@@ -1,0 +1,9 @@
+**/build
+**/.vscode
+**/cmake-build-Release
+**/.cache
+**/CMakeFiles
+.DS_Store
+compile_commands.json
+cmake_install.cmake
+CTestTestfile.cmake
