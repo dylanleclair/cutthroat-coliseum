@@ -1,4 +1,6 @@
-cmake -B ../build/ -S . "-DCMAKE_TOOLCHAIN_FILE=[vcpkg base]/scripts/buildsystems/vcpkg.cmake"
+git submodule update --init --recursive
+../vcpkg/bootstrap-vcpkg.sh
+cmake -B ../build/ -S .
 cmake --build ../build/
 
 # example command to run built project from command line:

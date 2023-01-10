@@ -1,4 +1,6 @@
-cmake -B ..\build\ -S . "-DCMAKE_TOOLCHAIN_FILE=[vcpkg base]/scripts/buildsystems/vcpkg.cmake"
+git submodule update --init --recursive # XXX: IDK if I can do this in powershell
+..\vcpkg\bootstrap-vcpkg.bat
+cmake -B ..\build\ -S .
 cmake --build ..\build\
 
 # example command to run built project from command line:
