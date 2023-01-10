@@ -20,7 +20,7 @@ int main()
 {
     if (SDL_Init(SDL_INIT_VIDEO) < 0)
     {
-        std::cout << "Failed to initialize the SDL2 library\n";
+        std::cerr << "Failed to initialize the SDL2 library\n";
         return -1;
     }
 
@@ -32,7 +32,7 @@ int main()
 
     if (!window)
     {
-        std::cout << "Failed to create window\n";
+        std::cerr << "Failed to create window\n";
         return -1;
     }
 
@@ -40,7 +40,7 @@ int main()
 
     if (!window_surface)
     {
-        std::cout << "Failed to get the surface from the window\n";
+        std::cerr << "Failed to get the surface from the window\n";
         return -1;
     }
 

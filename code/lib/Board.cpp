@@ -393,7 +393,7 @@ void Board::setValidMoves(std::pair<int, int> position)
     m_availableMoves.clear();
     if (!IS_ON_BOARD(position.first, position.second))
     {
-        std::cout << "Error at setValidMoves: Invalid position."  << std::endl;
+        std::cerr << "Error at setValidMoves: Invalid position."  << std::endl;
         return;
     }
     const Piece piece = m_board[position.first][position.second];
