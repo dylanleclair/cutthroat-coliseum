@@ -1,3 +1,5 @@
-cmake -B ..\build\ -S . "-DCMAKE_TOOLCHAIN_FILE=R:/newrepos/vcpkg/scripts/buildsystems/vcpkg.cmake"
+cmake -B ..\build\ -S . "-DCMAKE_TOOLCHAIN_FILE=[vcpkg base]/scripts/buildsystems/vcpkg.cmake"
 cmake --build ..\build\
-../build/client/Debug/cpsc585_client.exe
+
+# example command to run built project from command line:
+# ../build/client/Debug/cpsc585_client.exe
