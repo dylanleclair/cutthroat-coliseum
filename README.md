@@ -10,6 +10,7 @@
 - Install "Desktop Development with C++" in the visual studio installer (for cmake) if you haven't already
 - It will ask which cmake thing to use, use <project_root>/code/CMakeLists.txt
 - Everything should build for you wooooo lmk if there's an issue
+1. To run, use the green button dropdown to find `cpsc585-client.exe` or someth it'll work I think
 
 - see the IDE integration section here:
   - https://vcpkg.io/en/docs/users/buildsystems/cmake-integration.html
