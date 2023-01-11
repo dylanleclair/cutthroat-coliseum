@@ -8,3 +8,6 @@ compile_commands.json
 cmake_install.cmake
 CTestTestfile.cmake
 Makefile*
+
+# XXX: should we actually vc this? i don't think so but idk
+**/CMakeSettings.json
