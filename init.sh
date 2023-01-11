@@ -1,3 +1,5 @@
+#!/usr/bin/env sh
+
 git submodule update --init --recursive
 ./vcpkg/bootstrap-vcpkg.sh
 cmake -B build/ -S code/
