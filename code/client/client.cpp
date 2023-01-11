@@ -14,6 +14,17 @@
 #include "Window.h"
 
 
+int foo;
+void readConfig() {
+	auto result = toml::parse_file("../../code/assets/configs/temp.toml");
+	if (!result) {
+		std::cerr << "WON'T parse toml\n" << result.error() << "\n";
+		std::exit(2);
+	}
+	foo = result.table()["foo"].value_or(0);
+	std::cout << "\n\n\n\n\n" << foo << "\n\n\n\n\n";
+}
+
 // EXAMPLE CALLBACKS
 class MyCallbacks : public CallbackInterface {
 
@@ -23,6 +34,9 @@ public:
 	virtual void keyCallback(int key, int scancode, int action, int mods) {
 		if (key == GLFW_KEY_R && action == GLFW_PRESS) {
 			shader.recompile();
+		}
+		if (key == GLFW_KEY_T && action == GLFW_PRESS) {
+			readConfig();
 		}
 	}
 
@@ -113,17 +127,7 @@ std::vector<glm::vec3> colourSquare(std::vector<glm::vec3> dest, glm::vec3 colou
 
 }
 
-
 int main() {
-	auto result = toml::parse_file("../../code/assets/temp.toml");
-	if (!result) {
-		std::cerr << "WON'T parse toml\n" << result.error() << "\n";
-		std::exit(2);
-	}
-
-	std::cout << result.table() << std::endl;
-	std::exit(0);
-
 	Log::debug("Starting main");
 
 	// WINDOW
@@ -166,10 +170,7 @@ int main() {
 
 		for (int i = 0; i < GLsizei(cpuGeom.verts.size()); i+=4)
 		{
-			std::cout << " " << i << std::endl;
-
 			glDrawArrays(GL_LINE_LOOP, i, 4);
-			
 		}
 
 		glDisable(GL_FRAMEBUFFER_SRGB); // disable sRGB for things like imgui
