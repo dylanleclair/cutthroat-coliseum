@@ -1,6 +1,9 @@
 #include <GL/glew.h>
 #include <GLFW/glfw3.h>
 
+#define TOML_EXCEPTIONS 0 // HACK(beau): we really should disable them globally
+#include "toml++/toml.h"
+
 #include <iostream>
 
 #include "Geometry.h"
@@ -112,6 +115,15 @@ std::vector<glm::vec3> colourSquare(std::vector<glm::vec3> dest, glm::vec3 colou
 
 
 int main() {
+	auto result = toml::parse_file("../../code/assets/temp.toml");
+	if (!result) {
+		std::cerr << "WON'T parse toml\n" << result.error() << "\n";
+		std::exit(2);
+	}
+
+	std::cout << result.table() << std::endl;
+	std::exit(0);
+
 	Log::debug("Starting main");
 
 	// WINDOW
