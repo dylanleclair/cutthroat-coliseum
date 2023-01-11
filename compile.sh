@@ -1,8 +1,6 @@
-#!/bin/bash
+#!/usr/bin/env sh
 
 cmake -B build/ -S code/
-cmake --build build/ --target client
 
-pushd build/client || exit
-./cpsc585_client
-popd || exit
+# HACK(beau): compiling all targets breaks for some reason on my machine - beau
+cmake --build build/ --target client
