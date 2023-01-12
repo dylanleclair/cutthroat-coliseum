@@ -11,7 +11,6 @@ struct CarPhysics {
 
 // NOTE(beau): imo this could inherit from some interface - beau
 struct CarPhysicsConfig {
-	CarPhysics tempdata; // to be copied into all cars via ecs system
 	toml::table table;
 
 	CarPhysicsConfig(bool serializing);

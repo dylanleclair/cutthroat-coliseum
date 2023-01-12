@@ -12,8 +12,6 @@
 
 #include "CarPhysics.h"
 
-CarPhysics foo;
-
 // EXAMPLE CALLBACKS
 class MyCallbacks : public CallbackInterface {
 
@@ -21,21 +19,16 @@ public:
 	MyCallbacks(ShaderProgram& shader) : shader(shader) {}
 
 	virtual void keyCallback(int key, int scancode, int action, int mods) {
-		if (key == GLFW_KEY_R && action == GLFW_PRESS) {
+		if (key == GLFW_KEY_R && action == GLFW_PRESS)
 			shader.recompile();
-		}
 
 		// press t to hot-reload car physics config
-		if (key == GLFW_KEY_T && action == GLFW_PRESS) {
-			CarPhysicsConfig deserializer(false);
-			foo = deserializer.tempdata;
-			std::cout << "Suspension force: " << foo.m_suspension_force << "\n";
-			std::cout << "Acceleration force: " << foo.m_acceleration << "\n";
-		}
+		if (key == GLFW_KEY_T && action == GLFW_PRESS)
+			CarPhysicsConfig carConfigReader(false);
 
-		if (key == GLFW_KEY_S && action == GLFW_PRESS) {
-			CarPhysicsConfig serializer(true);
-		}
+		// press s to serialize current car config
+		if (key == GLFW_KEY_S && action == GLFW_PRESS)
+			CarPhysicsConfig carConfigSerializer(true);
 	}
 
 private:
