@@ -1,9 +1,6 @@
 #include <GL/glew.h>
 #include <GLFW/glfw3.h>
 
-#define TOML_EXCEPTIONS 0 // HACK(beau): we really should disable them globally
-#include "toml++/toml.h"
-
 #include <iostream>
 
 #include "Geometry.h"
@@ -13,17 +10,9 @@
 #include "Shader.h"
 #include "Window.h"
 
+#include "CarPhysics.h"
 
-int foo;
-void readConfig() {
-	auto result = toml::parse_file("../../code/assets/configs/temp.toml");
-	if (!result) {
-		std::cerr << "WON'T parse toml\n" << result.error() << "\n";
-		std::exit(2);
-	}
-	foo = result.table()["foo"].value_or(0);
-	std::cout << "\n\n\n\n\n" << foo << "\n\n\n\n\n";
-}
+CarPhysics foo;
 
 // EXAMPLE CALLBACKS
 class MyCallbacks : public CallbackInterface {
@@ -35,8 +24,17 @@ public:
 		if (key == GLFW_KEY_R && action == GLFW_PRESS) {
 			shader.recompile();
 		}
+
+		// press t to hot-reload car physics config
 		if (key == GLFW_KEY_T && action == GLFW_PRESS) {
-			readConfig();
+			CarPhysicsConfig deserializer(false);
+			foo = deserializer.tempdata;
+			std::cout << "Suspension force: " << foo.m_suspension_force << "\n";
+			std::cout << "Acceleration force: " << foo.m_acceleration << "\n";
+		}
+
+		if (key == GLFW_KEY_S && action == GLFW_PRESS) {
+			CarPhysicsConfig serializer(true);
 		}
 	}
 
