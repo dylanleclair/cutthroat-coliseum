@@ -27,3 +27,10 @@ foreach(file ${files})
 	get_filename_component(name ${file} NAME)
 	configure_file(${file} shaders/${name})
 endforeach()
+
+# Copy all the serialized toml files and tell the build system to re-run CMAKE if one of them changes
+file(GLOB files ../assets/configs/*)
+foreach(file ${files})
+	get_filename_component(name ${file} NAME)
+	configure_file(${file} configs/${name})
+endforeach()
