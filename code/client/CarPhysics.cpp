@@ -21,18 +21,30 @@ CarPhysicsConfig::CarPhysicsConfig(bool serializing) {
 }
 
 void CarPhysicsConfig::serialize() {
-    std::cout << "Serializing: \n" << table << "\n";
-    std::ofstream configFile(ASSETS_FILEPATH);
-    configFile << table;
+    **table["suspension_force"].as_floating_point() = carConfig.m_suspension_force;
+    **table["acceleration"].as_floating_point() = carConfig.m_acceleration;
+    std::cout << "Serializing these values IN MEMORY\n";
+    std::cout << "acceleration: " <<carConfig.m_acceleration << "\n\n";
+    std::cout << "suspension force:" << carConfig.m_suspension_force << "\n";
+    std::cout << "Which form this table:\n";
+    std::cout << "To this file (relative to executable):\n";
+    std::cout << table << "\n\n";
+    std::cout << ASSETS_FILEPATH << "\n\n";
+
+    std::ofstream(ASSETS_FILEPATH) << table;
 }
 
 // NOTE(beau) crashes if keys are not in file
 void CarPhysicsConfig::deserialize() {
     // NOTE(beau) crash if keys not found
-
-    std::cout << "Deserialized:" << "\n";
-    std::cout << tempdata.m_suspension_force << "\n";
-    std::cout << tempdata.m_acceleration << "\n";
     carConfig.m_suspension_force = *( table["suspension_force"].value<float>() );
     carConfig.m_acceleration = *( table["acceleration"].value<float>() );
+
+    std::cout << "Deserialized this table: " << "\n";
+    std::cout << table << "\n\n";
+    std::cout << "From this file (relative to executable): " << "\n";
+    std::cout << FILEPATH << "\n\n";
+    std::cout << "To these values in memory:\n";
+    std::cout << "acceleration: " <<carConfig.m_acceleration << "\n\n";
+    std::cout << "suspension force: " << carConfig.m_suspension_force << "\n";
 }
