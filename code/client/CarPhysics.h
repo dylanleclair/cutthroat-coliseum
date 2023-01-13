@@ -5,8 +5,7 @@
 
 // assets filepath based on which os
 #if defined(WIN32) || defined(_WIN32) || defined(__WIN32)
-#define ASSETS_FILEPATH
-"../../../../assets/configs/CarPhysics.toml"
+#define ASSETS_FILEPATH "../../../../assets/configs/CarPhysics.toml"
 #else
 #define ASSETS_FILEPATH "../../code/assets/configs/CarPhysics.toml"
 #endif
