@@ -1,4 +1,6 @@
-#include "GLFW/glfw3.h"
+#include <GLFW/glfw3.h>
+#include <GL/glew.h>
+#include "Window.h"
 
 enum Primitive { sphere, cube };
 
@@ -15,9 +17,11 @@ struct render_packet {
 
 class GraphicsSystem {
 public:
-	GraphicsSystem();
+	GraphicsSystem(Window& _window);
 	void addPrimitive(render_packet _packet);
 	void render();
+	Window getWindow();
 private:
+	ShaderProgram shader;
 
 };

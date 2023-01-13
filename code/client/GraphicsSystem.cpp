@@ -3,11 +3,28 @@
 #include "Geometry.h"
 #include <iostream>
 #include "GLFW/glfw3.h"
+#include "GraphicsSystem.h"
+#include "GLDebug.h"
+#include "ShaderProgram.h"
 
-GraphicsSystem::GraphicsSystem()
+GraphicsSystem::GraphicsSystem(Window& _window) {
+	// WINDOW
+	glfwInit();
+
+	GLDebug::enable();
+
+	// SHADERS
+	shader = ShaderProgram("shaders/test.vert", "shaders/test.frag");
+
+	GLint uniMat = glGetUniformLocation(shader, "M");
+}
 
 void GraphicsSystem::addPrimitive(render_packet _packet)
 {
+
+}
+
+void GraphicsSystem::render() {
 	glPointSize(10);
 	// GEOMETRY
 	CPU_Geometry cpuGeom;
@@ -21,11 +38,5 @@ void GraphicsSystem::addPrimitive(render_packet _packet)
 
 	gpuGeom.bind();
 
-	std::cout << "SHHHHHHHHHHHHHHH\n";
-
 	glDrawArrays(GL_POINTS, 0, 1);
-}
-
-void GraphicsSystem::render() {
-
 }
