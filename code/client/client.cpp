@@ -170,7 +170,7 @@ int main() {
 	ImGui::StyleColorsDark();
 
 	ImGui_ImplOpenGL3_Init("#version 330");
-	ImGui_ImplGlfw_InitForOpenGL(&*window.window, true);
+	ImGui_ImplGlfw_InitForOpenGL(window.window.get(), true);
 
 	// RENDER LOOP
 	while (!window.shouldClose()) {
