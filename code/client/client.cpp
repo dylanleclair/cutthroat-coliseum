@@ -10,6 +10,8 @@
 #include "Shader.h"
 #include "Window.h"
 
+#include "GraphicsSystem.h"
+
 
 // EXAMPLE CALLBACKS
 class MyCallbacks : public CallbackInterface {
@@ -140,6 +142,8 @@ int main() {
 	gpuGeom.setVerts(cpuGeom.verts);
 	gpuGeom.setCols(cpuGeom.cols);
 
+	GraphicsSystem gs();
+
 	// RENDER LOOP
 	while (!window.shouldClose()) {
 		glfwPollEvents();
@@ -159,6 +163,9 @@ int main() {
 			glDrawArrays(GL_LINE_LOOP, i, 4);
 			
 		}
+
+		render_packet pack(sphere, 4, 0, 0);
+		gs.addPrimitive(pack);
 
 		glDisable(GL_FRAMEBUFFER_SRGB); // disable sRGB for things like imgui
 
