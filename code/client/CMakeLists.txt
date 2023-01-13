@@ -17,6 +17,7 @@ target_link_libraries(${BINARY} PRIVATE ${CMAKE_PROJECT_NAME}_lib
   vivid
   fmt
   tomlplusplus::tomlplusplus
+  imgui::imgui
 )
 
 target_compile_definitions(${BINARY} PUBLIC ASSETS_PATH="${CMAKE_CURRENT_SOURCE_DIR}/../assets/") # Set the asset path macro to the absolute path on the dev machine

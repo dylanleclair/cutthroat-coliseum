@@ -16,6 +16,7 @@ find_package(glew REQUIRED)
 find_package(assimp CONFIG REQUIRED)
 find_package(glfw3 CONFIG REQUIRED)
 find_package(tomlplusplus CONFIG REQUIRED)
+find_package(imgui CONFIG REQUIRED)
 
 include_directories(${SDL2_INCLUDE_DIRS})
 include_directories(lib)
