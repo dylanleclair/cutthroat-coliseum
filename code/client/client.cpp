@@ -3,6 +3,10 @@
 
 #include <iostream>
 
+#include "imgui.h"
+#include "imgui_impl_glfw.h"
+#include "imgui_impl_opengl3.h"
+
 #include "Geometry.h"
 #include "GLDebug.h"
 #include "Log.h"
@@ -11,6 +15,9 @@
 #include "Window.h"
 
 #include "CarPhysics.h"
+
+CarPhysics carPhysics;
+CarPhysicsConfig carConfig(carPhysics);
 
 // EXAMPLE CALLBACKS
 class MyCallbacks : public CallbackInterface {
@@ -24,11 +31,14 @@ public:
 
 		// press t to hot-reload car physics config
 		if (key == GLFW_KEY_T && action == GLFW_PRESS)
-			CarPhysicsConfig carConfigReader(false);
+			carConfig.deserialize();
 
 		// press s to serialize current car config
 		if (key == GLFW_KEY_S && action == GLFW_PRESS)
-			CarPhysicsConfig carConfigSerializer(true);
+			carConfig.serialize();
+	}
+
+	virtual void cursorPosCallback(double xpos, double ypos) {
 	}
 
 private:
@@ -133,6 +143,7 @@ int main() {
 	// CALLBACKS
 	window.setCallbacks(std::make_shared<MyCallbacks>(shader)); // can also update callbacks to new ones
 
+
 	// GEOMETRY
 	CPU_Geometry cpuGeom;
 	GPU_Geometry gpuGeom;
@@ -146,6 +157,20 @@ int main() {
 
 	gpuGeom.setVerts(cpuGeom.verts);
 	gpuGeom.setCols(cpuGeom.cols);
+
+	carConfig.deserialize();
+
+	// NOTE(beau): put this somewhere else
+	// It's not in the window constructor because input won't
+	// work unless this code is called after the window callbacks are set
+	IMGUI_CHECKVERSION();
+	ImGui::CreateContext();
+	ImGuiIO& io = ImGui::GetIO(); (void)io;
+
+	ImGui::StyleColorsDark();
+
+	ImGui_ImplOpenGL3_Init("#version 330");
+	ImGui_ImplGlfw_InitForOpenGL(&*window.window, true);
 
 	// RENDER LOOP
 	while (!window.shouldClose()) {
@@ -166,8 +191,26 @@ int main() {
 
 		glDisable(GL_FRAMEBUFFER_SRGB); // disable sRGB for things like imgui
 
+		ImGui_ImplOpenGL3_NewFrame();
+		ImGui_ImplGlfw_NewFrame();
+		ImGui::NewFrame();
+
+		ImGui::Begin("Car Physics", nullptr);
+
+		ImGui::SliderFloat("acceleration", &carPhysics.m_acceleration, 0.f, 1000.f);
+		ImGui::SliderFloat("suspension", &carPhysics.m_suspension_force, 0.f, 1000.f);
+
+		ImGui::End();
+
+		ImGui::Render();
+		ImGui_ImplOpenGL3_RenderDrawData(ImGui::GetDrawData());
+
 		window.swapBuffers();
 	}
+
+	ImGui_ImplOpenGL3_Shutdown();
+	ImGui_ImplGlfw_Shutdown();
+	ImGui::DestroyContext();
 
 	glfwTerminate();
 	return 0;

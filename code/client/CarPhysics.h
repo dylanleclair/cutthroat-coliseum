@@ -12,15 +12,16 @@
 #endif
 
 struct CarPhysics {
-	float m_suspension_force;
 	float m_acceleration;
+	float m_suspension_force;
 };
 
-// NOTE(beau): imo this could inherit from some interface - beau
+// NOTE(beau): could this inherit from some interface? - beau
 struct CarPhysicsConfig {
+	CarPhysics &m_car_config;
 	toml::table table;
 
-	CarPhysicsConfig(bool serializing);
+	CarPhysicsConfig(CarPhysics &carPhysics);
 
 	void serialize();
 	void deserialize();
