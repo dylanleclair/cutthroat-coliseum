@@ -1,5 +1,20 @@
 {
   "name": "cpsc585",
   "version-string": "0.1.0",
-  "dependencies": ["sdl2", "gtest", "glm", "glew", "assimp", "glfw3"]
+  "dependencies": [
+    "sdl2",
+    "gtest",
+    "glm",
+    "glew",
+    "assimp",
+    "glfw3",
+    "tomlplusplus",
+    {
+      "name": "imgui",
+      "features": [
+        "opengl3-binding",
+        "glfw-binding"
+      ]
+    }
+  ]
 }

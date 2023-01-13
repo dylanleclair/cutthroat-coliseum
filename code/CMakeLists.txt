@@ -15,6 +15,8 @@ find_package(glm CONFIG REQUIRED)
 find_package(glew REQUIRED)
 find_package(assimp CONFIG REQUIRED)
 find_package(glfw3 CONFIG REQUIRED)
+find_package(tomlplusplus CONFIG REQUIRED)
+find_package(imgui CONFIG REQUIRED)
 
 include_directories(${SDL2_INCLUDE_DIRS})
 include_directories(lib)
@@ -45,3 +47,10 @@ FetchContent_Declare(
   GIT_TAG        cd4af11efc9c622896a3e4cb599fa28668ca3d05
 )
 FetchContent_MakeAvailable(fmt)
+
+FetchContent_Declare(
+    tomlplusplus
+    GIT_REPOSITORY https://github.com/marzer/tomlplusplus.git
+    GIT_TAG        v3.2.0
+)
+FetchContent_MakeAvailable(tomlplusplus)
