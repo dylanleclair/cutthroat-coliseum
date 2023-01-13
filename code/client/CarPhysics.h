@@ -17,11 +17,11 @@ struct CarPhysics {
 };
 
 // NOTE(beau): could this inherit from some interface? - beau
-struct CarPhysicsConfig {
+struct CarPhysicsSerde {
 	CarPhysics &m_car_config;
 	toml::table table;
 
-	CarPhysicsConfig(CarPhysics &carPhysics);
+	CarPhysicsSerde(CarPhysics &carPhysics);
 
 	void serialize();
 	void deserialize();

@@ -17,7 +17,7 @@
 #include "CarPhysics.h"
 
 CarPhysics carPhysics;
-CarPhysicsConfig carConfig(carPhysics);
+CarPhysicsSerde carConfig(carPhysics);
 
 // EXAMPLE CALLBACKS
 class MyCallbacks : public CallbackInterface {
