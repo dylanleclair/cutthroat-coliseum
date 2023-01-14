@@ -2,7 +2,7 @@
 
 //------------------------------------------------------------------------------
 // This file contains classes that provide a simpler and safer interface for
-// interacting with a GLFW window following RAII principles
+// interacting with a SDL window following RAII principles
 //------------------------------------------------------------------------------
 
 #include <GL/glew.h>
@@ -74,7 +74,7 @@ public:
 	int getWidth() const { return getSize().x; }
 	int getHeight() const { return getSize().y; }
 
-	// NOTE(beau): leave this in in case we need to change contexts
+	// NOTE(beau): leave this in in case we need to change contexts, but refactor to sdl2
 	// void makeContextCurrent() { glfwMakeContextCurrent(window.get()); }
 
 	void swapBuffers() { SDL_GL_SwapWindow(window.get()); }
@@ -85,7 +85,8 @@ public:
 	SDL_Event event;
 
 private:
-	std::unique_ptr<SDL_Window, WindowDeleter> window; // owning ptr (from GLFW)
+	std::unique_ptr<SDL_Window, WindowDeleter> window; // owning ptr (from SDL)
+
 	// TODO(beau): decide if we want to use callbacks for input handling, or
 	//             or just handle input events in main. If the latter, scrap
 	//             all this callback stuff
