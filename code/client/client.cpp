@@ -143,27 +143,27 @@ int main(int argc, char* argv[]) {
 	GLDebug::enable();
 
 	// SHADERS
-	// ShaderProgram shader("shaders/test.vert", "shaders/test.frag");
+	ShaderProgram shader("shaders/test.vert", "shaders/test.frag");
 
 	// CALLBACKS
 	// window.setCallbacks(std::make_shared<MyCallbacks>(shader)); // can also update callbacks to new ones
 
 
 	// GEOMETRY
-	// CPU_Geometry cpuGeom;
-	// GPU_Geometry gpuGeom;
+	CPU_Geometry cpuGeom;
+	GPU_Geometry gpuGeom;
 
-	// cpuGeom = squaresDiamonds(glm::vec3(0.8, -0.8, 0), glm::vec3(0.8, 0.8, 0), glm::vec3(-0.8, 0.8, 0), glm::vec3(-0.8, -0.8, 0), 3);
+	cpuGeom = squaresDiamonds(glm::vec3(0.8, -0.8, 0), glm::vec3(0.8, 0.8, 0), glm::vec3(-0.8, 0.8, 0), glm::vec3(-0.8, -0.8, 0), 3);
 
 
-	// for (int i = 0; i < cpuGeom.verts.size(); i++) {
-	// 	std::cout << cpuGeom.verts[i] << std::endl;
-	// }
+	for (int i = 0; i < cpuGeom.verts.size(); i++) {
+		std::cout << cpuGeom.verts[i] << std::endl;
+	}
 
-	// gpuGeom.setVerts(cpuGeom.verts);
-	// gpuGeom.setCols(cpuGeom.cols);
+	gpuGeom.setVerts(cpuGeom.verts);
+	gpuGeom.setCols(cpuGeom.cols);
 
-	// carConfig.deserialize();
+	carConfig.deserialize();
 
 	// NOTE(beau): put this somewhere else
 	// It's not in the window constructor because input won't
@@ -186,18 +186,16 @@ int main(int argc, char* argv[]) {
 				quit = true;
 		}
 
-		// shader.use();
-		// gpuGeom.bind();
+		shader.use();
+		gpuGeom.bind();
 
 		glEnable(GL_FRAMEBUFFER_SRGB);
 		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
-		//std::cout << GLsizei(cpuGeom.verts.size());
-
-		// for (int i = 0; i < GLsizei(cpuGeom.verts.size()); i+=4)
-		// {
-		// 	glDrawArrays(GL_LINE_LOOP, i, 4);
-		// }
+		for (int i = 0; i < GLsizei(cpuGeom.verts.size()); i+=4)
+		{
+			glDrawArrays(GL_LINE_LOOP, i, 4);
+		}
 
 		glDisable(GL_FRAMEBUFFER_SRGB); // disable sRGB for things like imgui
 
