@@ -6,7 +6,7 @@
 //------------------------------------------------------------------------------
 
 #include <GL/glew.h>
-#include <GLFW/glfw3.h>
+#include <SDL_render.h>
 #include <glm/glm.hpp>
 
 #include "SDL.h"
@@ -16,6 +16,9 @@
 #include <memory>
 
 
+// TODO(beau): decide if we want to use callbacks for input handling, or
+//             or just handle input events in main. If the latter, scrap
+//             all this callback stuff
 // Class that specifies the interface for the most common GLFW callbacks
 //
 // These are the default implementations. You can write your own class that
@@ -30,7 +33,7 @@ public:
 };
 
 
-// Functor for deleting a GLFW window.
+// Functor for deleting a SDL window.
 //
 // This is used as a custom deleter with std::unique_ptr so that the window
 // is properly destroyed when std::unique_ptr needs to clean up its resource
@@ -41,17 +44,25 @@ struct WindowDeleter {
 };
 
 
-// Main class for creating and interacting with a GLFW window.
+// Main class for creating and interacting with a SDL window.
 // Only wraps the most fundamental parts of the API
 class Window {
 
 public:
+	// TODO(beau): decide if we want to use callbacks for input handling, or
+	//             or just handle input events in main. If the latter, scrap
+	//             all this callback stuff
 	Window(
-		std::shared_ptr<CallbackInterface> callbacks, int width, int height,
-		const char* title, GLFWmonitor* monitor = NULL, GLFWwindow* share = NULL
+		std::shared_ptr<CallbackInterface> callbacks, int width, int height, const char* title
 	);
-	Window(int width, int height, const char* title, GLFWmonitor* monitor = NULL, GLFWwindow* share = NULL);
+	Window(int width, int height, const char* title);
 
+
+
+
+	// TODO(beau): decide if we want to use callbacks for input handling, or
+	//             or just handle input events in main. If the latter, scrap
+	//             all this callback stuff
 	void setCallbacks(std::shared_ptr<CallbackInterface> callbacks);
 
 	glm::ivec2 getPos() const;
@@ -63,23 +74,36 @@ public:
 	int getWidth() const { return getSize().x; }
 	int getHeight() const { return getSize().y; }
 
-	// int shouldClose() { return glfwWindowShouldClose(window.get()); }
+	// NOTE(beau): leave this in in case we need to change contexts
 	// void makeContextCurrent() { glfwMakeContextCurrent(window.get()); }
-	// void swapBuffers() { glfwSwapBuffers(window.get()); }
 
+	void swapBuffers() { SDL_GL_SwapWindow(window.get()); }
+
+
+	// NOTE(beau): I *think* this should be here so we can do the callback thing like before,
+	// BUT if we don't have to do that why not just switch on the sdl event in the render loop
+	SDL_Event event;
+
+private:
 	std::unique_ptr<SDL_Window, WindowDeleter> window; // owning ptr (from GLFW)
+	// TODO(beau): decide if we want to use callbacks for input handling, or
+	//             or just handle input events in main. If the latter, scrap
+	//             all this callback stuff
 	std::shared_ptr<CallbackInterface> callbacks;      // optional shared owning ptr (user provided)
 
-	void connectCallbacks();
+	// void connectCallbacks();
 
-	static void defaultWindowSizeCallback(GLFWwindow* window, int width, int height) { glViewport(0, 0, width, height); }
+	// static void defaultWindowSizeCallback(SDL_Window* window, int width, int height) { glViewport(0, 0, width, height); }
 
+	// TODO(beau): decide if we want to use callbacks for input handling, or
+	//             or just handle input events in main. If the latter, scrap
+	//             all this callback stuff
 	// Meta callback functions. These bind to the actual glfw callback,
 	// get the actual callback method from user data, and then call that.
-	static void keyMetaCallback(GLFWwindow* window, int key, int scancode, int action, int mods);
-	static void mouseButtonMetaCallback(GLFWwindow* window, int button, int action, int mods);
-	static void cursorPosMetaCallback(GLFWwindow* window, double xpos, double ypos);
-	static void scrollMetaCallback(GLFWwindow* window, double xoffset, double yoffset);
-	static void windowSizeMetaCallback(GLFWwindow* window, int width, int height);
+	// static void keyMetaCallback(SDL_Window* window, int key, int scancode, int action, int mods);
+	// static void mouseButtonMetaCallback(SDL_Window* window, int button, int action, int mods);
+	// static void cursorPosMetaCallback(SDL_Window* window, double xpos, double ypos);
+	// static void scrollMetaCallback(SDL_Window* window, double xoffset, double yoffset);
+	// static void windowSizeMetaCallback(SDL_Window* window, int width, int height);
 };
 

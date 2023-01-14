@@ -22,6 +22,9 @@
 CarPhysics carPhysics;
 CarPhysicsSerde carConfig(carPhysics);
 
+// TODO(beau): decide if we want to use callbacks for input handling, or
+//             or just handle input events in main. If the latter, scrap
+//             all this callback stuff
 // EXAMPLE CALLBACKS
 // class MyCallbacks : public CallbackInterface {
 
@@ -178,15 +181,11 @@ int main(int argc, char* argv[]) {
 	// RENDER LOOP
 	// while (!window.shouldClose()) {
 	bool quit = false;
-	SDL_Event event;
 	while (!quit) {
-		while (SDL_PollEvent(&event)) {
-			if (event.type == SDL_QUIT) {
+		while (SDL_PollEvent(&window.event)) {
+			if (window.event.type == SDL_QUIT)
 				quit = true;
-			}
 		}
-
-		// glfwPollEvents();
 
 		// shader.use();
 		// gpuGeom.bind();
@@ -217,8 +216,7 @@ int main(int argc, char* argv[]) {
 		// ImGui::Render();
 		// ImGui_ImplOpenGL3_RenderDrawData(ImGui::GetDrawData());
 
-		// window.swapBuffers();
-		SDL_GL_SwapWindow(window.window.get());
+		window.swapBuffers();
 	}
 
 	// ImGui_ImplOpenGL3_Shutdown();
