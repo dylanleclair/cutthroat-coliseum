@@ -1,5 +1,5 @@
 {
   "name": "cpsc585",
   "version-string": "0.1.0",
-  "dependencies": ["sdl2", "gtest", "glm", "glew", "assimp", "glfw3", "physx"]
+  "dependencies": ["sdl2", "gtest", "glm", "glew", "assimp", "glfw3"]
 }

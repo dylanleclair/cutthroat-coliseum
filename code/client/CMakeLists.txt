@@ -16,6 +16,8 @@ target_link_libraries(${BINARY} PRIVATE ${CMAKE_PROJECT_NAME}_lib
   glfw
   vivid
   fmt
+  tomlplusplus::tomlplusplus
+  imgui::imgui
 )
 
 target_compile_definitions(${BINARY} PUBLIC ASSETS_PATH="${CMAKE_CURRENT_SOURCE_DIR}/../assets/") # Set the asset path macro to the absolute path on the dev machine
@@ -25,4 +27,11 @@ file(GLOB files ../assets/shaders/*)
 foreach(file ${files})
 	get_filename_component(name ${file} NAME)
 	configure_file(${file} shaders/${name})
+endforeach()
+
+# Copy all the serialized toml files and tell the build system to re-run CMAKE if one of them changes
+file(GLOB files ../assets/configs/*)
+foreach(file ${files})
+	get_filename_component(name ${file} NAME)
+	configure_file(${file} configs/${name})
 endforeach()

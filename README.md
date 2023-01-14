@@ -23,3 +23,20 @@ NOTE: dylan i think you and i are fine without instructions
   - lib - systems code / code that supports the game but could easily be reused in other games.
   - client - the actual game / game logic
   - tst - for unit tests
+
+## Hot-reload example
+
+Version-controlled configs are stored in code/assets/configs. These are
+then copied into build/client/configs, similar to the shaders.
+
+DESERIALIZING:
+
+1. Modify the config file in build/client/configs/CarPhysics.toml with
+thing running
+2. Press `t` - you should see the console print what was deserialized
+
+SERIALIZING:
+
+Press `s` to serialize your new config back into the version-controlled
+config file. Note that this actually reads your config again cause idk
+if the serializer should know abt the state of the program
