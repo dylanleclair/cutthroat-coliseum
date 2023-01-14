@@ -46,7 +46,6 @@ Window::Window(int width, int height, const char* title)
 	// TODO(beau): put this somewhere obvious
 	IMGUI_CHECKVERSION();
 	ImGui::CreateContext();
-	ImGuiIO& io = ImGui::GetIO(); (void)io;
 
 	ImGui::StyleColorsDark();
 

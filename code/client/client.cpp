@@ -107,6 +107,8 @@ int main(int argc, char* argv[]) {
 	SDL_Init(SDL_INIT_EVERYTHING); // initialize all sdl systems
 	Window window(800, 800, "CPSC 453");
 
+	ImGuiIO& io = ImGui::GetIO(); (void)io;
+
 	GLDebug::enable();
 
 	// SHADERS
@@ -181,7 +183,7 @@ int main(int argc, char* argv[]) {
 		ImGui::End();
 
 		ImGui::Render();
-		// TODO(beau): gl viewport thing
+		glViewport(0, 0, (int)io.DisplaySize.x, (int)io.DisplaySize.y);
 		ImGui_ImplOpenGL3_RenderDrawData(ImGui::GetDrawData());
 
 		window.swapBuffers();
