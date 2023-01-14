@@ -1,10 +1,13 @@
 #include <GL/glew.h>
-#include <GLFW/glfw3.h>
+// #include <GLFW/glfw3.h>
+
 
 #include <iostream>
 
 #include "imgui.h"
-#include "imgui_impl_glfw.h"
+// #include "imgui_impl_glfw.h"
+#include "imgui_impl_sdl.h"
+#include "imgui_impl_sdlrenderer.h"
 #include "imgui_impl_opengl3.h"
 
 #include "Geometry.h"
@@ -20,30 +23,30 @@ CarPhysics carPhysics;
 CarPhysicsSerde carConfig(carPhysics);
 
 // EXAMPLE CALLBACKS
-class MyCallbacks : public CallbackInterface {
+// class MyCallbacks : public CallbackInterface {
 
-public:
-	MyCallbacks(ShaderProgram& shader) : shader(shader) {}
+// public:
+// 	MyCallbacks(ShaderProgram& shader) : shader(shader) {}
 
-	virtual void keyCallback(int key, int scancode, int action, int mods) {
-		if (key == GLFW_KEY_R && action == GLFW_PRESS)
-			shader.recompile();
+// 	virtual void keyCallback(int key, int scancode, int action, int mods) {
+// 		if (key == GLFW_KEY_R && action == GLFW_PRESS)
+// 			shader.recompile();
 
-		// press t to hot-reload car physics config
-		if (key == GLFW_KEY_T && action == GLFW_PRESS)
-			carConfig.deserialize();
+// 		// press t to hot-reload car physics config
+// 		if (key == GLFW_KEY_T && action == GLFW_PRESS)
+// 			carConfig.deserialize();
 
-		// press s to serialize current car config
-		if (key == GLFW_KEY_S && action == GLFW_PRESS)
-			carConfig.serialize();
-	}
+// 		// press s to serialize current car config
+// 		if (key == GLFW_KEY_S && action == GLFW_PRESS)
+// 			carConfig.serialize();
+// 	}
 
-	virtual void cursorPosCallback(double xpos, double ypos) {
-	}
+// 	virtual void cursorPosCallback(double xpos, double ypos) {
+// 	}
 
-private:
-	ShaderProgram& shader;
-};
+// private:
+// 	ShaderProgram& shader;
+// };
 
 
 std::vector<glm::vec3> drawFromMidpoints(std::vector<glm::vec3> src);
@@ -128,90 +131,101 @@ std::vector<glm::vec3> colourSquare(std::vector<glm::vec3> dest, glm::vec3 colou
 
 }
 
-int main() {
+int main(int argc, char* argv[]) {
 	Log::debug("Starting main");
 
 	// WINDOW
-	glfwInit();
+	SDL_Init(SDL_INIT_EVERYTHING);
 	Window window(800, 800, "CPSC 453"); // can set callbacks at construction if desired
 
 	GLDebug::enable();
 
 	// SHADERS
-	ShaderProgram shader("shaders/test.vert", "shaders/test.frag");
+	// ShaderProgram shader("shaders/test.vert", "shaders/test.frag");
 
 	// CALLBACKS
-	window.setCallbacks(std::make_shared<MyCallbacks>(shader)); // can also update callbacks to new ones
+	// window.setCallbacks(std::make_shared<MyCallbacks>(shader)); // can also update callbacks to new ones
 
 
 	// GEOMETRY
-	CPU_Geometry cpuGeom;
-	GPU_Geometry gpuGeom;
+	// CPU_Geometry cpuGeom;
+	// GPU_Geometry gpuGeom;
 
-	cpuGeom = squaresDiamonds(glm::vec3(0.8, -0.8, 0), glm::vec3(0.8, 0.8, 0), glm::vec3(-0.8, 0.8, 0), glm::vec3(-0.8, -0.8, 0), 3);
+	// cpuGeom = squaresDiamonds(glm::vec3(0.8, -0.8, 0), glm::vec3(0.8, 0.8, 0), glm::vec3(-0.8, 0.8, 0), glm::vec3(-0.8, -0.8, 0), 3);
 
 
-	for (int i = 0; i < cpuGeom.verts.size(); i++) {
-		std::cout << cpuGeom.verts[i] << std::endl;
-	}
+	// for (int i = 0; i < cpuGeom.verts.size(); i++) {
+	// 	std::cout << cpuGeom.verts[i] << std::endl;
+	// }
 
-	gpuGeom.setVerts(cpuGeom.verts);
-	gpuGeom.setCols(cpuGeom.cols);
+	// gpuGeom.setVerts(cpuGeom.verts);
+	// gpuGeom.setCols(cpuGeom.cols);
 
-	carConfig.deserialize();
+	// carConfig.deserialize();
 
 	// NOTE(beau): put this somewhere else
 	// It's not in the window constructor because input won't
 	// work unless this code is called after the window callbacks are set
-	IMGUI_CHECKVERSION();
-	ImGui::CreateContext();
-	ImGuiIO& io = ImGui::GetIO(); (void)io;
+	// IMGUI_CHECKVERSION();
+	// ImGui::CreateContext();
+	// ImGuiIO& io = ImGui::GetIO(); (void)io;
 
-	ImGui::StyleColorsDark();
+	// ImGui::StyleColorsDark();
 
-	ImGui_ImplOpenGL3_Init("#version 330");
-	ImGui_ImplGlfw_InitForOpenGL(window.window.get(), true);
+	// ImGui_ImplOpenGL3_Init("#version 330");
+	// ImGui_ImplGlfw_InitForOpenGL(window.window.get(), true);
 
 	// RENDER LOOP
-	while (!window.shouldClose()) {
-		glfwPollEvents();
+	// while (!window.shouldClose()) {
+	bool quit = false;
+	SDL_Event event;
+	while (!quit) {
+		while (SDL_PollEvent(&event)) {
+			if (event.type == SDL_QUIT) {
+				quit = true;
+			}
+		}
 
-		shader.use();
-		gpuGeom.bind();
+		// glfwPollEvents();
+
+		// shader.use();
+		// gpuGeom.bind();
 
 		glEnable(GL_FRAMEBUFFER_SRGB);
 		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
 		//std::cout << GLsizei(cpuGeom.verts.size());
 
-		for (int i = 0; i < GLsizei(cpuGeom.verts.size()); i+=4)
-		{
-			glDrawArrays(GL_LINE_LOOP, i, 4);
-		}
+		// for (int i = 0; i < GLsizei(cpuGeom.verts.size()); i+=4)
+		// {
+		// 	glDrawArrays(GL_LINE_LOOP, i, 4);
+		// }
 
 		glDisable(GL_FRAMEBUFFER_SRGB); // disable sRGB for things like imgui
 
-		ImGui_ImplOpenGL3_NewFrame();
-		ImGui_ImplGlfw_NewFrame();
-		ImGui::NewFrame();
+		// ImGui_ImplOpenGL3_NewFrame();
+		// ImGui_ImplGlfw_NewFrame();
+		// ImGui::NewFrame();
 
-		ImGui::Begin("Car Physics", nullptr);
+		// ImGui::Begin("Car Physics", nullptr);
 
-		ImGui::SliderFloat("acceleration", &carPhysics.m_acceleration, 0.f, 1000.f);
-		ImGui::SliderFloat("suspension", &carPhysics.m_suspension_force, 0.f, 1000.f);
+		// ImGui::SliderFloat("acceleration", &carPhysics.m_acceleration, 0.f, 1000.f);
+		// ImGui::SliderFloat("suspension", &carPhysics.m_suspension_force, 0.f, 1000.f);
 
-		ImGui::End();
+		// ImGui::End();
 
-		ImGui::Render();
-		ImGui_ImplOpenGL3_RenderDrawData(ImGui::GetDrawData());
+		// ImGui::Render();
+		// ImGui_ImplOpenGL3_RenderDrawData(ImGui::GetDrawData());
 
-		window.swapBuffers();
+		// window.swapBuffers();
+		SDL_GL_SwapWindow(window.window.get());
 	}
 
-	ImGui_ImplOpenGL3_Shutdown();
-	ImGui_ImplGlfw_Shutdown();
-	ImGui::DestroyContext();
+	// ImGui_ImplOpenGL3_Shutdown();
+	// ImGui_ImplGlfw_Shutdown();
+	// ImGui::DestroyContext();
 
-	glfwTerminate();
+	SDL_Quit();
+	// glfwTerminate();
 	return 0;
 }

@@ -9,6 +9,10 @@
 #include <GLFW/glfw3.h>
 #include <glm/glm.hpp>
 
+#include "SDL.h"
+#include "SDL_main.h"
+#include "SDL_opengl.h"
+
 #include <memory>
 
 
@@ -31,8 +35,8 @@ public:
 // This is used as a custom deleter with std::unique_ptr so that the window
 // is properly destroyed when std::unique_ptr needs to clean up its resource
 struct WindowDeleter {
-	void operator() (GLFWwindow* window) const {
-		glfwDestroyWindow(window);
+	void operator() (SDL_Window* window) const {
+		SDL_DestroyWindow(window);
 	}
 };
 
@@ -59,11 +63,11 @@ public:
 	int getWidth() const { return getSize().x; }
 	int getHeight() const { return getSize().y; }
 
-	int shouldClose() { return glfwWindowShouldClose(window.get()); }
-	void makeContextCurrent() { glfwMakeContextCurrent(window.get()); }
-	void swapBuffers() { glfwSwapBuffers(window.get()); }
+	// int shouldClose() { return glfwWindowShouldClose(window.get()); }
+	// void makeContextCurrent() { glfwMakeContextCurrent(window.get()); }
+	// void swapBuffers() { glfwSwapBuffers(window.get()); }
 
-	std::unique_ptr<GLFWwindow, WindowDeleter> window; // owning ptr (from GLFW)
+	std::unique_ptr<SDL_Window, WindowDeleter> window; // owning ptr (from GLFW)
 	std::shared_ptr<CallbackInterface> callbacks;      // optional shared owning ptr (user provided)
 
 	void connectCallbacks();
