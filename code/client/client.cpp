@@ -19,36 +19,6 @@
 CarPhysics carPhysics;
 CarPhysicsSerde carConfig(carPhysics);
 
-// TODO(beau): decide if we want to use callbacks for input handling, or
-//             or just handle input events in main. If the latter, scrap
-//             all this callback stuff
-// EXAMPLE CALLBACKS
-// class MyCallbacks : public CallbackInterface {
-
-// public:
-// 	MyCallbacks(ShaderProgram& shader) : shader(shader) {}
-
-// 	virtual void keyCallback(int key, int scancode, int action, int mods) {
-// 		if (key == GLFW_KEY_R && action == GLFW_PRESS)
-// 			shader.recompile();
-
-// 		// press t to hot-reload car physics config
-// 		if (key == GLFW_KEY_T && action == GLFW_PRESS)
-// 			carConfig.deserialize();
-
-// 		// press s to serialize current car config
-// 		if (key == GLFW_KEY_S && action == GLFW_PRESS)
-// 			carConfig.serialize();
-// 	}
-
-// 	virtual void cursorPosCallback(double xpos, double ypos) {
-// 	}
-
-// private:
-// 	ShaderProgram& shader;
-// };
-
-
 std::vector<glm::vec3> drawFromMidpoints(std::vector<glm::vec3> src);
 std::vector<glm::vec3> colourSquare(std::vector<glm::vec3> dest, glm::vec3 colour);
 
@@ -141,10 +111,6 @@ int main(int argc, char* argv[]) {
 
 	// SHADERS
 	ShaderProgram shader("shaders/test.vert", "shaders/test.frag");
-
-	// CALLBACKS
-	// window.setCallbacks(std::make_shared<MyCallbacks>(shader)); // can also update callbacks to new ones
-
 
 	// GEOMETRY
 	CPU_Geometry cpuGeom;
