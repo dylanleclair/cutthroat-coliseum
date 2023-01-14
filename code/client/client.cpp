@@ -168,8 +168,26 @@ int main(int argc, char* argv[]) {
 	bool quit = false;
 	while (!quit) {
 		while (SDL_PollEvent(&window.event)) {
+			ImGui_ImplSDL2_ProcessEvent(&window.event);
+
 			if (window.event.type == SDL_QUIT)
 				quit = true;
+
+			if (window.event.type == SDL_KEYDOWN) {
+				switch (window.event.key.keysym.sym) {
+					case SDLK_r:
+						shader.recompile();
+						break;
+					case SDLK_t:
+						carConfig.deserialize();
+						break;
+					case SDLK_s:
+						carConfig.serialize();
+						break;
+					default:
+						break;
+				};
+			}
 		}
 
 		shader.use();
