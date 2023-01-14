@@ -75,7 +75,8 @@ Window::Window(
 		sdl_error_handler(1);
 
 	// TODO:(beau) clean up
-	if (!SDL_GL_CreateContext(window.get()))
+	SDL_GLContext context = SDL_GL_CreateContext(window.get());
+	if (!context)
 		sdl_error_handler(1);
 
 	// vsync
@@ -87,6 +88,16 @@ Window::Window(
 		Log::error("WINDOW glewInit error:{}", glewGetErrorString(err));
 		throw std::runtime_error("Failed to initialize GLEW");
 	}
+
+	// TODO(beau): put this somewhere obvious
+	IMGUI_CHECKVERSION();
+	ImGui::CreateContext();
+	ImGuiIO& io = ImGui::GetIO(); (void)io;
+
+	ImGui::StyleColorsDark();
+
+	ImGui_ImplSDL2_InitForOpenGL(window.get(), context);
+	ImGui_ImplOpenGL3_Init("#version 330");
 }
 
 

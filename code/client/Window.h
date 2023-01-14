@@ -13,6 +13,11 @@
 #include "SDL_main.h"
 #include "SDL_opengl.h"
 
+#include "imgui.h"
+#include "imgui_impl_sdl.h"
+#include "imgui_impl_sdlrenderer.h"
+#include "imgui_impl_opengl3.h"
+
 #include <memory>
 
 
@@ -84,7 +89,6 @@ public:
 	// BUT if we don't have to do that why not just switch on the sdl event in the render loop
 	SDL_Event event;
 
-private:
 	std::unique_ptr<SDL_Window, WindowDeleter> window; // owning ptr (from SDL)
 
 	// TODO(beau): decide if we want to use callbacks for input handling, or

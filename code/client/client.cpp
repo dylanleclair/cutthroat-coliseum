@@ -4,9 +4,7 @@
 #include <iostream>
 
 #include "imgui.h"
-// #include "imgui_impl_glfw.h"
 #include "imgui_impl_sdl.h"
-#include "imgui_impl_sdlrenderer.h"
 #include "imgui_impl_opengl3.h"
 
 #include "Geometry.h"
@@ -136,9 +134,8 @@ std::vector<glm::vec3> colourSquare(std::vector<glm::vec3> dest, glm::vec3 colou
 int main(int argc, char* argv[]) {
 	Log::debug("Starting main");
 
-	// WINDOW
-	SDL_Init(SDL_INIT_EVERYTHING);
-	Window window(800, 800, "CPSC 453"); // can set callbacks at construction if desired
+	SDL_Init(SDL_INIT_EVERYTHING); // initialize all sdl systems
+	Window window(800, 800, "CPSC 453");
 
 	GLDebug::enable();
 
@@ -165,17 +162,6 @@ int main(int argc, char* argv[]) {
 
 	carConfig.deserialize();
 
-	// NOTE(beau): put this somewhere else
-	// It's not in the window constructor because input won't
-	// work unless this code is called after the window callbacks are set
-	// IMGUI_CHECKVERSION();
-	// ImGui::CreateContext();
-	// ImGuiIO& io = ImGui::GetIO(); (void)io;
-
-	// ImGui::StyleColorsDark();
-
-	// ImGui_ImplOpenGL3_Init("#version 330");
-	// ImGui_ImplGlfw_InitForOpenGL(window.window.get(), true);
 
 	// RENDER LOOP
 	// while (!window.shouldClose()) {
@@ -199,26 +185,27 @@ int main(int argc, char* argv[]) {
 
 		glDisable(GL_FRAMEBUFFER_SRGB); // disable sRGB for things like imgui
 
-		// ImGui_ImplOpenGL3_NewFrame();
-		// ImGui_ImplGlfw_NewFrame();
-		// ImGui::NewFrame();
+		ImGui_ImplOpenGL3_NewFrame();
+		ImGui_ImplSDL2_NewFrame();
+		ImGui::NewFrame();
 
-		// ImGui::Begin("Car Physics", nullptr);
+		ImGui::Begin("Car Physics", nullptr);
 
-		// ImGui::SliderFloat("acceleration", &carPhysics.m_acceleration, 0.f, 1000.f);
-		// ImGui::SliderFloat("suspension", &carPhysics.m_suspension_force, 0.f, 1000.f);
+		ImGui::SliderFloat("acceleration", &carPhysics.m_acceleration, 0.f, 1000.f);
+		ImGui::SliderFloat("suspension", &carPhysics.m_suspension_force, 0.f, 1000.f);
 
-		// ImGui::End();
+		ImGui::End();
 
-		// ImGui::Render();
-		// ImGui_ImplOpenGL3_RenderDrawData(ImGui::GetDrawData());
+		ImGui::Render();
+		// TODO(beau): gl viewport thing
+		ImGui_ImplOpenGL3_RenderDrawData(ImGui::GetDrawData());
 
 		window.swapBuffers();
 	}
 
-	// ImGui_ImplOpenGL3_Shutdown();
-	// ImGui_ImplGlfw_Shutdown();
-	// ImGui::DestroyContext();
+	ImGui_ImplOpenGL3_Shutdown();
+	ImGui_ImplSDL2_Shutdown();
+	ImGui::DestroyContext();
 
 	SDL_Quit();
 	return 0;
