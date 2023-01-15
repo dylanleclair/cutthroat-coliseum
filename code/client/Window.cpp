@@ -50,6 +50,8 @@ Window::Window(int width, int height, const char* title)
 	ImGui::StyleColorsDark();
 
 	ImGui_ImplSDL2_InitForOpenGL(window.get(), context);
+
+	// VOLATILE: must match version specified in shaders!
 	ImGui_ImplOpenGL3_Init("#version 460 core");
 }
 
