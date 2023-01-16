@@ -1,69 +1,48 @@
+// TODO(beau): sdl cleanup:
+//             There are a number of sdl things we could clean up, we simply need to figure out when/where
+//             - SDL_Quit()
+//             - clean up OpenGL context (will we switch contexts?)
+//             - clean up the window?
+//             - other things iirc
+//             IMO these things will become more clear once we know more about the architecture of our program.
+//             For now, we can leave these things as we're not leaking memory and the OS is cleaning up after us.
+//             Note that the glfw code also didn't do a great job of cleaning up after itself
 #include "Window.h"
 
 #include "Log.h"
 
 #include <iostream>
 
-
-// ---------------------------
-// static function definitions
-// ---------------------------
-
-void Window::keyMetaCallback(GLFWwindow* window, int key, int scancode, int action, int mods) {
-	CallbackInterface* callbacks = static_cast<CallbackInterface*>(glfwGetWindowUserPointer(window));
-	callbacks->keyCallback(key, scancode, action, mods);
+void sdl_error_handler(int sdl_return) {
+	if (!sdl_return) return;
+	Log::error("SDL error: ", SDL_GetError());
+	SDL_Quit();
+	exit(1);
 }
 
 
-void Window::mouseButtonMetaCallback(GLFWwindow* window, int button, int action, int mods) {
-	CallbackInterface* callbacks = static_cast<CallbackInterface*>(glfwGetWindowUserPointer(window));
-	callbacks->mouseButtonCallback(button, action, mods);
-}
-
-
-void Window::cursorPosMetaCallback(GLFWwindow* window, double xpos, double ypos) {
-	CallbackInterface* callbacks = static_cast<CallbackInterface*>(glfwGetWindowUserPointer(window));
-	callbacks->cursorPosCallback(xpos, ypos);
-}
-
-
-void Window::scrollMetaCallback(GLFWwindow* window, double xoffset, double yoffset) {
-	CallbackInterface* callbacks = static_cast<CallbackInterface*>(glfwGetWindowUserPointer(window));
-	callbacks->scrollCallback(xoffset, yoffset);
-}
-
-
-void Window::windowSizeMetaCallback(GLFWwindow* window, int width, int height) {
-	CallbackInterface* callbacks = static_cast<CallbackInterface*>(glfwGetWindowUserPointer(window));
-	callbacks->windowSizeCallback(width, height);
-}
-
-
-// ----------------------
-// non-static definitions
-// ----------------------
-
-Window::Window(
-	std::shared_ptr<CallbackInterface> callbacks, int width, int height,
-	const char* title, GLFWmonitor* monitor, GLFWwindow* share
-)
+Window::Window(int width, int height, const char* title)
 	: window(nullptr)
-	, callbacks(callbacks)
 {
 	// specify OpenGL version
-	glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 3);
-	glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 3);
-	glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);
-	glfwWindowHint(GLFW_OPENGL_FORWARD_COMPAT, GL_TRUE); // needed for mac?
-	glfwWindowHint(GLFW_OPENGL_DEBUG_CONTEXT, GL_TRUE);
+	// XXX(beau): handle errors?
+	SDL_GL_SetAttribute(SDL_GL_CONTEXT_MAJOR_VERSION, 4);
+	SDL_GL_SetAttribute(SDL_GL_CONTEXT_MINOR_VERSION, 6);
+	SDL_GL_SetAttribute(SDL_GL_CONTEXT_PROFILE_MASK, SDL_GL_CONTEXT_PROFILE_CORE);
+	SDL_GL_SetAttribute(SDL_GL_DOUBLEBUFFER, 1);
+	SDL_GL_SetAttribute(SDL_GL_CONTEXT_FLAGS, SDL_GL_CONTEXT_DEBUG_FLAG);
+	SDL_GL_SetAttribute(SDL_GL_CONTEXT_FLAGS, SDL_GL_CONTEXT_FORWARD_COMPATIBLE_FLAG);
 
-	// create window
-	window = std::unique_ptr<GLFWwindow, WindowDeleter>(glfwCreateWindow(width, height, title, monitor, share));
-	if (window == nullptr) {
-		Log::error("WINDOW failed to create GLFW window");
-		throw std::runtime_error("Failed to create GLFW window.");
-	}
-	glfwMakeContextCurrent(window.get());
+	window = std::unique_ptr<SDL_Window, WindowDeleter>(SDL_CreateWindow("CPSC 453", SDL_WINDOWPOS_CENTERED, SDL_WINDOWPOS_CENTERED, width, height, SDL_WINDOW_OPENGL));
+	if (!window)
+		sdl_error_handler(1);
+
+	SDL_GLContext context = SDL_GL_CreateContext(window.get());
+	if (!context)
+		sdl_error_handler(1);
+
+	// vsync
+	sdl_error_handler(SDL_GL_SetSwapInterval(1));
 
 	// initialize OpenGL extensions for the current context (this window)
 	GLenum err = glewInit();
@@ -72,47 +51,28 @@ Window::Window(
 		throw std::runtime_error("Failed to initialize GLEW");
 	}
 
-	glfwSetWindowSizeCallback(window.get(), defaultWindowSizeCallback);
+	// TODO(beau): put this somewhere obvious
+	IMGUI_CHECKVERSION();
+	ImGui::CreateContext();
 
-	if (callbacks != nullptr) {
-		connectCallbacks();
-	}
-}
+	ImGui::StyleColorsDark();
 
+	ImGui_ImplSDL2_InitForOpenGL(window.get(), context);
 
-Window::Window(int width, int height, const char* title, GLFWmonitor* monitor, GLFWwindow* share)
-	: Window(nullptr, width, height, title, monitor, share)
-{}
-
-
-void Window::connectCallbacks() {
-	// set userdata of window to point to the object that carries out the callbacks
-	glfwSetWindowUserPointer(window.get(), callbacks.get());
-
-	// bind meta callbacks to actual callbacks
-	glfwSetKeyCallback(window.get(), keyMetaCallback);
-	glfwSetMouseButtonCallback(window.get(), mouseButtonMetaCallback);
-	glfwSetCursorPosCallback(window.get(), cursorPosMetaCallback);
-	glfwSetScrollCallback(window.get(), scrollMetaCallback);
-	glfwSetWindowSizeCallback(window.get(), windowSizeMetaCallback);
-}
-
-
-void Window::setCallbacks(std::shared_ptr<CallbackInterface> callbacks_) {
-	callbacks = callbacks_;
-	connectCallbacks();
+	// VOLATILE: must match version specified in shaders!
+	ImGui_ImplOpenGL3_Init("#version 460 core");
 }
 
 
 glm::ivec2 Window::getPos() const {
 	int x, y;
-	glfwGetWindowPos(window.get(), &x, &y);
+	SDL_GetWindowPosition(window.get(), &x, &y);
 	return glm::ivec2(x, y);
 }
 
 
 glm::ivec2 Window::getSize() const {
 	int w, h;
-	glfwGetWindowSize(window.get(), &w, &h);
+	SDL_GetWindowSize(window.get(), &w, &h);
 	return glm::ivec2(w, h);
 }

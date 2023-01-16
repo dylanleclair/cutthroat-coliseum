@@ -13,7 +13,6 @@ target_link_libraries(${BINARY} PRIVATE ${CMAKE_PROJECT_NAME}_lib
   glm::glm
   GLEW::GLEW
   assimp::assimp
-  glfw
   vivid
   fmt
   tomlplusplus::tomlplusplus

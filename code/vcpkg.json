@@ -7,13 +7,13 @@
     "glm",
     "glew",
     "assimp",
-    "glfw3",
     "tomlplusplus",
     {
       "name": "imgui",
       "features": [
         "opengl3-binding",
-        "glfw-binding"
+        "sdl2-binding",
+        "sdl2-renderer-binding"
       ]
     }
   ]
