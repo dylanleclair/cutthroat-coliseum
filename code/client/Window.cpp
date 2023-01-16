@@ -1,3 +1,12 @@
+// TODO(beau): sdl cleanup:
+//             There are a number of sdl things we could clean up, we simply need to figure out when/where
+//             - SDL_Quit()
+//             - clean up OpenGL context (will we switch contexts?)
+//             - clean up the window?
+//             - other things iirc
+//             IMO these things will become more clear once we know more about the architecture of our program.
+//             For now, we can leave these things as we're not leaking memory and the OS is cleaning up after us.
+//             Note that the glfw code also didn't do a great job of cleaning up after itself
 #include "Window.h"
 
 #include "Log.h"
@@ -28,7 +37,6 @@ Window::Window(int width, int height, const char* title)
 	if (!window)
 		sdl_error_handler(1);
 
-	// TODO:(beau) clean up
 	SDL_GLContext context = SDL_GL_CreateContext(window.get());
 	if (!context)
 		sdl_error_handler(1);
