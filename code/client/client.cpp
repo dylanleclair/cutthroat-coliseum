@@ -1,10 +1,10 @@
 #include <GL/glew.h>
-#include <GLFW/glfw3.h>
+
 
 #include <iostream>
 
 #include "imgui.h"
-#include "imgui_impl_glfw.h"
+#include "imgui_impl_sdl.h"
 #include "imgui_impl_opengl3.h"
 
 #include "Geometry.h"
@@ -128,21 +128,62 @@ std::vector<glm::vec3> colourSquare(std::vector<glm::vec3> dest, glm::vec3 colou
 
 }
 
-
-int main() {
+int main(int argc, char* argv[]) {
 	Log::debug("Starting main");
 
-	// WINDOW
-	glfwInit();
-	Window window(800, 800, "CPSC 453"); // can set callbacks at construction if desired
+	SDL_Init(SDL_INIT_EVERYTHING); // initialize all sdl systems
+	Window window(800, 800, "CPSC 453");
+
+	ImGuiIO& io = ImGui::GetIO(); (void)io;
 
 	GLDebug::enable();
 
-	GraphicsSystem gs(window);
+	// SHADERS
+	ShaderProgram shader("shaders/test.vert", "shaders/test.frag");
+
+	// GEOMETRY
+	CPU_Geometry cpuGeom;
+	GPU_Geometry gpuGeom;
+
+	cpuGeom = squaresDiamonds(glm::vec3(0.8, -0.8, 0), glm::vec3(0.8, 0.8, 0), glm::vec3(-0.8, 0.8, 0), glm::vec3(-0.8, -0.8, 0), 3);
+
+
+	for (int i = 0; i < cpuGeom.verts.size(); i++) {
+		std::cout << cpuGeom.verts[i] << std::endl;
+	}
+
+	gpuGeom.setVerts(cpuGeom.verts);
+	gpuGeom.setCols(cpuGeom.cols);
+
+	carConfig.deserialize();
+
 
 	// RENDER LOOP
-	while (!window.shouldClose()) {
-		glfwPollEvents();
+	// while (!window.shouldClose()) {
+	bool quit = false;
+	while (!quit) {
+		while (SDL_PollEvent(&window.event)) {
+			ImGui_ImplSDL2_ProcessEvent(&window.event);
+
+			if (window.event.type == SDL_QUIT)
+				quit = true;
+
+			if (window.event.type == SDL_KEYDOWN) {
+				switch (window.event.key.keysym.sym) {
+					case SDLK_r:
+						shader.recompile();
+						break;
+					case SDLK_t:
+						carConfig.deserialize();
+						break;
+					case SDLK_s:
+						carConfig.serialize();
+						break;
+					default:
+						break;
+				};
+			}
+		}
 
 		shader.use();
 		gpuGeom.bind();
@@ -156,7 +197,7 @@ int main() {
 		glDisable(GL_FRAMEBUFFER_SRGB); // disable sRGB for things like imgui
 
 		ImGui_ImplOpenGL3_NewFrame();
-		ImGui_ImplGlfw_NewFrame();
+		ImGui_ImplSDL2_NewFrame();
 		ImGui::NewFrame();
 
 		ImGui::Begin("Car Physics", nullptr);
@@ -167,15 +208,16 @@ int main() {
 		ImGui::End();
 
 		ImGui::Render();
+		glViewport(0, 0, (int)io.DisplaySize.x, (int)io.DisplaySize.y);
 		ImGui_ImplOpenGL3_RenderDrawData(ImGui::GetDrawData());
 
 		window.swapBuffers();
 	}
 
 	ImGui_ImplOpenGL3_Shutdown();
-	ImGui_ImplGlfw_Shutdown();
+	ImGui_ImplSDL2_Shutdown();
 	ImGui::DestroyContext();
 
-	glfwTerminate();
+	SDL_Quit();
 	return 0;
 }
