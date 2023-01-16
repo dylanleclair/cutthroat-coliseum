@@ -14,7 +14,6 @@ find_package(GTest CONFIG REQUIRED)
 find_package(glm CONFIG REQUIRED)
 find_package(glew REQUIRED)
 find_package(assimp CONFIG REQUIRED)
-find_package(glfw3 CONFIG REQUIRED)
 find_package(tomlplusplus CONFIG REQUIRED)
 find_package(imgui CONFIG REQUIRED)
 

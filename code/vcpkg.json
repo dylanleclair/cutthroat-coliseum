@@ -7,7 +7,6 @@
     "glm",
     "glew",
     "assimp",
-    "glfw3",
     "tomlplusplus",
     {
       "name": "imgui",

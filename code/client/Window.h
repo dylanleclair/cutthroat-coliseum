@@ -47,8 +47,7 @@ struct Window {
 	int getWidth() const { return getSize().x; }
 	int getHeight() const { return getSize().y; }
 
-	// NOTE(beau): leave this in in case we need to change contexts, but refactor to sdl2
-	// void makeContextCurrent() { glfwMakeContextCurrent(window.get()); }
+	// NOTE(beau): make current context method?
 
 	void swapBuffers() { SDL_GL_SwapWindow(window.get()); }
 
