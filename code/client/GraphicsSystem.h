@@ -3,6 +3,7 @@
 #include "Window.h"
 #include "Camera.h"
 #include "Position.h"
+#include "ShaderProgram.h"
 
 //a package of data telling the system what primitive to draw
 struct render_packet {
@@ -18,12 +19,12 @@ public:
 	GraphicsSystem(Window& _window);
 	void addPrimitive(render_packet _packet);
 	void render();
-	Camera& getCamera();
+	void input(SDL_Event&);
 private:
-	ShaderProgram shader = ShaderProgram("shaders/test.vert", "shaders/test.frag");
 	std::vector<render_packet> geometries;
 	Camera camera;
 	GLint modelUniform = -1;
 	GLuint viewUniform = -1;
 	GLuint perspectiveUniform = -1;
+	ShaderProgram* shader;
 };

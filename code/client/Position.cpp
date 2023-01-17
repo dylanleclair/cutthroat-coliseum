@@ -5,12 +5,12 @@
 
 void Position::setPosition(glm::vec3 _position)
 {
-	position = _position;
+	//position = glm::vec3(_position);
 }
 
 glm::vec3 Position::getPosision()
 {
-	return new glm::vec3(position);
+	return glm::vec3(1.0f);
 }
 
 /*
@@ -28,10 +28,10 @@ void Position::localMove(glm::vec3 _direction, float _distance)
 }*/
 
 
-void Position::globalMove(glm::vec3, float)
+void Position::globalMove(glm::vec3 _direction, float _distance)
 {
 	//take into account the objects rotation
-	position += glm::normalize(_direction) * _distance;
+	//position += glm::normalize(_direction) * _distance;
 }
 
 glm::mat4 Position::getTransformMatrix()

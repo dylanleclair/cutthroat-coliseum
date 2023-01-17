@@ -1,4 +1,5 @@
 #include "Camera.h"
+#include <glm/glm.hpp>
 
 Camera::Camera() {}
 
@@ -8,7 +9,7 @@ void Camera::lookat(float x, float y, float z) {
 
 glm::mat4 Camera::getView()
 {
-
+	return glm::mat4(1.0f);
 }
 
 /*
@@ -16,7 +17,7 @@ glm::mat4 Camera::getView()
 */
 void Camera::input(SDL_Event& _event) {
 	//THESE ARE TEMPOARY!!!!
-	static bool leftMouseButtonPressed = false;
+	static bool leftMouseButtonPressed, firstMouse = false;
 	static float panup, pandown, fspeed, hspeed, panHorizontal, panVertical, lastX, lastY = 0;
 
 	if(_event.type == SDL_KEYDOWN)
@@ -40,8 +41,6 @@ void Camera::input(SDL_Event& _event) {
 	{
 		if (_event.button.button == SDL_BUTTON_LEFT)
 		{
-			clickX = mouseX;
-			clickY = mouseY;
 			leftMouseButtonPressed = true;
 		}
 	}

@@ -6,13 +6,14 @@
 #include "glm/gtc/type_ptr.hpp"
 
 GraphicsSystem::GraphicsSystem(Window& _window) {
+	shader = new ShaderProgram("shaders/test.vert", "shaders/test.frag");
 	// SHADERS
-	shader.use();
+	shader->use();
 
 	//get uniform locations
-	modelUniform = glGetUniformLocation(GLuint(shader), "M");
-	viewUniform = glGetUniformLocation(GLuint(shader), "V");
-	perspectiveUniform = glGetUniformLocation(GLuint(shader), "P");
+	modelUniform = glGetUniformLocation(GLuint(*shader), "M");
+	viewUniform = glGetUniformLocation(GLuint(*shader), "V");
+	perspectiveUniform = glGetUniformLocation(GLuint(*shader), "P");
 }
 
 void GraphicsSystem::addPrimitive(render_packet _packet)
@@ -43,8 +44,7 @@ void GraphicsSystem::render() {
 	glDrawArrays(GL_LINE, 0, 1);
 }
 
-//for now I'm only managing one camera
-Camera& GraphicsSystem::getCamera()
+void GraphicsSystem::input(SDL_Event& _event)
 {
-	return camera;
+	camera.input(_event);
 }

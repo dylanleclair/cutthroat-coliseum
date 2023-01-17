@@ -150,7 +150,7 @@ int main(int argc, char* argv[]) {
 			}
 
 			//pass the event to the camera
-			gs.getCamera().input(window.event);
+			gs.input(window.event);
 		}
 
 		glEnable(GL_FRAMEBUFFER_SRGB);

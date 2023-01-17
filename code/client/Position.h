@@ -26,7 +26,7 @@ public:
 	//computes the final transformation matrix
 	glm::mat4 getTransformMatrix();
 private:
-	glm::mat4 position = glm::mat4(1);
+	glm::mat4 position = glm::mat4(1.0f);
 	//glm::quat rotation;
-	glm::mat4 scale = glm::mat4(1);
+	glm::mat4 scale = glm::mat4(1.0f);
 };
