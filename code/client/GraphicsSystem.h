@@ -1,16 +1,14 @@
-#include <GLFW/glfw3.h>
 #include <GL/glew.h>
+#include "Geometry.h"
 #include "Window.h"
-
-enum Primitive { sphere, cube };
+#include "Camera.h"
+#include "Position.h"
 
 //a package of data telling the system what primitive to draw
 struct render_packet {
-	Primitive shape;
-	int radius;
-	float x;
-	float y;
-	render_packet(Primitive _primitive, int _radius, float _x, float _y) : shape(_primitive), radius(_radius), x(_x), y(_y) {}
+	CPU_Geometry geom;
+	Position position;
+	render_packet(CPU_Geometry& _geom, Position _position) : geom(_geom), position(_position) {}
 };
 
 
@@ -20,8 +18,12 @@ public:
 	GraphicsSystem(Window& _window);
 	void addPrimitive(render_packet _packet);
 	void render();
-	Window getWindow();
+	Camera& getCamera();
 private:
-	ShaderProgram shader;
-
+	ShaderProgram shader = ShaderProgram("shaders/test.vert", "shaders/test.frag");
+	std::vector<render_packet> geometries;
+	Camera camera;
+	GLint modelUniform = -1;
+	GLuint viewUniform = -1;
+	GLuint perspectiveUniform = -1;
 };

@@ -16,34 +16,10 @@
 
 #include "CarPhysics.h"
 
+#include "GraphicsSystem.h"
+
 CarPhysics carPhysics;
 CarPhysicsSerde carConfig(carPhysics);
-
-// EXAMPLE CALLBACKS
-class MyCallbacks : public CallbackInterface {
-
-public:
-	MyCallbacks(ShaderProgram& shader) : shader(shader) {}
-
-	virtual void keyCallback(int key, int scancode, int action, int mods) {
-		if (key == GLFW_KEY_R && action == GLFW_PRESS)
-			shader.recompile();
-
-		// press t to hot-reload car physics config
-		if (key == GLFW_KEY_T && action == GLFW_PRESS)
-			carConfig.deserialize();
-
-		// press s to serialize current car config
-		if (key == GLFW_KEY_S && action == GLFW_PRESS)
-			carConfig.serialize();
-	}
-
-	virtual void cursorPosCallback(double xpos, double ypos) {
-	}
-
-private:
-	ShaderProgram& shader;
-};
 
 
 std::vector<glm::vec3> drawFromMidpoints(std::vector<glm::vec3> src);
@@ -138,30 +114,19 @@ int main(int argc, char* argv[]) {
 
 	GLDebug::enable();
 
-	// SHADERS
-	ShaderProgram shader("shaders/test.vert", "shaders/test.frag");
-
 	// GEOMETRY
 	CPU_Geometry cpuGeom;
-	GPU_Geometry gpuGeom;
 
 	cpuGeom = squaresDiamonds(glm::vec3(0.8, -0.8, 0), glm::vec3(0.8, 0.8, 0), glm::vec3(-0.8, 0.8, 0), glm::vec3(-0.8, -0.8, 0), 3);
 
-
-	for (int i = 0; i < cpuGeom.verts.size(); i++) {
-		std::cout << cpuGeom.verts[i] << std::endl;
-	}
-
-	gpuGeom.setVerts(cpuGeom.verts);
-	gpuGeom.setCols(cpuGeom.cols);
-
 	carConfig.deserialize();
 
+	GraphicsSystem gs(window);
 
-	// RENDER LOOP
-	// while (!window.shouldClose()) {
+	// GAME LOOP
 	bool quit = false;
 	while (!quit) {
+		//polls all pending input events until there are none left in the queue
 		while (SDL_PollEvent(&window.event)) {
 			ImGui_ImplSDL2_ProcessEvent(&window.event);
 
@@ -171,7 +136,7 @@ int main(int argc, char* argv[]) {
 			if (window.event.type == SDL_KEYDOWN) {
 				switch (window.event.key.keysym.sym) {
 					case SDLK_r:
-						shader.recompile();
+						//TODO recompile the shader
 						break;
 					case SDLK_t:
 						carConfig.deserialize();
@@ -183,15 +148,15 @@ int main(int argc, char* argv[]) {
 						break;
 				};
 			}
-		}
 
-		shader.use();
-		gpuGeom.bind();
+			//pass the event to the camera
+			gs.getCamera().input(window.event);
+		}
 
 		glEnable(GL_FRAMEBUFFER_SRGB);
 		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
-		render_packet pack(sphere, 4, 0, 0);
+		render_packet pack(cpuGeom, Position());
 		gs.addPrimitive(pack);
 
 		glDisable(GL_FRAMEBUFFER_SRGB); // disable sRGB for things like imgui

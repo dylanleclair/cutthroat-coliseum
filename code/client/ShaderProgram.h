@@ -27,6 +27,11 @@ public:
 
 	void friend attach(ShaderProgram& sp, Shader& s);
 
+	// Allow casting from this type into a GLuint
+	// This allows usage in situations where a function expects a GLuint
+	operator GLuint() const;
+	GLuint value() const;
+
 private:
 	ShaderProgramHandle programID;
 
