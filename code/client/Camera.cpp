@@ -10,10 +10,10 @@ void Camera::lookat(float x, float y, float z) {
 
 glm::mat4 Camera::getView()
 {
-	glm::vec3 cameraFront = callbacks->cameraDirection;
+	glm::vec3 cameraFront = cameraDirection;
 	
-	cameraPos += glm::normalize(glm::cross(cameraFront, cameraUp)) * cameraSpeed * callbacks->hspeed;
-	cameraPos += cameraSpeed * cameraFront * callbacks->fspeed;
+	cameraPos += glm::normalize(glm::cross(cameraFront, cameraUp)) * cameraSpeed * hspeed;
+	cameraPos += cameraSpeed * cameraFront * fspeed;
 
 	return glm::lookAt(cameraPos, cameraPos + cameraFront, cameraUp);
 }
@@ -21,10 +21,7 @@ glm::mat4 Camera::getView()
 /*
 * Used to forward callback events into the camera
 */
-void Camera::input(SDL_Event& _event) {
-	//THESE ARE TEMPOARY!!!!
-	static bool leftMouseButtonPressed, firstMouse = false;
-	static float panup, pandown, fspeed, hspeed, panHorizontal, panVertical, lastX, lastY = 0;
+void Camera::input(const SDL_Event& _event) {
 
 	if(_event.type == SDL_KEYDOWN)
 	{
@@ -47,8 +44,6 @@ void Camera::input(SDL_Event& _event) {
 	{
 		if (_event.button.button == SDL_BUTTON_LEFT)
 		{
-			clickX = mouseX;
-			clickY = mouseY;
 			leftMouseButtonPressed = true;
 		}
 	}
