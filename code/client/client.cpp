@@ -14,6 +14,8 @@
 #include "Shader.h"
 #include "Window.h"
 
+#include "systems/ecs.h"
+
 #include "CarPhysics.h"
 
 #include "FrameCounter.h"
@@ -103,6 +105,45 @@ std::vector<glm::vec3> colourSquare(std::vector<glm::vec3> dest, glm::vec3 colou
 
 }
 
+
+struct ExampleComponent
+{
+	int a{ 0 };
+	int b{ 0 };
+	int c{ 0 };
+};
+
+
+struct ExampleSystem : ecs::ISystem
+{
+
+	virtual void Initialize() {}
+	virtual void Teardown() {}
+	virtual void Update(ecs::Scene &scene, float deltaTime)
+	{
+		for (Guid entityGuid : ecs::EntitiesInScene<ExampleComponent>(scene))
+		{
+			// pass in the guid of the entity to lookup the corresponding component
+			ExampleComponent& ex = scene.GetComponent<ExampleComponent>(entityGuid);
+
+			// do some operation of the data
+			ex.a += 1;
+			ex.b += 2;
+			ex.c += 3;
+
+			display = "ecs component: " + std::to_string(ex.a) + " " + std::to_string(ex.b) + " " + std::to_string(ex.c) + "!";
+		}
+	}
+
+	std::string getDisplayString()
+	{
+		return display;
+	}
+
+private:
+	std::string display{};
+};
+
 int main(int argc, char* argv[]) {
 	Log::debug("Starting main");
 
@@ -131,6 +172,20 @@ int main(int argc, char* argv[]) {
 	gpuGeom.setCols(cpuGeom.cols);
 
 	carConfig.deserialize();
+
+	// init ecs ////////////////////////////////
+	ecs::Scene mainScene;
+
+	// spawn some entities.
+	for (int i = 0; i < 10; i++)
+	{
+		ecs::Entity e = mainScene.CreateEntity();
+		mainScene.AddComponent(e.guid, ExampleComponent{ 0,1,2 });
+	}
+	
+	// create instance of system to use.
+	ExampleSystem exampleEcsSystem;
+	/////////////////////////////////////////////
 
 	FramerateCounter framerate;
 	// RENDER LOOP
@@ -163,6 +218,12 @@ int main(int argc, char* argv[]) {
 		shader.use();
 		gpuGeom.bind();
 
+
+		// BEGIN ECS SYSTEMS UPDATES 
+		exampleEcsSystem.Update(mainScene, 0.0f);
+		// END__ ECS SYSTEMS UPDATES
+
+
 		glEnable(GL_FRAMEBUFFER_SRGB);
 		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
@@ -181,6 +242,8 @@ int main(int argc, char* argv[]) {
 
 		ImGui::SliderFloat("acceleration", &carPhysics.m_acceleration, 0.f, 1000.f);
 		ImGui::SliderFloat("suspension", &carPhysics.m_suspension_force, 0.f, 1000.f);
+
+		ImGui::Text(exampleEcsSystem.getDisplayString().c_str());
 
 		ImGui::Text("framerate: %d", framerate.framerate());
 
