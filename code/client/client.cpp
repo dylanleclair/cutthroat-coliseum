@@ -16,6 +16,8 @@
 
 #include "CarPhysics.h"
 
+#include "FrameCounter.h"
+
 CarPhysics carPhysics;
 CarPhysicsSerde carConfig(carPhysics);
 
@@ -130,7 +132,7 @@ int main(int argc, char* argv[]) {
 
 	carConfig.deserialize();
 
-
+	FramerateCounter framerate;
 	// RENDER LOOP
 	// while (!window.shouldClose()) {
 	bool quit = false;
@@ -179,6 +181,8 @@ int main(int argc, char* argv[]) {
 
 		ImGui::SliderFloat("acceleration", &carPhysics.m_acceleration, 0.f, 1000.f);
 		ImGui::SliderFloat("suspension", &carPhysics.m_suspension_force, 0.f, 1000.f);
+
+		ImGui::Text("framerate: %d", framerate.framerate());
 
 		ImGui::End();
 
