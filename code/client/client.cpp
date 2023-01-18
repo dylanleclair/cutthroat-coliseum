@@ -123,6 +123,9 @@ int main(int argc, char* argv[]) {
 
 	GraphicsSystem gs(window);
 
+	render_packet pack(cpuGeom, Position());
+	gs.addPrimitive(pack);
+
 	// GAME LOOP
 	bool quit = false;
 	while (!quit) {
@@ -153,11 +156,10 @@ int main(int argc, char* argv[]) {
 			gs.input(window.event);
 		}
 
+		gs.render();
+
 		glEnable(GL_FRAMEBUFFER_SRGB);
 		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-
-		render_packet pack(cpuGeom, Position());
-		gs.addPrimitive(pack);
 
 		glDisable(GL_FRAMEBUFFER_SRGB); // disable sRGB for things like imgui
 
