@@ -1,5 +1,6 @@
 #include "Camera.h"
 #include <glm/glm.hpp>
+#include <glm/gtc/matrix_transform.hpp>
 
 Camera::Camera() {}
 
@@ -9,7 +10,12 @@ void Camera::lookat(float x, float y, float z) {
 
 glm::mat4 Camera::getView()
 {
-	return glm::mat4(1.0f);
+	glm::vec3 cameraFront = callbacks->cameraDirection;
+	
+	cameraPos += glm::normalize(glm::cross(cameraFront, cameraUp)) * cameraSpeed * callbacks->hspeed;
+	cameraPos += cameraSpeed * cameraFront * callbacks->fspeed;
+
+	return glm::lookAt(cameraPos, cameraPos + cameraFront, cameraUp);
 }
 
 /*
@@ -41,6 +47,8 @@ void Camera::input(SDL_Event& _event) {
 	{
 		if (_event.button.button == SDL_BUTTON_LEFT)
 		{
+			clickX = mouseX;
+			clickY = mouseY;
 			leftMouseButtonPressed = true;
 		}
 	}

@@ -4,6 +4,8 @@
 #include "GLDebug.h"
 #include "ShaderProgram.h"
 #include "glm/gtc/type_ptr.hpp"
+#include "Camera.h"
+#include "Position.h"
 
 GraphicsSystem::GraphicsSystem(Window& _window) {
 	shader = new ShaderProgram("shaders/test.vert", "shaders/test.frag");

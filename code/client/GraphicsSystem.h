@@ -1,3 +1,4 @@
+#pragma once
 #include <GL/glew.h>
 #include "Geometry.h"
 #include "Window.h"

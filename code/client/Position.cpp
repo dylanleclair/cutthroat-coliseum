@@ -8,7 +8,7 @@ void Position::setPosition(glm::vec3 _position)
 	//position = glm::vec3(_position);
 }
 
-glm::vec3 Position::getPosision()
+glm::vec3 Position::getPosition()
 {
 	return glm::vec3(1.0f);
 }

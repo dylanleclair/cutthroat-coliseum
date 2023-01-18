@@ -1,3 +1,4 @@
+#pragma once
 #include <glm/gtc/quaternion.hpp>
 #include <glm/gtx/quaternion.hpp>
 //TODO: Impliment rotation
@@ -10,7 +11,7 @@ public:
 	//sets the objects position in world space
 	void setPosition(glm::vec3);
 	//returns a copy of the objects position in world space
-	glm::vec3 getPosision();
+	glm::vec3 getPosition();
 
 	//rotates the object along an axis by radian units
 	//void localRotate(glm::vec3, float);
