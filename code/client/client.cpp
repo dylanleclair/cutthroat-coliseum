@@ -239,11 +239,13 @@ int main(int argc, char* argv[]) {
 		ImGui::NewFrame();
 
 		// BEGIN FRAMERATE COUNTER
-		ImGui::Begin("Framerate");
+		ImGui::Begin("Milestone 1");
 		ImGui::Text("framerate: %d", framerate.framerate());
+		// TODO(milestone 1): display physx value as proof that physx is initialized
 		ImGui::End();
 		// END FRAMERATE COUNTER
 
+		// TODO(milestone 1): strip all non-milestone related imgui windows out
 		// BEGIN CAR PHYSICS PANEL
 		ImGui::Begin("Car Physics", nullptr);
 		ImGui::SliderFloat("acceleration", &carPhysics.m_acceleration, 0.f, 1000.f);
