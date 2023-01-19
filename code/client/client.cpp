@@ -241,12 +241,11 @@ int main(int argc, char* argv[]) {
 		// BEGIN CAR PHYSICS PANEL
 		ImGui::Begin("Car Physics", nullptr);
 
-		// TODO(beau) imgui button to serialize
 		ImGui::SliderFloat("acceleration", &carPhysics.m_acceleration, 0.f, 1000.f);
 		ImGui::SliderFloat("suspension", &carPhysics.m_suspension_force, 0.f, 1000.f);
 		if (ImGui::Button("Serialize")) carConfig.serialize();
 
-		ImGui::Text(exampleEcsSystem.getDisplayString().c_str());
+		ImGui::Text("%s", exampleEcsSystem.getDisplayString().c_str());
 
 		ImGui::End();
 		// END CAR PHYSICS PANEL
