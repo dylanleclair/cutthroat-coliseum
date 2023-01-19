@@ -1,6 +1,7 @@
 #include "Camera.h"
 #include <glm/glm.hpp>
 #include <glm/gtc/matrix_transform.hpp>
+#include <iostream>
 
 Camera::Camera() {}
 
@@ -22,16 +23,15 @@ glm::mat4 Camera::getView()
 * Used to forward callback events into the camera
 */
 void Camera::input(const SDL_Event& _event) {
-
 	if(_event.type == SDL_KEYDOWN)
 	{
-		if (_event.key.keysym.sym == SDLK_w)
+		if (_event.key.keysym.sym == SDLK_UP)
 			fspeed = 1.0f;
-		if (_event.key.keysym.sym == SDLK_s)
+		if (_event.key.keysym.sym == SDLK_DOWN)
 			fspeed = -1.0f;
-		if (_event.key.keysym.sym == SDLK_a)
+		if (_event.key.keysym.sym == SDLK_LEFT)
 			hspeed = -1.0f;
-		if (_event.key.keysym.sym == SDLK_d)
+		if (_event.key.keysym.sym == SDLK_RIGHT)
 			hspeed = 1.0f;
 	}
 	if (_event.type == SDL_KEYUP)

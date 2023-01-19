@@ -27,5 +27,5 @@ private:
 	GLint modelUniform = -1;
 	GLuint viewUniform = -1;
 	GLuint perspectiveUniform = -1;
-	ShaderProgram* shader;
+	ShaderProgram shader;
 };

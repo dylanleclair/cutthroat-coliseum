@@ -14,8 +14,8 @@ private:
 	glm::vec3 cameraPos = glm::vec3(0.0f, 0.5f, 1.0f);
 	glm::vec3 cameraUp = glm::vec3(0.0f, 1.0f, 0.0f);
 	glm::vec3 cameraDirection = glm::vec3(0.0f, 0.0f, -1.0f);
-	float panup, pandown, fspeed, hspeed, panHorizontal, panVertical, lastX, lastY = 0;
-	bool leftMouseButtonPressed, firstMouse = false;
-	const float cameraSpeed = 0.5;
+	float fspeed = 0, hspeed = 0, panHorizontal = -90.0f, panVertical = 0, lastX = 0, lastY = 0;
+	bool leftMouseButtonPressed = false, firstMouse = false;
+	const float cameraSpeed = 0.1;
 };
 

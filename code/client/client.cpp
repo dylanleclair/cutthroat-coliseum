@@ -22,88 +22,6 @@ CarPhysics carPhysics;
 CarPhysicsSerde carConfig(carPhysics);
 
 
-std::vector<glm::vec3> drawFromMidpoints(std::vector<glm::vec3> src);
-std::vector<glm::vec3> colourSquare(std::vector<glm::vec3> dest, glm::vec3 colour);
-
-CPU_Geometry squaresDiamonds(glm::vec3 a, glm::vec3 b, glm::vec3 c, glm::vec3 d, int depth) {
-
-	glm::vec3 squareColor(255 / 255, 255 / 255, 0 / 255);
-	glm::vec3 diamondColor(255 / 255, 51 / 255, 153 / 255);
-
-	CPU_Geometry cpu;
-
-	cpu.verts.push_back(a);
-	cpu.verts.push_back(b);
-	cpu.verts.push_back(c);
-	cpu.verts.push_back(d);
-	
-	cpu.cols = colourSquare(cpu.cols, squareColor);
-	cpu.verts = drawFromMidpoints(cpu.verts);
-	cpu.cols =colourSquare(cpu.cols, diamondColor);
-
-	depth--;
-
-	while (depth > 0)
-	{
-
-		for (int i = 0; i < 2; i++) {
-
-			cpu.verts = drawFromMidpoints(cpu.verts);
-
-			if (i == 0)
-				cpu.cols = colourSquare(cpu.cols, squareColor);
-			else cpu.cols = colourSquare(cpu.cols, diamondColor);
-
-
-		}
-
-		depth--;
-	}
-
-	return cpu;
-}
-
-
-std::vector<glm::vec3> drawFromMidpoints(std::vector<glm::vec3> src)
-{
-
-	std::vector<glm::vec3> output = src;
-
-	int index = src.size() - 4;
-
-	glm::vec3 a, b, c, d, e, f, g,h;
-
-	a = output[index++];
-	b = output[index++];
-	c = output[index++];
-	d = output[index];
-
-	e = (0.5f * a + 0.5f * b);
-	f = (0.5f * b + 0.5f * c);
-	g = (0.5f * c + 0.5f * d);
-	h = (0.5f * d + 0.5f * a);
-
-	output.push_back(e);
-	output.push_back(f);
-	output.push_back(g);
-	output.push_back(h);
-
-	return output;
-}
-
-std::vector<glm::vec3> colourSquare(std::vector<glm::vec3> dest, glm::vec3 colour)
-{
-	std::vector<glm::vec3> colours = dest;
-
-	for (int i = 0; i < 4; i++) {
-		colours.push_back(colour);
-	}
-
-	return colours;
-
-
-}
-
 int main(int argc, char* argv[]) {
 	Log::debug("Starting main");
 
@@ -117,7 +35,52 @@ int main(int argc, char* argv[]) {
 	// GEOMETRY
 	CPU_Geometry cpuGeom;
 
-	cpuGeom = squaresDiamonds(glm::vec3(0.8, -0.8, 0), glm::vec3(0.8, 0.8, 0), glm::vec3(-0.8, 0.8, 0), glm::vec3(-0.8, -0.8, 0), 3);
+	//make a wireframe cube
+
+	cpuGeom.verts.push_back(glm::vec3(-1, -1, 1));
+	cpuGeom.verts.push_back(glm::vec3(1, -1, 1));
+	cpuGeom.verts.push_back(glm::vec3(1, 1, 1));
+	cpuGeom.verts.push_back(glm::vec3(-1, -1, 1));
+	cpuGeom.verts.push_back(glm::vec3(1, 1, 1));
+	cpuGeom.verts.push_back(glm::vec3(-1, 1, 1));
+	cpuGeom.verts.push_back(glm::vec3(1, -1, 1));
+	cpuGeom.verts.push_back(glm::vec3(1, -1, -1));
+	cpuGeom.verts.push_back(glm::vec3(1, 1, -1));
+	cpuGeom.verts.push_back(glm::vec3(1, -1, 1));
+	cpuGeom.verts.push_back(glm::vec3(1, 1, -1));
+	cpuGeom.verts.push_back(glm::vec3(1, 1, 1));
+	cpuGeom.verts.push_back(glm::vec3(1, -1, -1));
+	cpuGeom.verts.push_back(glm::vec3(-1, -1, -1));
+	cpuGeom.verts.push_back(glm::vec3(-1, 1, -1));
+	cpuGeom.verts.push_back(glm::vec3(1, -1, -1));
+	cpuGeom.verts.push_back(glm::vec3(-1, 1, -1));
+	cpuGeom.verts.push_back(glm::vec3(1, 1, -1));
+	cpuGeom.verts.push_back(glm::vec3(-1, -1, -1));
+	cpuGeom.verts.push_back(glm::vec3(-1, -1, 1));
+	cpuGeom.verts.push_back(glm::vec3(-1, 1, 1));
+	cpuGeom.verts.push_back(glm::vec3(-1, -1, -1));
+	cpuGeom.verts.push_back(glm::vec3(-1, 1, 1));
+	cpuGeom.verts.push_back(glm::vec3(-1, 1, -1));
+	cpuGeom.verts.push_back(glm::vec3(-1, 1, 1));
+	cpuGeom.verts.push_back(glm::vec3(1, 1, 1));
+	cpuGeom.verts.push_back(glm::vec3(1, 1, -1));
+	cpuGeom.verts.push_back(glm::vec3(-1, 1, 1));
+	cpuGeom.verts.push_back(glm::vec3(1, 1, -1));
+	cpuGeom.verts.push_back(glm::vec3(-1, 1, -1));
+	cpuGeom.verts.push_back(glm::vec3(1, -1, 1));
+	cpuGeom.verts.push_back(glm::vec3(-1, -1, -1));
+	cpuGeom.verts.push_back(glm::vec3(1, -1, -1));
+	cpuGeom.verts.push_back(glm::vec3(1, -1, 1));
+	cpuGeom.verts.push_back(glm::vec3(-1, -1, 1));
+	cpuGeom.verts.push_back(glm::vec3(-1, -1, -1));
+
+	for (int i = 0; i < 12; i++) {
+		float col1 = static_cast <float> (rand()) / static_cast <float> (RAND_MAX);
+		float col2 = static_cast <float> (rand()) / static_cast <float> (RAND_MAX);
+		float col3 = static_cast <float> (rand()) / static_cast <float> (RAND_MAX);
+		for(int j = 0; j < 3; j++)
+			cpuGeom.cols.push_back(glm::vec3(col1, col2, col3));
+	}
 
 	carConfig.deserialize();
 
@@ -158,8 +121,8 @@ int main(int argc, char* argv[]) {
 
 		gs.render();
 
-		glEnable(GL_FRAMEBUFFER_SRGB);
-		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+		//glEnable(GL_FRAMEBUFFER_SRGB);
+		//glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
 		glDisable(GL_FRAMEBUFFER_SRGB); // disable sRGB for things like imgui
 
