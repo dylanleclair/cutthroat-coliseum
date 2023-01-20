@@ -219,9 +219,14 @@ int main(int argc, char* argv[]) {
 		ImGui::End();
 		// END FRAMERATE COUNTER
 
-		// TODO(beau): simulate physics every frame for milestone 1
-		// gScene->simulate(1.0f / 60.0f);
-		// gScene->fetchResults(true);
+		// simulate physics with time delta = time of last frame
+		// XXX(beau): DOES NOT CLAMP TIME DELTA
+		// TODO(beau): make a setup for dealing with time - follow slides
+		{
+			float frame_time_seconds = framerate.m_time_queue.front() / 1000.0f;
+			gScene->simulate(frame_time_seconds);
+			gScene->fetchResults(true);
+		}
 
 		// TODO(milestone 1): strip all non-milestone related imgui windows out
 		// BEGIN CAR PHYSICS PANEL
