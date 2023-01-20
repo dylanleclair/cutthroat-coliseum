@@ -36,7 +36,6 @@ int main(int argc, char* argv[]) {
 	CPU_Geometry cpuGeom;
 
 	//make a wireframe cube
-
 	cpuGeom.verts.push_back(glm::vec3(-1, -1, 1));
 	cpuGeom.verts.push_back(glm::vec3(1, -1, 1));
 	cpuGeom.verts.push_back(glm::vec3(1, 1, 1));

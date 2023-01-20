@@ -56,8 +56,9 @@ void Camera::input(const SDL_Event& _event) {
 	//move the camera
 	if (leftMouseButtonPressed)
 	{
-		float xpos = _event.motion.x;
-		float ypos = _event.motion.y;
+		
+		int xpos, ypos;
+		SDL_GetMouseState(&xpos, &ypos);
 		//The following code was adapted from https://learnopengl.com/Getting-started/Camera
 		if (firstMouse)
 		{
