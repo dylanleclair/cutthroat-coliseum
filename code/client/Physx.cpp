@@ -1,6 +1,9 @@
 #include "Physx.h"
 #include <iostream>
 
+// Slightly edited snippet provided by Travis Dow in his lab 1 email
+// I've obtained explicit permission from travis to use it here
+// - Beau
 void init_physx() {
 	//PhysX management class instances.
 	physx::PxDefaultAllocator gAllocator;
