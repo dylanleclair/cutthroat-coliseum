@@ -1,13 +1,17 @@
+#include <cassert>
 #include "SDL.h"
 
 struct FramerateCounter {
 	static const int m_capacity = 60;
 	FramerateCounter() {
-		m_queue.reserve(m_capacity + 1);
+		m_time_queue.reserve(m_capacity + 1);
+		m_rate_queue.reserve(m_capacity + 1);
 	}
 
 	uint32_t m_prev = 0;
-	std::vector<uint32_t> m_queue;
+	// TODO(beau): use proper queue data structures when I care
+	std::vector<float> m_time_queue;
+	std::vector<float> m_rate_queue;
 
 	// for framerate counter
 	uint32_t deltatime() {
@@ -20,12 +24,20 @@ struct FramerateCounter {
 	// call only once per frame!!
 	uint32_t framerate() {
 		uint32_t delta = deltatime();
-		m_queue.emplace(m_queue.begin(), delta);
+		m_time_queue.emplace(m_time_queue.begin(), (float) delta);
 
-		if (m_queue.size() > m_capacity) m_queue.pop_back();
+		if (m_time_queue.size() > m_capacity) {
+            m_time_queue.pop_back();
+            m_rate_queue.pop_back();
+        }
 
 		uint32_t sum = 0;
-		for (const auto& t : m_queue) sum += t;
-		return 1000 * m_queue.size() / sum;
+		for (const auto& t : m_time_queue) sum += t;
+        uint32_t result = 1000 * m_time_queue.size() / sum;
+
+		m_rate_queue.emplace(m_rate_queue.begin(), (float) result);
+        assert(m_rate_queue.size() == m_time_queue.size());
+
+        return result;
 	}
 };
