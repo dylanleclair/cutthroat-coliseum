@@ -130,7 +130,7 @@ int main(int argc, char* argv[]) {
 	render_packet pack(cpuGeom, Position());
 	gs.addPrimitive(pack);
 
-	// init ecs ////////////////////////////////
+	// init ecs 
 	ecs::Scene mainScene;
 
 	// spawn some entities.
@@ -142,11 +142,9 @@ int main(int argc, char* argv[]) {
 	
 	// create instance of system to use.
 	ExampleSystem exampleEcsSystem;
-	/////////////////////////////////////////////
 
 	FramerateCounter framerate;
-	// RENDER LOOP
-	// while (!window.shouldClose()) {
+
 
 	bool quit = false;
 	int controlledCamera = 0;
@@ -197,13 +195,6 @@ int main(int argc, char* argv[]) {
 		// BEGIN ECS SYSTEMS UPDATES 
 		exampleEcsSystem.Update(mainScene, 0.0f);
 		// END__ ECS SYSTEMS UPDATES
-
-
-		glEnable(GL_FRAMEBUFFER_SRGB);
-		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-
-		//glEnable(GL_FRAMEBUFFER_SRGB);
-		//glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
 		glDisable(GL_FRAMEBUFFER_SRGB); // disable sRGB for things like imgui
 
