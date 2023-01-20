@@ -24,7 +24,7 @@ public:
 private:
 	std::vector<render_packet> geometries;
 	Camera cameras[4];
-	int numCamerasActive = 4;
+	int numCamerasActive = 1;
 	GLint modelUniform = -1;
 	GLuint viewUniform = -1;
 	GLuint perspectiveUniform = -1;
