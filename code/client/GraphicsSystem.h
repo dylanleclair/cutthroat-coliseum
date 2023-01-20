@@ -29,4 +29,5 @@ private:
 	GLuint viewUniform = -1;
 	GLuint perspectiveUniform = -1;
 	ShaderProgram shader;
+	glm::ivec2 windowSize;
 };

@@ -13,6 +13,8 @@ GraphicsSystem::GraphicsSystem(Window& _window) :
 	// SHADERS
 	shader.use();
 
+	windowSize = _window.getSize();
+
 	//get uniform locations
 	modelUniform = glGetUniformLocation(GLuint(shader), "M");
 	viewUniform = glGetUniformLocation(GLuint(shader), "V");
@@ -35,27 +37,27 @@ void GraphicsSystem::render() {
 	for (int i = 0; i < numCamerasActive; i++) {
 		shader.use();
 		//matricies that need only be set once per camera
-		glm::mat4 P = glm::perspective(glm::radians(45.0f), 1.0f, 0.01f, 1000.f);
+		glm::mat4 P = glm::perspective(glm::radians(45.0f), (float)windowSize.x/ windowSize.y, 0.01f, 1000.f);
 		glm::mat4 V = cameras[i].getView();
 		glUniformMatrix4fv(perspectiveUniform, 1, GL_FALSE, glm::value_ptr(P));
 		glUniformMatrix4fv(viewUniform, 1, GL_FALSE, glm::value_ptr(V));
 
 		//set the viewport
 		if (numCamerasActive <= 1) { //there can't be 0 cameras, assume always 1 minimum
-			glViewport(0, 0, 800, 800);
+			glViewport(0, 0, windowSize.x, windowSize.y);
 		}
 		else {
 			if (i == 0) {
-				glViewport(0, 400, 400, 400);
+				glViewport(0, windowSize.y / 2, windowSize.x / 2, windowSize.y / 2);
 			}
 			else if (i == 1) {
-				glViewport(400, 400, 400, 400);
+				glViewport(windowSize.x / 2, windowSize.y / 2, windowSize.x / 2, windowSize.y / 2);
 			}
 			else if (i == 2) {
-				glViewport(400, 0, 400, 400);
+				glViewport(windowSize.x / 2, 0, windowSize.x / 2, windowSize.y / 2);
 			}
 			else if (i == 3) {
-				glViewport(0, 0, 400, 400);
+				glViewport(0, 0, windowSize.x / 2, windowSize.y / 2);
 			}
 		}
 
