@@ -22,11 +22,10 @@ struct FramerateCounter {
 		uint32_t delta = deltatime();
 		m_queue.emplace(m_queue.begin(), delta);
 
-		const auto size = m_queue.size();
-		if (size > m_capacity) m_queue.pop_back();
+		if (m_queue.size() > m_capacity) m_queue.pop_back();
 
 		uint32_t sum = 0;
 		for (const auto& t : m_queue) sum += t;
-		return 1000 * size / sum;
+		return 1000 * m_queue.size() / sum;
 	}
 };
