@@ -182,6 +182,9 @@ int main(int argc, char* argv[]) {
 					case SDLK_3:
 						controlledCamera = 3;
 						break;
+					case SDLK_ESCAPE:	// (Pressing escape closes the window, useful for fullscreen);
+						quit = true;
+						break;
 					default:
 						break;
 				};
