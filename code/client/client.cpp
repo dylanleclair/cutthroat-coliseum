@@ -241,8 +241,8 @@ int main(int argc, char* argv[]) {
 		// BEGIN FRAMERATE COUNTER
 		ImGui::Begin("Milestone 1");
 		ImGui::Text("framerate: %d", framerate.framerate());
-        ImGui::PlotLines("Frametime plot", framerate.m_time_queue.data(), framerate.m_time_queue.size());
-        ImGui::PlotLines("Framerate plot", framerate.m_rate_queue.data(), framerate.m_rate_queue.size());
+        ImGui::PlotLines("Frametime plot (ms)", framerate.m_time_queue.data(), framerate.m_time_queue.size());
+        ImGui::PlotLines("Framerate plot (hz)", framerate.m_rate_queue.data(), framerate.m_rate_queue.size());
 		// TODO(milestone 1): display physx value as proof that physx is initialized
 		ImGui::End();
 		// END FRAMERATE COUNTER
