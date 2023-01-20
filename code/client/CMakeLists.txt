@@ -31,11 +31,12 @@ find_library(PhysX_LIBRARY_RELEASE NAMES PhysX_64 PhysX_static_64 PATH_SUFFIXES 
 find_library(PhysX_LIBRARY_DEBUG NAMES PhysX_64 PhysX_static_64 PATH_SUFFIXES lib PATHS "${_VCPKG_INSTALLED_DIR}/${VCPKG_TARGET_TRIPLET}/debug" NO_DEFAULT_PATH REQUIRED)
 select_library_configurations(PhysX)
 
+set(PHYSX_INCLUDES_LIBS ${PhysXPvdSDK_LIBRARY} ${PhysXExtensions_LIBRARY} ${PhysXFoundation_LIBRARY} ${PhysXCommon_LIBRARY} ${PhysX_LIBRARY})
 
 if(WIN32 OR APPLE)
-    set(PHYSX_INCLUDES_LIBS ${PhysXPvdSDK_LIBRARY} ${PhysXExtensions_LIBRARY} ${PhysXFoundation_LIBRARY} ${PhysXCommon_LIBRARY} ${PhysX_LIBRARY})
 else()
-    set(PHYSX_INCLUDES_LIBS -Wl,--start-group ${PhysXPvdSDK_LIBRARY} ${PhysXExtensions_LIBRARY} ${PhysXFoundation_LIBRARY} ${PhysXCommon_LIBRARY} ${PhysX_LIBRARY} -Wl,--end-group)
+    set(PHYSX_START_WRAP_LIB -Wl,--start-group)
+	set(PHYSX_END_WRAP_LIB -Wl,--end-group)
 endif()
 
 target_link_libraries(${BINARY} PRIVATE ${CMAKE_PROJECT_NAME}_lib 
@@ -49,7 +50,8 @@ target_link_libraries(${BINARY} PRIVATE ${CMAKE_PROJECT_NAME}_lib
   fmt
   tomlplusplus::tomlplusplus
   imgui::imgui
-  ${PHYSX_INCLUDES_LIBS}
+  
+  ${PHYSX_START_WRAP_LIB}${PHYSX_INCLUDES_LIBS}${PHYSX_END_WRAP_LIB}
 )
 
 target_compile_definitions(${BINARY} PUBLIC ASSETS_PATH="${CMAKE_CURRENT_SOURCE_DIR}/../assets/") # Set the asset path macro to the absolute path on the dev machine
