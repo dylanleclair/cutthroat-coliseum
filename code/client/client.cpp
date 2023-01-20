@@ -68,7 +68,7 @@ int main(int argc, char* argv[]) {
 	Log::debug("Starting main");
 
 	SDL_Init(SDL_INIT_EVERYTHING); // initialize all sdl systems
-	Window window(800, 800, "CPSC 453");
+	Window window(800, 800, "Maximus Overdrive");
 
 	ImGuiIO& io = ImGui::GetIO(); (void)io;
 
