@@ -10,8 +10,8 @@ struct FramerateCounter {
 
 	uint32_t m_prev = 0;
 	// TODO(beau): use proper queue data structures when I care
-	std::vector<float> m_time_queue;
-	std::vector<float> m_rate_queue;
+	std::vector<float> m_time_queue; // in milliseconds
+	std::vector<float> m_rate_queue; // in frames per second / hz
 
 	// for framerate counter
 	uint32_t deltatime() {
