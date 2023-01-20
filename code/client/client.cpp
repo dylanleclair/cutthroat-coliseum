@@ -21,6 +21,8 @@
 #include "GraphicsSystem.h"
 #include "FrameCounter.h"
 
+#include "Physx.h"
+
 CarPhysics carPhysics;
 CarPhysicsSerde carConfig(carPhysics);
 
@@ -142,6 +144,8 @@ int main(int argc, char* argv[]) {
 	
 	// create instance of system to use.
 	ExampleSystem exampleEcsSystem;
+
+	init_physx();
 
 	FramerateCounter framerate;
 
