@@ -206,6 +206,7 @@ int main(int argc, char* argv[]) {
 		ImGui::NewFrame();
 
 		// BEGIN FRAMERATE COUNTER
+		ImGui::SetNextWindowSize(ImVec2(500, 100)); 
 		ImGui::Begin("Milestone 1");
 		ImGui::Text("framerate: %d", framerate.framerate());
         ImGui::PlotLines("Frametime plot (ms)", framerate.m_time_queue.data(), framerate.m_time_queue.size());
