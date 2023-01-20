@@ -61,3 +61,11 @@ bool ShaderProgram::checkAndLogLinkSuccess() const {
 		return true;
 	}
 }
+
+ShaderProgram::operator GLuint() const {
+	return programID;
+}
+
+GLuint ShaderProgram::value() const {
+	return programID;
+}
