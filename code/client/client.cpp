@@ -90,6 +90,7 @@ int main(int argc, char* argv[]) {
 
 	// GAME LOOP
 	bool quit = false;
+	int controlledCamera = 0;
 	while (!quit) {
 		//polls all pending input events until there are none left in the queue
 		while (SDL_PollEvent(&window.event)) {
@@ -109,13 +110,25 @@ int main(int argc, char* argv[]) {
 					case SDLK_s:
 						carConfig.serialize();
 						break;
+					case SDLK_0:
+						controlledCamera = 0;
+						break;
+					case SDLK_1:
+						controlledCamera = 1;
+						break;
+					case SDLK_2:
+						controlledCamera = 2;
+						break;
+					case SDLK_3:
+						controlledCamera = 3;
+						break;
 					default:
 						break;
 				};
 			}
 
 			//pass the event to the camera
-			gs.input(window.event);
+			gs.input(window.event, controlledCamera);
 		}
 
 		gs.render();

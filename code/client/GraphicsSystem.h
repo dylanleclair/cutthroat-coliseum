@@ -20,10 +20,11 @@ public:
 	GraphicsSystem(Window& _window);
 	void addPrimitive(render_packet _packet);
 	void render();
-	void input(SDL_Event&);
+	void input(SDL_Event&, int _cameraID);
 private:
 	std::vector<render_packet> geometries;
-	Camera camera;
+	Camera cameras[4];
+	int numCamerasActive = 4;
 	GLint modelUniform = -1;
 	GLuint viewUniform = -1;
 	GLuint perspectiveUniform = -1;
