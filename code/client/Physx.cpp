@@ -79,8 +79,4 @@ void init_physx() {
 
 	// Clean up
 	shape->release();
-
-	gScene->simulate(1.0f / 60.0f);
-	gScene->fetchResults(true);
-
 }

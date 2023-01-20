@@ -219,6 +219,10 @@ int main(int argc, char* argv[]) {
 		ImGui::End();
 		// END FRAMERATE COUNTER
 
+		// TODO(beau): simulate physics every frame for milestone 1
+		// gScene->simulate(1.0f / 60.0f);
+		// gScene->fetchResults(true);
+
 		// TODO(milestone 1): strip all non-milestone related imgui windows out
 		// BEGIN CAR PHYSICS PANEL
 		ImGui::Begin("Car Physics", nullptr);
