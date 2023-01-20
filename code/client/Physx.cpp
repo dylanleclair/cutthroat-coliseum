@@ -4,17 +4,18 @@
 // Slightly edited snippet provided by Travis Dow in his lab 1 email
 // I've obtained explicit permission from travis to use it here
 // - Beau
-void init_physx() {
-	//PhysX management class instances.
-	physx::PxDefaultAllocator      gAllocator;
-	physx::PxDefaultErrorCallback  gErrorCallback;
-	physx::PxFoundation*           gFoundation = NULL;
-	physx::PxPhysics*              gPhysics = NULL;
-	physx::PxDefaultCpuDispatcher* gDispatcher = NULL;
-	physx::PxScene*                gScene = NULL;
-	physx::PxMaterial*             gMaterial = NULL;
-	physx::PxPvd*                  gPvd = NULL;
 
+//PhysX management class instances.
+physx::PxDefaultAllocator      gAllocator;
+physx::PxDefaultErrorCallback  gErrorCallback;
+physx::PxFoundation*           gFoundation = NULL;
+physx::PxPhysics*              gPhysics = NULL;
+physx::PxDefaultCpuDispatcher* gDispatcher = NULL;
+physx::PxScene*                gScene = NULL;
+physx::PxMaterial*             gMaterial = NULL;
+physx::PxPvd*                  gPvd = NULL;
+
+void init_physx() {
 	// Initialize PhysX
 	gFoundation = PxCreateFoundation(PX_PHYSICS_VERSION, gAllocator, gErrorCallback);
 	if (!gFoundation)
