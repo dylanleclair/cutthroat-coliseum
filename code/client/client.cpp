@@ -21,6 +21,8 @@
 #include "GraphicsSystem.h"
 #include "FrameCounter.h"
 
+#include "Physx.h"
+
 CarPhysics carPhysics;
 CarPhysicsSerde carConfig(carPhysics);
 
@@ -143,6 +145,8 @@ int main(int argc, char* argv[]) {
 	// create instance of system to use.
 	ExampleSystem exampleEcsSystem;
 
+	init_physx();
+
 	FramerateCounter framerate;
 
 
@@ -214,6 +218,15 @@ int main(int argc, char* argv[]) {
 		// TODO(milestone 1): display physx value as proof that physx is initialized
 		ImGui::End();
 		// END FRAMERATE COUNTER
+
+		// simulate physics with time delta = time of last frame
+		// XXX(beau): DOES NOT CLAMP TIME DELTA
+		// TODO(beau): make a setup for dealing with time - follow slides
+		{
+			float frame_time_seconds = framerate.m_time_queue.front() / 1000.0f;
+			gScene->simulate(frame_time_seconds);
+			gScene->fetchResults(true);
+		}
 
 		// TODO(milestone 1): strip all non-milestone related imgui windows out
 		// BEGIN CAR PHYSICS PANEL
