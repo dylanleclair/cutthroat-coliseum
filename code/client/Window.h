@@ -6,7 +6,6 @@
 //------------------------------------------------------------------------------
 
 #include <GL/glew.h>
-#include <SDL_render.h>
 #include <glm/glm.hpp>
 
 #include "SDL.h"
