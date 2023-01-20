@@ -31,12 +31,39 @@ find_library(PhysX_LIBRARY_RELEASE NAMES PhysX_64 PhysX_static_64 PATH_SUFFIXES 
 find_library(PhysX_LIBRARY_DEBUG NAMES PhysX_64 PhysX_static_64 PATH_SUFFIXES lib PATHS "${_VCPKG_INSTALLED_DIR}/${VCPKG_TARGET_TRIPLET}/debug" NO_DEFAULT_PATH REQUIRED)
 select_library_configurations(PhysX)
 
-set(PHYSX_INCLUDES_LIBS ${PhysXPvdSDK_LIBRARY} ${PhysXExtensions_LIBRARY} ${PhysXFoundation_LIBRARY} ${PhysXCommon_LIBRARY} ${PhysX_LIBRARY})
+set(PHYSX_INCLUDES_LIBS )
 
 if(WIN32 OR APPLE)
+  target_link_libraries(${BINARY} PRIVATE ${CMAKE_PROJECT_NAME}_lib 
+    
+    $<TARGET_NAME_IF_EXISTS:SDL2::SDL2main>
+    $<IF:$<TARGET_EXISTS:SDL2::SDL2>,SDL2::SDL2,SDL2::SDL2-static>
+    glm::glm
+    GLEW::GLEW
+    assimp::assimp
+    vivid
+    fmt
+    tomlplusplus::tomlplusplus
+    imgui::imgui
+    
+    ${PhysXPvdSDK_LIBRARY} ${PhysXExtensions_LIBRARY} ${PhysXFoundation_LIBRARY} ${PhysXCommon_LIBRARY} ${PhysX_LIBRARY}
+  )
+
 else()
-    set(PHYSX_START_WRAP_LIB -Wl,--start-group)
-	set(PHYSX_END_WRAP_LIB -Wl,--end-group)
+  target_link_libraries(${BINARY} PRIVATE ${CMAKE_PROJECT_NAME}_lib 
+    
+    $<TARGET_NAME_IF_EXISTS:SDL2::SDL2main>
+    $<IF:$<TARGET_EXISTS:SDL2::SDL2>,SDL2::SDL2,SDL2::SDL2-static>
+    glm::glm
+    GLEW::GLEW
+    assimp::assimp
+    vivid
+    fmt
+    tomlplusplus::tomlplusplus
+    imgui::imgui
+    
+     -Wl,--start-group ${PhysXPvdSDK_LIBRARY} ${PhysXExtensions_LIBRARY} ${PhysXFoundation_LIBRARY} ${PhysXCommon_LIBRARY} ${PhysX_LIBRARY} -Wl,--end-group
+  )
 endif()
 
 target_link_libraries(${BINARY} PRIVATE ${CMAKE_PROJECT_NAME}_lib 
@@ -51,7 +78,7 @@ target_link_libraries(${BINARY} PRIVATE ${CMAKE_PROJECT_NAME}_lib
   tomlplusplus::tomlplusplus
   imgui::imgui
   
-  ${PHYSX_START_WRAP_LIB}${PHYSX_INCLUDES_LIBS}${PHYSX_END_WRAP_LIB}
+  ${PhysXPvdSDK_LIBRARY} ${PhysXExtensions_LIBRARY} ${PhysXFoundation_LIBRARY} ${PhysXCommon_LIBRARY} ${PhysX_LIBRARY}
 )
 
 target_compile_definitions(${BINARY} PUBLIC ASSETS_PATH="${CMAKE_CURRENT_SOURCE_DIR}/../assets/") # Set the asset path macro to the absolute path on the dev machine
