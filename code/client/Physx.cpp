@@ -30,7 +30,7 @@ void init_physx() {
 	if (!gPhysics)
 	{
 		std::cout << "PxCreatePhysics failed!" << std::endl;
-		exit( -1);
+		exit(-1);
 	}
 
 	// Scene
@@ -77,12 +77,7 @@ void init_physx() {
 	// Clean up
 	shape->release();
 
-	// Simulate at 60fps
-	while (1)
-	{
-		gScene->simulate(1.0f / 60.0f);
-		gScene->fetchResults(true);
-	}
+	gScene->simulate(1.0f / 60.0f);
+	gScene->fetchResults(true);
 
-	exit(0);
 }
