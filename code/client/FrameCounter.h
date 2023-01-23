@@ -25,6 +25,17 @@ struct FramerateCounter {
 	// call only once per frame!!
 	uint32_t framerate() {
 		uint32_t delta = deltatime();
+
+		// HACK(beau): clamp lowest possible frametime to 1 ms
+		// otherwise we pass 0 to physx simulate which is no good
+		// this is an issue if your gpu has vsync turned off and
+		// your framerate gets above 1000 which causes SDL_GetTicks()
+		// to return the same value as last frame as another
+		// millisecond hasn't passed yet meaning the deltatime
+		// since last frame would be 0
+		delta = delta ? delta : 1;
+
+		assert(delta > 0);
 		m_time_queue.emplace(m_time_queue.begin(), (float) delta);
 
 		if (m_time_queue.size() > m_capacity) {
