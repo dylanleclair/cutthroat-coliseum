@@ -6,7 +6,6 @@
 //------------------------------------------------------------------------------
 
 #include <GL/glew.h>
-#include <SDL_render.h>
 #include <glm/glm.hpp>
 
 #include "SDL.h"
@@ -15,7 +14,6 @@
 
 #include "imgui.h"
 #include "imgui_impl_sdl.h"
-#include "imgui_impl_sdlrenderer.h"
 #include "imgui_impl_opengl3.h"
 
 #include <memory>

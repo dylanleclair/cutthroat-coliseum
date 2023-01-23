@@ -7,9 +7,13 @@
 #include "Camera.h"
 #include "Position.h"
 
-GraphicsSystem::GraphicsSystem(Window& _window) : shader("shaders/test.vert", "shaders/test.frag") {
+GraphicsSystem::GraphicsSystem(Window& _window) :
+	shader("shaders/test.vert", "shaders/test.frag")
+{
 	// SHADERS
 	shader.use();
+
+	windowSize = _window.getSize();
 
 	//get uniform locations
 	modelUniform = glGetUniformLocation(GLuint(shader), "M");
@@ -24,36 +28,57 @@ void GraphicsSystem::addPrimitive(render_packet _packet)
 }
 
 void GraphicsSystem::render() {
-	glPointSize(10);
-	// GEOMETRY
-	GPU_Geometry gpuGeom;
-
-	gpuGeom.bind();
-	gpuGeom.setVerts(geometries[0].geom.verts);
-	gpuGeom.setCols(geometries[0].geom.cols);
-
-	//matricies
-	glm::mat4 P = glm::perspective(glm::radians(45.0f), 1.0f, 0.01f, 1000.f);
-	glm::mat4 V = camera.getView();
-	glm::mat4 M = glm::mat4(1.0f);//geometries[0].position.getTransformMatrix();
-
-	glUniformMatrix4fv(perspectiveUniform, 1, GL_FALSE, glm::value_ptr(P));
-	glUniformMatrix4fv(viewUniform, 1, GL_FALSE, glm::value_ptr(V));
-	glUniformMatrix4fv(modelUniform, 1, GL_FALSE, glm::value_ptr(M));
-
 	glEnable(GL_LINE_SMOOTH);
 	glEnable(GL_FRAMEBUFFER_SRGB);
 	glClearColor(0.0f, 0.0f, 0.0f, 1.0f);
 	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 	glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
 
-	shader.use();
+	for (int i = 0; i < numCamerasActive; i++) {
+		shader.use();
+		//matricies that need only be set once per camera
+		glm::mat4 P = glm::perspective(glm::radians(45.0f), (float)windowSize.x/ windowSize.y, 0.01f, 1000.f);
+		glm::mat4 V = cameras[i].getView();
+		glUniformMatrix4fv(perspectiveUniform, 1, GL_FALSE, glm::value_ptr(P));
+		glUniformMatrix4fv(viewUniform, 1, GL_FALSE, glm::value_ptr(V));
 
-	glPointSize(10.0f);
-	glDrawArrays(GL_TRIANGLES, 0, 36);
+		//set the viewport
+		if (numCamerasActive <= 1) { //there can't be 0 cameras, assume always 1 minimum
+			glViewport(0, 0, windowSize.x, windowSize.y);
+		}
+		else {
+			if (i == 0) {
+				glViewport(0, windowSize.y / 2, windowSize.x / 2, windowSize.y / 2);
+			}
+			else if (i == 1) {
+				glViewport(windowSize.x / 2, windowSize.y / 2, windowSize.x / 2, windowSize.y / 2);
+			}
+			else if (i == 2) {
+				glViewport(windowSize.x / 2, 0, windowSize.x / 2, windowSize.y / 2);
+			}
+			else if (i == 3) {
+				glViewport(0, 0, windowSize.x / 2, windowSize.y / 2);
+			}
+		}
+
+		for (render_packet pck : geometries)
+		{
+			// GEOMETRY
+			GPU_Geometry gpuGeom;
+
+			gpuGeom.bind();
+			gpuGeom.setVerts(pck.geom.verts);
+			gpuGeom.setCols(pck.geom.cols);
+
+			glm::mat4 M = glm::mat4(1.0f);
+			glUniformMatrix4fv(modelUniform, 1, GL_FALSE, glm::value_ptr(M));
+
+			glDrawArrays(GL_TRIANGLES, 0, pck.geom.verts.size());
+		}
+	}
 }
 
-void GraphicsSystem::input(SDL_Event& _event)
+void GraphicsSystem::input(SDL_Event& _event, int _cameraID)
 {
-	camera.input(_event);
+	cameras[_cameraID].input(_event);
 }

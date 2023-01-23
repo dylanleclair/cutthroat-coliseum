@@ -27,13 +27,13 @@ Window::Window(int width, int height, const char* title)
 	// specify OpenGL version
 	// XXX(beau): handle errors?
 	SDL_GL_SetAttribute(SDL_GL_CONTEXT_MAJOR_VERSION, 4);
-	SDL_GL_SetAttribute(SDL_GL_CONTEXT_MINOR_VERSION, 6);
+	SDL_GL_SetAttribute(SDL_GL_CONTEXT_MINOR_VERSION, 1);
 	SDL_GL_SetAttribute(SDL_GL_CONTEXT_PROFILE_MASK, SDL_GL_CONTEXT_PROFILE_CORE);
 	SDL_GL_SetAttribute(SDL_GL_DOUBLEBUFFER, 1);
 	SDL_GL_SetAttribute(SDL_GL_CONTEXT_FLAGS, SDL_GL_CONTEXT_DEBUG_FLAG);
 	SDL_GL_SetAttribute(SDL_GL_CONTEXT_FLAGS, SDL_GL_CONTEXT_FORWARD_COMPATIBLE_FLAG);
 
-	window = std::unique_ptr<SDL_Window, WindowDeleter>(SDL_CreateWindow("CPSC 453", SDL_WINDOWPOS_CENTERED, SDL_WINDOWPOS_CENTERED, width, height, SDL_WINDOW_OPENGL));
+	window = std::unique_ptr<SDL_Window, WindowDeleter>(SDL_CreateWindow(title, SDL_WINDOWPOS_CENTERED, SDL_WINDOWPOS_CENTERED, width, height, SDL_WINDOW_OPENGL));
 	if (!window)
 		sdl_error_handler(1);
 
@@ -60,7 +60,7 @@ Window::Window(int width, int height, const char* title)
 	ImGui_ImplSDL2_InitForOpenGL(window.get(), context);
 
 	// VOLATILE: must match version specified in shaders!
-	ImGui_ImplOpenGL3_Init("#version 460 core");
+	ImGui_ImplOpenGL3_Init("#version 410 core");
 }
 
 
