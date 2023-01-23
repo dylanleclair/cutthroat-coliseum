@@ -1,4 +1,5 @@
 #pragma once
+#include "systems/ecs.h"
 #include <GL/glew.h>
 #include "Geometry.h"
 #include "Window.h"
@@ -14,12 +15,11 @@ struct render_packet {
 };
 
 
-
-class GraphicsSystem {
+struct GraphicsSystem : ecs::ISystem {
 public:
 	GraphicsSystem(Window& _window);
 	void addPrimitive(render_packet _packet);
-	void render();
+	void Update(ecs::Scene& scene, float deltaTime);
 	void input(SDL_Event&, int _cameraID);
 private:
 	std::vector<render_packet> geometries;

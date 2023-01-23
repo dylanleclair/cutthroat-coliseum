@@ -1,6 +1,3 @@
-#include <GL/glew.h>
-
-
 #include <iostream>
 
 #include "imgui.h"
@@ -10,8 +7,6 @@
 #include "Geometry.h"
 #include "GLDebug.h"
 #include "Log.h"
-#include "ShaderProgram.h"
-#include "Shader.h"
 #include "Window.h"
 
 #include "systems/ecs.h"
@@ -197,7 +192,7 @@ int main(int argc, char* argv[]) {
 			//pass the event to the camera
 			gs.input(window.event, controlledCamera);
 		}
-		gs.render();
+		gs.Update(mainScene, 0.0f);
 
 		// BEGIN ECS SYSTEMS UPDATES 
 		exampleEcsSystem.Update(mainScene, 0.0f);

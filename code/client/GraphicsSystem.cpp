@@ -1,4 +1,6 @@
+#include "systems/ecs.h"
 #include "GraphicsSystem.h"
+
 #include <GL/glew.h>
 #include <iostream>
 #include "GLDebug.h"
@@ -27,7 +29,7 @@ void GraphicsSystem::addPrimitive(render_packet _packet)
 	geometries.push_back(_packet);
 }
 
-void GraphicsSystem::render() {
+void GraphicsSystem::Update(ecs::Scene& scene, float deltaTime) {
 	glEnable(GL_LINE_SMOOTH);
 	glEnable(GL_FRAMEBUFFER_SRGB);
 	glClearColor(0.0f, 0.0f, 0.0f, 1.0f);
