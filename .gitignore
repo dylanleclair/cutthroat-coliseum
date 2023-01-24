@@ -353,3 +353,4 @@ MigrationBackup/
 **/build
 **/vcpkg_installed
 **/.vscode
+enc_temp_folder/
