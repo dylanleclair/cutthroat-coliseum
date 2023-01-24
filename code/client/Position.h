@@ -9,6 +9,7 @@
 class Position {
 public:
 	//sets the objects position in world space
+	Position(glm::vec3 _pos);
 	void setPosition(glm::vec3);
 	//returns a copy of the objects position in world space
 	glm::vec3 getPosition();

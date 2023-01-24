@@ -23,12 +23,6 @@ GraphicsSystem::GraphicsSystem(Window& _window) :
 	perspectiveUniform = glGetUniformLocation(GLuint(shader), "P");
 }
 
-void GraphicsSystem::addPrimitive(render_packet _packet)
-{
-	//NOTE: I believe this should copy the CPU_Geometry into the vector. This isn't ideal since whenever the vector resizes it will need to copy all the data but the ECS should take care of this
-	geometries.push_back(_packet);
-}
-
 void GraphicsSystem::Update(ecs::Scene& scene, float deltaTime) {
 	glEnable(GL_LINE_SMOOTH);
 	glEnable(GL_FRAMEBUFFER_SRGB);
@@ -63,19 +57,18 @@ void GraphicsSystem::Update(ecs::Scene& scene, float deltaTime) {
 			}
 		}
 
-		for (render_packet pck : geometries)
-		{
+		for (Guid entityGuid : ecs::EntitiesInScene<RenderComponent>(scene)) {
+			RenderComponent& comp = scene.GetComponent<RenderComponent>(entityGuid);
 			// GEOMETRY
 			GPU_Geometry gpuGeom;
 
 			gpuGeom.bind();
-			gpuGeom.setVerts(pck.geom.verts);
-			gpuGeom.setCols(pck.geom.cols);
+			gpuGeom.setVerts(comp.geom->verts);
+			gpuGeom.setCols(comp.geom->cols);
 
-			glm::mat4 M = glm::mat4(1.0f);
+			glm::mat4 M = comp.position->getTransformMatrix();
 			glUniformMatrix4fv(modelUniform, 1, GL_FALSE, glm::value_ptr(M));
-
-			glDrawArrays(GL_TRIANGLES, 0, pck.geom.verts.size());
+			glDrawArrays(GL_TRIANGLES, 0, comp.geom->verts.size());
 		}
 	}
 }

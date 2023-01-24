@@ -122,23 +122,30 @@ int main(int argc, char* argv[]) {
 
 	carConfig.deserialize();
 
-	GraphicsSystem gs(window);
-
-	render_packet pack(cpuGeom, Position());
-	gs.addPrimitive(pack);
+	
 
 	// init ecs 
 	ecs::Scene mainScene;
 
 	// spawn some entities.
-	for (int i = 0; i < 10; i++)
+	for (int i = 0; i < 500; i++)
 	{
 		ecs::Entity e = mainScene.CreateEntity();
 		mainScene.AddComponent(e.guid, ExampleComponent{ 0,1,2 });
+
+		//create cube meshes for them
+		glm::vec3 temp;
+		const float LO = -10;
+		const float HI = 10;
+		for(int i = 0; i < 3; i++)
+			temp[i] = LO + static_cast <float> (rand()) / (static_cast <float> (RAND_MAX / (HI - LO)));
+		Position* position = new Position(temp);
+		mainScene.AddComponent(e.guid, RenderComponent{ &cpuGeom, position });
 	}
 	
 	// create instance of system to use.
 	ExampleSystem exampleEcsSystem;
+	GraphicsSystem gs(window);
 
 	init_physx();
 
@@ -192,10 +199,11 @@ int main(int argc, char* argv[]) {
 			//pass the event to the camera
 			gs.input(window.event, controlledCamera);
 		}
-		gs.Update(mainScene, 0.0f);
+		
 
 		// BEGIN ECS SYSTEMS UPDATES 
 		exampleEcsSystem.Update(mainScene, 0.0f);
+		gs.Update(mainScene, 0.0f);
 		// END__ ECS SYSTEMS UPDATES
 
 		glDisable(GL_FRAMEBUFFER_SRGB); // disable sRGB for things like imgui

@@ -3,6 +3,11 @@
 #include "glm/gtc/type_ptr.hpp"
 #include <glm/gtx/rotate_vector.hpp>
 
+
+Position::Position(glm::vec3 _pos) {
+	position = glm::translate(position, _pos);
+}
+
 void Position::setPosition(glm::vec3 _position)
 {
 	//position = glm::vec3(_position);
