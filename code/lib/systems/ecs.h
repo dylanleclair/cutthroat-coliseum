@@ -36,10 +36,7 @@ namespace ecs
     /// @brief Gets the mask for the component by shifting according to the provided GUID.
     /// @param componentGuid
     /// @return ComponentFlags with only this component enabled
-    ComponentFlags componentMaskFromGuid(Guid componentGuid)
-    {
-        return (static_cast<u64>(1) << componentGuid);
-    }
+    ComponentFlags componentMaskFromGuid(Guid componentGuid);
 
     namespace memory
     {
