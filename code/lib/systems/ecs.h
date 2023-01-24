@@ -1,3 +1,4 @@
+// TODO(beau): put definitions in ecs.cpp and have this file just be declarations
 #pragma once
 
 #include <string>
