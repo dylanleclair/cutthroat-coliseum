@@ -72,52 +72,52 @@ int main(int argc, char* argv[]) {
 	GLDebug::enable();
 
 	// GEOMETRY
-	CPU_Geometry cpuGeom;
+	CPU_Geometry cubeGeom;
 
 	//make a wireframe cube
-	cpuGeom.verts.push_back(glm::vec3(-1, -1, 1));
-	cpuGeom.verts.push_back(glm::vec3(1, -1, 1));
-	cpuGeom.verts.push_back(glm::vec3(1, 1, 1));
-	cpuGeom.verts.push_back(glm::vec3(-1, -1, 1));
-	cpuGeom.verts.push_back(glm::vec3(1, 1, 1));
-	cpuGeom.verts.push_back(glm::vec3(-1, 1, 1));
-	cpuGeom.verts.push_back(glm::vec3(1, -1, 1));
-	cpuGeom.verts.push_back(glm::vec3(1, -1, -1));
-	cpuGeom.verts.push_back(glm::vec3(1, 1, -1));
-	cpuGeom.verts.push_back(glm::vec3(1, -1, 1));
-	cpuGeom.verts.push_back(glm::vec3(1, 1, -1));
-	cpuGeom.verts.push_back(glm::vec3(1, 1, 1));
-	cpuGeom.verts.push_back(glm::vec3(1, -1, -1));
-	cpuGeom.verts.push_back(glm::vec3(-1, -1, -1));
-	cpuGeom.verts.push_back(glm::vec3(-1, 1, -1));
-	cpuGeom.verts.push_back(glm::vec3(1, -1, -1));
-	cpuGeom.verts.push_back(glm::vec3(-1, 1, -1));
-	cpuGeom.verts.push_back(glm::vec3(1, 1, -1));
-	cpuGeom.verts.push_back(glm::vec3(-1, -1, -1));
-	cpuGeom.verts.push_back(glm::vec3(-1, -1, 1));
-	cpuGeom.verts.push_back(glm::vec3(-1, 1, 1));
-	cpuGeom.verts.push_back(glm::vec3(-1, -1, -1));
-	cpuGeom.verts.push_back(glm::vec3(-1, 1, 1));
-	cpuGeom.verts.push_back(glm::vec3(-1, 1, -1));
-	cpuGeom.verts.push_back(glm::vec3(-1, 1, 1));
-	cpuGeom.verts.push_back(glm::vec3(1, 1, 1));
-	cpuGeom.verts.push_back(glm::vec3(1, 1, -1));
-	cpuGeom.verts.push_back(glm::vec3(-1, 1, 1));
-	cpuGeom.verts.push_back(glm::vec3(1, 1, -1));
-	cpuGeom.verts.push_back(glm::vec3(-1, 1, -1));
-	cpuGeom.verts.push_back(glm::vec3(1, -1, 1));
-	cpuGeom.verts.push_back(glm::vec3(-1, -1, -1));
-	cpuGeom.verts.push_back(glm::vec3(1, -1, -1));
-	cpuGeom.verts.push_back(glm::vec3(1, -1, 1));
-	cpuGeom.verts.push_back(glm::vec3(-1, -1, 1));
-	cpuGeom.verts.push_back(glm::vec3(-1, -1, -1));
+	cubeGeom.verts.push_back(glm::vec3(-1, -1, 1));
+	cubeGeom.verts.push_back(glm::vec3(1, -1, 1));
+	cubeGeom.verts.push_back(glm::vec3(1, 1, 1));
+	cubeGeom.verts.push_back(glm::vec3(-1, -1, 1));
+	cubeGeom.verts.push_back(glm::vec3(1, 1, 1));
+	cubeGeom.verts.push_back(glm::vec3(-1, 1, 1));
+	cubeGeom.verts.push_back(glm::vec3(1, -1, 1));
+	cubeGeom.verts.push_back(glm::vec3(1, -1, -1));
+	cubeGeom.verts.push_back(glm::vec3(1, 1, -1));
+	cubeGeom.verts.push_back(glm::vec3(1, -1, 1));
+	cubeGeom.verts.push_back(glm::vec3(1, 1, -1));
+	cubeGeom.verts.push_back(glm::vec3(1, 1, 1));
+	cubeGeom.verts.push_back(glm::vec3(1, -1, -1));
+	cubeGeom.verts.push_back(glm::vec3(-1, -1, -1));
+	cubeGeom.verts.push_back(glm::vec3(-1, 1, -1));
+	cubeGeom.verts.push_back(glm::vec3(1, -1, -1));
+	cubeGeom.verts.push_back(glm::vec3(-1, 1, -1));
+	cubeGeom.verts.push_back(glm::vec3(1, 1, -1));
+	cubeGeom.verts.push_back(glm::vec3(-1, -1, -1));
+	cubeGeom.verts.push_back(glm::vec3(-1, -1, 1));
+	cubeGeom.verts.push_back(glm::vec3(-1, 1, 1));
+	cubeGeom.verts.push_back(glm::vec3(-1, -1, -1));
+	cubeGeom.verts.push_back(glm::vec3(-1, 1, 1));
+	cubeGeom.verts.push_back(glm::vec3(-1, 1, -1));
+	cubeGeom.verts.push_back(glm::vec3(-1, 1, 1));
+	cubeGeom.verts.push_back(glm::vec3(1, 1, 1));
+	cubeGeom.verts.push_back(glm::vec3(1, 1, -1));
+	cubeGeom.verts.push_back(glm::vec3(-1, 1, 1));
+	cubeGeom.verts.push_back(glm::vec3(1, 1, -1));
+	cubeGeom.verts.push_back(glm::vec3(-1, 1, -1));
+	cubeGeom.verts.push_back(glm::vec3(1, -1, 1));
+	cubeGeom.verts.push_back(glm::vec3(-1, -1, -1));
+	cubeGeom.verts.push_back(glm::vec3(1, -1, -1));
+	cubeGeom.verts.push_back(glm::vec3(1, -1, 1));
+	cubeGeom.verts.push_back(glm::vec3(-1, -1, 1));
+	cubeGeom.verts.push_back(glm::vec3(-1, -1, -1));
 
 	for (int i = 0; i < 12; i++) {
 		float col1 = static_cast <float> (rand()) / static_cast <float> (RAND_MAX);
 		float col2 = static_cast <float> (rand()) / static_cast <float> (RAND_MAX);
 		float col3 = static_cast <float> (rand()) / static_cast <float> (RAND_MAX);
 		for(int j = 0; j < 3; j++)
-			cpuGeom.cols.push_back(glm::vec3(col1, col2, col3));
+			cubeGeom.cols.push_back(glm::vec3(col1, col2, col3));
 	}
 
 	carConfig.deserialize();
@@ -127,20 +127,42 @@ int main(int argc, char* argv[]) {
 	// init ecs 
 	ecs::Scene mainScene;
 
+	//FOR DYLAN: Why does having only 1 entity not seem to work? The component is added but it isn't being regiesterd,
+	// In general it seems that you need n+1 entities to get n entities working.
 	// spawn some entities.
-	for (int i = 0; i < 500; i++)
+	for (int i = 0; i < 2; i++)
 	{
 		ecs::Entity e = mainScene.CreateEntity();
 		mainScene.AddComponent(e.guid, ExampleComponent{ 0,1,2 });
 
+
+
+		
+		//yes, I know this makes a memory leak. It is just to test
+		CPU_Geometry* cpuGeom = new CPU_Geometry();
+		//put the meshes of 500 cubes in one entity
+		for (int j = 0; j < 500; j++) {
+			//create cube meshes for them
+			glm::vec3 temp;
+			const float LO = -3;
+			const float HI = 3;
+			for (int j = 0; j < 3; j++)
+				temp[j] = LO + static_cast <float> (rand()) / (static_cast <float> (RAND_MAX / (HI - LO)));
+			Position* position = new Position(temp);
+			//do some sample calculations to simulate static meshes
+			for (int j = 0; j < cubeGeom.verts.size(); j++) {
+				cpuGeom->verts.push_back(position->getTransformMatrix() * glm::vec4(cubeGeom.verts[j], 1));
+				cpuGeom->cols.push_back(cubeGeom.cols[j]);
+			}
+		}
 		//create cube meshes for them
 		glm::vec3 temp;
-		const float LO = -10;
-		const float HI = 10;
-		for(int i = 0; i < 3; i++)
-			temp[i] = LO + static_cast <float> (rand()) / (static_cast <float> (RAND_MAX / (HI - LO)));
+		const float LO = -1;
+		const float HI = 1;
+		for (int j = 0; j < 3; j++)
+			temp[j] = LO + static_cast <float> (rand()) / (static_cast <float> (RAND_MAX / (HI - LO)));
 		Position* position = new Position(temp);
-		mainScene.AddComponent(e.guid, RenderComponent{ &cpuGeom, position });
+		mainScene.AddComponent(e.guid, RenderComponent{ cpuGeom, position });
 	}
 	
 	// create instance of system to use.
