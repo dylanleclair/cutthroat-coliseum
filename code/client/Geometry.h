@@ -19,8 +19,6 @@
 struct CPU_Geometry {
 	std::vector<glm::vec3> verts;
 	std::vector<glm::vec3> cols;
-	const static std::vector<glm::vec3> STATIC_verts;
-	const static std::vector<glm::vec3> STATIC_cols;
 };
 
 

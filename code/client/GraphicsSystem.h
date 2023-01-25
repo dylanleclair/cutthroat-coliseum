@@ -11,7 +11,6 @@ struct RenderComponent
 {
 	CPU_Geometry* geom;
 	Position* position;
-	bool isStatic = false;
 };
 
 struct GraphicsSystem : ecs::ISystem {
