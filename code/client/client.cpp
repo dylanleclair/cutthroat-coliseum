@@ -130,7 +130,7 @@ int main(int argc, char* argv[]) {
 	//FOR DYLAN: Why does having only 1 entity not seem to work? The component is added but it isn't being regiesterd,
 	// In general it seems that you need n+1 entities to get n entities working.
 	// spawn some entities.
-	for (int i = 0; i < 2; i++)
+	for (int i = 0; i < 500; i++)
 	{
 		ecs::Entity e = mainScene.CreateEntity();
 		mainScene.AddComponent(e.guid, ExampleComponent{ 0,1,2 });
@@ -157,10 +157,10 @@ int main(int argc, char* argv[]) {
 		}
 		//create cube meshes for them
 		glm::vec3 temp;
-		const float LO = -1;
-		const float HI = 1;
-		for (int j = 0; j < 3; j++)
-			temp[j] = LO + static_cast <float> (rand()) / (static_cast <float> (RAND_MAX / (HI - LO)));
+		const float LO = -10;
+		const float HI = 10;
+		for(int i = 0; i < 3; i++)
+			temp[i] = LO + static_cast <float> (rand()) / (static_cast <float> (RAND_MAX / (HI - LO)));
 		Position* position = new Position(temp);
 		mainScene.AddComponent(e.guid, RenderComponent{ cpuGeom, position });
 	}
