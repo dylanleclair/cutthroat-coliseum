@@ -57,8 +57,20 @@ void GraphicsSystem::Update(ecs::Scene& scene, float deltaTime) {
 			}
 		}
 
+		//render static components
+		GPU_Geometry gpuGeom;
+		gpuGeom.bind();
+		gpuGeom.setVerts(CPU_Geometry::STATIC_verts);
+		gpuGeom.setCols(CPU_Geometry::STATIC_cols);
+		glDrawArrays(GL_TRIANGLES, 0, CPU_Geometry::STATIC_verts.size());
+		
+		//render dynamic components
 		for (Guid entityGuid : ecs::EntitiesInScene<RenderComponent>(scene)) {
 			RenderComponent& comp = scene.GetComponent<RenderComponent>(entityGuid);
+			//if it is static don't render it
+			if (comp.isStatic)
+				continue;
+
 			// GEOMETRY
 			GPU_Geometry gpuGeom;
 

@@ -117,7 +117,7 @@ int main(int argc, char* argv[]) {
 		float col2 = static_cast <float> (rand()) / static_cast <float> (RAND_MAX);
 		float col3 = static_cast <float> (rand()) / static_cast <float> (RAND_MAX);
 		for(int j = 0; j < 3; j++)
-			cpuGeom.cols.push_back(glm::vec3(col1, col2, col3));
+			cpuGeom.STATIC_cols.push_back(glm::vec3(col1, col2, col3));
 	}
 
 	carConfig.deserialize();
@@ -140,7 +140,12 @@ int main(int argc, char* argv[]) {
 		for(int i = 0; i < 3; i++)
 			temp[i] = LO + static_cast <float> (rand()) / (static_cast <float> (RAND_MAX / (HI - LO)));
 		Position* position = new Position(temp);
-		mainScene.AddComponent(e.guid, RenderComponent{ &cpuGeom, position });
+
+		//do some sample calculations to simulate static meshes
+		for (int j = 0; j < cpuGeom.verts.size(); j++) {
+			cpuGeom.verts[j] = position->getTransformMatrix() * glm::vec4(cpuGeom.verts[j], 1);
+		}
+		mainScene.AddComponent(e.guid, RenderComponent{ &cpuGeom, position, true });
 	}
 	
 	// create instance of system to use.
