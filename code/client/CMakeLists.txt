@@ -83,6 +83,10 @@ target_link_libraries(${BINARY} PRIVATE ${CMAKE_PROJECT_NAME}_lib
 
 target_compile_definitions(${BINARY} PUBLIC ASSETS_PATH="${CMAKE_CURRENT_SOURCE_DIR}/../assets/") # Set the asset path macro to the absolute path on the dev machine
 
+# BUG(Beau): when building on vs it doesn't copy updated stuff inside configs/ and models/
+# I'm not sure exactly what's going on or when this happens but we'll have to take a look
+# - Beau
+
 # Copy all the shaders and tell the build system to re-run CMAKE if one of them changes
 file(GLOB files ../assets/shaders/*)
 foreach(file ${files})
@@ -95,4 +99,11 @@ file(GLOB files ../assets/configs/*)
 foreach(file ${files})
 	get_filename_component(name ${file} NAME)
 	configure_file(${file} configs/${name})
+endforeach()
+
+# Copy all models and tell the build system to re-run CMAKE if one of them changes
+file(GLOB files ../assets/models/*)
+foreach(file ${files})
+	get_filename_component(name ${file} NAME)
+	configure_file(${file} models/${name})
 endforeach()
