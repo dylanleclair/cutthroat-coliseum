@@ -38,8 +38,10 @@ struct ExampleSystem : ecs::ISystem
 	virtual void Teardown() {}
 	virtual void Update(ecs::Scene &scene, float deltaTime)
 	{
+		std::cout << "HHHHHHHHHHHHHHHHHHHHHHHHHH\n";
 		for (Guid entityGuid : ecs::EntitiesInScene<ExampleComponent>(scene))
 		{
+			
 			// pass in the guid of the entity to lookup the corresponding component
 			ExampleComponent& ex = scene.GetComponent<ExampleComponent>(entityGuid);
 
@@ -130,7 +132,8 @@ int main(int argc, char* argv[]) {
 	//FOR DYLAN: Why does having only 1 entity not seem to work? The component is added but it isn't being regiesterd,
 	// In general it seems that you need n+1 entities to get n entities working.
 	// spawn some entities.
-	for (int i = 0; i < 2; i++)
+	mainScene.CreateEntity();
+	for (int i = 0; i < 0; i++)
 	{
 		ecs::Entity e = mainScene.CreateEntity();
 		mainScene.AddComponent(e.guid, ExampleComponent{ 0,1,2 });
@@ -157,7 +160,13 @@ int main(int argc, char* argv[]) {
 		Position* position = new Position(glm::vec3(0));
 		mainScene.AddComponent(e.guid, RenderComponent{ cpuGeom, position });
 	}
-	
+
+	ecs::Entity e = mainScene.CreateEntity();
+	mainScene.AddComponent(e.guid, MeshComponent{ "configs/monkey.obj" });
+	ecs::Entity e2 = mainScene.CreateEntity();
+	mainScene.AddComponent(e2.guid, MeshComponent{ "configs/monkey.obj" });
+
+	std::cout << "Component initalization finished\n";
 	// create instance of system to use.
 	ExampleSystem exampleEcsSystem;
 	GraphicsSystem gs(window);
@@ -217,8 +226,11 @@ int main(int argc, char* argv[]) {
 		
 
 		// BEGIN ECS SYSTEMS UPDATES 
+		std::cout << "updating systems\n";
 		exampleEcsSystem.Update(mainScene, 0.0f);
-		gs.Update(mainScene, 0.0f);
+		std::cout << "exmple system finished\n";
+		//gs.Update(mainScene, 0.0f);
+		//std::cout << "graphics system finished\n";
 		// END__ ECS SYSTEMS UPDATES
 
 		glDisable(GL_FRAMEBUFFER_SRGB); // disable sRGB for things like imgui
