@@ -38,7 +38,6 @@ struct ExampleSystem : ecs::ISystem
 	virtual void Teardown() {}
 	virtual void Update(ecs::Scene &scene, float deltaTime)
 	{
-		std::cout << "HHHHHHHHHHHHHHHHHHHHHHHHHH\n";
 		for (Guid entityGuid : ecs::EntitiesInScene<ExampleComponent>(scene))
 		{
 			
@@ -129,42 +128,24 @@ int main(int argc, char* argv[]) {
 	// init ecs 
 	ecs::Scene mainScene;
 
-	//FOR DYLAN: Why does having only 1 entity not seem to work? The component is added but it isn't being regiesterd,
-	// In general it seems that you need n+1 entities to get n entities working.
 	// spawn some entities.
-	mainScene.CreateEntity();
-	for (int i = 0; i < 0; i++)
+	for (int i = 0; i < 500; i++)
 	{
 		ecs::Entity e = mainScene.CreateEntity();
 		mainScene.AddComponent(e.guid, ExampleComponent{ 0,1,2 });
 
-		
-		//yes, I know this makes a memory leak. It is just to test
-		CPU_Geometry* cpuGeom = new CPU_Geometry();
-		//put the meshes of 500 cubes in one entity
-		for (int j = 0; j < 500; j++) {
-			//create cube meshes for them
-			glm::vec3 temp;
-			const float LO = -3;
-			const float HI = 3;
-			for (int j = 0; j < 3; j++)
-				temp[j] = LO + static_cast <float> (rand()) / (static_cast <float> (RAND_MAX / (HI - LO)));
-			Position* position = new Position(temp);
-			//do some sample calculations to simulate static meshes
-			for (int j = 0; j < cubeGeom.verts.size(); j++) {
-				cpuGeom->verts.push_back(position->getTransformMatrix() * glm::vec4(cubeGeom.verts[j], 1));
-				cpuGeom->cols.push_back(cubeGeom.cols[j]);
-			}
-		}
-
-		Position* position = new Position(glm::vec3(0));
-		mainScene.AddComponent(e.guid, RenderComponent{ cpuGeom, position });
+		//create cube meshes for them
+		glm::vec3 temp;
+		const float LO = -10;
+		const float HI = 10;
+		for (int i = 0; i < 3; i++)
+			temp[i] = LO + static_cast <float> (rand()) / (static_cast <float> (RAND_MAX / (HI - LO)));
+		Position* position = new Position(temp);
+		RenderComponent comp = RenderComponent();
+		comp.position = position;
+		GraphicsSystem::readVertsFromFile(comp, "configs/monkey.obj");
+		mainScene.AddComponent(e.guid, comp);
 	}
-
-	ecs::Entity e = mainScene.CreateEntity();
-	mainScene.AddComponent(e.guid, MeshComponent{ "configs/monkey.obj" });
-	ecs::Entity e2 = mainScene.CreateEntity();
-	mainScene.AddComponent(e2.guid, MeshComponent{ "configs/monkey.obj" });
 
 	std::cout << "Component initalization finished\n";
 	// create instance of system to use.
@@ -226,10 +207,10 @@ int main(int argc, char* argv[]) {
 		
 
 		// BEGIN ECS SYSTEMS UPDATES 
-		std::cout << "updating systems\n";
+		//std::cout << "updating systems\n";
 		exampleEcsSystem.Update(mainScene, 0.0f);
-		std::cout << "exmple system finished\n";
-		//gs.Update(mainScene, 0.0f);
+		//std::cout << "exmple system finished\n";
+		gs.Update(mainScene, 0.0f);
 		//std::cout << "graphics system finished\n";
 		// END__ ECS SYSTEMS UPDATES
 

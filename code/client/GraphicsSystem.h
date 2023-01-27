@@ -14,27 +14,20 @@
 
 struct RenderComponent
 {
-	CPU_Geometry* geom;
+	GPU_Geometry* geom = new GPU_Geometry();
 	Position* position;
-	RenderComponent() {} //this doesn't do anything, but it needs to be here
-	RenderComponent(CPU_Geometry* _geom, Position* _position) : geom(_geom), position(_position) {  }
+	int numVerts = 0;
+	RenderComponent() = default;
+	RenderComponent(CPU_Geometry* _geom, Position* _position) : position(_position) { geom->setCols(_geom->cols); geom->setVerts(_geom->verts); numVerts = _geom->verts.size(); }
 };
 
-struct MeshComponent {
-	MeshComponent() {}
-	MeshComponent(std::string _file);
-	void processNode(aiNode* node, const aiScene* scene, CPU_Geometry* geom);
-	CPU_Geometry* geom = new CPU_Geometry;
-private:
-	bool initalized = false;
-	
-};
 
 struct GraphicsSystem : ecs::ISystem {
 public:
 	GraphicsSystem(Window& _window);
 	void Update(ecs::Scene& scene, float deltaTime);
 	void input(SDL_Event&, int _cameraID);
+	static void readVertsFromFile(RenderComponent& _component, const std::string _file);
 private:
 	Camera cameras[4];
 	int numCamerasActive = 1;
@@ -43,5 +36,5 @@ private:
 	GLuint perspectiveUniform = -1;
 	ShaderProgram shader;
 	glm::ivec2 windowSize;
+	static void processNode(aiNode* node, const aiScene* scene, CPU_Geometry* geom);
 };
-

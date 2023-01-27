@@ -60,38 +60,18 @@ void GraphicsSystem::Update(ecs::Scene& scene, float deltaTime) {
 				glViewport(0, 0, windowSize.x / 2, windowSize.y / 2);
 			}
 		}
-		std::cout << "HELLO\n";
+		
 		//render dynamic components
 		for (Guid entityGuid : ecs::EntitiesInScene<RenderComponent>(scene)) {
 			RenderComponent& comp = scene.GetComponent<RenderComponent>(entityGuid);
 
 			// GEOMETRY
-			GPU_Geometry gpuGeom;
-
-			gpuGeom.bind();
-			gpuGeom.setVerts(comp.geom->verts);
-			gpuGeom.setCols(comp.geom->cols);
+			comp.geom->bind();
 
 			glm::mat4 M = comp.position->getTransformMatrix();
 			glUniformMatrix4fv(modelUniform, 1, GL_FALSE, glm::value_ptr(M));
-			glDrawArrays(GL_TRIANGLES, 0, comp.geom->verts.size());
+			glDrawArrays(GL_TRIANGLES, 0, comp.numVerts);
 		}
-	}
-	
-	//render dynamic components
-	for (Guid entityGuid : ecs::EntitiesInScene<MeshComponent>(scene)) {
-		MeshComponent& comp = scene.GetComponent<MeshComponent>(entityGuid);
-
-		// GEOMETRY
-		GPU_Geometry gpuGeom;
-
-		gpuGeom.bind();
-		gpuGeom.setVerts(comp.geom->verts);
-		gpuGeom.setCols(comp.geom->cols);
-
-		glm::mat4 M = glm::mat4(1);
-		glUniformMatrix4fv(modelUniform, 1, GL_FALSE, glm::value_ptr(M));
-		glDrawArrays(GL_TRIANGLES, 0, comp.geom->verts.size());
 	}
 }
 
@@ -100,8 +80,8 @@ void GraphicsSystem::input(SDL_Event& _event, int _cameraID)
 	cameras[_cameraID].input(_event);
 }
 
-MeshComponent::MeshComponent(std::string _file)
-{
+void GraphicsSystem::readVertsFromFile(RenderComponent& _component, const std::string _file) {
+	CPU_Geometry geom;
 	std::cout << "Beginning to load model\n";
 	Assimp::Importer importer;
 	const aiScene* scene = importer.ReadFile(_file, aiProcess_Triangulate);
@@ -112,11 +92,16 @@ MeshComponent::MeshComponent(std::string _file)
 	}
 	std::cout << "Found " << scene->mRootNode->mNumMeshes << " Meshes\n";
 	std::cout << "root node contains " << scene->mRootNode->mNumChildren << " Children\n";
-	processNode(scene->mRootNode, scene, geom);
-	std::cout << "Finished loading model with " << geom->verts.size() << " verticies\n";
+	processNode(scene->mRootNode, scene, &geom);
+	std::cout << "Finished loading model with " << geom.verts.size() << " verticies\n";
+
+	//Load the verticies into the GPU
+	_component.numVerts = geom.verts.size();
+	_component.geom->setVerts(geom.verts);
+	_component.geom->setCols(geom.cols);
 }
 
-void MeshComponent::processNode(aiNode* node, const aiScene* scene, CPU_Geometry* geom) {
+void GraphicsSystem::processNode(aiNode* node, const aiScene* scene, CPU_Geometry* geom) {
 	//process (For now I'm only processing the root node)
 	for (int i = 0; i < node->mNumMeshes; i++) {
 		const aiMesh* mesh = scene->mMeshes[node->mMeshes[i]];
