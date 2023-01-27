@@ -397,7 +397,7 @@ namespace ecs
 
             const Iterator end() const
             {
-                u64 firstIndex = m_scene.entities.size() - 1;
+                u64 firstIndex = m_scene.entities.size();
 
                 ComponentFlags entityComponentsMasked = (m_componentMask & m_scene.entities[index].components);
 
