@@ -1,4 +1,6 @@
+#include "systems/ecs.h"
 #include "GraphicsSystem.h"
+
 #include <GL/glew.h>
 #include <iostream>
 #include "GLDebug.h"
@@ -6,6 +8,10 @@
 #include "glm/gtc/type_ptr.hpp"
 #include "Camera.h"
 #include "Position.h"
+
+#include <assimp/Importer.hpp>
+#include <assimp/scene.h>
+#include <assimp/postprocess.h>
 
 GraphicsSystem::GraphicsSystem(Window& _window) :
 	shader("shaders/test.vert", "shaders/test.frag")
@@ -21,13 +27,7 @@ GraphicsSystem::GraphicsSystem(Window& _window) :
 	perspectiveUniform = glGetUniformLocation(GLuint(shader), "P");
 }
 
-void GraphicsSystem::addPrimitive(render_packet _packet)
-{
-	//NOTE: I believe this should copy the CPU_Geometry into the vector. This isn't ideal since whenever the vector resizes it will need to copy all the data but the ECS should take care of this
-	geometries.push_back(_packet);
-}
-
-void GraphicsSystem::render() {
+void GraphicsSystem::Update(ecs::Scene& scene, float deltaTime) {
 	glEnable(GL_LINE_SMOOTH);
 	glEnable(GL_FRAMEBUFFER_SRGB);
 	glClearColor(0.0f, 0.0f, 0.0f, 1.0f);
@@ -60,20 +60,17 @@ void GraphicsSystem::render() {
 				glViewport(0, 0, windowSize.x / 2, windowSize.y / 2);
 			}
 		}
+		
+		//render dynamic components
+		for (Guid entityGuid : ecs::EntitiesInScene<RenderComponent>(scene)) {
+			RenderComponent& comp = scene.GetComponent<RenderComponent>(entityGuid);
 
-		for (render_packet pck : geometries)
-		{
 			// GEOMETRY
-			GPU_Geometry gpuGeom;
+			comp.geom->bind();
 
-			gpuGeom.bind();
-			gpuGeom.setVerts(pck.geom.verts);
-			gpuGeom.setCols(pck.geom.cols);
-
-			glm::mat4 M = glm::mat4(1.0f);
+			glm::mat4 M = comp.position->getTransformMatrix();
 			glUniformMatrix4fv(modelUniform, 1, GL_FALSE, glm::value_ptr(M));
-
-			glDrawArrays(GL_TRIANGLES, 0, pck.geom.verts.size());
+			glDrawArrays(GL_TRIANGLES, 0, comp.numVerts);
 		}
 	}
 }
@@ -81,4 +78,54 @@ void GraphicsSystem::render() {
 void GraphicsSystem::input(SDL_Event& _event, int _cameraID)
 {
 	cameras[_cameraID].input(_event);
+}
+
+void GraphicsSystem::readVertsFromFile(RenderComponent& _component, const std::string _file) {
+	CPU_Geometry geom;
+	std::cout << "Beginning to load model\n";
+	Assimp::Importer importer;
+	const aiScene* scene = importer.ReadFile(_file, aiProcess_Triangulate);
+	if (!scene || scene->mFlags & AI_SCENE_FLAGS_INCOMPLETE || !scene->mRootNode)
+	{
+		std::cout << "Error importing " << _file << " into scene\n";
+		return;
+	}
+	std::cout << "Found " << scene->mRootNode->mNumMeshes << " Meshes\n";
+	std::cout << "root node contains " << scene->mRootNode->mNumChildren << " Children\n";
+	processNode(scene->mRootNode, scene, &geom);
+	std::cout << "Finished loading model with " << geom.verts.size() << " verticies\n";
+
+	//Load the verticies into the GPU
+	_component.numVerts = geom.verts.size();
+	_component.geom->setVerts(geom.verts);
+	_component.geom->setCols(geom.cols);
+}
+
+void GraphicsSystem::processNode(aiNode* node, const aiScene* scene, CPU_Geometry* geom) {
+	//process (For now I'm only processing the root node)
+	for (int i = 0; i < node->mNumMeshes; i++) {
+		const aiMesh* mesh = scene->mMeshes[node->mMeshes[i]];
+		//for each mess extract its verticies
+		//retrieve all the verticies
+		std::vector<glm::vec3> tverts;
+		tverts.reserve(mesh->mNumVertices);
+		for (int j = 0; j < mesh->mNumVertices; j++) {
+			tverts.push_back(glm::vec3(mesh->mVertices[j].x, mesh->mVertices[j].y, mesh->mVertices[j].z));
+		}
+		std::cout << "Finished loading verticies\n";
+		//retrieve all the indicies
+		//remove the dependency for indicies and store the final result
+		for (int j = 0; j < mesh->mNumFaces; j++) {
+			geom->verts.push_back(tverts[mesh->mFaces[j].mIndices[0]]);
+			geom->verts.push_back(tverts[mesh->mFaces[j].mIndices[1]]);
+			geom->verts.push_back(tverts[mesh->mFaces[j].mIndices[2]]);
+			for (int z = 0; z < 3; z++)
+				geom->cols.push_back(glm::vec3(1));
+		}
+	}
+
+	for (int i = 0; i < node->mNumChildren; i++)
+	{
+		processNode(node->mChildren[i], scene, geom);
+	}
 }

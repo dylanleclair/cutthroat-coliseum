@@ -1,28 +1,34 @@
 #pragma once
+#include "systems/ecs.h"
 #include <GL/glew.h>
 #include "Geometry.h"
 #include "Window.h"
 #include "Camera.h"
 #include "Position.h"
 #include "ShaderProgram.h"
+#include <iostream>
 
-//a package of data telling the system what primitive to draw
-struct render_packet {
-	CPU_Geometry geom;
-	Position position;
-	render_packet(CPU_Geometry& _geom, Position _position) : geom(_geom), position(_position) {}
+#include <assimp/Importer.hpp>
+#include <assimp/scene.h>
+#include <assimp/postprocess.h>
+
+struct RenderComponent
+{
+	GPU_Geometry* geom = new GPU_Geometry();
+	Position* position;
+	int numVerts = 0;
+	RenderComponent() = default;
+	RenderComponent(CPU_Geometry* _geom, Position* _position) : position(_position) { geom->setCols(_geom->cols); geom->setVerts(_geom->verts); numVerts = _geom->verts.size(); }
 };
 
 
-
-class GraphicsSystem {
+struct GraphicsSystem : ecs::ISystem {
 public:
 	GraphicsSystem(Window& _window);
-	void addPrimitive(render_packet _packet);
-	void render();
+	void Update(ecs::Scene& scene, float deltaTime);
 	void input(SDL_Event&, int _cameraID);
+	static void readVertsFromFile(RenderComponent& _component, const std::string _file);
 private:
-	std::vector<render_packet> geometries;
 	Camera cameras[4];
 	int numCamerasActive = 1;
 	GLint modelUniform = -1;
@@ -30,4 +36,5 @@ private:
 	GLuint perspectiveUniform = -1;
 	ShaderProgram shader;
 	glm::ivec2 windowSize;
+	static void processNode(aiNode* node, const aiScene* scene, CPU_Geometry* geom);
 };

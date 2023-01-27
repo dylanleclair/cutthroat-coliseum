@@ -1,6 +1,3 @@
-#include <GL/glew.h>
-
-
 #include <iostream>
 
 #include "imgui.h"
@@ -10,8 +7,6 @@
 #include "Geometry.h"
 #include "GLDebug.h"
 #include "Log.h"
-#include "ShaderProgram.h"
-#include "Shader.h"
 #include "Window.h"
 
 #include "systems/ecs.h"
@@ -45,6 +40,7 @@ struct ExampleSystem : ecs::ISystem
 	{
 		for (Guid entityGuid : ecs::EntitiesInScene<ExampleComponent>(scene))
 		{
+			
 			// pass in the guid of the entity to lookup the corresponding component
 			ExampleComponent& ex = scene.GetComponent<ExampleComponent>(entityGuid);
 
@@ -77,73 +73,84 @@ int main(int argc, char* argv[]) {
 	GLDebug::enable();
 
 	// GEOMETRY
-	CPU_Geometry cpuGeom;
+	CPU_Geometry cubeGeom;
 
 	//make a wireframe cube
-	cpuGeom.verts.push_back(glm::vec3(-1, -1, 1));
-	cpuGeom.verts.push_back(glm::vec3(1, -1, 1));
-	cpuGeom.verts.push_back(glm::vec3(1, 1, 1));
-	cpuGeom.verts.push_back(glm::vec3(-1, -1, 1));
-	cpuGeom.verts.push_back(glm::vec3(1, 1, 1));
-	cpuGeom.verts.push_back(glm::vec3(-1, 1, 1));
-	cpuGeom.verts.push_back(glm::vec3(1, -1, 1));
-	cpuGeom.verts.push_back(glm::vec3(1, -1, -1));
-	cpuGeom.verts.push_back(glm::vec3(1, 1, -1));
-	cpuGeom.verts.push_back(glm::vec3(1, -1, 1));
-	cpuGeom.verts.push_back(glm::vec3(1, 1, -1));
-	cpuGeom.verts.push_back(glm::vec3(1, 1, 1));
-	cpuGeom.verts.push_back(glm::vec3(1, -1, -1));
-	cpuGeom.verts.push_back(glm::vec3(-1, -1, -1));
-	cpuGeom.verts.push_back(glm::vec3(-1, 1, -1));
-	cpuGeom.verts.push_back(glm::vec3(1, -1, -1));
-	cpuGeom.verts.push_back(glm::vec3(-1, 1, -1));
-	cpuGeom.verts.push_back(glm::vec3(1, 1, -1));
-	cpuGeom.verts.push_back(glm::vec3(-1, -1, -1));
-	cpuGeom.verts.push_back(glm::vec3(-1, -1, 1));
-	cpuGeom.verts.push_back(glm::vec3(-1, 1, 1));
-	cpuGeom.verts.push_back(glm::vec3(-1, -1, -1));
-	cpuGeom.verts.push_back(glm::vec3(-1, 1, 1));
-	cpuGeom.verts.push_back(glm::vec3(-1, 1, -1));
-	cpuGeom.verts.push_back(glm::vec3(-1, 1, 1));
-	cpuGeom.verts.push_back(glm::vec3(1, 1, 1));
-	cpuGeom.verts.push_back(glm::vec3(1, 1, -1));
-	cpuGeom.verts.push_back(glm::vec3(-1, 1, 1));
-	cpuGeom.verts.push_back(glm::vec3(1, 1, -1));
-	cpuGeom.verts.push_back(glm::vec3(-1, 1, -1));
-	cpuGeom.verts.push_back(glm::vec3(1, -1, 1));
-	cpuGeom.verts.push_back(glm::vec3(-1, -1, -1));
-	cpuGeom.verts.push_back(glm::vec3(1, -1, -1));
-	cpuGeom.verts.push_back(glm::vec3(1, -1, 1));
-	cpuGeom.verts.push_back(glm::vec3(-1, -1, 1));
-	cpuGeom.verts.push_back(glm::vec3(-1, -1, -1));
+	cubeGeom.verts.push_back(glm::vec3(-1, -1, 1));
+	cubeGeom.verts.push_back(glm::vec3(1, -1, 1));
+	cubeGeom.verts.push_back(glm::vec3(1, 1, 1));
+	cubeGeom.verts.push_back(glm::vec3(-1, -1, 1));
+	cubeGeom.verts.push_back(glm::vec3(1, 1, 1));
+	cubeGeom.verts.push_back(glm::vec3(-1, 1, 1));
+	cubeGeom.verts.push_back(glm::vec3(1, -1, 1));
+	cubeGeom.verts.push_back(glm::vec3(1, -1, -1));
+	cubeGeom.verts.push_back(glm::vec3(1, 1, -1));
+	cubeGeom.verts.push_back(glm::vec3(1, -1, 1));
+	cubeGeom.verts.push_back(glm::vec3(1, 1, -1));
+	cubeGeom.verts.push_back(glm::vec3(1, 1, 1));
+	cubeGeom.verts.push_back(glm::vec3(1, -1, -1));
+	cubeGeom.verts.push_back(glm::vec3(-1, -1, -1));
+	cubeGeom.verts.push_back(glm::vec3(-1, 1, -1));
+	cubeGeom.verts.push_back(glm::vec3(1, -1, -1));
+	cubeGeom.verts.push_back(glm::vec3(-1, 1, -1));
+	cubeGeom.verts.push_back(glm::vec3(1, 1, -1));
+	cubeGeom.verts.push_back(glm::vec3(-1, -1, -1));
+	cubeGeom.verts.push_back(glm::vec3(-1, -1, 1));
+	cubeGeom.verts.push_back(glm::vec3(-1, 1, 1));
+	cubeGeom.verts.push_back(glm::vec3(-1, -1, -1));
+	cubeGeom.verts.push_back(glm::vec3(-1, 1, 1));
+	cubeGeom.verts.push_back(glm::vec3(-1, 1, -1));
+	cubeGeom.verts.push_back(glm::vec3(-1, 1, 1));
+	cubeGeom.verts.push_back(glm::vec3(1, 1, 1));
+	cubeGeom.verts.push_back(glm::vec3(1, 1, -1));
+	cubeGeom.verts.push_back(glm::vec3(-1, 1, 1));
+	cubeGeom.verts.push_back(glm::vec3(1, 1, -1));
+	cubeGeom.verts.push_back(glm::vec3(-1, 1, -1));
+	cubeGeom.verts.push_back(glm::vec3(1, -1, 1));
+	cubeGeom.verts.push_back(glm::vec3(-1, -1, -1));
+	cubeGeom.verts.push_back(glm::vec3(1, -1, -1));
+	cubeGeom.verts.push_back(glm::vec3(1, -1, 1));
+	cubeGeom.verts.push_back(glm::vec3(-1, -1, 1));
+	cubeGeom.verts.push_back(glm::vec3(-1, -1, -1));
 
 	for (int i = 0; i < 12; i++) {
 		float col1 = static_cast <float> (rand()) / static_cast <float> (RAND_MAX);
 		float col2 = static_cast <float> (rand()) / static_cast <float> (RAND_MAX);
 		float col3 = static_cast <float> (rand()) / static_cast <float> (RAND_MAX);
 		for(int j = 0; j < 3; j++)
-			cpuGeom.cols.push_back(glm::vec3(col1, col2, col3));
+			cubeGeom.cols.push_back(glm::vec3(col1, col2, col3));
 	}
 
 	carConfig.deserialize();
 
-	GraphicsSystem gs(window);
-
-	render_packet pack(cpuGeom, Position());
-	gs.addPrimitive(pack);
+	
 
 	// init ecs 
 	ecs::Scene mainScene;
 
 	// spawn some entities.
-	for (int i = 0; i < 10; i++)
+	for (int i = 0; i < 500; i++)
 	{
 		ecs::Entity e = mainScene.CreateEntity();
 		mainScene.AddComponent(e.guid, ExampleComponent{ 0,1,2 });
+
+		//create cube meshes for them
+		glm::vec3 temp;
+		const float LO = -10;
+		const float HI = 10;
+		for (int i = 0; i < 3; i++)
+			temp[i] = LO + static_cast <float> (rand()) / (static_cast <float> (RAND_MAX / (HI - LO)));
+		Position* position = new Position(temp);
+		RenderComponent comp = RenderComponent();
+		comp.position = position;
+		GraphicsSystem::readVertsFromFile(comp, "configs/monkey.obj");
+		mainScene.AddComponent(e.guid, comp);
 	}
-	
+
+	std::cout << "Component initalization finished\n";
 	// create instance of system to use.
 	ExampleSystem exampleEcsSystem;
+	GraphicsSystem gs(window);
 
 	init_physx();
 
@@ -197,10 +204,14 @@ int main(int argc, char* argv[]) {
 			//pass the event to the camera
 			gs.input(window.event, controlledCamera);
 		}
-		gs.render();
+		
 
 		// BEGIN ECS SYSTEMS UPDATES 
+		//std::cout << "updating systems\n";
 		exampleEcsSystem.Update(mainScene, 0.0f);
+		//std::cout << "exmple system finished\n";
+		gs.Update(mainScene, 0.0f);
+		//std::cout << "graphics system finished\n";
 		// END__ ECS SYSTEMS UPDATES
 
 		glDisable(GL_FRAMEBUFFER_SRGB); // disable sRGB for things like imgui
