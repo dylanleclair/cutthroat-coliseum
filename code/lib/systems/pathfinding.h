@@ -74,21 +74,75 @@ namespace pathfinding {
 	template <typename P>
 	struct AStarNode
 	{
-		AStarNode(P typeVal, std::pair<AStarNode, bool> parent) : value(typeVal), parent(parent) {};
+		AStarNode(P typeVal, bool isRoot) : value(typeVal), isRoot(isRoot) 
+		{
+			gCost = isRoot ? 0 : std::numeric_limits<float>::max();
+		};
+		AStarNode(P typeVal, bool isRoot, float gCost, float hCost, float fCost) : value(typeVal), isRoot(isRoot), gCost(gCost), fCost(fCost), hCost(hCost) {};
 		std::vector<P> reconstructPath();
 
-		const P& getValue() { return value; }
+		P& getValue() { return value; }
 
+		const float getCurrentCost() { return gCost };
+		
+		std::vector<P> path;
+
+		std::vector<AStarNode<P>> AStarNode<P>::foilNeighbours(std::function<std::vector<std::pair<P, float>>(P)> getNeighbours, std::function<float(P, P)> heuristic, P goal)
+		{
+
+			std::vector<AStarNode<P>> neighbours{};
+			for (std::pair<P, float>& neighbour : getNeighbours(this->getValue()))
+			{
+				// need to calculate the values for the neigher
+				float hCost = heuristic(neighbour.first, goal);	// estimated dist. from neighbour to destination
+				float gCost = this->gCost + neighbour.second;	// "distance" from start to neighbour
+				float fCost = gCost + hCost;					// overall estimated cost
+
+
+
+				AStarNode<P> node{ neighbour.first, false ,gCost,hCost,fCost };
+
+				// reconstruct the path
+				for (auto& entry : this->path)
+				{
+					node.path.push_back(entry);
+				}
+				// add new element in path
+				node.path.push_back(this->value);
+
+				neighbours.push_back(node);
+			}
+
+			return neighbours;
+		}
+
+		// from https://dev.to/jansonsa/a-star-a-path-finding-c-4a4h
+		inline bool operator< (const AStarNode<P>& rhs) const
+		{
+			return this->fCost < rhs.fCost;
+		}
+	
 	private:
-		P value;
-		std::pair<AStarNode, bool> parent;
-		float gCost{ std::numeric_limits<float>::max }; // cost of cheapest path from start to this node currently known
-		float hCost{ std::numeric_limits<float>::max }; // cost estimate / heuristic from this node to goal
-		float fCost{ std::numeric_limits<float>::max }; // fCost = gCost + hCost (best guess as to resulting path cost)
+		P value;	
+		float gCost{ std::numeric_limits<float>::max() }; // cost of cheapest path from start to this node currently known
+		float hCost{ std::numeric_limits<float>::max() }; // cost estimate / heuristic from this node to goal
+		float fCost{ std::numeric_limits<float>::max() }; // fCost = gCost + hCost (best guess as to resulting path cost)
+
+		bool isRoot;
 
 
+		
+
+		
 	};
 
+
+	template <typename T>
+	std::vector<T> AStarNode<T>::reconstructPath()
+	{
+		this->path.push_back(this->value);
+		return this->path;
+	}
 
 	/// <summary>
 	/// Computes the A* algorithm for a given set of points, using given heuristic and comparison functions.
@@ -98,9 +152,61 @@ namespace pathfinding {
 	/// <param name="goal"></param>
 	/// <param name="heuristic"></param>
 	/// <param name="compare"></param>
-	template <typename T> 
-	static void AStar(T start, T goal, std::function<float(T, T)> heuristic, std::function<bool(T&, T&)> compare);
+	template <typename T>
+	std::vector<T> AStar(T start, T goal, std::function<float(T, T)> heuristic, std::function<std::vector<std::pair<T, float>>(T)> getNeighbours)
+	{
 
+		AStarNode<T> actualStart{ start , true };
+		AStarNode<T> actualGoal{ goal, false };
+
+
+		std::set<AStarNode<T>> openSet{};
+		openSet.insert(actualStart);
+
+
+		while (openSet.size() > 0)
+		{
+			auto beginIt = openSet.begin();
+
+			// pop the node from the "priority queue" 
+			AStarNode<T> n = *beginIt; // find the node (deref)
+			T& nValue = n.getValue();
+			if (nValue == goal)
+			{
+				return n.reconstructPath();
+			}
+
+			openSet.erase(beginIt); // delete it from the set 
+
+			// foil the neighbours according to the neighbouring function
+			std::vector<AStarNode<T>> neighbours = n.foilNeighbours(getNeighbours, heuristic, goal);
+
+			// wrap them up in 
+			for (AStarNode<T>& neighbour : neighbours)
+			{
+				// do the mathy math stuffs & add new neighbours
+				openSet.insert(neighbour);
+			}
+
+		}
+
+		/* this some cursed shit imma try and avoid if i can help it
+		struct customCompare {
+			bool operator() (const T& lhs, const T& rhs)
+			{
+				return compare(lhs, rhs);
+			}
+		};
+		*/
+		// initialize a set of nodes
+
+
+
+
+		// maybe we start with a simpler implementation lol
+
+		return std::vector<T>{};
+	}
 
 
 
