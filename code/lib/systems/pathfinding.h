@@ -94,10 +94,10 @@ namespace pathfinding {
 			for (std::pair<P, float>& neighbour : getNeighbours(this->getValue()))
 			{
 				// need to calculate the values for the neigher
-				float hCost = heuristic(neighbour.first, goal);	// estimated dist. from neighbour to destination
+				// for some reason this works best when hCost * 2... prolly need to adjust heuristic or gcost to fix
+				float hCost = 2.f * heuristic(neighbour.first, goal);	// estimated dist. from neighbour to destination
 				float gCost = this->gCost + neighbour.second;	// "distance" from start to neighbour
 				float fCost = gCost + hCost;					// overall estimated cost
-
 
 
 				AStarNode<P> node{ neighbour.first, false ,gCost,hCost,fCost };

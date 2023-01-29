@@ -14,17 +14,9 @@ struct Transform
 
     void print()
     {
-        printf("transform: %f,%f", posX, posY);
+        printf("transform: %f,%f\n", posX, posY);
     }
 };
-
-TEST(pathfinding, do_nothing)
-{
-
-    std::cout << "yay";
-    ASSERT_TRUE(true);
-
-}
 
 float euclidean2D(Transform a, Transform b)
 {
@@ -70,16 +62,71 @@ TEST(pathfinding, a_star_2d)
 
     // must perform a rounding step in case the "goal" is not actually on the coordinate grid
     // OR, find some way to force the goal to be on the grid (in this case rounding?)
-
+    
+    printf("finding a path from point a to b\n");
+    printf("point a: ");
+    a.print();
+    printf("point b: ");
+    b.print();
+    printf("\n");
 
     std::vector<Transform> result = pathfinding::AStar<Transform>(a, b, euclidean2D, generateNearby);
 
+    printf("path from a to b generated using A* algorithm using euclidean distance as heuristic:");
     for (auto& pos : result)
     {
         pos.print();
     }
     
-    std::cout << "yay";
+    ASSERT_TRUE(result[result.size() - 1] == b);
+
+}
+
+TEST(pathfinding, a_star_2d_no_print)
+{
+
+    Transform a{ 0.f, 0.f };
+    Transform b{ 12.f, 12.f };
+
+    // must perform a rounding step in case the "goal" is not actually on the coordinate grid
+    // OR, find some way to force the goal to be on the grid (in this case rounding?)
+
+
+    std::vector<Transform> result = pathfinding::AStar<Transform>(a, b, euclidean2D, generateNearby);
+
+    ASSERT_TRUE(result[result.size() - 1] == b);
+
+}
+
+
+
+TEST(pathfinding, a_star_2d_no_print_far)
+{
+
+    Transform a{ 0.f, 0.f };
+    Transform b{ 200.f, 200.f };
+
+    // must perform a rounding step in case the "goal" is not actually on the coordinate grid
+    // OR, find some way to force the goal to be on the grid (in this case rounding?)
+
+
+    std::vector<Transform> result = pathfinding::AStar<Transform>(a, b, euclidean2D, generateNearby);
+
+    ASSERT_TRUE(result[result.size() - 1] == b);
+
+}
+
+TEST(pathfinding, a_star_2d_no_print_far_rect)
+{
+
+    Transform a{ 0.f, 0.f };
+    Transform b{ 100.f, 200.f };
+
+    // must perform a rounding step in case the "goal" is not actually on the coordinate grid
+    // OR, find some way to force the goal to be on the grid (in this case rounding?)
+
+    std::vector<Transform> result = pathfinding::AStar<Transform>(a, b, euclidean2D, generateNearby);
+
     ASSERT_TRUE(result[result.size() - 1] == b);
 
 }
