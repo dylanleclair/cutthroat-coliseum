@@ -22,46 +22,6 @@ CarPhysics carPhysics;
 CarPhysicsSerde carConfig(carPhysics);
 
 
-
-struct ExampleComponent
-{
-	int a{ 0 };
-	int b{ 0 };
-	int c{ 0 };
-};
-
-
-struct ExampleSystem : ecs::ISystem
-{
-
-	virtual void Initialize() {}
-	virtual void Teardown() {}
-	virtual void Update(ecs::Scene &scene, float deltaTime)
-	{
-		for (Guid entityGuid : ecs::EntitiesInScene<ExampleComponent>(scene))
-		{
-			
-			// pass in the guid of the entity to lookup the corresponding component
-			ExampleComponent& ex = scene.GetComponent<ExampleComponent>(entityGuid);
-
-			// do some operation of the data
-			ex.a += 1;
-			ex.b += 2;
-			ex.c += 3;
-
-			display = "ecs component: " + std::to_string(ex.a) + " " + std::to_string(ex.b) + " " + std::to_string(ex.c) + "!";
-		}
-	}
-
-	std::string getDisplayString()
-	{
-		return display;
-	}
-
-private:
-	std::string display{};
-};
-
 int main(int argc, char* argv[]) {
 	Log::debug("Starting main");
 
@@ -71,56 +31,6 @@ int main(int argc, char* argv[]) {
 	ImGuiIO& io = ImGui::GetIO(); (void)io;
 
 	GLDebug::enable();
-
-	// GEOMETRY
-	CPU_Geometry cubeGeom;
-
-	//make a wireframe cube
-	cubeGeom.verts.push_back(glm::vec3(-1, -1, 1));
-	cubeGeom.verts.push_back(glm::vec3(1, -1, 1));
-	cubeGeom.verts.push_back(glm::vec3(1, 1, 1));
-	cubeGeom.verts.push_back(glm::vec3(-1, -1, 1));
-	cubeGeom.verts.push_back(glm::vec3(1, 1, 1));
-	cubeGeom.verts.push_back(glm::vec3(-1, 1, 1));
-	cubeGeom.verts.push_back(glm::vec3(1, -1, 1));
-	cubeGeom.verts.push_back(glm::vec3(1, -1, -1));
-	cubeGeom.verts.push_back(glm::vec3(1, 1, -1));
-	cubeGeom.verts.push_back(glm::vec3(1, -1, 1));
-	cubeGeom.verts.push_back(glm::vec3(1, 1, -1));
-	cubeGeom.verts.push_back(glm::vec3(1, 1, 1));
-	cubeGeom.verts.push_back(glm::vec3(1, -1, -1));
-	cubeGeom.verts.push_back(glm::vec3(-1, -1, -1));
-	cubeGeom.verts.push_back(glm::vec3(-1, 1, -1));
-	cubeGeom.verts.push_back(glm::vec3(1, -1, -1));
-	cubeGeom.verts.push_back(glm::vec3(-1, 1, -1));
-	cubeGeom.verts.push_back(glm::vec3(1, 1, -1));
-	cubeGeom.verts.push_back(glm::vec3(-1, -1, -1));
-	cubeGeom.verts.push_back(glm::vec3(-1, -1, 1));
-	cubeGeom.verts.push_back(glm::vec3(-1, 1, 1));
-	cubeGeom.verts.push_back(glm::vec3(-1, -1, -1));
-	cubeGeom.verts.push_back(glm::vec3(-1, 1, 1));
-	cubeGeom.verts.push_back(glm::vec3(-1, 1, -1));
-	cubeGeom.verts.push_back(glm::vec3(-1, 1, 1));
-	cubeGeom.verts.push_back(glm::vec3(1, 1, 1));
-	cubeGeom.verts.push_back(glm::vec3(1, 1, -1));
-	cubeGeom.verts.push_back(glm::vec3(-1, 1, 1));
-	cubeGeom.verts.push_back(glm::vec3(1, 1, -1));
-	cubeGeom.verts.push_back(glm::vec3(-1, 1, -1));
-	cubeGeom.verts.push_back(glm::vec3(1, -1, 1));
-	cubeGeom.verts.push_back(glm::vec3(-1, -1, -1));
-	cubeGeom.verts.push_back(glm::vec3(1, -1, -1));
-	cubeGeom.verts.push_back(glm::vec3(1, -1, 1));
-	cubeGeom.verts.push_back(glm::vec3(-1, -1, 1));
-	cubeGeom.verts.push_back(glm::vec3(-1, -1, -1));
-
-	for (int i = 0; i < 12; i++) {
-		float col1 = static_cast <float> (rand()) / static_cast <float> (RAND_MAX);
-		float col2 = static_cast <float> (rand()) / static_cast <float> (RAND_MAX);
-		float col3 = static_cast <float> (rand()) / static_cast <float> (RAND_MAX);
-		for(int j = 0; j < 3; j++)
-			cubeGeom.cols.push_back(glm::vec3(col1, col2, col3));
-	}
-
 	carConfig.deserialize();
 
 	
@@ -128,28 +38,17 @@ int main(int argc, char* argv[]) {
 	// init ecs 
 	ecs::Scene mainScene;
 
-	// spawn some entities.
-	for (int i = 0; i < 500; i++)
-	{
-		ecs::Entity e = mainScene.CreateEntity();
-		mainScene.AddComponent(e.guid, ExampleComponent{ 0,1,2 });
+	ecs::Entity e = mainScene.CreateEntity();
+	Position* position = new Position(glm::vec3(0));
+	RenderComponent comp = RenderComponent();
+	comp.position = position;
+	GraphicsSystem::readVertsFromFile(comp, "models/torus.obj");
 
-		//create cube meshes for them
-		glm::vec3 temp;
-		const float LO = -10;
-		const float HI = 10;
-		for (int i = 0; i < 3; i++)
-			temp[i] = LO + static_cast <float> (rand()) / (static_cast <float> (RAND_MAX / (HI - LO)));
-		Position* position = new Position(temp);
-		RenderComponent comp = RenderComponent();
-		comp.position = position;
-		GraphicsSystem::readVertsFromFile(comp, "configs/monkey.obj");
-		mainScene.AddComponent(e.guid, comp);
-	}
+	mainScene.AddComponent(e.guid, comp);
 
+	
 	std::cout << "Component initalization finished\n";
 	// create instance of system to use.
-	ExampleSystem exampleEcsSystem;
 	GraphicsSystem gs(window);
 
 	init_physx();
@@ -207,11 +106,7 @@ int main(int argc, char* argv[]) {
 		
 
 		// BEGIN ECS SYSTEMS UPDATES 
-		//std::cout << "updating systems\n";
-		exampleEcsSystem.Update(mainScene, 0.0f);
-		//std::cout << "exmple system finished\n";
 		gs.Update(mainScene, 0.0f);
-		//std::cout << "graphics system finished\n";
 		// END__ ECS SYSTEMS UPDATES
 
 		glDisable(GL_FRAMEBUFFER_SRGB); // disable sRGB for things like imgui
@@ -247,11 +142,6 @@ int main(int argc, char* argv[]) {
 		if (ImGui::Button("Serialize")) carConfig.serialize();
 		ImGui::End();
 		// END CAR PHYSICS PANEL
-
-		// BEGIN ECS DEMO PANEL
-		ImGui::Begin("ECS Demo");
-		ImGui::Text("%s", exampleEcsSystem.getDisplayString().c_str());
-		ImGui::End();
 
 		// NOTE: the imgui bible - beau
 		ImGui::ShowDemoWindow();
