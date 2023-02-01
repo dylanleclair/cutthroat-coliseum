@@ -8,6 +8,8 @@
 #include "glm/gtc/type_ptr.hpp"
 #include "Camera.h"
 #include "Position.h"
+#include "glm/gtc/quaternion.hpp"
+#include <glm/gtx/quaternion.hpp>
 
 #include <assimp/Importer.hpp>
 #include <assimp/scene.h>
@@ -64,11 +66,12 @@ void GraphicsSystem::Update(ecs::Scene& scene, float deltaTime) {
 		//render dynamic components
 		for (Guid entityGuid : ecs::EntitiesInScene<RenderComponent>(scene)) {
 			RenderComponent& comp = scene.GetComponent<RenderComponent>(entityGuid);
-
+			TransformComponent& trans = scene.GetComponent<TransformComponent>(entityGuid);
+			
 			// GEOMETRY
 			comp.geom->bind();
 
-			glm::mat4 M = comp.position->getTransformMatrix();
+			glm::mat4 M = glm::translate(glm::mat4(1), trans.position) * toMat4(trans.rotation);
 			glUniformMatrix4fv(modelUniform, 1, GL_FALSE, glm::value_ptr(M));
 			glDrawArrays(GL_TRIANGLES, 0, comp.numVerts);
 		}
@@ -129,3 +132,5 @@ void GraphicsSystem::processNode(aiNode* node, const aiScene* scene, CPU_Geometr
 		processNode(node->mChildren[i], scene, geom);
 	}
 }
+
+

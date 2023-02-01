@@ -13,10 +13,11 @@
 
 #include "CarPhysics.h"
 
+#include "PhysicsSystem.h"
 #include "GraphicsSystem.h"
 #include "FrameCounter.h"
 
-#include "Physx.h"
+//#include "Physx.h"
 
 CarPhysics carPhysics;
 CarPhysicsSerde carConfig(carPhysics);
@@ -33,25 +34,31 @@ int main(int argc, char* argv[]) {
 	GLDebug::enable();
 	carConfig.deserialize();
 
-	
+	// create instance of system to use.
+	GraphicsSystem gs(window);
+	PhysicsSystem ps;
 
 	// init ecs 
 	ecs::Scene mainScene;
 
 	ecs::Entity e = mainScene.CreateEntity();
 	Position* position = new Position(glm::vec3(0));
-	RenderComponent comp = RenderComponent();
-	comp.position = position;
-	GraphicsSystem::readVertsFromFile(comp, "models/torus.obj");
+	RenderComponent rend = RenderComponent();
+	GraphicsSystem::readVertsFromFile(rend, "models/torus.obj");
 
-	mainScene.AddComponent(e.guid, comp);
+	mainScene.AddComponent(e.guid, rend);
+
+	TransformComponent trans = TransformComponent();
+	mainScene.AddComponent(e.guid, trans);
+
+	RigidbodyComponent rb = RigidbodyComponent();
+	rb.intalize(ps);
+	mainScene.AddComponent(e.guid, rb);
 
 	
 	std::cout << "Component initalization finished\n";
-	// create instance of system to use.
-	GraphicsSystem gs(window);
 
-	init_physx();
+	//init_physx();
 
 	FramerateCounter framerate;
 
@@ -105,7 +112,8 @@ int main(int argc, char* argv[]) {
 		}
 		
 
-		// BEGIN ECS SYSTEMS UPDATES 
+		// BEGIN ECS SYSTEMS UPDATES
+		ps.Update(mainScene, framerate.m_time_queue.front() / 1000.0f);
 		gs.Update(mainScene, 0.0f);
 		// END__ ECS SYSTEMS UPDATES
 
@@ -130,8 +138,8 @@ int main(int argc, char* argv[]) {
 		// TODO(beau): make a setup for dealing with time - follow slides
 		{
 			float frame_time_seconds = framerate.m_time_queue.front() / 1000.0f;
-			gScene->simulate(frame_time_seconds);
-			gScene->fetchResults(true);
+			//gScene->simulate(frame_time_seconds);
+			//gScene->fetchResults(true);
 		}
 
 		// TODO(milestone 1): strip all non-milestone related imgui windows out

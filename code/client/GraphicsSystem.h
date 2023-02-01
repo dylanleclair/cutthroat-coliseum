@@ -12,13 +12,26 @@
 #include <assimp/scene.h>
 #include <assimp/postprocess.h>
 
+#include "PxPhysicsAPI.h"
+
+/*
+* Render component is what is visible to the user
+*/
 struct RenderComponent
 {
 	GPU_Geometry* geom = new GPU_Geometry();
-	Position* position;
 	int numVerts = 0;
 	RenderComponent() = default;
-	RenderComponent(CPU_Geometry* _geom, Position* _position) : position(_position) { geom->setCols(_geom->cols); geom->setVerts(_geom->verts); numVerts = _geom->verts.size(); }
+	RenderComponent(CPU_Geometry* _geom) { geom->setCols(_geom->cols); geom->setVerts(_geom->verts); numVerts = _geom->verts.size(); }
+};
+
+/*
+* Transform describes the objects position in 3D space.
+*/
+struct TransformComponent
+{
+	glm::vec3 position;
+	glm::quat rotation;
 };
 
 
