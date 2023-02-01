@@ -42,10 +42,9 @@ int main(int argc, char* argv[]) {
 	ecs::Scene mainScene;
 
 	ecs::Entity e = mainScene.CreateEntity();
-	Position* position = new Position(glm::vec3(0));
+
 	RenderComponent rend = RenderComponent();
 	GraphicsSystem::readVertsFromFile(rend, "models/torus.obj");
-
 	mainScene.AddComponent(e.guid, rend);
 
 	TransformComponent trans = TransformComponent();
@@ -54,7 +53,7 @@ int main(int argc, char* argv[]) {
 	RigidbodyComponent rb = RigidbodyComponent();
 	rb.intalize(ps);
 	mainScene.AddComponent(e.guid, rb);
-
+	
 	
 	std::cout << "Component initalization finished\n";
 
@@ -113,8 +112,12 @@ int main(int argc, char* argv[]) {
 		
 
 		// BEGIN ECS SYSTEMS UPDATES
-		ps.Update(mainScene, framerate.m_time_queue.front() / 1000.0f);
+		std::cout << "Beginning system updates\n";
+		if(framerate.m_time_queue.size() != 0)
+			ps.Update(mainScene, framerate.m_time_queue.front() / 1000.0f);
+		std::cout << "Physics updated\n";
 		gs.Update(mainScene, 0.0f);
+		std::cout << "Graphics updated\n";
 		// END__ ECS SYSTEMS UPDATES
 
 		glDisable(GL_FRAMEBUFFER_SRGB); // disable sRGB for things like imgui

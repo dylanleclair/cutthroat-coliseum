@@ -7,7 +7,6 @@
 #include "ShaderProgram.h"
 #include "glm/gtc/type_ptr.hpp"
 #include "Camera.h"
-#include "Position.h"
 #include "glm/gtc/quaternion.hpp"
 #include <glm/gtx/quaternion.hpp>
 

@@ -2,13 +2,6 @@
 #include "GraphicsSystem.h"
 #include "PxPhysicsAPI.h"
 
-struct RigidbodyComponent
-{
-	physx::PxRigidDynamic* body = nullptr;
-	RigidbodyComponent() = default;
-	void intalize(const PhysicsSystem& physSystem);
-};
-
 struct PhysicsSystem : ecs::ISystem {
 	physx::PxDefaultAllocator      gAllocator;
 	physx::PxDefaultErrorCallback  gErrorCallback;
@@ -19,7 +12,15 @@ struct PhysicsSystem : ecs::ISystem {
 	physx::PxMaterial* gMaterial;
 	physx::PxPvd* gPvd;
 public:
+	PhysicsSystem();
 	void Update(ecs::Scene& scene, float deltaTime);
 private:
 
+};
+
+struct RigidbodyComponent
+{
+	physx::PxRigidDynamic* body = nullptr;
+	RigidbodyComponent() = default;
+	void intalize(const PhysicsSystem& physSystem);
 };

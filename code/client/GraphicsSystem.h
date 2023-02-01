@@ -4,7 +4,6 @@
 #include "Geometry.h"
 #include "Window.h"
 #include "Camera.h"
-#include "Position.h"
 #include "ShaderProgram.h"
 #include <iostream>
 
@@ -13,6 +12,10 @@
 #include <assimp/postprocess.h>
 
 #include "PxPhysicsAPI.h"
+
+#include <glm/gtc/quaternion.hpp> 
+#include <glm/gtx/quaternion.hpp>
+
 
 /*
 * Render component is what is visible to the user
