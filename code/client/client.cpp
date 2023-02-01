@@ -1,8 +1,13 @@
 #include <iostream>
 
+
 #include "imgui.h"
 #include "imgui_impl_sdl.h"
 #include "imgui_impl_opengl3.h"
+
+
+#include <PxPhysicsAPI.h>
+
 
 #include "Geometry.h"
 #include "GLDebug.h"
@@ -16,14 +21,30 @@
 #include "GraphicsSystem.h"
 #include "FrameCounter.h"
 
-#include "Physx.h"
+
+
+using namespace physx;
+
+extern bool initPhysics();
+extern void stepPhysics();
+extern void cleanupPhysics();
+extern int carSampleInit();
+
+extern PxScene* gScene;
+
+
 
 CarPhysics carPhysics;
 CarPhysicsSerde carConfig(carPhysics);
 
 
+
+
 int main(int argc, char* argv[]) {
 	Log::debug("Starting main");
+
+
+	carSampleInit();
 
 	SDL_Init(SDL_INIT_EVERYTHING); // initialize all sdl systems
 	Window window(800, 800, "Maximus Overdrive");
@@ -51,7 +72,13 @@ int main(int argc, char* argv[]) {
 	// create instance of system to use.
 	GraphicsSystem gs(window);
 
-	init_physx();
+	//init_physx();
+	
+	if (initPhysics())
+	{
+		std::cout << "initialized physx driving model\n";
+	}
+	
 
 	FramerateCounter framerate;
 
@@ -129,10 +156,14 @@ int main(int argc, char* argv[]) {
 		// XXX(beau): DOES NOT CLAMP TIME DELTA
 		// TODO(beau): make a setup for dealing with time - follow slides
 		{
-			float frame_time_seconds = framerate.m_time_queue.front() / 1000.0f;
-			gScene->simulate(frame_time_seconds);
-			gScene->fetchResults(true);
+			//float frame_time_seconds = framerate.m_time_queue.front() / 1000.0f;
+			//gScene->simulate(frame_time_seconds);
+			//gScene->fetchResults(true);
 		}
+
+		// PHYSX DRIVER UPDATE
+		stepPhysics();
+
 
 		// TODO(milestone 1): strip all non-milestone related imgui windows out
 		// BEGIN CAR PHYSICS PANEL
@@ -156,6 +187,9 @@ int main(int argc, char* argv[]) {
 	ImGui_ImplOpenGL3_Shutdown();
 	ImGui_ImplSDL2_Shutdown();
 	ImGui::DestroyContext();
+
+
+	cleanupPhysics();
 
 	SDL_Quit();
 	return 0;

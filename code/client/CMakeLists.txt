@@ -38,9 +38,22 @@ find_library(PhysXCommon_LIBRARY_RELEASE NAMES PhysXCommon_64 PhysXCommon_static
 find_library(PhysXCommon_LIBRARY_DEBUG NAMES PhysXCommon_64 PhysXCommon_static_64 PATH_SUFFIXES lib PATHS ${PHYSX_LIB_DEBUG_PATH} NO_DEFAULT_PATH REQUIRED)
 select_library_configurations(PhysXCommon)
 
+find_library(PhysXVehicle2_LIBRARY_RELEASE NAMES PhysXVehicle2_64 PhysXVehicle2_static_64 PATH_SUFFIXES lib PATHS ${PHYSX_LIB_PATH} NO_DEFAULT_PATH REQUIRED)
+find_library(PhysXVehicle2_LIBRARY_DEBUG NAMES PhysXVehicle2_64 PhysXVehicle2_static_64 PATH_SUFFIXES lib PATHS ${PHYSX_LIB_DEBUG_PATH} NO_DEFAULT_PATH REQUIRED)
+select_library_configurations(PhysXVehicle2)
+
+
+find_library(PhysXCooking_LIBRARY_RELEASE NAMES PhysXCooking_64 PhysXCooking_static_64 PATH_SUFFIXES lib PATHS ${PHYSX_LIB_PATH} NO_DEFAULT_PATH REQUIRED)
+find_library(PhysXCooking_LIBRARY_DEBUG NAMES PhysXCooking_64 PhysXCooking_static_64 PATH_SUFFIXES lib PATHS ${PHYSX_LIB_DEBUG_PATH} NO_DEFAULT_PATH REQUIRED)
+select_library_configurations(PhysXCooking)
+
+
 find_library(PhysX_LIBRARY_RELEASE NAMES PhysX_64 PhysX_static_64 PATH_SUFFIXES lib PATHS ${PHYSX_LIB_PATH} NO_DEFAULT_PATH REQUIRED)
 find_library(PhysX_LIBRARY_DEBUG NAMES PhysX_64 PhysX_static_64 PATH_SUFFIXES lib PATHS ${PHYSX_LIB_DEBUG_PATH} NO_DEFAULT_PATH REQUIRED)
 select_library_configurations(PhysX)
+
+
+
 
 if(WIN32 OR APPLE)
   target_link_libraries(${BINARY} PRIVATE ${CMAKE_PROJECT_NAME}_lib 
@@ -55,7 +68,7 @@ if(WIN32 OR APPLE)
     tomlplusplus::tomlplusplus
     imgui::imgui
     
-    ${PhysXPvdSDK_LIBRARY} ${PhysXExtensions_LIBRARY} ${PhysXFoundation_LIBRARY} ${PhysXCommon_LIBRARY} ${PhysX_LIBRARY}
+    ${PhysXPvdSDK_LIBRARY} ${PhysXExtensions_LIBRARY} ${PhysXFoundation_LIBRARY} ${PhysXCommon_LIBRARY} ${PhysXCooking_LIBRARY} ${PhysXVehicle2_LIBRARY}  ${PhysX_LIBRARY} 
   )
 
 else()
@@ -71,24 +84,9 @@ else()
     tomlplusplus::tomlplusplus
     imgui::imgui
     
-     -Wl,--start-group ${PhysXPvdSDK_LIBRARY} ${PhysXExtensions_LIBRARY} ${PhysXFoundation_LIBRARY} ${PhysXCommon_LIBRARY} ${PhysX_LIBRARY} -Wl,--end-group
+     -Wl,--start-group ${PhysXPvdSDK_LIBRARY} ${PhysXExtensions_LIBRARY} ${PhysXFoundation_LIBRARY} ${PhysXCommon_LIBRARY} ${PhysXCooking_LIBRARY} ${PhysXVehicle2_LIBRARY}  ${PhysX_LIBRARY} -Wl,--end-group
   )
 endif()
-
-target_link_libraries(${BINARY} PRIVATE ${CMAKE_PROJECT_NAME}_lib 
-  
-  $<TARGET_NAME_IF_EXISTS:SDL2::SDL2main>
-  $<IF:$<TARGET_EXISTS:SDL2::SDL2>,SDL2::SDL2,SDL2::SDL2-static>
-  glm::glm
-  GLEW::GLEW
-  assimp::assimp
-  vivid
-  fmt
-  tomlplusplus::tomlplusplus
-  imgui::imgui
-  
-  ${PhysXPvdSDK_LIBRARY} ${PhysXExtensions_LIBRARY} ${PhysXFoundation_LIBRARY} ${PhysXCommon_LIBRARY} ${PhysX_LIBRARY}
-)
 
 target_compile_definitions(${BINARY} PUBLIC ASSETS_PATH="${CMAKE_CURRENT_SOURCE_DIR}/../assets/") # Set the asset path macro to the absolute path on the dev machine
 
@@ -110,6 +108,13 @@ foreach(file ${files})
 	configure_file(${file} configs/${name})
 endforeach()
 
+# Copy all the vehicledata json files and tell the build system to re-run CMAKE if one of them changes
+file(GLOB files ../assets/vehicledata/*)
+foreach(file ${files})
+	get_filename_component(name ${file} NAME)
+	configure_file(${file} vehicledata/${name})
+endforeach()
+
 # Copy all models and tell the build system to re-run CMAKE if one of them changes
 file(GLOB files ../assets/models/*)
 foreach(file ${files})
@@ -128,5 +133,5 @@ endforeach()
 
 add_custom_command(TARGET ${BINARY} POST_BUILD
     COMMAND ${CMAKE_COMMAND} -E copy_directory
-        "${PHYSX_LIB_DEBUG_PATH}/shared/*"
+        "${PHYSX_LIB_DEBUG_PATH}/shared/"
         $<TARGET_FILE_DIR:${BINARY}>)
