@@ -36,7 +36,6 @@ int main(int argc, char* argv[]) {
 
 	// create instance of system to use.
 	GraphicsSystem gs(window);
-	PhysicsSystem ps;
 
 	// init ecs 
 	ecs::Scene mainScene;
@@ -49,10 +48,6 @@ int main(int argc, char* argv[]) {
 
 	TransformComponent trans = TransformComponent();
 	mainScene.AddComponent(e.guid, trans);
-
-	RigidbodyComponent rb = RigidbodyComponent();
-	rb.intalize(ps);
-	mainScene.AddComponent(e.guid, rb);
 	
 	
 	std::cout << "Component initalization finished\n";
@@ -114,7 +109,7 @@ int main(int argc, char* argv[]) {
 		// BEGIN ECS SYSTEMS UPDATES
 		std::cout << "Beginning system updates\n";
 		if(framerate.m_time_queue.size() != 0)
-			ps.Update(mainScene, framerate.m_time_queue.front() / 1000.0f);
+			gScene->simulate(framerate.m_time_queue.front() / 1000.0f);
 		std::cout << "Physics updated\n";
 		gs.Update(mainScene, 0.0f);
 		std::cout << "Graphics updated\n";

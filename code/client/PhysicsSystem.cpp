@@ -1,3 +1,4 @@
+/*
 #include "PhysicsSystem.h"
 #include "GraphicsSystem.h"
 #include <systems/ecs.h>
@@ -74,4 +75,4 @@ void RigidbodyComponent::intalize(const PhysicsSystem& physSystem)
 
 	physx::PxRigidBodyExt::updateMassAndInertia(*body, 10.0f);
 	physSystem.gScene->addActor(*body);
-}
+}*/

@@ -33,7 +33,7 @@ void GraphicsSystem::Update(ecs::Scene& scene, float deltaTime) {
 	glEnable(GL_FRAMEBUFFER_SRGB);
 	glClearColor(0.0f, 0.0f, 0.0f, 1.0f);
 	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-	glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
+	//glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
 
 	for (int i = 0; i < numCamerasActive; i++) {
 		shader.use();
@@ -70,7 +70,7 @@ void GraphicsSystem::Update(ecs::Scene& scene, float deltaTime) {
 			// GEOMETRY
 			comp.geom->bind();
 
-			glm::mat4 M = glm::translate(glm::mat4(1), trans.position) * toMat4(trans.rotation);
+			glm::mat4 M = glm::translate(glm::mat4(1), trans.getPosition()) * toMat4(trans.getRotation());
 			glUniformMatrix4fv(modelUniform, 1, GL_FALSE, glm::value_ptr(M));
 			glDrawArrays(GL_TRIANGLES, 0, comp.numVerts);
 		}
@@ -131,5 +131,3 @@ void GraphicsSystem::processNode(aiNode* node, const aiScene* scene, CPU_Geometr
 		processNode(node->mChildren[i], scene, geom);
 	}
 }
-
-
