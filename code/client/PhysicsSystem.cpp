@@ -12,7 +12,6 @@ PhysicsSystem::PhysicsSystem()
 	gPvd = PxCreatePvd(*gFoundation);
 	PxPvdTransport* transport = PxDefaultPvdSocketTransportCreate(PVD_HOST, 5425, 10);
 	gPvd->connect(*transport, PxPvdInstrumentationFlag::eALL);
-
 	gPhysics = PxCreatePhysics(PX_PHYSICS_VERSION, *gFoundation, PxTolerancesScale(), true, gPvd);
 
 	PxSceneDesc sceneDesc(gPhysics->getTolerancesScale());
@@ -56,7 +55,7 @@ void PhysicsSystem::Update(ecs::Scene& scene, float deltaTime)
 		transComp.position.x = rbComp.body->getGlobalPose().p.x; 
 		transComp.position.y = rbComp.body->getGlobalPose().p.y;
 		transComp.position.z = rbComp.body->getGlobalPose().p.z;
-
+		
 		transComp.rotation.x = rbComp.body->getGlobalPose().q.x;
 		transComp.rotation.y = rbComp.body->getGlobalPose().q.y;
 		transComp.rotation.z = rbComp.body->getGlobalPose().q.z;
