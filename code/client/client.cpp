@@ -1,26 +1,44 @@
 #include <iostream>
 
+
 #include "imgui.h"
 #include "imgui_impl_sdl.h"
 #include "imgui_impl_opengl3.h"
 
+
 #include "graphics/Geometry.h"
+
 #include "Window.h"
 
 #include "systems/ecs.h"
-#include "systems/PhysicsSystem.h"
+//#include "systems/PhysicsSystem.h"
 #include "systems/GraphicsSystem.h"
 #include "systems/components.h"
 
 #include "CarPhysics.h"
 #include "FrameCounter.h"
 
+
+using namespace physx;
+
+extern bool initPhysics();
+extern void stepPhysics();
+extern void cleanupPhysics();
+extern int carSampleInit();
+
+extern PxScene* gScene;
+
 CarPhysics carPhysics;
 CarPhysicsSerde carConfig(carPhysics);
 
 
+
+
 int main(int argc, char* argv[]) {
 	printf("Starting main");
+
+
+	carSampleInit();
 
 	SDL_Init(SDL_INIT_EVERYTHING); // initialize all sdl systems
 	Window window(800, 800, "Maximus Overdrive");
@@ -67,6 +85,16 @@ int main(int argc, char* argv[]) {
 	
 	
 	std::cout << "Component initalization finished\n";
+
+	// create instance of system to use.
+	GraphicsSystem gs(window);
+
+	//init_physx();
+	
+	if (initPhysics())
+	{
+		std::cout << "initialized physx driving model\n";
+	}
 	
 
 	FramerateCounter framerate;
@@ -158,6 +186,10 @@ int main(int argc, char* argv[]) {
 			//gScene->fetchResults(true);
 		}
 
+		// PHYSX DRIVER UPDATE
+		stepPhysics();
+
+
 		// TODO(milestone 1): strip all non-milestone related imgui windows out
 		// BEGIN CAR PHYSICS PANEL
 		ImGui::Begin("Car Physics", nullptr);
@@ -180,6 +212,9 @@ int main(int argc, char* argv[]) {
 	ImGui_ImplOpenGL3_Shutdown();
 	ImGui_ImplSDL2_Shutdown();
 	ImGui::DestroyContext();
+
+
+	cleanupPhysics();
 
 	SDL_Quit();
 	return 0;
