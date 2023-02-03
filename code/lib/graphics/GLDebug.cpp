@@ -1,5 +1,4 @@
 #include "GLDebug.h"
-#include "Log.h"
 
 #include <regex>
 
@@ -47,18 +46,18 @@ void GLDebug::debugOutputHandler(
     {
         case GL_DEBUG_SEVERITY_HIGH:
             severityStr = "high";
-			Log::error(format.c_str(), sourceStr, severityStr, id, typeStr, message_str);
+            printf(format.c_str(), sourceStr, severityStr, id, typeStr, message_str);
             break;
         case GL_DEBUG_SEVERITY_MEDIUM:
             severityStr = "medium";
-			Log::warn(format.c_str(), sourceStr, severityStr, id, typeStr, message_str);
+            printf(format.c_str(), sourceStr, severityStr, id, typeStr, message_str);
             break;
         case GL_DEBUG_SEVERITY_LOW:
             severityStr = "low";
-			Log::info(format.c_str(), sourceStr, severityStr, id, typeStr, message_str);
+            printf(format.c_str(), sourceStr, severityStr, id, typeStr, message_str);
             break;
         case GL_DEBUG_SEVERITY_NOTIFICATION:
-			Log::debug(format.c_str(), sourceStr, severityStr, id, typeStr, message_str);
+            printf(format.c_str(), sourceStr, severityStr, id, typeStr, message_str);
             break;
     }
 }
@@ -73,9 +72,9 @@ void GLDebug::enable() {
 		glEnable(GL_DEBUG_OUTPUT_SYNCHRONOUS);
 		glDebugMessageCallback(GLDebug::debugOutputHandler, nullptr);
 		glDebugMessageControl(GL_DONT_CARE, GL_DONT_CARE, GL_DONT_CARE, 0, nullptr, GL_TRUE);
-		Log::info("Enabling debug mode for opengl");
+        printf("Enabling debug mode for opengl");
 	} else {
-		Log::warn("Unable to enable debug mode for opengl");
+        printf("Unable to enable debug mode for opengl");
 	}
 }
 

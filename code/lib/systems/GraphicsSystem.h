@@ -1,25 +1,21 @@
 #pragma once
 #include "systems/ecs.h"
 #include <GL/glew.h>
-#include "Geometry.h"
-#include "Window.h"
-#include "Camera.h"
-#include "Position.h"
-#include "ShaderProgram.h"
+#include "graphics/Geometry.h"
+#include "../client/Window.h"
+#include "graphics/Camera.h"
+#include "graphics/ShaderProgram.h"
+#include "components.h"
 #include <iostream>
 
 #include <assimp/Importer.hpp>
 #include <assimp/scene.h>
 #include <assimp/postprocess.h>
 
-struct RenderComponent
-{
-	GPU_Geometry* geom = new GPU_Geometry();
-	Position* position;
-	int numVerts = 0;
-	RenderComponent() = default;
-	RenderComponent(CPU_Geometry* _geom, Position* _position) : position(_position) { geom->setCols(_geom->cols); geom->setVerts(_geom->verts); numVerts = _geom->verts.size(); }
-};
+#include "PxPhysicsAPI.h"
+
+#include <glm/gtc/quaternion.hpp> 
+#include <glm/gtx/quaternion.hpp>
 
 
 struct GraphicsSystem : ecs::ISystem {

@@ -9,13 +9,11 @@
 //             Note that the glfw code also didn't do a great job of cleaning up after itself
 #include "Window.h"
 
-#include "Log.h"
-
 #include <iostream>
 
 void sdl_error_handler(int sdl_return) {
 	if (!sdl_return) return;
-	Log::error("SDL error: ", SDL_GetError());
+	printf("SDL error: ", SDL_GetError());
 	SDL_Quit();
 	exit(1);
 }
@@ -47,7 +45,7 @@ Window::Window(int width, int height, const char* title)
 	// initialize OpenGL extensions for the current context (this window)
 	GLenum err = glewInit();
 	if (err != GLEW_OK) {
-		Log::error("WINDOW glewInit error:{}", glewGetErrorString(err));
+		printf("WINDOW glewInit error:{}", glewGetErrorString(err));
 		throw std::runtime_error("Failed to initialize GLEW");
 	}
 

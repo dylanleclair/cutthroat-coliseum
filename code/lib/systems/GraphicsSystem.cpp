@@ -3,11 +3,12 @@
 
 #include <GL/glew.h>
 #include <iostream>
-#include "GLDebug.h"
-#include "ShaderProgram.h"
+#include "graphics/GLDebug.h"
+#include "graphics/ShaderProgram.h"
 #include "glm/gtc/type_ptr.hpp"
-#include "Camera.h"
-#include "Position.h"
+#include "graphics/Camera.h"
+#include "glm/gtc/quaternion.hpp"
+#include <glm/gtx/quaternion.hpp>
 
 #include <assimp/Importer.hpp>
 #include <assimp/scene.h>
@@ -16,6 +17,7 @@
 GraphicsSystem::GraphicsSystem(Window& _window) :
 	shader("shaders/test.vert", "shaders/test.frag")
 {
+	GLDebug::enable();
 	// SHADERS
 	shader.use();
 
@@ -32,7 +34,7 @@ void GraphicsSystem::Update(ecs::Scene& scene, float deltaTime) {
 	glEnable(GL_FRAMEBUFFER_SRGB);
 	glClearColor(0.0f, 0.0f, 0.0f, 1.0f);
 	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-	glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
+	//glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
 
 	for (int i = 0; i < numCamerasActive; i++) {
 		shader.use();
@@ -64,11 +66,12 @@ void GraphicsSystem::Update(ecs::Scene& scene, float deltaTime) {
 		//render dynamic components
 		for (Guid entityGuid : ecs::EntitiesInScene<RenderComponent>(scene)) {
 			RenderComponent& comp = scene.GetComponent<RenderComponent>(entityGuid);
-
+			TransformComponent& trans = scene.GetComponent<TransformComponent>(entityGuid);
+			
 			// GEOMETRY
 			comp.geom->bind();
 
-			glm::mat4 M = comp.position->getTransformMatrix();
+			glm::mat4 M = glm::translate(glm::mat4(1), trans.getPosition()) * toMat4(trans.getRotation());
 			glUniformMatrix4fv(modelUniform, 1, GL_FALSE, glm::value_ptr(M));
 			glDrawArrays(GL_TRIANGLES, 0, comp.numVerts);
 		}
@@ -129,3 +132,4 @@ void GraphicsSystem::processNode(aiNode* node, const aiScene* scene, CPU_Geometr
 		processNode(node->mChildren[i], scene, geom);
 	}
 }
+
