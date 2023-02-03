@@ -1,158 +1,101 @@
 #include <iostream>
 
+
 #include "imgui.h"
 #include "imgui_impl_sdl.h"
 #include "imgui_impl_opengl3.h"
 
-#include "Geometry.h"
-#include "GLDebug.h"
-#include "Log.h"
+
+#include "graphics/Geometry.h"
+
 #include "Window.h"
 
 #include "systems/ecs.h"
+//#include "systems/PhysicsSystem.h"
+#include "systems/GraphicsSystem.h"
+#include "systems/components.h"
 
 #include "CarPhysics.h"
-
-#include "GraphicsSystem.h"
 #include "FrameCounter.h"
 
-#include "Physx.h"
+
+using namespace physx;
+
+extern bool initPhysics();
+extern void stepPhysics();
+extern void cleanupPhysics();
+extern int carSampleInit();
+
+extern PxScene* gScene;
 
 CarPhysics carPhysics;
 CarPhysicsSerde carConfig(carPhysics);
 
 
 
-struct ExampleComponent
-{
-	int a{ 0 };
-	int b{ 0 };
-	int c{ 0 };
-};
-
-
-struct ExampleSystem : ecs::ISystem
-{
-
-	virtual void Initialize() {}
-	virtual void Teardown() {}
-	virtual void Update(ecs::Scene &scene, float deltaTime)
-	{
-		for (Guid entityGuid : ecs::EntitiesInScene<ExampleComponent>(scene))
-		{
-			
-			// pass in the guid of the entity to lookup the corresponding component
-			ExampleComponent& ex = scene.GetComponent<ExampleComponent>(entityGuid);
-
-			// do some operation of the data
-			ex.a += 1;
-			ex.b += 2;
-			ex.c += 3;
-
-			display = "ecs component: " + std::to_string(ex.a) + " " + std::to_string(ex.b) + " " + std::to_string(ex.c) + "!";
-		}
-	}
-
-	std::string getDisplayString()
-	{
-		return display;
-	}
-
-private:
-	std::string display{};
-};
 
 int main(int argc, char* argv[]) {
-	Log::debug("Starting main");
+	printf("Starting main");
+
+
+	carSampleInit();
 
 	SDL_Init(SDL_INIT_EVERYTHING); // initialize all sdl systems
 	Window window(800, 800, "Maximus Overdrive");
 
 	ImGuiIO& io = ImGui::GetIO(); (void)io;
 
-	GLDebug::enable();
-
-	// GEOMETRY
-	CPU_Geometry cubeGeom;
-
-	//make a wireframe cube
-	cubeGeom.verts.push_back(glm::vec3(-1, -1, 1));
-	cubeGeom.verts.push_back(glm::vec3(1, -1, 1));
-	cubeGeom.verts.push_back(glm::vec3(1, 1, 1));
-	cubeGeom.verts.push_back(glm::vec3(-1, -1, 1));
-	cubeGeom.verts.push_back(glm::vec3(1, 1, 1));
-	cubeGeom.verts.push_back(glm::vec3(-1, 1, 1));
-	cubeGeom.verts.push_back(glm::vec3(1, -1, 1));
-	cubeGeom.verts.push_back(glm::vec3(1, -1, -1));
-	cubeGeom.verts.push_back(glm::vec3(1, 1, -1));
-	cubeGeom.verts.push_back(glm::vec3(1, -1, 1));
-	cubeGeom.verts.push_back(glm::vec3(1, 1, -1));
-	cubeGeom.verts.push_back(glm::vec3(1, 1, 1));
-	cubeGeom.verts.push_back(glm::vec3(1, -1, -1));
-	cubeGeom.verts.push_back(glm::vec3(-1, -1, -1));
-	cubeGeom.verts.push_back(glm::vec3(-1, 1, -1));
-	cubeGeom.verts.push_back(glm::vec3(1, -1, -1));
-	cubeGeom.verts.push_back(glm::vec3(-1, 1, -1));
-	cubeGeom.verts.push_back(glm::vec3(1, 1, -1));
-	cubeGeom.verts.push_back(glm::vec3(-1, -1, -1));
-	cubeGeom.verts.push_back(glm::vec3(-1, -1, 1));
-	cubeGeom.verts.push_back(glm::vec3(-1, 1, 1));
-	cubeGeom.verts.push_back(glm::vec3(-1, -1, -1));
-	cubeGeom.verts.push_back(glm::vec3(-1, 1, 1));
-	cubeGeom.verts.push_back(glm::vec3(-1, 1, -1));
-	cubeGeom.verts.push_back(glm::vec3(-1, 1, 1));
-	cubeGeom.verts.push_back(glm::vec3(1, 1, 1));
-	cubeGeom.verts.push_back(glm::vec3(1, 1, -1));
-	cubeGeom.verts.push_back(glm::vec3(-1, 1, 1));
-	cubeGeom.verts.push_back(glm::vec3(1, 1, -1));
-	cubeGeom.verts.push_back(glm::vec3(-1, 1, -1));
-	cubeGeom.verts.push_back(glm::vec3(1, -1, 1));
-	cubeGeom.verts.push_back(glm::vec3(-1, -1, -1));
-	cubeGeom.verts.push_back(glm::vec3(1, -1, -1));
-	cubeGeom.verts.push_back(glm::vec3(1, -1, 1));
-	cubeGeom.verts.push_back(glm::vec3(-1, -1, 1));
-	cubeGeom.verts.push_back(glm::vec3(-1, -1, -1));
-
-	for (int i = 0; i < 12; i++) {
-		float col1 = static_cast <float> (rand()) / static_cast <float> (RAND_MAX);
-		float col2 = static_cast <float> (rand()) / static_cast <float> (RAND_MAX);
-		float col3 = static_cast <float> (rand()) / static_cast <float> (RAND_MAX);
-		for(int j = 0; j < 3; j++)
-			cubeGeom.cols.push_back(glm::vec3(col1, col2, col3));
-	}
-
 	carConfig.deserialize();
 
-	
+	// create instance of system to use.
+	GraphicsSystem gs(window);
+	init_physics();
 
 	// init ecs 
 	ecs::Scene mainScene;
 
-	// spawn some entities.
-	for (int i = 0; i < 500; i++)
-	{
-		ecs::Entity e = mainScene.CreateEntity();
-		mainScene.AddComponent(e.guid, ExampleComponent{ 0,1,2 });
+	//make a ground plane
+	gMaterial = gPhysics->createMaterial(0.5f, 0.5f, 0.6f);
+	physx::PxRigidStatic* groundPlane = physx::PxCreatePlane(*gPhysics, physx::PxPlane(0, 1, 0, 50), *gMaterial);
+	gScene->addActor(*groundPlane);
 
-		//create cube meshes for them
-		glm::vec3 temp;
-		const float LO = -10;
-		const float HI = 10;
-		for (int i = 0; i < 3; i++)
-			temp[i] = LO + static_cast <float> (rand()) / (static_cast <float> (RAND_MAX / (HI - LO)));
-		Position* position = new Position(temp);
-		RenderComponent comp = RenderComponent();
-		comp.position = position;
-		GraphicsSystem::readVertsFromFile(comp, "configs/monkey.obj");
-		mainScene.AddComponent(e.guid, comp);
-	}
+	//make a cube entity
+	ecs::Entity e = mainScene.CreateEntity();
 
+	//create and place a cube
+	float halfLen = 0.5f;
+	physx::PxTransform tran(physx::PxVec3(0, 50, -30)); //put the cube 40 units in the air
+	physx::PxRigidDynamic* body = gPhysics->createRigidDynamic(tran);
+
+	//for the physx visual debugger.
+	physx::PxShape* shape = gPhysics->createShape(physx::PxBoxGeometry(halfLen, halfLen, halfLen), *gMaterial);
+	body->attachShape(*shape);
+
+	physx::PxRigidBodyExt::updateMassAndInertia(*body, 10.0f);
+	gScene->addActor(*body);
+
+	RenderComponent rend = RenderComponent();
+	GraphicsSystem::readVertsFromFile(rend, "models/torus.obj");
+	mainScene.AddComponent(e.guid, rend);
+
+	TransformComponent trans = TransformComponent(body);
+	mainScene.AddComponent(e.guid, trans);
+
+
+	
+	
 	std::cout << "Component initalization finished\n";
+
 	// create instance of system to use.
-	ExampleSystem exampleEcsSystem;
 	GraphicsSystem gs(window);
 
-	init_physx();
+	//init_physx();
+	
+	if (initPhysics())
+	{
+		std::cout << "initialized physx driving model\n";
+	}
+	
 
 	FramerateCounter framerate;
 
@@ -206,12 +149,16 @@ int main(int argc, char* argv[]) {
 		}
 		
 
-		// BEGIN ECS SYSTEMS UPDATES 
-		//std::cout << "updating systems\n";
-		exampleEcsSystem.Update(mainScene, 0.0f);
-		//std::cout << "exmple system finished\n";
+		// BEGIN ECS SYSTEMS UPDATES
+		//std::cout << "Beginning system updates\n";
+		if(framerate.m_time_queue.size() != 0)
+			gScene->simulate(framerate.m_time_queue.front() / 1000.0f);
+		else
+			gScene->simulate(0.1);
+		gScene->fetchResults(true); //block until the simulation is finished
+
 		gs.Update(mainScene, 0.0f);
-		//std::cout << "graphics system finished\n";
+
 		// END__ ECS SYSTEMS UPDATES
 
 		glDisable(GL_FRAMEBUFFER_SRGB); // disable sRGB for things like imgui
@@ -234,10 +181,14 @@ int main(int argc, char* argv[]) {
 		// XXX(beau): DOES NOT CLAMP TIME DELTA
 		// TODO(beau): make a setup for dealing with time - follow slides
 		{
-			float frame_time_seconds = framerate.m_time_queue.front() / 1000.0f;
-			gScene->simulate(frame_time_seconds);
-			gScene->fetchResults(true);
+			//float frame_time_seconds = framerate.m_time_queue.front() / 1000.0f;
+			//gScene->simulate(frame_time_seconds);
+			//gScene->fetchResults(true);
 		}
+
+		// PHYSX DRIVER UPDATE
+		stepPhysics();
+
 
 		// TODO(milestone 1): strip all non-milestone related imgui windows out
 		// BEGIN CAR PHYSICS PANEL
@@ -247,11 +198,6 @@ int main(int argc, char* argv[]) {
 		if (ImGui::Button("Serialize")) carConfig.serialize();
 		ImGui::End();
 		// END CAR PHYSICS PANEL
-
-		// BEGIN ECS DEMO PANEL
-		ImGui::Begin("ECS Demo");
-		ImGui::Text("%s", exampleEcsSystem.getDisplayString().c_str());
-		ImGui::End();
 
 		// NOTE: the imgui bible - beau
 		ImGui::ShowDemoWindow();
@@ -266,6 +212,9 @@ int main(int argc, char* argv[]) {
 	ImGui_ImplOpenGL3_Shutdown();
 	ImGui_ImplSDL2_Shutdown();
 	ImGui::DestroyContext();
+
+
+	cleanupPhysics();
 
 	SDL_Quit();
 	return 0;
