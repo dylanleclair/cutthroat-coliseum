@@ -4,8 +4,6 @@
 #include <stdexcept>
 #include <vector>
 
-#include "Log.h"
-
 
 ShaderProgram::ShaderProgram(const std::string& vertexPath, const std::string& fragmentPath)
 	: programID()
@@ -31,7 +29,7 @@ bool ShaderProgram::recompile() {
 		return true;
 	}
 	catch (std::runtime_error &e) {
-		Log::warn("SHADER_PROGRAM falling back to previous version of shaders");
+		printf("SHADER_PROGRAM falling back to previous version of shaders");
 		return false;
 	}
 }
@@ -53,11 +51,11 @@ bool ShaderProgram::checkAndLogLinkSuccess() const {
 		std::vector<char> log(logLength);
 		glGetProgramInfoLog(programID, logLength, NULL, log.data());
 
-		Log::error("SHADER_PROGRAM linking {} + {}:\n{}", vertex.getPath(), fragment.getPath(), log.data());
+		printf("SHADER_PROGRAM linking {} + {}:\n{}", vertex.getPath(), fragment.getPath(), log.data());
 		return false;
 	}
 	else {
-		Log::info("SHADER_PROGRAM successfully compiled and linked {} + {}", vertex.getPath(), fragment.getPath());
+		printf("SHADER_PROGRAM successfully compiled and linked {} + {}", vertex.getPath(), fragment.getPath());
 		return true;
 	}
 }

@@ -1,7 +1,5 @@
 #include "Shader.h"
 
-#include "Log.h"
-
 #include <cstring>
 #include <fstream>
 #include <iostream>
@@ -43,7 +41,7 @@ bool Shader::compile() {
 		sourceString = sourceStream.str();
 	}
 	catch (std::ifstream::failure &e) {
-		Log::error("SHADER reading {}:\n{}", path, strerror(errno));
+		printf("SHADER reading {}:\n{}", path, strerror(errno));
 		return false;
 	}
 	const GLchar* sourceCode = sourceString.c_str();
@@ -63,7 +61,7 @@ bool Shader::compile() {
 		std::vector<char> log(logLength);
 		glGetShaderInfoLog(shaderID, logLength, NULL, log.data());
 
-		Log::error("SHADER compiling {}:\n{}", path, log.data());
+		printf("SHADER compiling {}:\n{}", path, log.data());
 	}
 	return success;
 }

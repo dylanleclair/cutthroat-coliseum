@@ -3,10 +3,10 @@
 
 #include <GL/glew.h>
 #include <iostream>
-#include "GLDebug.h"
-#include "ShaderProgram.h"
+#include "graphics/GLDebug.h"
+#include "graphics/ShaderProgram.h"
 #include "glm/gtc/type_ptr.hpp"
-#include "Camera.h"
+#include "graphics/Camera.h"
 #include "glm/gtc/quaternion.hpp"
 #include <glm/gtx/quaternion.hpp>
 
@@ -17,6 +17,7 @@
 GraphicsSystem::GraphicsSystem(Window& _window) :
 	shader("shaders/test.vert", "shaders/test.frag")
 {
+	GLDebug::enable();
 	// SHADERS
 	shader.use();
 
@@ -131,3 +132,4 @@ void GraphicsSystem::processNode(aiNode* node, const aiScene* scene, CPU_Geometr
 		processNode(node->mChildren[i], scene, geom);
 	}
 }
+

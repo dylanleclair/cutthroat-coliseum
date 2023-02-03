@@ -4,55 +4,70 @@
 #include "imgui_impl_sdl.h"
 #include "imgui_impl_opengl3.h"
 
-#include "Geometry.h"
-#include "GLDebug.h"
-#include "Log.h"
+#include "graphics/Geometry.h"
 #include "Window.h"
 
 #include "systems/ecs.h"
+#include "systems/PhysicsSystem.h"
+#include "systems/GraphicsSystem.h"
+#include "systems/components.h"
 
 #include "CarPhysics.h"
-
-#include "PhysicsSystem.h"
-#include "GraphicsSystem.h"
 #include "FrameCounter.h"
-
-//#include "Physx.h"
 
 CarPhysics carPhysics;
 CarPhysicsSerde carConfig(carPhysics);
 
 
 int main(int argc, char* argv[]) {
-	Log::debug("Starting main");
+	printf("Starting main");
 
 	SDL_Init(SDL_INIT_EVERYTHING); // initialize all sdl systems
 	Window window(800, 800, "Maximus Overdrive");
 
 	ImGuiIO& io = ImGui::GetIO(); (void)io;
 
-	GLDebug::enable();
 	carConfig.deserialize();
 
 	// create instance of system to use.
 	GraphicsSystem gs(window);
+	init_physics();
 
 	// init ecs 
 	ecs::Scene mainScene;
 
+	//make a ground plane
+	gMaterial = gPhysics->createMaterial(0.5f, 0.5f, 0.6f);
+	physx::PxRigidStatic* groundPlane = physx::PxCreatePlane(*gPhysics, physx::PxPlane(0, 1, 0, 50), *gMaterial);
+	gScene->addActor(*groundPlane);
+
+	//make a cube entity
 	ecs::Entity e = mainScene.CreateEntity();
+
+	//create and place a cube
+	float halfLen = 0.5f;
+	physx::PxTransform tran(physx::PxVec3(0, 50, -30)); //put the cube 40 units in the air
+	physx::PxRigidDynamic* body = gPhysics->createRigidDynamic(tran);
+
+	//for the physx visual debugger.
+	physx::PxShape* shape = gPhysics->createShape(physx::PxBoxGeometry(halfLen, halfLen, halfLen), *gMaterial);
+	body->attachShape(*shape);
+
+	physx::PxRigidBodyExt::updateMassAndInertia(*body, 10.0f);
+	gScene->addActor(*body);
 
 	RenderComponent rend = RenderComponent();
 	GraphicsSystem::readVertsFromFile(rend, "models/torus.obj");
 	mainScene.AddComponent(e.guid, rend);
 
-	TransformComponent trans = TransformComponent();
+	TransformComponent trans = TransformComponent(body);
 	mainScene.AddComponent(e.guid, trans);
+
+
 	
 	
 	std::cout << "Component initalization finished\n";
-
-	//init_physx();
+	
 
 	FramerateCounter framerate;
 
@@ -107,12 +122,15 @@ int main(int argc, char* argv[]) {
 		
 
 		// BEGIN ECS SYSTEMS UPDATES
-		std::cout << "Beginning system updates\n";
+		//std::cout << "Beginning system updates\n";
 		if(framerate.m_time_queue.size() != 0)
 			gScene->simulate(framerate.m_time_queue.front() / 1000.0f);
-		std::cout << "Physics updated\n";
+		else
+			gScene->simulate(0.1);
+		gScene->fetchResults(true); //block until the simulation is finished
+
 		gs.Update(mainScene, 0.0f);
-		std::cout << "Graphics updated\n";
+
 		// END__ ECS SYSTEMS UPDATES
 
 		glDisable(GL_FRAMEBUFFER_SRGB); // disable sRGB for things like imgui
@@ -135,7 +153,7 @@ int main(int argc, char* argv[]) {
 		// XXX(beau): DOES NOT CLAMP TIME DELTA
 		// TODO(beau): make a setup for dealing with time - follow slides
 		{
-			float frame_time_seconds = framerate.m_time_queue.front() / 1000.0f;
+			//float frame_time_seconds = framerate.m_time_queue.front() / 1000.0f;
 			//gScene->simulate(frame_time_seconds);
 			//gScene->fetchResults(true);
 		}

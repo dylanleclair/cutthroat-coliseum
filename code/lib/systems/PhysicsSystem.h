@@ -1,21 +1,22 @@
-#include "Physx.h"
-#include <iostream>
-
-// Slightly edited snippet provided by Travis Dow in his lab 1 email
-// I've obtained explicit permission from travis to use it here
+// HACK(beau): VS is defining this for us and complaining
+// but without vs its not defined. Solin is to find a way
+// to get cmake to define this regardless I think
 // - Beau
+#if !defined(WIN32) && !defined(_WIN32) && !defined(__WIN32)
+#define _DEBUG
+#endif
+#include "PxPhysicsAPI.h"
 
-//PhysX management class instances.
 physx::PxDefaultAllocator      gAllocator;
 physx::PxDefaultErrorCallback  gErrorCallback;
-physx::PxFoundation*           gFoundation = NULL;
-physx::PxPhysics*              gPhysics = NULL;
+physx::PxFoundation* gFoundation = NULL;
+physx::PxPhysics* gPhysics = NULL;
 physx::PxDefaultCpuDispatcher* gDispatcher = NULL;
-physx::PxScene*                gScene = NULL;
-physx::PxMaterial*             gMaterial = NULL;
-physx::PxPvd*                  gPvd = NULL;
+physx::PxScene* gScene = NULL;
+physx::PxMaterial* gMaterial = NULL;
+physx::PxPvd* gPvd = NULL;
 
-void init_physx() {
+void init_physics() {
 	// Initialize PhysX
 	gFoundation = PxCreateFoundation(PX_PHYSICS_VERSION, gAllocator, gErrorCallback);
 	if (!gFoundation)
@@ -53,31 +54,4 @@ void init_physx() {
 		pvdClient->setScenePvdFlag(physx::PxPvdSceneFlag::eTRANSMIT_CONTACTS, true);
 		pvdClient->setScenePvdFlag(physx::PxPvdSceneFlag::eTRANSMIT_SCENEQUERIES, true);
 	}
-
-	// Simulate
-	gMaterial = gPhysics->createMaterial(0.5f, 0.5f, 0.6f);
-	physx::PxRigidStatic* groundPlane = physx::PxCreatePlane(*gPhysics, physx::PxPlane(0, 1, 0, 50), *gMaterial);
-	gScene->addActor(*groundPlane);
-
-	// Define a box
-	float halfLen = 0.5f;
-	physx::PxShape* shape = gPhysics->createShape(physx::PxBoxGeometry(halfLen, halfLen, halfLen), *gMaterial);
-	physx::PxU32 size = 10;
-	physx::PxTransform tran(physx::PxVec3(0));
-
-	// Create a pyramid of physics-enabled boxes
-	for (physx::PxU32 i = 0; i < size; i++)
-	{
-		for (physx::PxU32 j = 0; j < size - i; j++)
-		{
-			physx::PxTransform localTran(physx::PxVec3(physx::PxReal(j * 2) - physx::PxReal(size - i), physx::PxReal(i * 2 - 1), 0) * halfLen);
-			physx::PxRigidDynamic* body = gPhysics->createRigidDynamic(tran.transform(localTran));
-			body->attachShape(*shape);
-			physx::PxRigidBodyExt::updateMassAndInertia(*body, 10.0f);
-			gScene->addActor(*body);
-		}
-	}
-
-	// Clean up
-	shape->release();
 }
