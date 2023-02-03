@@ -356,5 +356,5 @@ enc_temp_folder/
 
 # overrides for third party resources 
 
-!code/thirdparty/physx/**/
-!code/thirdparty/physx/**/debug/physx_binaries.zip
+# !code/thirdparty/physx/**/
+# !code/thirdparty/physx/**/debug/physx_binaries.zip
