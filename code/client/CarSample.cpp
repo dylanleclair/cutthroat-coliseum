@@ -297,6 +297,11 @@ void cleanupPhysics()
   cleanupPhysX();
 }
 
+PxRigidBody* getVehicleRigidBody()
+{
+    return gVehicle.mPhysXState.physxActor.rigidBody;
+}
+
 void stepPhysics()
 {
   if (gNbCommands == gCommandProgress)

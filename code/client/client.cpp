@@ -7,6 +7,7 @@
 
 
 #include "graphics/Geometry.h"
+#include "PxPhysicsAPI.h"
 
 #include "Window.h"
 
@@ -21,6 +22,7 @@
 
 using namespace physx;
 
+extern PxRigidBody* getVehicleRigidBody();
 extern bool initPhysics();
 extern void stepPhysics();
 extern void cleanupPhysics();
@@ -49,52 +51,29 @@ int main(int argc, char* argv[]) {
 
 	// create instance of system to use.
 	GraphicsSystem gs(window);
-	init_physics();
+	//init_physics();
 
 	// init ecs 
 	ecs::Scene mainScene;
-
-	//make a ground plane
-	gMaterial = gPhysics->createMaterial(0.5f, 0.5f, 0.6f);
-	physx::PxRigidStatic* groundPlane = physx::PxCreatePlane(*gPhysics, physx::PxPlane(0, 1, 0, 50), *gMaterial);
-	gScene->addActor(*groundPlane);
-
-	//make a cube entity
-	ecs::Entity e = mainScene.CreateEntity();
-
-	//create and place a cube
-	float halfLen = 0.5f;
-	physx::PxTransform tran(physx::PxVec3(0, 50, -30)); //put the cube 40 units in the air
-	physx::PxRigidDynamic* body = gPhysics->createRigidDynamic(tran);
-
-	//for the physx visual debugger.
-	physx::PxShape* shape = gPhysics->createShape(physx::PxBoxGeometry(halfLen, halfLen, halfLen), *gMaterial);
-	body->attachShape(*shape);
-
-	physx::PxRigidBodyExt::updateMassAndInertia(*body, 10.0f);
-	gScene->addActor(*body);
-
-	RenderComponent rend = RenderComponent();
-	GraphicsSystem::readVertsFromFile(rend, "models/torus.obj");
-	mainScene.AddComponent(e.guid, rend);
-
-	TransformComponent trans = TransformComponent(body);
-	mainScene.AddComponent(e.guid, trans);
-
-
 	
 	
 	std::cout << "Component initalization finished\n";
 
-	// create instance of system to use.
-	GraphicsSystem gs(window);
-
-	//init_physx();
 	
 	if (initPhysics())
 	{
 		std::cout << "initialized physx driving model\n";
 	}
+
+	//make a cube entity
+	ecs::Entity e = mainScene.CreateEntity();
+
+	RenderComponent rend = RenderComponent();
+	GraphicsSystem::readVertsFromFile(rend, "models/torus.obj");
+	mainScene.AddComponent(e.guid, rend);
+	
+	TransformComponent trans = TransformComponent(getVehicleRigidBody());
+	mainScene.AddComponent(e.guid, trans);
 	
 
 	FramerateCounter framerate;
@@ -148,7 +127,7 @@ int main(int argc, char* argv[]) {
 			gs.input(window.event, controlledCamera);
 		}
 		
-
+		/*
 		// BEGIN ECS SYSTEMS UPDATES
 		//std::cout << "Beginning system updates\n";
 		if(framerate.m_time_queue.size() != 0)
@@ -156,7 +135,7 @@ int main(int argc, char* argv[]) {
 		else
 			gScene->simulate(0.1);
 		gScene->fetchResults(true); //block until the simulation is finished
-
+		*/
 		gs.Update(mainScene, 0.0f);
 
 		// END__ ECS SYSTEMS UPDATES
@@ -205,14 +184,14 @@ int main(int argc, char* argv[]) {
 		ImGui::Render();
 		glViewport(0, 0, (int)io.DisplaySize.x, (int)io.DisplaySize.y);
 		ImGui_ImplOpenGL3_RenderDrawData(ImGui::GetDrawData());
-
+		
 		window.swapBuffers();
 	}
 
 	ImGui_ImplOpenGL3_Shutdown();
 	ImGui_ImplSDL2_Shutdown();
 	ImGui::DestroyContext();
-
+	
 
 	cleanupPhysics();
 
