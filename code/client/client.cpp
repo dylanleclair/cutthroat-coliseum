@@ -78,6 +78,16 @@ int main(int argc, char* argv[]) {
 
 	FramerateCounter framerate;
 
+	assert(SDL_NumJoysticks() > 0);
+	// TODO: handle no controller
+	SDL_GameController* controller = nullptr;
+	controller = SDL_GameControllerOpen(0);
+	assert(controller);
+	SDL_Joystick* joy = nullptr;
+	joy = SDL_GameControllerGetJoystick(controller);
+	assert(joy);
+	int instanceID =  SDL_JoystickInstanceID(joy);
+
 
 	bool quit = false;
 	int controlledCamera = 0;
@@ -126,6 +136,8 @@ int main(int argc, char* argv[]) {
 			//pass the event to the camera
 			gs.input(window.event, controlledCamera);
 		}
+
+
 		
 		/*
 		// BEGIN ECS SYSTEMS UPDATES
@@ -177,6 +189,13 @@ int main(int argc, char* argv[]) {
 		if (ImGui::Button("Serialize")) carConfig.serialize();
 		ImGui::End();
 		// END CAR PHYSICS PANEL
+		
+		// BEGIN A BUTTON THING
+		bool cbutton = false;
+		cbutton = SDL_GameControllerGetButton(controller, SDL_CONTROLLER_BUTTON_A);
+		ImGui::Begin("Controller", nullptr);
+		ImGui::Checkbox("a button", &cbutton);
+		ImGui::End();
 
 		// NOTE: the imgui bible - beau
 		ImGui::ShowDemoWindow();
@@ -194,6 +213,11 @@ int main(int argc, char* argv[]) {
 	
 
 	cleanupPhysics();
+
+	SDL_JoystickClose(joy);
+	joy = nullptr;
+	SDL_GameControllerClose(controller);
+	controller = nullptr;
 
 	SDL_Quit();
 	return 0;
