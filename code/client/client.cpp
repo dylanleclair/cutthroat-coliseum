@@ -193,9 +193,20 @@ int main(int argc, char* argv[]) {
 		// BEGIN A BUTTON THING
 		bool cbutton = false;
 		cbutton = SDL_GameControllerGetButton(controller, SDL_CONTROLLER_BUTTON_A);
-		ImGui::Begin("Controller", nullptr);
+		ImGui::Begin("Buttons", nullptr);
 		ImGui::Checkbox("a button", &cbutton);
 		ImGui::End();
+		// END A BUTTON THING
+
+		// BEGIN JOYSTICK THING
+		auto axis = 0;
+		axis = SDL_GameControllerGetAxis(controller, SDL_CONTROLLER_AXIS_TRIGGERRIGHT);
+		ImGui::Begin("Axes aka Joysticks and triggers");
+		ImGui::Text("Right trigger: %hd", axis);
+		ImGui::End();
+		// END JOYSTICK THING
+
+
 
 		// NOTE: the imgui bible - beau
 		ImGui::ShowDemoWindow();
