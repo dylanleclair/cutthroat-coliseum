@@ -24,7 +24,7 @@ using namespace physx;
 
 extern PxRigidBody* getVehicleRigidBody();
 extern bool initPhysics();
-extern void stepPhysics();
+extern void stepPhysics(SDL_GameController* controller, float timestep = 1 / 164.f);
 extern void cleanupPhysics();
 extern int carSampleInit();
 
@@ -178,7 +178,7 @@ int main(int argc, char* argv[]) {
 		}
 
 		// PHYSX DRIVER UPDATE
-		stepPhysics();
+		stepPhysics(controller);
 
 
 		// TODO(milestone 1): strip all non-milestone related imgui windows out
