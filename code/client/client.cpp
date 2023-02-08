@@ -67,14 +67,24 @@ int main(int argc, char* argv[]) {
 
 	//make a cube entity
 	ecs::Entity e = mainScene.CreateEntity();
+	ecs::Entity level_e = mainScene.CreateEntity();
 
 	RenderComponent rend = RenderComponent();
 	GraphicsSystem::readVertsFromFile(rend, "models/torus.obj");
 	mainScene.AddComponent(e.guid, rend);
+
+	// Level
+	RenderComponent level_r = RenderComponent();
+	GraphicsSystem::readVertsFromFile(level_r, "models/torus_track.obj");
+	mainScene.AddComponent(level_e.guid, level_r);
+	
+	TransformComponent trans2 = TransformComponent();
 	
 	TransformComponent trans = TransformComponent(getVehicleRigidBody());
 	mainScene.AddComponent(e.guid, trans);
+	//mainScene.AddComponent(level_e.guid, trans2);
 	
+	//std::cout << trans.getPosition().x << ", " << trans.getPosition().y << ", " << trans.getPosition().z << std::endl;
 
 	FramerateCounter framerate;
 
