@@ -314,11 +314,11 @@ void stepPhysics(SDL_GameController* controller, float timestep = 1 / 164.f)
     // command.duration = timestep;
 
     if (SDL_GameControllerGetButton(controller, SDL_CONTROLLER_BUTTON_A)) {
-        command.throttle = 1.f;
+        command.throttle = 5.f;
         goto end; // so we don't attempt to throttle and break
     }
     if (SDL_GameControllerGetButton(controller, SDL_CONTROLLER_BUTTON_B)) {
-        command.brake = 1.f;
+        command.brake = 2.f;
         // goto end;????
     }
 end:
