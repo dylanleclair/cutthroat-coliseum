@@ -1,6 +1,6 @@
 #include "Texture.h"
 #define STB_IMAGE_IMPLEMENTATION
-#include <stb/stb_image.h>
+#include "stb_image.h"
 
 #include <iostream>
 
@@ -49,6 +49,7 @@ Texture::Texture(std::string path, GLint interpolation)
 		unbind();
 		glPixelStorei(GL_UNPACK_ALIGNMENT, 4);	//Return to default alignment
 		stbi_image_free(data);
+		std::cout << "finished loading texture\n";
 
 	}
 	else {

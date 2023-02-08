@@ -29,7 +29,7 @@ find_package(glew REQUIRED)
 find_package(assimp CONFIG REQUIRED)
 find_package(tomlplusplus CONFIG REQUIRED)
 find_package(imgui CONFIG REQUIRED)
-find_package(stb MODULE REQUIRED)
+#find_package(stb MODULE REQUIRED)
 
 include_directories(${STB_INCLUDE_DIRS})
 include_directories(${SDL2_INCLUDE_DIRS})

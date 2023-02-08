@@ -28,7 +28,7 @@ GraphicsSystem::GraphicsSystem(Window& _window) :
 	viewUniform = glGetUniformLocation(GLuint(shader), "V");
 	perspectiveUniform = glGetUniformLocation(GLuint(shader), "P"); 
 	shaderSelectorUniform = glGetUniformLocation(GLuint(shader), "selector");
-	textureUniform = glGetUniformLocation(GLuint(shader), "texture");
+	textureUniform = glGetUniformLocation(GLuint(shader), "tex");
 }
 
 void GraphicsSystem::Update(ecs::Scene& scene, float deltaTime) {
@@ -36,7 +36,6 @@ void GraphicsSystem::Update(ecs::Scene& scene, float deltaTime) {
 	glEnable(GL_FRAMEBUFFER_SRGB);
 	glClearColor(0.0f, 0.0f, 0.0f, 1.0f);
 	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-	//glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
 
 	for (int i = 0; i < numCamerasActive; i++) {
 		shader.use();
@@ -66,10 +65,15 @@ void GraphicsSystem::Update(ecs::Scene& scene, float deltaTime) {
 		}
 		
 		//render dynamic components
-		for (Guid entityGuid : ecs::EntitiesInScene<RenderComponent>(scene)) {
+		for (Guid entityGuid : ecs::EntitiesInScene<RenderComponent,TransformComponent>(scene)) {
 			RenderComponent& comp = scene.GetComponent<RenderComponent>(entityGuid);
 			TransformComponent& trans = scene.GetComponent<TransformComponent>(entityGuid);
 			
+			if(comp.appearance == 1)
+				glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
+			else
+				glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
+
 			glUniform1i(shaderSelectorUniform, comp.shaderState);//0 = position and color, 1 = position and texture
 			if (comp.shaderState == 1)
 				comp.texture->bind();
@@ -89,7 +93,7 @@ void GraphicsSystem::input(SDL_Event& _event, int _cameraID)
 	cameras[_cameraID].input(_event);
 }
 
-void GraphicsSystem::readVertsFromFile(RenderComponent& _component, const std::string _file, const std::string _textureFile = "") {
+void GraphicsSystem::readVertsFromFile(RenderComponent& _component, const std::string _file, const std::string _textureFile) {
 	CPU_Geometry geom;
 	std::cout << "Beginning to load model\n";
 	Assimp::Importer importer;
@@ -99,15 +103,21 @@ void GraphicsSystem::readVertsFromFile(RenderComponent& _component, const std::s
 		std::cout << "Error importing " << _file << " into scene\n";
 		return;
 	}
-	std::cout << "Found " << scene->mRootNode->mNumMeshes << " Meshes\n";
-	std::cout << "root node contains " << scene->mRootNode->mNumChildren << " Children\n";
 	processNode(scene->mRootNode, scene, &geom);
 	std::cout << "Finished loading model with " << geom.verts.size() << " verticies\n";
 
 	//Load the verticies into the GPU
+	if (_textureFile.size() > 0) {
+		_component.texture = new Texture(_textureFile, GL_NEAREST);
+		_component.shaderState = 1;
+	}
+	else {
+		_component.shaderState = 0;
+	}
 	_component.numVerts = geom.verts.size();
 	_component.geom->setVerts(geom.verts);
 	_component.geom->setCols(geom.cols);
+	_component.geom->setTexCoords(geom.texs);
 }
 
 void GraphicsSystem::processNode(aiNode* node, const aiScene* scene, CPU_Geometry* geom) {
@@ -119,7 +129,7 @@ void GraphicsSystem::processNode(aiNode* node, const aiScene* scene, CPU_Geometr
 		std::vector<glm::vec2> ttexs;
 		tverts.reserve(mesh->mNumVertices);
 		for (int j = 0; j < mesh->mNumVertices; j++) {
-			tverts.push_back(glm::vec3(mesh->mVertices[j].x, mesh->mVertices[j].y, mesh->mVertices[j].z));
+			tverts.push_back(glm::vec3(mesh->mVertices[j].x, -mesh->mVertices[j].y, mesh->mVertices[j].z));
 			if (mesh->mTextureCoords[0]) {
 				ttexs.push_back(glm::vec2(mesh->mTextureCoords[0][j].x, mesh->mTextureCoords[0][j].y));
 			}

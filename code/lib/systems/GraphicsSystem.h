@@ -24,7 +24,7 @@ public:
 	GraphicsSystem(Window& _window);
 	void Update(ecs::Scene& scene, float deltaTime);
 	void input(SDL_Event&, int _cameraID);
-	static void readVertsFromFile(RenderComponent& _component, const std::string _file, const std::string _textureFile);
+	static void readVertsFromFile(RenderComponent& _component, const std::string _file, const std::string _textureFile = "");
 private:
 	Camera cameras[4];
 	int numCamerasActive = 1;
