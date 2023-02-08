@@ -23,7 +23,7 @@ using namespace physx;
 
 extern PxRigidBody* getVehicleRigidBody();
 extern bool initPhysics();
-extern void stepPhysics();
+extern void stepPhysics(SDL_GameController* controller, float timestep = 1 / 164.f);
 extern void cleanupPhysics();
 extern int carSampleInit();
 
@@ -97,10 +97,12 @@ int main(int argc, char* argv[]) {
 	
 	//make an entity
 	ecs::Entity e = mainScene.CreateEntity();
+	ecs::Entity level_e = mainScene.CreateEntity();
 
 	RenderComponent rend = RenderComponent();
 	GraphicsSystem::readVertsFromFile(rend, "models/torus.obj");
 	mainScene.AddComponent(e.guid, rend);
+
 
 	TransformComponent trans = TransformComponent(getVehicleRigidBody());
 	mainScene.AddComponent(e.guid, trans);
@@ -135,7 +137,26 @@ int main(int argc, char* argv[]) {
 
 
 
+	// Level
+	RenderComponent level_r = RenderComponent();
+	GraphicsSystem::readVertsFromFile(level_r, "models/torus_track.obj");
+	mainScene.AddComponent(level_e.guid, level_r);
+	
+	TransformComponent trans2 = TransformComponent();
+	mainScene.AddComponent(level_e.guid, trans2);
+
+
 	FramerateCounter framerate;
+
+	assert(SDL_NumJoysticks() > 0);
+	// TODO: handle no controller
+	SDL_GameController* controller = nullptr;
+	controller = SDL_GameControllerOpen(0);
+	assert(controller);
+	SDL_Joystick* joy = nullptr;
+	joy = SDL_GameControllerGetJoystick(controller);
+	assert(joy);
+	int instanceID =  SDL_JoystickInstanceID(joy);
 
 
 	bool quit = false;
@@ -185,6 +206,8 @@ int main(int argc, char* argv[]) {
 			//pass the event to the camera
 			gs.input(window.event, controlledCamera);
 		}
+
+
 		
 		/*
 		// BEGIN ECS SYSTEMS UPDATES
@@ -225,7 +248,7 @@ int main(int argc, char* argv[]) {
 		}
 
 		// PHYSX DRIVER UPDATE
-		stepPhysics();
+		stepPhysics(controller);
 
 
 		// TODO(milestone 1): strip all non-milestone related imgui windows out
@@ -236,6 +259,24 @@ int main(int argc, char* argv[]) {
 		if (ImGui::Button("Serialize")) carConfig.serialize();
 		ImGui::End();
 		// END CAR PHYSICS PANEL
+		
+		// BEGIN A BUTTON THING
+		bool cbutton = false;
+		cbutton = SDL_GameControllerGetButton(controller, SDL_CONTROLLER_BUTTON_A);
+		ImGui::Begin("Buttons", nullptr);
+		ImGui::Checkbox("a button", &cbutton);
+		ImGui::End();
+		// END A BUTTON THING
+
+		// BEGIN JOYSTICK THING
+		auto axis = 0;
+		axis = SDL_GameControllerGetAxis(controller, SDL_CONTROLLER_AXIS_TRIGGERRIGHT);
+		ImGui::Begin("Axes aka Joysticks and triggers");
+		ImGui::Text("Right trigger: %hd", axis);
+		ImGui::End();
+		// END JOYSTICK THING
+
+
 
 		// NOTE: the imgui bible - beau
 		ImGui::ShowDemoWindow();
@@ -253,6 +294,11 @@ int main(int argc, char* argv[]) {
 	
 
 	cleanupPhysics();
+
+	SDL_JoystickClose(joy);
+	joy = nullptr;
+	SDL_GameControllerClose(controller);
+	controller = nullptr;
 
 	SDL_Quit();
 	return 0;
