@@ -82,6 +82,20 @@ struct RenderComponent
 {
 	GPU_Geometry* geom = new GPU_Geometry();
 	int numVerts = 0;
+	Texture* texture = nullptr;
+	char shaderState = -1;
 	RenderComponent() = default;
-	RenderComponent(CPU_Geometry* _geom) { geom->setCols(_geom->cols); geom->setVerts(_geom->verts); numVerts = _geom->verts.size(); }
+	RenderComponent(CPU_Geometry* _geom) { 
+		geom->setCols(_geom->cols); 
+		geom->setVerts(_geom->verts); 
+		numVerts = _geom->verts.size(); 
+		geom->setTexCoords(_geom->texs); 
+		if (_geom->texPath.length() > 0) {
+			texture = new Texture(_geom->texPath, GL_NEAREST);
+			shaderState = 1;
+		}
+		else {
+			shaderState = 0;
+		}
+	}
 };

@@ -69,7 +69,7 @@ int main(int argc, char* argv[]) {
 	ecs::Entity e = mainScene.CreateEntity();
 
 	RenderComponent rend = RenderComponent();
-	GraphicsSystem::readVertsFromFile(rend, "models/torus.obj");
+	GraphicsSystem::readVertsFromFile(rend, "models/torus.obj", "textures/CFHX3384.JPG");
 	mainScene.AddComponent(e.guid, rend);
 	
 	TransformComponent trans = TransformComponent(getVehicleRigidBody());
