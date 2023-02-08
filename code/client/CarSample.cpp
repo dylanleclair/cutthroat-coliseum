@@ -136,16 +136,16 @@ struct Command
   PxF32 throttle;
   PxF32 steer;
   PxU32 gear;
-  PxF32 duration;
+  //PxF32 duration;
 };
 const PxU32 gTargetGearCommand = PxVehicleEngineDriveTransmissionCommandState::eAUTOMATIC_GEAR;
 Command gCommands[] =
     {
-        {0.5f, 0.0f, 0.0f, gTargetGearCommand, 2.0f},  // brake on and come to rest for 2 seconds
-        {0.0f, 0.65f, 0.0f, gTargetGearCommand, 5.0f}, // throttle for 5 seconds
-        {0.5f, 0.0f, 0.0f, gTargetGearCommand, 5.0f},  // brake for 5 seconds
-        {0.0f, 0.75f, 0.0f, gTargetGearCommand, 5.0f}, // throttle for 5 seconds
-        {0.0f, 0.25f, 0.5f, gTargetGearCommand, 5.0f}  // light throttle and steer for 5 seconds.
+        {0.5f, 0.0f, 0.0f, gTargetGearCommand,},// 2.0f},  // brake on and come to rest for 2 seconds
+        {0.0f, 0.65f, 0.0f, gTargetGearCommand,},// 5.0f}, // throttle for 5 seconds
+        {0.5f, 0.0f, 0.0f, gTargetGearCommand, },//5.0f},  // brake for 5 seconds
+        {0.0f, 0.75f, 0.0f, gTargetGearCommand,},// 5.0f}, // throttle for 5 seconds
+        {0.0f, 0.25f, 0.5f, gTargetGearCommand,}// 5.0f}  // light throttle and steer for 5 seconds.
 };
 const PxU32 gNbCommands = sizeof(gCommands) / sizeof(Command);
 PxReal gCommandTime = 0.0f; // Time spent on current command
@@ -302,15 +302,33 @@ PxRigidBody* getVehicleRigidBody()
     return gVehicle.mPhysXState.physxActor.rigidBody;
 }
 
-void stepPhysics()
+#include "SDL.h"
+#include <limits>
+
+void stepPhysics(SDL_GameController* controller, float timestep = 1 / 164.f)
 {
-  if (gNbCommands == gCommandProgress)
-    return;
-
-  const PxReal timestep = 1.0f / 60.0f;
-
   // Apply the brake, throttle and steer to the command state of the vehicle.
-  const Command &command = gCommands[gCommandProgress];
+  //const Command &command = gCommands[gCommandProgress];
+  
+    Command command = { 0.f, 0.f, 0.f, gTargetGearCommand };
+    // command.duration = timestep;
+
+    if (SDL_GameControllerGetButton(controller, SDL_CONTROLLER_BUTTON_A)) {
+        command.throttle = 5.f;
+        goto end; // so we don't attempt to throttle and break
+    }
+    if (SDL_GameControllerGetButton(controller, SDL_CONTROLLER_BUTTON_B)) {
+        command.brake = 2.f;
+        // goto end;????
+    }
+end:
+
+    // Normalize controller axis
+    // BUG: max positive is 1 less in magnitude than max min meaning full negative will be slightly above 1
+    auto axis = -SDL_GameControllerGetAxis(controller, SDL_CONTROLLER_AXIS_LEFTX) / SHRT_MAX;
+    command.steer = axis;
+    // TODO: steer
+
   gVehicle.mCommandState.brakes[0] = command.brake;
   gVehicle.mCommandState.nbBrakes = 1;
   gVehicle.mCommandState.throttle = command.throttle;
@@ -329,15 +347,6 @@ void stepPhysics()
   // Forward integrate the phsyx scene by a single timestep.
   gScene->simulate(timestep);
   gScene->fetchResults(true);
-
-  // Increment the time spent on the current command.
-  // Move to the next command in the list if enough time has lapsed.
-  gCommandTime += timestep;
-  if (gCommandTime > gCommands[gCommandProgress].duration)
-  {
-    gCommandProgress++;
-    gCommandTime = 0.0f;
-  }
 }
 
 int carSampleInit()
