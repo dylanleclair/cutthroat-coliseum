@@ -417,9 +417,10 @@ namespace ecs
                     return Iterator{m_wrapper, firstIndex};
                 }
 
-                ComponentFlags entityComponentsMasked = (m_componentMask & m_scene.entities[index].components);
+                ComponentFlags entityComponents = m_scene.entities[index].components;
+                ComponentFlags entityComponentsMasked = (m_componentMask & entityComponents);
 
-                while (index > 0 && (m_componentMask != entityComponentsMasked || !m_scene.isValidEntity(m_scene.entities[index].guid)))
+                while (index > 0 && (entityComponentsMasked != 0 || !m_scene.isValidEntity(m_scene.entities[index].guid)))
                 {
                     firstIndex--;
                 }
