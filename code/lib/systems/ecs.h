@@ -399,6 +399,11 @@ namespace ecs
             {
                 u64 firstIndex = m_scene.entities.size();
 
+                if (firstIndex == 0)
+                {
+                    return Iterator(m_wrapper, firstIndex);
+                }
+
                 ComponentFlags entityComponentsMasked = (m_componentMask & m_scene.entities[index].components);
 
                 while (index > 0 && (m_componentMask != entityComponentsMasked || !m_scene.isValidEntity(m_scene.entities[index].guid)))

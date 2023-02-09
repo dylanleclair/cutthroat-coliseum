@@ -13,12 +13,15 @@
 #include <glm/glm.hpp>
 
 #include <vector>
+#include <string>
 
 
 // List of vertices and colour using std::vector and glm::vec3
 struct CPU_Geometry {
+	std::string texPath;
 	std::vector<glm::vec3> verts;
 	std::vector<glm::vec3> cols;
+	std::vector<glm::vec2> texs;
 };
 
 
@@ -33,6 +36,7 @@ public:
 
 	void setVerts(const std::vector<glm::vec3>& verts);
 	void setCols(const std::vector<glm::vec3>& cols);
+	void setTexCoords(const std::vector<glm::vec2>& texCoords);
 
 private:
 	// note: due to how OpenGL works, vao needs to be 
@@ -41,4 +45,5 @@ private:
 
 	VertexBuffer vertBuffer;
 	VertexBuffer colBuffer;
+	VertexBuffer texCoordBuffer;
 };
