@@ -376,7 +376,7 @@ namespace ecs
             {
                 Guid e = m_scene.entities[index].guid;
                 if (m_scene.isValidEntity(e))
-                    return (m_all) ? true : m_componentMask == m_scene.entities[index].components;
+                    return (m_all) ? true : (m_componentMask & m_scene.entities[index].components) != 0;
                 else
                 {
                     return false;
@@ -398,7 +398,7 @@ namespace ecs
 
                 ComponentFlags entityComponentsMasked = (m_componentMask & m_scene.entities[index].components);
 
-                while (index < m_scene.entities.size() && (m_componentMask != entityComponentsMasked || !m_scene.isValidEntity(m_scene.entities[index].guid)))
+                while (index < m_scene.entities.size() && (m_componentMask == 0 || !m_scene.isValidEntity(m_scene.entities[index].guid)))
                 {
                     firstIndex++;
                 }
@@ -420,7 +420,8 @@ namespace ecs
                 ComponentFlags entityComponents = m_scene.entities[index].components;
                 ComponentFlags entityComponentsMasked = (m_componentMask & entityComponents);
 
-                while (index > 0 && (entityComponentsMasked != 0 || !m_scene.isValidEntity(m_scene.entities[index].guid)))
+                // goal: decrement index until we find a valid entity (ie: it matches component mask)
+                while (index > 0 && (entityComponentsMasked == 0 || !m_scene.isValidEntity(m_scene.entities[index].guid)))
                 {
                     firstIndex--;
                 }
