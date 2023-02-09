@@ -7,11 +7,11 @@
 
 
 #include "graphics/Geometry.h"
+#include "PxPhysicsAPI.h"
 
 #include "Window.h"
 
 #include "systems/ecs.h"
-//#include "systems/PhysicsSystem.h"
 #include "systems/GraphicsSystem.h"
 #include "systems/components.h"
 
@@ -21,8 +21,9 @@
 
 using namespace physx;
 
+extern PxRigidBody* getVehicleRigidBody();
 extern bool initPhysics();
-extern void stepPhysics();
+extern void stepPhysics(SDL_GameController* controller, float timestep = 1 / 164.f);
 extern void cleanupPhysics();
 extern int carSampleInit();
 
@@ -49,55 +50,112 @@ int main(int argc, char* argv[]) {
 
 	// create instance of system to use.
 	GraphicsSystem gs(window);
-	init_physics();
+	//init_physics();
 
 	// init ecs 
 	ecs::Scene mainScene;
-
-	//make a ground plane
-	gMaterial = gPhysics->createMaterial(0.5f, 0.5f, 0.6f);
-	physx::PxRigidStatic* groundPlane = physx::PxCreatePlane(*gPhysics, physx::PxPlane(0, 1, 0, 50), *gMaterial);
-	gScene->addActor(*groundPlane);
-
-	//make a cube entity
-	ecs::Entity e = mainScene.CreateEntity();
-
-	//create and place a cube
-	float halfLen = 0.5f;
-	physx::PxTransform tran(physx::PxVec3(0, 50, -30)); //put the cube 40 units in the air
-	physx::PxRigidDynamic* body = gPhysics->createRigidDynamic(tran);
-
-	//for the physx visual debugger.
-	physx::PxShape* shape = gPhysics->createShape(physx::PxBoxGeometry(halfLen, halfLen, halfLen), *gMaterial);
-	body->attachShape(*shape);
-
-	physx::PxRigidBodyExt::updateMassAndInertia(*body, 10.0f);
-	gScene->addActor(*body);
-
-	RenderComponent rend = RenderComponent();
-	GraphicsSystem::readVertsFromFile(rend, "models/torus.obj");
-	mainScene.AddComponent(e.guid, rend);
-
-	TransformComponent trans = TransformComponent(body);
-	mainScene.AddComponent(e.guid, trans);
-
-
 	
 	
 	std::cout << "Component initalization finished\n";
 
-	// create instance of system to use.
-	GraphicsSystem gs(window);
-
-	//init_physx();
 	
 	if (initPhysics())
 	{
 		std::cout << "initialized physx driving model\n";
 	}
+
+
+	//ground
+	ecs::Entity ground_e = mainScene.CreateEntity();
+	CPU_Geometry ground_geom;
+	glm::vec3 square[] = {
+		{1.f, 0.f, 1.0f},
+		{1.f, 0.f, -1.0f},
+		{-1.f, 0.f, -1.0f},
+
+		{1.f, 0.f, 1.0f},
+		{-1.f, 0.f, -1.0f},
+		{-1.f, 0.f, 1.0f},
+	};
+
+	const float scale = 5.f;
+	for (int x = -30; x <= 30; x++) {
+		for (int z = -30; z <= 30; z++) {
+			for (int i = 0; i < 6; i++) {
+				ground_geom.verts.push_back(square[i]*scale + glm::vec3(x * scale,-1,z * scale));
+				ground_geom.cols.push_back(glm::vec3(0, 1, 0));
+			}
+		}
+	}
+
+	RenderComponent ground = RenderComponent(&ground_geom);
+	ground.appearance = 1;
+	mainScene.AddComponent(ground_e.guid, ground);
+
+	TransformComponent trans2 = TransformComponent();
+	mainScene.AddComponent(ground_e.guid, trans2);
 	
+	//make an entity
+	ecs::Entity e = mainScene.CreateEntity();
+	ecs::Entity level_e = mainScene.CreateEntity();
+
+	RenderComponent rend = RenderComponent();
+	GraphicsSystem::readVertsFromFile(rend, "models/torus.obj");
+	mainScene.AddComponent(e.guid, rend);
+
+
+	TransformComponent trans = TransformComponent(getVehicleRigidBody());
+	mainScene.AddComponent(e.guid, trans);
+
+
+	//finish box
+	ecs::Entity finish_e = mainScene.CreateEntity();
+	CPU_Geometry finish_geom;
+
+	glm::vec3 rectangle[] = {
+		{10.f, 1.f, 0.0f},
+		{10.f, -1.f, 0.0f},
+		{-10.f, -1.f, 0.0f},
+
+		{10.f, 1.f, 0.0f},
+		{-10.f, -1.f, 0.0f},
+		{-10.f, 1.f, 0.0f},
+	};
+	for (int i = 0; i < 6; i++) {
+		finish_geom.verts.push_back(rectangle[i]);
+		finish_geom.cols.push_back(glm::vec3(1, 0, 0));
+	}
+
+
+	RenderComponent finish = RenderComponent(&finish_geom);
+	finish.appearance = 0;
+	mainScene.AddComponent(finish_e.guid, finish);
+
+	TransformComponent trans3 = TransformComponent();
+	trans3.setPosition(glm::vec3(10, 0, 0));
+	mainScene.AddComponent(finish_e.guid, trans3);
+
+
+
+	// Level
+	RenderComponent level_r = RenderComponent();
+	GraphicsSystem::readVertsFromFile(level_r, "models/torus_track.obj");
+	mainScene.AddComponent(level_e.guid, level_r);
+	
+	mainScene.AddComponent(level_e.guid, trans2);
+
 
 	FramerateCounter framerate;
+
+	assert(SDL_NumJoysticks() > 0);
+	// TODO: handle no controller
+	SDL_GameController* controller = nullptr;
+	controller = SDL_GameControllerOpen(0);
+	assert(controller);
+	SDL_Joystick* joy = nullptr;
+	joy = SDL_GameControllerGetJoystick(controller);
+	assert(joy);
+	int instanceID =  SDL_JoystickInstanceID(joy);
 
 
 	bool quit = false;
@@ -147,8 +205,10 @@ int main(int argc, char* argv[]) {
 			//pass the event to the camera
 			gs.input(window.event, controlledCamera);
 		}
-		
 
+
+		
+		/*
 		// BEGIN ECS SYSTEMS UPDATES
 		//std::cout << "Beginning system updates\n";
 		if(framerate.m_time_queue.size() != 0)
@@ -156,7 +216,7 @@ int main(int argc, char* argv[]) {
 		else
 			gScene->simulate(0.1);
 		gScene->fetchResults(true); //block until the simulation is finished
-
+		*/
 		gs.Update(mainScene, 0.0f);
 
 		// END__ ECS SYSTEMS UPDATES
@@ -187,7 +247,7 @@ int main(int argc, char* argv[]) {
 		}
 
 		// PHYSX DRIVER UPDATE
-		stepPhysics();
+		stepPhysics(controller);
 
 
 		// TODO(milestone 1): strip all non-milestone related imgui windows out
@@ -198,6 +258,24 @@ int main(int argc, char* argv[]) {
 		if (ImGui::Button("Serialize")) carConfig.serialize();
 		ImGui::End();
 		// END CAR PHYSICS PANEL
+		
+		// BEGIN A BUTTON THING
+		bool cbutton = false;
+		cbutton = SDL_GameControllerGetButton(controller, SDL_CONTROLLER_BUTTON_A);
+		ImGui::Begin("Buttons", nullptr);
+		ImGui::Checkbox("a button", &cbutton);
+		ImGui::End();
+		// END A BUTTON THING
+
+		// BEGIN JOYSTICK THING
+		auto axis = 0;
+		axis = SDL_GameControllerGetAxis(controller, SDL_CONTROLLER_AXIS_TRIGGERRIGHT);
+		ImGui::Begin("Axes aka Joysticks and triggers");
+		ImGui::Text("Right trigger: %hd", axis);
+		ImGui::End();
+		// END JOYSTICK THING
+
+
 
 		// NOTE: the imgui bible - beau
 		ImGui::ShowDemoWindow();
@@ -205,16 +283,21 @@ int main(int argc, char* argv[]) {
 		ImGui::Render();
 		glViewport(0, 0, (int)io.DisplaySize.x, (int)io.DisplaySize.y);
 		ImGui_ImplOpenGL3_RenderDrawData(ImGui::GetDrawData());
-
+		
 		window.swapBuffers();
 	}
 
 	ImGui_ImplOpenGL3_Shutdown();
 	ImGui_ImplSDL2_Shutdown();
 	ImGui::DestroyContext();
-
+	
 
 	cleanupPhysics();
+
+	SDL_JoystickClose(joy);
+	joy = nullptr;
+	SDL_GameControllerClose(controller);
+	controller = nullptr;
 
 	SDL_Quit();
 	return 0;

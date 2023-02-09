@@ -31,7 +31,7 @@ namespace ecs
     /// @brief systems interface proof of concept
     struct ISystem
     {
-        virtual void Update(Scene& scene, float deltaTime) = 0;
+        virtual void Update(Scene &scene, float deltaTime) = 0;
     };
 
     /// @brief Gets the mask for the component by shifting according to the provided GUID.
@@ -83,7 +83,7 @@ namespace ecs
                 m_size--;
             }
 
-            T& GetComponentData(Guid entityGuid)
+            T &GetComponentData(Guid entityGuid)
             {
                 // TODO: add guard clause
                 return m_components[m_mappings[entityGuid]];
@@ -91,7 +91,7 @@ namespace ecs
 
         private:
             // std::vector<T> m_components = std::vector<T>{};                       // we're *supposed* to use an array here, but a vector will do.
-            size_t m_size{ 0 };
+            size_t m_size{0};
             std::array<T, MAX_ENTITIES> m_components;
             std::array<size_t, MAX_ENTITIES> m_mappings; // helps us access components even if others are removed. component guid -> index in pool
         };
@@ -99,8 +99,8 @@ namespace ecs
 
     struct EntityComponentSystem
     {
-        u64 m_componentCounter{ 0 };
-        u64 m_entityCounter{ 0 };
+        u64 m_componentCounter{0};
+        u64 m_entityCounter{0};
         std::vector<Guid> m_discardedGuids = std::vector<Guid>{};
 
         // lookup table of component GUIDs
@@ -149,7 +149,7 @@ namespace ecs
             {
                 // assign a completely new guid
                 Guid entityId = ecs.m_entityCounter++;
-                entities.push_back(Entity{ entityId, 0 });
+                entities.push_back(Entity{entityId, 0});
                 return entities[entityId];
             }
             else
@@ -162,7 +162,6 @@ namespace ecs
             }
         }
 
-
         /// <summary>
         /// DO NOT USE -- UNSTABLE pending updates for proper support.
         /// </summary>
@@ -174,16 +173,16 @@ namespace ecs
 
             // we want to keep the array packed, so we have to identify all components and delete
 
-            //todo: implement psuedocode
-            // walk thru the component mask of the entity
-            // for each high bit
-            // - calculate the amount of bits shifted so far (this is the component guid)
-            // - remove the component from the component pool
+            // todo: implement psuedocode
+            //  walk thru the component mask of the entity
+            //  for each high bit
+            //  - calculate the amount of bits shifted so far (this is the component guid)
+            //  - remove the component from the component pool
         }
 
         bool isValidEntity(Guid entityGuid)
         {
-            for (const auto& guid : ecs.m_discardedGuids)
+            for (const auto &guid : ecs.m_discardedGuids)
             {
                 if (entityGuid == guid)
                 {
@@ -205,13 +204,13 @@ namespace ecs
         /// @param component the component data to initialize the entity with
         /// @return a reference to the component data in ECS memory
         template <typename T>
-        T& AddComponent(Guid entityGuid, T component)
+        T &AddComponent(Guid entityGuid, T component)
         {
-            std::string typeName = std::string{ typeid(T).name() };
+            std::string typeName = std::string{typeid(T).name()};
             Guid componentGuid = GetComponentGuid<T>();
             ComponentFlags newComponentMask = componentMaskFromGuid(componentGuid);
 
-            Entity& entity = entities[entityGuid];
+            Entity &entity = entities[entityGuid];
 
             std::shared_ptr<memory::ComponentPool<T>> componentPool = std::static_pointer_cast<memory::ComponentPool<T>>(ecs.m_componentPools[componentGuid]);
 
@@ -221,7 +220,7 @@ namespace ecs
             // update the entity's components.
             entities[entityGuid].components |= (static_cast<u64>(1) << componentGuid); // mask the bit!
 
-            T& componentData = componentPool->GetComponentData(entityGuid);
+            T &componentData = componentPool->GetComponentData(entityGuid);
             // CONSIDER RETURNING THE COMPONENT
             return componentData;
         }
@@ -232,7 +231,7 @@ namespace ecs
         template <typename T>
         void RemoveComponent(Guid entityGuid)
         {
-            std::string typeName = std::string{ typeid(T).name() };
+            std::string typeName = std::string{typeid(T).name()};
             u64 componentId = GetComponentGuid<T>();
             std::shared_ptr<memory::ComponentPool<T>> componentPool = std::static_pointer_cast<memory::ComponentPool<T>>(ecs.m_componentPools[componentId]);
             componentPool->remove(entityGuid);
@@ -249,12 +248,24 @@ namespace ecs
         /// @param entityGuid
         /// @return
         template <typename T>
-        T& GetComponent(Guid entityGuid)
+        T &GetComponent(Guid entityGuid)
         {
-            std::string typeName = std::string{ typeid(T).name() };
+            std::string typeName = std::string{typeid(T).name()};
             Guid componentGuid = GetComponentGuid<T>();
             std::shared_ptr<memory::ComponentPool<T>> componentPool = std::static_pointer_cast<memory::ComponentPool<T>>(ecs.m_componentPools[componentGuid]);
             return componentPool->GetComponentData(entityGuid);
+        }
+
+        template <typename T>
+        bool HasComponent(Guid entityGuid)
+        {
+            std::string typeName = std::string{typeid(T).name()};
+            Guid componentGuid = GetComponentGuid<T>();
+
+            // shift the component guid
+            ComponentFlags bitmask = (static_cast<ComponentFlags>(1) << componentGuid);
+
+            return (bitmask & entities[entityGuid].components != 0) ? true : false;
         }
 
         /// @brief Gets the component flags -> DO NOT USE unless for tests / absolutely needed.
@@ -262,7 +273,7 @@ namespace ecs
         /// @return the component flags
         ComponentFlags getComponentFlags(Guid entityGuid)
         {
-            for (auto& entity : entities)
+            for (auto &entity : entities)
             {
                 if (entity.guid == entityGuid)
                 {
@@ -279,7 +290,7 @@ namespace ecs
         Guid GetComponentGuid()
         {
             // lookup the typename
-            std::string typeName = std::string{ typeid(T).name() };
+            std::string typeName = std::string{typeid(T).name()};
 
             // see if a Guid already exists for this type of component
             if (auto typeLookup = ecs.m_componentGuids.find(typeName); typeLookup != ecs.m_componentGuids.end())
@@ -324,7 +335,7 @@ namespace ecs
     template <typename... ComponentTypes>
     struct EntitiesInScene
     {
-        EntitiesInScene(Scene& scene) : m_scene(scene)
+        EntitiesInScene(Scene &scene) : m_scene(scene)
         {
             if (sizeof...(ComponentTypes) == 0)
             {
@@ -332,8 +343,8 @@ namespace ecs
             }
             else
             {
-                Guid componentIds[] = { 0, scene.GetComponentGuid<ComponentTypes>()... };
-                for (const auto& id : componentIds)
+                Guid componentIds[] = {0, scene.GetComponentGuid<ComponentTypes>()...};
+                for (const auto &id : componentIds)
                 {
                     m_componentMask |= (static_cast<ComponentFlags>(1) << id); // all we have to do is or it in~!
                 }
@@ -343,20 +354,20 @@ namespace ecs
         struct Iterator
         {
 
-            Iterator(EntitiesInScene& entitiesInScene) : m_wrapper(entitiesInScene), m_scene(entitiesInScene.m_scene), m_componentMask(entitiesInScene.m_componentMask), m_all(entitiesInScene.m_all) {}
+            Iterator(EntitiesInScene &entitiesInScene) : m_wrapper(entitiesInScene), m_scene(entitiesInScene.m_scene), m_componentMask(entitiesInScene.m_componentMask), m_all(entitiesInScene.m_all) {}
 
-            Iterator(EntitiesInScene& entitiesInScene, size_t index) : m_wrapper(entitiesInScene), m_scene(entitiesInScene.m_scene), m_componentMask(entitiesInScene.m_componentMask), m_all(entitiesInScene.m_all), index(index) {}
+            Iterator(EntitiesInScene &entitiesInScene, size_t index) : m_wrapper(entitiesInScene), m_scene(entitiesInScene.m_scene), m_componentMask(entitiesInScene.m_componentMask), m_all(entitiesInScene.m_all), index(index) {}
 
             Guid operator*() const
             {
                 return m_scene.entities[index].guid;
             };
 
-            bool operator==(const Iterator& other) const
+            bool operator==(const Iterator &other) const
             {
                 return index == other.index || index == m_scene.entities.size();
             }
-            bool operator!=(const Iterator& other) const
+            bool operator!=(const Iterator &other) const
             {
                 return index != other.index && index != m_scene.entities.size();
             }
@@ -365,14 +376,14 @@ namespace ecs
             {
                 Guid e = m_scene.entities[index].guid;
                 if (m_scene.isValidEntity(e))
-                    return (m_all) ? true : m_componentMask == m_scene.entities[index].components;
+                    return (m_all) ? true : (m_componentMask & m_scene.entities[index].components) != 0;
                 else
                 {
                     return false;
                 }
             }
 
-            Iterator& operator++()
+            Iterator &operator++()
             {
                 do
                 {
@@ -387,39 +398,49 @@ namespace ecs
 
                 ComponentFlags entityComponentsMasked = (m_componentMask & m_scene.entities[index].components);
 
-                while (index < m_scene.entities.size() && (m_componentMask != entityComponentsMasked || !m_scene.isValidEntity(m_scene.entities[index].guid)))
+                while (index < m_scene.entities.size() && (m_componentMask == 0 || !m_scene.isValidEntity(m_scene.entities[index].guid)))
                 {
                     firstIndex++;
                 }
 
-                return Iterator{ m_wrapper, firstIndex };
+                return Iterator{m_wrapper, firstIndex};
             }
 
             const Iterator end() const
             {
+
                 u64 firstIndex = m_scene.entities.size();
 
-                ComponentFlags entityComponentsMasked = (m_componentMask & m_scene.entities[index].components);
+                if (firstIndex == 0)
+                {
+                    // return early -> no elements
+                    return Iterator{m_wrapper, firstIndex};
+                }
 
-                while (index > 0 && (m_componentMask != entityComponentsMasked || !m_scene.isValidEntity(m_scene.entities[index].guid)))
+                ComponentFlags entityComponents = m_scene.entities[index].components;
+                ComponentFlags entityComponentsMasked = (m_componentMask & entityComponents);
+
+                // goal: decrement index until we find a valid entity (ie: it matches component mask)
+                while (index > 0 && (entityComponentsMasked == 0 || !m_scene.isValidEntity(m_scene.entities[index].guid)))
                 {
                     firstIndex--;
                 }
 
-                return Iterator{ m_wrapper, firstIndex };
+                return Iterator{m_wrapper, firstIndex};
             }
+
             bool m_all;
             ComponentFlags m_componentMask;
-            Scene& m_scene;
-            size_t index{ 0 };
-            EntitiesInScene& m_wrapper;
+            Scene &m_scene;
+            size_t index{0};
+            EntitiesInScene &m_wrapper;
         };
 
         Iterator begin() { return Iterator(*this).begin(); }
         Iterator end() { return Iterator(*this).end(); }
-        Scene& m_scene;
-        ComponentFlags m_componentMask{ 0 };
-        bool m_all{ false };
+        Scene &m_scene;
+        ComponentFlags m_componentMask{0};
+        bool m_all{false};
     };
 
 }
