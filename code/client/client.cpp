@@ -12,7 +12,6 @@
 #include "Window.h"
 
 #include "systems/ecs.h"
-//#include "systems/PhysicsSystem.h"
 #include "systems/GraphicsSystem.h"
 #include "systems/components.h"
 
@@ -65,7 +64,38 @@ int main(int argc, char* argv[]) {
 		std::cout << "initialized physx driving model\n";
 	}
 
-	//make a cube entity
+
+	//ground
+	ecs::Entity ground_e = mainScene.CreateEntity();
+	CPU_Geometry ground_geom;
+	glm::vec3 square[] = {
+		{1.f, 0.f, 1.0f},
+		{1.f, 0.f, -1.0f},
+		{-1.f, 0.f, -1.0f},
+
+		{1.f, 0.f, 1.0f},
+		{-1.f, 0.f, -1.0f},
+		{-1.f, 0.f, 1.0f},
+	};
+
+	const float scale = 5.f;
+	for (int x = -30; x <= 30; x++) {
+		for (int z = -30; z <= 30; z++) {
+			for (int i = 0; i < 6; i++) {
+				ground_geom.verts.push_back(square[i]*scale + glm::vec3(x * scale,-1,z * scale));
+				ground_geom.cols.push_back(glm::vec3(0, 1, 0));
+			}
+		}
+	}
+
+	RenderComponent ground = RenderComponent(&ground_geom);
+	ground.appearance = 1;
+	mainScene.AddComponent(ground_e.guid, ground);
+
+	TransformComponent trans2 = TransformComponent();
+	mainScene.AddComponent(ground_e.guid, trans2);
+	
+	//make an entity
 	ecs::Entity e = mainScene.CreateEntity();
 	ecs::Entity level_e = mainScene.CreateEntity();
 
@@ -73,18 +103,47 @@ int main(int argc, char* argv[]) {
 	GraphicsSystem::readVertsFromFile(rend, "models/torus.obj");
 	mainScene.AddComponent(e.guid, rend);
 
+
+	TransformComponent trans = TransformComponent(getVehicleRigidBody());
+	mainScene.AddComponent(e.guid, trans);
+
+
+	//finish box
+	ecs::Entity finish_e = mainScene.CreateEntity();
+	CPU_Geometry finish_geom;
+
+	glm::vec3 rectangle[] = {
+		{10.f, 1.f, 0.0f},
+		{10.f, -1.f, 0.0f},
+		{-10.f, -1.f, 0.0f},
+
+		{10.f, 1.f, 0.0f},
+		{-10.f, -1.f, 0.0f},
+		{-10.f, 1.f, 0.0f},
+	};
+	for (int i = 0; i < 6; i++) {
+		finish_geom.verts.push_back(rectangle[i]);
+		finish_geom.cols.push_back(glm::vec3(1, 0, 0));
+	}
+
+
+	RenderComponent finish = RenderComponent(&finish_geom);
+	finish.appearance = 0;
+	mainScene.AddComponent(finish_e.guid, finish);
+
+	TransformComponent trans3 = TransformComponent();
+	trans3.setPosition(glm::vec3(10, 0, 0));
+	mainScene.AddComponent(finish_e.guid, trans3);
+
+
+
 	// Level
 	RenderComponent level_r = RenderComponent();
 	GraphicsSystem::readVertsFromFile(level_r, "models/torus_track.obj");
 	mainScene.AddComponent(level_e.guid, level_r);
 	
-	TransformComponent trans2 = TransformComponent();
-	
-	TransformComponent trans = TransformComponent(getVehicleRigidBody());
-	mainScene.AddComponent(e.guid, trans);
-	//mainScene.AddComponent(level_e.guid, trans2);
-	
-	//std::cout << trans.getPosition().x << ", " << trans.getPosition().y << ", " << trans.getPosition().z << std::endl;
+	mainScene.AddComponent(level_e.guid, trans2);
+
 
 	FramerateCounter framerate;
 

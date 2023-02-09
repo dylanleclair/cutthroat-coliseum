@@ -108,7 +108,7 @@ PxMaterial *gMaterial = NULL;
 PxPvd *gPvd = NULL;
 
 // The path to the vehicle json files to be loaded.
-const char* gVehicleDataPath = "vehicledata";
+const char *gVehicleDataPath = "vehicledata";
 
 // The vehicle with engine drivetrain
 EngineDriveVehicle gVehicle;
@@ -136,16 +136,41 @@ struct Command
   PxF32 throttle;
   PxF32 steer;
   PxU32 gear;
-  //PxF32 duration;
+  // PxF32 duration;
 };
 const PxU32 gTargetGearCommand = PxVehicleEngineDriveTransmissionCommandState::eAUTOMATIC_GEAR;
 Command gCommands[] =
     {
-        {0.5f, 0.0f, 0.0f, gTargetGearCommand,},// 2.0f},  // brake on and come to rest for 2 seconds
-        {0.0f, 0.65f, 0.0f, gTargetGearCommand,},// 5.0f}, // throttle for 5 seconds
-        {0.5f, 0.0f, 0.0f, gTargetGearCommand, },//5.0f},  // brake for 5 seconds
-        {0.0f, 0.75f, 0.0f, gTargetGearCommand,},// 5.0f}, // throttle for 5 seconds
-        {0.0f, 0.25f, 0.5f, gTargetGearCommand,}// 5.0f}  // light throttle and steer for 5 seconds.
+        {
+            0.5f,
+            0.0f,
+            0.0f,
+            gTargetGearCommand,
+        }, // 2.0f},  // brake on and come to rest for 2 seconds
+        {
+            0.0f,
+            0.65f,
+            0.0f,
+            gTargetGearCommand,
+        }, // 5.0f}, // throttle for 5 seconds
+        {
+            0.5f,
+            0.0f,
+            0.0f,
+            gTargetGearCommand,
+        }, // 5.0f},  // brake for 5 seconds
+        {
+            0.0f,
+            0.75f,
+            0.0f,
+            gTargetGearCommand,
+        }, // 5.0f}, // throttle for 5 seconds
+        {
+            0.0f,
+            0.25f,
+            0.5f,
+            gTargetGearCommand,
+        } // 5.0f}  // light throttle and steer for 5 seconds.
 };
 const PxU32 gNbCommands = sizeof(gCommands) / sizeof(Command);
 PxReal gCommandTime = 0.0f; // Time spent on current command
@@ -297,37 +322,39 @@ void cleanupPhysics()
   cleanupPhysX();
 }
 
-PxRigidBody* getVehicleRigidBody()
+PxRigidBody *getVehicleRigidBody()
 {
-    return gVehicle.mPhysXState.physxActor.rigidBody;
+  return gVehicle.mPhysXState.physxActor.rigidBody;
 }
 
 #include "SDL.h"
 #include <limits>
 
-void stepPhysics(SDL_GameController* controller, float timestep = 1 / 164.f)
+void stepPhysics(SDL_GameController *controller, float timestep = 1 / 164.f)
 {
   // Apply the brake, throttle and steer to the command state of the vehicle.
-  //const Command &command = gCommands[gCommandProgress];
-  
-    Command command = { 0.f, 0.f, 0.f, gTargetGearCommand };
-    // command.duration = timestep;
+  // const Command &command = gCommands[gCommandProgress];
 
-    if (SDL_GameControllerGetButton(controller, SDL_CONTROLLER_BUTTON_A)) {
-        command.throttle = 5.f;
-        goto end; // so we don't attempt to throttle and break
-    }
-    if (SDL_GameControllerGetButton(controller, SDL_CONTROLLER_BUTTON_B)) {
-        command.brake = 2.f;
-        // goto end;????
-    }
+  Command command = {0.f, 0.f, 0.f, gTargetGearCommand};
+  // command.duration = timestep;
+
+  if (SDL_GameControllerGetButton(controller, SDL_CONTROLLER_BUTTON_A))
+  {
+    command.throttle = 5.f;
+    goto end; // so we don't attempt to throttle and break
+  }
+  if (SDL_GameControllerGetButton(controller, SDL_CONTROLLER_BUTTON_B))
+  {
+    command.brake = 2.f;
+    // goto end;????
+  }
 end:
 
-    // Normalize controller axis
-    // BUG: max positive is 1 less in magnitude than max min meaning full negative will be slightly above 1
-    auto axis = -SDL_GameControllerGetAxis(controller, SDL_CONTROLLER_AXIS_LEFTX) / SHRT_MAX;
-    command.steer = axis;
-    // TODO: steer
+  // Normalize controller axis
+  // BUG: max positive is 1 less in magnitude than max min meaning full negative will be slightly above 1
+  auto axis = -SDL_GameControllerGetAxis(controller, SDL_CONTROLLER_AXIS_LEFTX) / SHRT_MAX;
+  command.steer = axis;
+  // TODO: steer
 
   gVehicle.mCommandState.brakes[0] = command.brake;
   gVehicle.mCommandState.nbBrakes = 1;
