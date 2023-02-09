@@ -31,7 +31,6 @@ TEST(ecs, register_component_guids)
   ASSERT_TRUE(guid1 == 0);
   ASSERT_TRUE(guid2 == 1);
   ASSERT_TRUE(guid3 == 0);
-  
 }
 
 TEST(ecs, entities_in_scene)
@@ -93,7 +92,7 @@ TEST(ecs, remove_component)
   ASSERT_TRUE(scene.getComponentFlags(entity.guid) == 0); // no components yet
 
   scene.AddComponent<Transform>(entity.guid, Transform{0.0f, 0.0f, 0.0f}); // component guid 0
-  scene.AddComponent<DummyData>(entity.guid, {0,1}); // component guid 1
+  scene.AddComponent<DummyData>(entity.guid, {0, 1});                      // component guid 1
 
   for (int i = 1; i < 5; i++)
   {
@@ -131,10 +130,109 @@ TEST(ecs, iterate_over_scene)
 
   for (Guid entityGuid : ecs::EntitiesInScene<Transform>(scene))
   {
-    Transform& t = scene.GetComponent<Transform>(entityGuid);
+    Transform &t = scene.GetComponent<Transform>(entityGuid);
     entitiesIteratedOver++;
   }
 
   ASSERT_TRUE(entitiesIteratedOver == 1);
+}
 
+TEST(ecs, iterate_over_scene_multiple_ents)
+{
+
+  ecs::Scene scene;
+
+  ecs::Entity entity = scene.CreateEntity();
+  ecs::Entity entity2 = scene.CreateEntity();
+
+  ASSERT_TRUE(scene.getComponentFlags(entity.guid) == 0); // no components yet
+
+  scene.AddComponent<Transform>(entity.guid, Transform{0.0f, 0.0f, 0.0f});  // component guid 0
+  scene.AddComponent<Transform>(entity2.guid, Transform{1.0f, 1.0f, 1.0f}); // component guid 0
+
+  int entitiesIteratedOver{0};
+
+  for (Guid entityGuid : ecs::EntitiesInScene<Transform>(scene))
+  {
+    Transform &t = scene.GetComponent<Transform>(entityGuid);
+    entitiesIteratedOver++;
+  }
+
+  ASSERT_TRUE(entitiesIteratedOver == 2);
+}
+
+TEST(ecs, checkComponentType)
+{
+
+  ecs::Scene scene;
+
+  ecs::Entity entity = scene.CreateEntity();
+
+  ASSERT_TRUE(scene.getComponentFlags(entity.guid) == 0); // no components yet
+
+  scene.AddComponent<Transform>(entity.guid, Transform{0.0f, 0.0f, 0.0f}); // component guid 0
+
+  ASSERT_TRUE(scene.HasComponent<Transform>(entity.guid));
+
+  ASSERT_FALSE(scene.HasComponent<DummyData>(entity.guid));
+}
+
+TEST(ecs, iterator_bug_several_components)
+{
+
+  ecs::Scene scene;
+
+  ecs::Entity entity = scene.CreateEntity();
+  ecs::Entity entity2 = scene.CreateEntity();
+
+  ASSERT_TRUE(scene.getComponentFlags(entity.guid) == 0); // no components yet
+
+  scene.AddComponent<Transform>(entity.guid, Transform{0.0f, 0.0f, 0.0f});
+  scene.AddComponent<Transform>(entity2.guid, Transform{1.0f, 1.0f, 1.0f});
+
+  scene.AddComponent<DummyData>(entity.guid, DummyData{0,1}); 
+  scene.AddComponent<DummyData>(entity.guid, DummyData{1,2});
+
+  ASSERT_TRUE(scene.getComponentFlags(entity.guid) == 0b11);
+
+  int entitiesIteratedOver{0};
+
+  for (Guid entityGuid : ecs::EntitiesInScene<Transform,DummyData>(scene))
+  {
+    // i couldn't repro the issue? weird stuff.
+    Transform &t = scene.GetComponent<Transform>(entityGuid);
+    DummyData &d = scene.GetComponent<DummyData>(entityGuid);
+    entitiesIteratedOver++;
+  }
+
+  ASSERT_TRUE(entitiesIteratedOver == 2);
+}
+
+TEST(ecs, iterator_not_picky_test)
+{
+
+  ecs::Scene scene;
+
+  ecs::Entity entity = scene.CreateEntity();
+  ecs::Entity entity2 = scene.CreateEntity();
+
+  ASSERT_TRUE(scene.getComponentFlags(entity.guid) == 0); // no components yet
+
+  scene.AddComponent<Transform>(entity.guid, Transform{0.0f, 0.0f, 0.0f});
+  scene.AddComponent<Transform>(entity2.guid, Transform{1.0f, 1.0f, 1.0f});
+
+  scene.AddComponent<DummyData>(entity.guid, DummyData{0,1}); 
+  scene.AddComponent<DummyData>(entity.guid, DummyData{1,2});
+
+  ASSERT_TRUE(scene.getComponentFlags(entity.guid) == 0b11);
+
+  int entitiesIteratedOver{0};
+
+  for (Guid entityGuid : ecs::EntitiesInScene<Transform>(scene))
+  {
+    Transform &t = scene.GetComponent<Transform>(entityGuid);
+    entitiesIteratedOver++;
+  }
+
+  ASSERT_TRUE(entitiesIteratedOver == 2);
 }
