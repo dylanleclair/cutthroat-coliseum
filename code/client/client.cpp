@@ -142,7 +142,6 @@ int main(int argc, char* argv[]) {
 	GraphicsSystem::readVertsFromFile(level_r, "models/torus_track.obj");
 	mainScene.AddComponent(level_e.guid, level_r);
 	
-	TransformComponent trans2 = TransformComponent();
 	mainScene.AddComponent(level_e.guid, trans2);
 
 
