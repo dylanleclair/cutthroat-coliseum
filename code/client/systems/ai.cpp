@@ -38,13 +38,11 @@ void AISystem::Update(ecs::Scene& scene, float deltaTime) {
             std::vector<glm::vec3> path = pathfinding::AStar<glm::vec3>(roundPosition(position.getPosition()),roundPosition(targetPosition.getPosition()),euclideanXZ,AISystem::generateNearby);
             
             // std::vector<glm::vec3> path = {glm::vec3{0.f},glm::vec3{0.5f}, glm::vec3{0.6f}};
-            std::cout << "path found!" << std::endl;
             for (auto& pos: path)
             {
                 pathGeom.verts.push_back(glm::vec3{pos});
                 pathGeom.cols.push_back(glm::vec3(1.0f, 0.f, 1.0f));
             }
-            std::cout << "path done " <<  std::endl;
         }
     }
 
