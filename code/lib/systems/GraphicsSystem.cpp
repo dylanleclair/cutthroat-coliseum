@@ -41,7 +41,12 @@ void GraphicsSystem::Update(ecs::Scene& scene, float deltaTime) {
 		shader.use();
 		//matricies that need only be set once per camera
 		glm::mat4 P = glm::perspective(glm::radians(45.0f), (float)windowSize.x/ windowSize.y, 0.01f, 1000.f);
-		glm::mat4 V = cameras[i].getView();
+		//glm::mat4 V = cameras[i].getView();
+		// Hardcoded camera value, it can't move after this 
+		glm::mat4 V = { 0.236837, -0.415199, 0.878361, 0,
+						0, 0.904083, 0.427358, 0,
+						- 0.971549, -0.101214, 0.21412, 0,
+						0.0948601, -1.58747, -22.4296, 1 };
 		glUniformMatrix4fv(perspectiveUniform, 1, GL_FALSE, glm::value_ptr(P));
 		glUniformMatrix4fv(viewUniform, 1, GL_FALSE, glm::value_ptr(V));
 
@@ -86,6 +91,12 @@ void GraphicsSystem::Update(ecs::Scene& scene, float deltaTime) {
 			glDrawArrays(GL_TRIANGLES, 0, comp.numVerts);
 		}
 	}
+}
+
+// Function to return a camera view matrix (used for debug)
+// TODO:: add a cameraID to pass in for multiple cameras
+glm::mat4 GraphicsSystem::getCameraView() {
+	return cameras[0].getView();
 }
 
 void GraphicsSystem::input(SDL_Event& _event, int _cameraID)
