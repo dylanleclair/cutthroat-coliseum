@@ -17,7 +17,7 @@
 
 #include "CarPhysics.h"
 #include "FrameCounter.h"
-#include "graphics/GLDebug.h"
+#include "systems/ai.h"
 
 
 using namespace physx;
@@ -39,6 +39,7 @@ CarPhysicsSerde carConfig(carPhysics);
 int main(int argc, char* argv[]) {
 	printf("Starting main");
 
+
 	carSampleInit();
 
 	SDL_Init(SDL_INIT_EVERYTHING); // initialize all sdl systems
@@ -47,7 +48,7 @@ int main(int argc, char* argv[]) {
 	ImGuiIO& io = ImGui::GetIO(); (void)io;
 
 	carConfig.deserialize();
-	GLDebug::enable();
+
 	// create instance of system to use.
 	GraphicsSystem gs(window);
 	//init_physics();
@@ -132,34 +133,46 @@ int main(int argc, char* argv[]) {
 	}
 
 
+
+	PathfindingComponent car_pathfinder{finish_e.guid};
+	mainScene.AddComponent(e.guid,car_pathfinder);
+
+
 	RenderComponent finish = RenderComponent(&finish_geom);
 	finish.appearance = 0;
-	//mainScene.AddComponent(finish_e.guid, finish);
+	mainScene.AddComponent(finish_e.guid, finish);
 
 	TransformComponent trans3 = TransformComponent();
 	trans3.setPosition(glm::vec3(10, 0, 0));
-	//mainScene.AddComponent(finish_e.guid, trans3);
+	mainScene.AddComponent(finish_e.guid, trans3);
 
+
+	// Path renderer
+	ecs::Entity path = mainScene.CreateEntity();
+	mainScene.AddComponent(path.guid, TransformComponent{});
+	mainScene.AddComponent(path.guid,RenderComponent{});
+
+	AISystem aiSystem{path.guid};
 
 
 	// Level
 	RenderComponent level_r = RenderComponent();
 	GraphicsSystem::readVertsFromFile(level_r, "models/torus_track.obj");
-	//mainScene.AddComponent(level_e.guid, level_r);
+	mainScene.AddComponent(level_e.guid, level_r);
 	
-	//mainScene.AddComponent(level_e.guid, trans2);
+	mainScene.AddComponent(level_e.guid, trans2);
 
 
 	FramerateCounter framerate;
 
-	//assert(SDL_NumJoysticks() > 0);
+	assert(SDL_NumJoysticks() > 0);
 	// TODO: handle no controller
 	SDL_GameController* controller = nullptr;
 	controller = SDL_GameControllerOpen(0);
-	//assert(controller);
+	assert(controller);
 	SDL_Joystick* joy = nullptr;
 	joy = SDL_GameControllerGetJoystick(controller);
-	//assert(joy);
+	assert(joy);
 	int instanceID =  SDL_JoystickInstanceID(joy);
 
 
@@ -223,6 +236,7 @@ int main(int argc, char* argv[]) {
 		gScene->fetchResults(true); //block until the simulation is finished
 		*/
 		gs.Update(mainScene, 0.0f);
+		aiSystem.Update(mainScene, 0.f);
 
 		// END__ ECS SYSTEMS UPDATES
 

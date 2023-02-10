@@ -13,7 +13,6 @@
 #include <assimp/Importer.hpp>
 #include <assimp/scene.h>
 #include <assimp/postprocess.h>
-#include <bitset>
 
 GraphicsSystem::GraphicsSystem(Window& _window) :
 	shader("shaders/test.vert", "shaders/test.frag")
@@ -107,7 +106,14 @@ void GraphicsSystem::Update(ecs::Scene& scene, float deltaTime) {
 			// GEOMETRY
 			comp.geom->bind();
 
-			glDrawArrays(GL_TRIANGLES, 0, comp.numVerts);
+			glm::mat4 M = glm::translate(glm::mat4(1), trans.getPosition()) * toMat4(trans.getRotation());
+			glUniformMatrix4fv(modelUniform, 1, GL_FALSE, glm::value_ptr(M));
+			if (comp.appearance == 2)
+			{
+				glDrawArrays(GL_LINE_STRIP, 0, comp.numVerts);
+			} else {
+				glDrawArrays(GL_TRIANGLES, 0, comp.numVerts);
+			}
 		}
 	}
 }
@@ -157,15 +163,12 @@ void GraphicsSystem::processNode(aiNode* node, const aiScene* scene, CPU_Geometr
 		//retrieve all the verticies
 		std::vector<glm::vec3> tverts; //a tempoary vector to store nodes until they can be unindexed
 		std::vector<glm::vec2> ttexs;
-		std::vector<glm::vec3> tnorms;
 		tverts.reserve(mesh->mNumVertices);
 		for (int j = 0; j < mesh->mNumVertices; j++) {
 			tverts.push_back(glm::vec3(mesh->mVertices[j].x, -mesh->mVertices[j].y, mesh->mVertices[j].z));
 			if (mesh->mTextureCoords[0]) {
 				ttexs.push_back(glm::vec2(mesh->mTextureCoords[0][j].x, mesh->mTextureCoords[0][j].y));
 			}
-			if (mesh->HasNormals())
-				tnorms.push_back(glm::vec3(mesh->mTextureCoords[0][j].x, mesh->mTextureCoords[0][j].y, mesh->mTextureCoords[0][j].z));
 		}
 		
 		//retrieve all the indicies
@@ -179,11 +182,6 @@ void GraphicsSystem::processNode(aiNode* node, const aiScene* scene, CPU_Geometr
 				geom->texs.push_back(ttexs[mesh->mFaces[j].mIndices[0]]);
 				geom->texs.push_back(ttexs[mesh->mFaces[j].mIndices[1]]);
 				geom->texs.push_back(ttexs[mesh->mFaces[j].mIndices[2]]);
-			}
-			if (mesh->HasNormals()) {
-				geom->norms.push_back(tnorms[mesh->mFaces[j].mIndices[0]]);
-				geom->norms.push_back(tnorms[mesh->mFaces[j].mIndices[1]]);
-				geom->norms.push_back(tnorms[mesh->mFaces[j].mIndices[2]]);
 			}
 			for (int z = 0; z < 3; z++)
 				geom->cols.push_back(glm::vec3(1));
