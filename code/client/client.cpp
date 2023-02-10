@@ -97,17 +97,18 @@ int main(int argc, char* argv[]) {
 	mainScene.AddComponent(ground_e.guid, trans2);
 	
 	//make an entity
-	ecs::Entity e = mainScene.CreateEntity();
+	ecs::Entity car_e = mainScene.CreateEntity();
 	ecs::Entity level_e = mainScene.CreateEntity();
 	ecs::Entity outWall_e = mainScene.CreateEntity();
 	ecs::Entity inWall_e = mainScene.CreateEntity();
 
 	// Car
-	RenderComponent rend = RenderComponent();
-	GraphicsSystem::readVertsFromFile(rend, "models/test_car.obj");
-	mainScene.AddComponent(e.guid, rend);
-	TransformComponent trans = TransformComponent(getVehicleRigidBody());
-	mainScene.AddComponent(e.guid, trans);
+	RenderComponent car_r = RenderComponent();
+	GraphicsSystem::readVertsFromFile(car_r, "models/test_car.obj");
+	mainScene.AddComponent(car_e.guid, car_r);
+	TransformComponent car_t = TransformComponent(getVehicleRigidBody());
+	car_t.setPosition(glm::vec3(0, 1, 0));
+	mainScene.AddComponent(car_e.guid, car_t);
 
 
 	//finish box
@@ -135,7 +136,7 @@ int main(int argc, char* argv[]) {
 	mainScene.AddComponent(finish_e.guid, finish);
 
 	TransformComponent trans3 = TransformComponent();
-	trans3.setPosition(glm::vec3(9, 1, 0));
+	trans3.setPosition(glm::vec3(9, 1, -2));
 	mainScene.AddComponent(finish_e.guid, trans3);
 
 
@@ -166,6 +167,8 @@ int main(int argc, char* argv[]) {
 	auto &wallTrans = mainScene.GetComponent<TransformComponent>(outWall_e.guid);
 	wallTrans.setPosition(glm::vec3(0, 0, 0));
 	*/
+	auto &finish_trans = mainScene.GetComponent<TransformComponent>(finish_e.guid);
+	TransformComponent &car_trans = mainScene.GetComponent<TransformComponent>(car_e.guid);
 	
 
 
@@ -221,10 +224,14 @@ int main(int argc, char* argv[]) {
 
 					// Prinout of camera matrix
 					case SDLK_c:
-						std::cout << gs.getCameraView()[0][0] << ", " << gs.getCameraView()[0][1] << ", " << gs.getCameraView()[0][2] << ", " << gs.getCameraView()[0][3] << std::endl;
-						std::cout << gs.getCameraView()[1][0] << ", " << gs.getCameraView()[1][1] << ", " << gs.getCameraView()[1][2] << ", " << gs.getCameraView()[1][3] << std::endl;
-						std::cout << gs.getCameraView()[2][0] << ", " << gs.getCameraView()[2][1] << ", " << gs.getCameraView()[2][2] << ", " << gs.getCameraView()[2][3] << std::endl;
+						std::cout << gs.getCameraView()[0][0] << ", " << gs.getCameraView()[0][1] << ", " << gs.getCameraView()[0][2] << ", " << gs.getCameraView()[0][3] << "," << std::endl;
+						std::cout << gs.getCameraView()[1][0] << ", " << gs.getCameraView()[1][1] << ", " << gs.getCameraView()[1][2] << ", " << gs.getCameraView()[1][3] << "," << std::endl;
+						std::cout << gs.getCameraView()[2][0] << ", " << gs.getCameraView()[2][1] << ", " << gs.getCameraView()[2][2] << ", " << gs.getCameraView()[2][3] << "," << std::endl;
 						std::cout << gs.getCameraView()[3][0] << ", " << gs.getCameraView()[3][1] << ", " << gs.getCameraView()[3][2] << ", " << gs.getCameraView()[3][3] << std::endl;
+						std::cout << std::endl;
+						
+						std::cout << finish_trans.getPosition().x << ", " << finish_trans.getPosition().y << ", " << finish_trans.getPosition().z << std::endl;
+						std::cout << car_t.getPosition().x << ", " << car_t.getPosition().y << ", " << car_t.getPosition().z << std::endl;
 						break;
 					case SDLK_ESCAPE:	// (Pressing escape closes the window, useful for fullscreen);
 						quit = true;
@@ -238,23 +245,12 @@ int main(int argc, char* argv[]) {
 			gs.input(window.event, controlledCamera);
 		}
 
-		//{-10.f, 0.5f, 0.0f},
-		//{-10.f, -1.f, 0.0f},
-		//{ -5.f, -1.f, 0.0f },
-
-		//{ -5.f, 0.5f, 0.0f },
-		//{ -5.f, -1.f, 0.0f },
-		//{ -10.f, 0.5f, 0.0f },
-
-		//std::cout << trans.getPosition().x << ", " << trans.getPosition().y << ", " << trans.getPosition().z << std::endl;
-
-
 		// Finish line code
 		// TODO :: get proper transform
-		//if (trans.getPosition().x >= 0.18f && trans.getPosition().x <= 3.2f ) 
-		//{
-		//	std::cout << "Finish line crossed !" << std::endl;
-		//}
+		if (car_trans.getPosition().x >= 0.0f && car_trans.getPosition().x <= 2.0f)
+		{
+			std::cout << "Finish line crossed !" << std::endl;
+		}
 		
 		/*
 		// BEGIN ECS SYSTEMS UPDATES
