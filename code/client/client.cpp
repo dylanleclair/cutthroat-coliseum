@@ -119,8 +119,8 @@ int main(int argc, char* argv[]) {
 	// Car
 	RenderComponent car_r = RenderComponent();
 	GraphicsSystem::readVertsFromFile(car_r, "models/test_car.obj");
-	car_r.shaderState |= 4;
-	car_r.shaderState |= 1;
+	car_r.shaderState |= 4; // 4 is for shading
+	car_r.shaderState |= 1; // 1 is for colours
 	car_r.color = glm::vec3(0.5f, 0.5f, 0.f);
 	mainScene.AddComponent(car_e.guid, car_r);
 	TransformComponent car_t = TransformComponent(getVehicleRigidBody());
@@ -153,8 +153,6 @@ int main(int argc, char* argv[]) {
 		finish_geom.verts.push_back(rectangle[5-i]);
 		finish_geom.cols.push_back(glm::vec3(1, 0, 0));
 	}
-
-
 
 
 	// Finish line components
@@ -339,14 +337,8 @@ int main(int argc, char* argv[]) {
 			//gScene->fetchResults(true);
 		}
 
-		float delta_time = framerate.m_time_queue.front() / 1000.f;
-		
-
-		float other_delta = 1 / 60.f;
-		//std::cout << "delta_time: " << delta_time << " other_delta: " << other_delta << " diff:" << delta_time - other_delta << std::endl;
-
 		// PHYSX DRIVER UPDATE
-		stepPhysics(controller, delta_time);
+		stepPhysics(controller, framerate.m_time_queue.front() / 1000.f);
 
 
 		// TODO(milestone 1): strip all non-milestone related imgui windows out
