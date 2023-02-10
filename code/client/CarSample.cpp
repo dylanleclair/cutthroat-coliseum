@@ -236,7 +236,7 @@ void initGroundPlane()
     gGroundPlane->getShapes(&shape, 1, i);
     shape->setFlag(PxShapeFlag::eSCENE_QUERY_SHAPE, true);
     shape->setFlag(PxShapeFlag::eSIMULATION_SHAPE, true);
-    shape->setFlag(PxShapeFlag::eTRIGGER_SHAPE, true);
+    shape->setFlag(PxShapeFlag::eTRIGGER_SHAPE, false);
   }
   gScene->addActor(*gGroundPlane);
 }
@@ -299,6 +299,17 @@ bool initVehicles()
   gVehicleSimulationContext.gravity = gGravity;
   gVehicleSimulationContext.physxScene = gScene;
   gVehicleSimulationContext.physxActorUpdateMode = PxVehiclePhysXActorUpdateMode::eAPPLY_ACCELERATION;
+
+  PxU32 vehicle_shapes = gVehicle.mPhysXState.physxActor.rigidBody->getNbShapes();
+  for (PxU32 i = 0; i < vehicle_shapes; i++)
+  {
+      PxShape* shape = NULL;
+      gVehicle.mPhysXState.physxActor.rigidBody->getShapes(&shape, 1, i);
+      shape->setFlag(PxShapeFlag::eSCENE_QUERY_SHAPE, true);
+      shape->setFlag(PxShapeFlag::eSIMULATION_SHAPE, true);
+      shape->setFlag(PxShapeFlag::eTRIGGER_SHAPE, false);
+  }
+
   return true;
 }
 
@@ -318,6 +329,10 @@ void Boxes() {
             body->attachShape(*shape);
             physx::PxRigidBodyExt::updateMassAndInertia(*body, 10.0f);
             gScene->addActor(*body);
+
+            shape->setFlag(PxShapeFlag::eSCENE_QUERY_SHAPE, true);
+            shape->setFlag(PxShapeFlag::eSIMULATION_SHAPE, true);
+            shape->setFlag(PxShapeFlag::eTRIGGER_SHAPE, false);
         }
     }
 

@@ -34,8 +34,9 @@ CarPhysics carPhysics;
 CarPhysicsSerde carConfig(carPhysics);
 
 int lapCount = 0;
+bool isFinished = false;
 
-void finishLineLogic() {
+void finishLinePrint() {
 	lapCount++;
 	std::cout << "Lap: " << lapCount << std::endl;
 	if (lapCount == 2) {
@@ -208,6 +209,86 @@ int main(int argc, char* argv[]) {
 	mainScene.AddComponent(inWall_e.guid, inWall);
 	mainScene.AddComponent(inWall_e.guid, wall_t);
 
+
+	CPU_Geometry box_geom;
+
+	glm::vec3 box[] = {
+	{ 0.5f, 0.f, 0.f },
+	{ 0.5f, 0.5f, 0.f },
+	{ 0.5f, 0.f, 0.5f },
+	{ 0.f, 0.5f, 0.5f },
+	{ 0.5f, 0.5f, 0.5f },
+	{ 0.f, 0.f, 0.5f }
+	};
+
+	for (int i = 0; i < 6; i++) {
+		box_geom.verts.push_back(box[i]);
+		box_geom.cols.push_back(glm::vec3(1, 0, 0));
+	}
+	for (int i = 0; i < 6; i++) {
+		box_geom.verts.push_back(rectangle[5 - i]);
+		box_geom.cols.push_back(glm::vec3(0, 1, 0));
+	}
+
+	ecs::Entity box_e1 = mainScene.CreateEntity();
+	ecs::Entity box_e2 = mainScene.CreateEntity();
+	ecs::Entity box_e3 = mainScene.CreateEntity();
+	ecs::Entity box_e4 = mainScene.CreateEntity();
+	ecs::Entity box_e5 = mainScene.CreateEntity();
+	ecs::Entity box_e6 = mainScene.CreateEntity();
+	ecs::Entity box_e7 = mainScene.CreateEntity();
+	ecs::Entity box_e8 = mainScene.CreateEntity();
+	ecs::Entity box_e9 = mainScene.CreateEntity();
+	ecs::Entity box_e10 = mainScene.CreateEntity();
+
+	RenderComponent box1 = RenderComponent();
+	RenderComponent box2 = RenderComponent();
+	RenderComponent box3 = RenderComponent();
+	RenderComponent box4 = RenderComponent();
+	RenderComponent box5 = RenderComponent();
+	RenderComponent box6 = RenderComponent();
+	RenderComponent box7 = RenderComponent();
+	RenderComponent box8 = RenderComponent();
+	RenderComponent box9 = RenderComponent();
+	RenderComponent box10 = RenderComponent();
+
+	RenderComponent box_r1 = RenderComponent(&box_geom);
+	RenderComponent box_r2 = RenderComponent(&box_geom);
+	RenderComponent box_r3 = RenderComponent(&box_geom);
+	RenderComponent box_r4 = RenderComponent(&box_geom);
+	RenderComponent box_r5 = RenderComponent(&box_geom);
+	RenderComponent box_r6 = RenderComponent(&box_geom);
+	RenderComponent box_r7 = RenderComponent(&box_geom);
+	RenderComponent box_r8 = RenderComponent(&box_geom);
+	RenderComponent box_r9 = RenderComponent(&box_geom);
+	RenderComponent box_r10 = RenderComponent(&box_geom);
+
+	box_r1.shaderState |= 1;
+	box_r1.shaderState |= 4;
+	box_r2.shaderState |= 1;
+	box_r2.shaderState |= 4;
+	box_r3.shaderState |= 1;
+	box_r3.shaderState |= 4;
+	box_r4.shaderState |= 1;
+	box_r4.shaderState |= 4;
+	box_r5.shaderState |= 1;
+	box_r5.shaderState |= 4;
+	box_r6.shaderState |= 1;
+	box_r6.shaderState |= 4;
+	box_r7.shaderState |= 1;
+	box_r7.shaderState |= 4;
+	box_r8.shaderState |= 1;
+	box_r8.shaderState |= 4;
+	box_r9.shaderState |= 1;
+	box_r9.shaderState |= 4;
+	box_r10.shaderState |= 1;
+	box_r10.shaderState |= 4;
+
+	// May need to do colour
+
+	TransformComponent box1_t = TransformComponent();
+
+
 	// This is how to change the position of the object after it has been passed to the ECS
 	/*
 	auto &wallTrans = mainScene.GetComponent<TransformComponent>(outWall_e.guid);
@@ -292,10 +373,17 @@ int main(int argc, char* argv[]) {
 		}
 
 		// Finish line code
-		if (car_trans.getPosition().x >= -0.5f && car_trans.getPosition().x <= 3.8f &&
-			car_trans.getPosition().z >= -1.9f && car_trans.getPosition().z <= -1.85f)
-		{
-			finishLineLogic();
+		if (car_trans.getPosition().x >= -1.5f && car_trans.getPosition().x <= 4.8f &&
+			car_trans.getPosition().z >= -3.0f && car_trans.getPosition().z <= -0.6f)
+		{	
+			if (isFinished == false) {
+				isFinished = true;
+				finishLinePrint();
+			}			
+			
+		}
+		else {
+			isFinished = false;
 		}
 		
 		/*
