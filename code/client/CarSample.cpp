@@ -329,9 +329,28 @@ PxRigidBody *getVehicleRigidBody()
 
 #include "SDL.h"
 #include <limits>
+#include <vector>
+#include <iostream>
 
-void stepPhysics(SDL_GameController *controller, float timestep = 1 / 164.f)
+void stepPhysics(SDL_GameController *controller, std::vector<SDL_Event> events,float timestep = 1 / 164.f)
 {
+
+
+    for (auto& event : events)
+    {
+
+        if (event.type == SDL_KEYDOWN) {
+            switch (event.key.keysym.sym) {
+            case SDLK_w:
+                //TODO recompile the shader
+                std::cout << "w pressed\n";
+                break;
+            default:
+                break;
+            };
+        }
+    }
+
   // Apply the brake, throttle and steer to the command state of the vehicle.
   // const Command &command = gCommands[gCommandProgress];
 

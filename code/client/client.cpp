@@ -24,7 +24,7 @@ using namespace physx;
 
 extern PxRigidBody* getVehicleRigidBody();
 extern bool initPhysics();
-extern void stepPhysics(SDL_GameController* controller, float timestep = 1 / 164.f);
+extern void stepPhysics(SDL_GameController* controller, std::vector<SDL_Event> events, float timestep = 1 / 164.f);
 extern void cleanupPhysics();
 extern int carSampleInit();
 
@@ -32,8 +32,6 @@ extern PxScene* gScene;
 
 CarPhysics carPhysics;
 CarPhysicsSerde carConfig(carPhysics);
-
-
 
 
 int main(int argc, char* argv[]) {
@@ -178,6 +176,7 @@ int main(int argc, char* argv[]) {
 	// GAME LOOP
 	while (!quit) {
 		//polls all pending input events until there are none left in the queue
+		std::vector<SDL_Event> events;
 		while (SDL_PollEvent(&window.event)) {
 			ImGui_ImplSDL2_ProcessEvent(&window.event);
 
@@ -214,6 +213,9 @@ int main(int argc, char* argv[]) {
 						break;
 				};
 			}
+
+
+			events.push_back(window.event);
 
 			//pass the event to the camera
 			gs.input(window.event, controlledCamera);
@@ -261,7 +263,7 @@ int main(int argc, char* argv[]) {
 		}
 
 		// PHYSX DRIVER UPDATE
-		stepPhysics(controller);
+		stepPhysics(controller, events);
 
 
 		// TODO(milestone 1): strip all non-milestone related imgui windows out
