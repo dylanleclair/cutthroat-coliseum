@@ -102,9 +102,6 @@ int main(int argc, char* argv[]) {
 	RenderComponent ground = RenderComponent(&ground_geom);
 	ground.appearance = 1;
 	mainScene.AddComponent(ground_e.guid, ground);
-
-	TransformComponent trans2 = TransformComponent();
-	mainScene.AddComponent(ground_e.guid, trans2);
 	
 	//make an entity
 	ecs::Entity car_e = mainScene.CreateEntity();
@@ -142,17 +139,19 @@ int main(int argc, char* argv[]) {
 
 
 
-	PathfindingComponent car_pathfinder{finish_e.guid};
-	mainScene.AddComponent(e.guid,car_pathfinder);
 
 	// Finish line components
 	RenderComponent finish = RenderComponent(&finish_geom);
 	finish.appearance = 0;
 	mainScene.AddComponent(finish_e.guid, finish);
 
-	TransformComponent trans3 = TransformComponent();
-	trans3.setPosition(glm::vec3(9, 1, -2));
-	mainScene.AddComponent(finish_e.guid, trans3);
+	TransformComponent finish_t = TransformComponent();
+	finish_t.setPosition(glm::vec3(9, 1, -2));
+	mainScene.AddComponent(finish_e.guid, finish_t);
+
+	// Pathfinding
+	PathfindingComponent car_pathfinder{ finish_e.guid };
+	mainScene.AddComponent(car_e.guid, car_pathfinder);
 
 
 	// Path renderer
@@ -164,12 +163,13 @@ int main(int argc, char* argv[]) {
 
 
 	// Level
-
+	TransformComponent level_t = TransformComponent();
+	mainScene.AddComponent(ground_e.guid, level_t);
 
 	RenderComponent level_r = RenderComponent();
 	GraphicsSystem::readVertsFromFile(level_r, "models/large_test_torus.obj");
 	mainScene.AddComponent(level_e.guid, level_r);	
-	//mainScene.AddComponent(level_e.guid, trans2);
+	mainScene.AddComponent(level_e.guid, level_t);
 
 	TransformComponent wall_t = TransformComponent();
 	wall_t.setPosition(glm::vec3(0, 2, 0));

@@ -204,7 +204,7 @@ void initPhysX()
     pvdClient->setScenePvdFlag(PxPvdSceneFlag::eTRANSMIT_CONTACTS, true);
     pvdClient->setScenePvdFlag(PxPvdSceneFlag::eTRANSMIT_SCENEQUERIES, true);
   }
-  gMaterial = gPhysics->createMaterial(0.5f, 0.5f, 0.6f);
+  gMaterial = gPhysics->createMaterial(0.5f, 0.5f, 0.5f);
 
   PxInitVehicleExtension(*gFoundation);
 }
@@ -229,6 +229,7 @@ void cleanupPhysX()
 void initGroundPlane()
 {
   gGroundPlane = PxCreatePlane(*gPhysics, PxPlane(0, 1, 0, 0), *gMaterial);
+  std::cout << "Material: " << gMaterial->getStaticFriction() << std::endl;
   for (PxU32 i = 0; i < gGroundPlane->getNbShapes(); i++)
   {
     PxShape *shape = NULL;
@@ -339,17 +340,18 @@ void stepPhysics(SDL_GameController *controller, float timestep = 1 / 164.f)
   Command command = {0.f, 0.f, 0.f, gTargetGearCommand};
   // command.duration = timestep;
 
+  // Throttle to 2.f will cause weird behaviour
   if (SDL_GameControllerGetButton(controller, SDL_CONTROLLER_BUTTON_A))
   {
-    command.throttle = 2.f;
-    goto end; // so we don't attempt to throttle and break
+    command.throttle = 1.f;
+    //goto end; // so we don't attempt to throttle and break
   }
-  if (SDL_GameControllerGetButton(controller, SDL_CONTROLLER_BUTTON_B))
+  else if (SDL_GameControllerGetButton(controller, SDL_CONTROLLER_BUTTON_B))
   {
-    command.brake = 2.f;
+    command.brake = 1.f;
     // goto end;????
   }
-end:
+//end:
 
   // Normalize controller axis
   // BUG: max positive is 1 less in magnitude than max min meaning full negative will be slightly above 1
@@ -358,6 +360,7 @@ end:
   //std::cout << axis << std::endl;
   command.steer = axis;
   // TODO: steer
+
 
   gVehicle.mCommandState.brakes[0] = command.brake;
   gVehicle.mCommandState.nbBrakes = 1;
