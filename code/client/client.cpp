@@ -99,11 +99,10 @@ int main(int argc, char* argv[]) {
 	ecs::Entity e = mainScene.CreateEntity();
 	ecs::Entity level_e = mainScene.CreateEntity();
 
+	// Car
 	RenderComponent rend = RenderComponent();
-	GraphicsSystem::readVertsFromFile(rend, "models/torus.obj");
+	GraphicsSystem::readVertsFromFile(rend, "models/test_car.obj");
 	mainScene.AddComponent(e.guid, rend);
-
-
 	TransformComponent trans = TransformComponent(getVehicleRigidBody());
 	mainScene.AddComponent(e.guid, trans);
 
@@ -194,6 +193,14 @@ int main(int argc, char* argv[]) {
 					case SDLK_3:
 						controlledCamera = 3;
 						break;
+
+					// Prinout of camera matrix
+					case SDLK_c:
+						std::cout << gs.getCameraView()[0][0] << ", " << gs.getCameraView()[0][1] << ", " << gs.getCameraView()[0][2] << ", " << gs.getCameraView()[0][3] << std::endl;
+						std::cout << gs.getCameraView()[1][0] << ", " << gs.getCameraView()[1][1] << ", " << gs.getCameraView()[1][2] << ", " << gs.getCameraView()[1][3] << std::endl;
+						std::cout << gs.getCameraView()[2][0] << ", " << gs.getCameraView()[2][1] << ", " << gs.getCameraView()[2][2] << ", " << gs.getCameraView()[2][3] << std::endl;
+						std::cout << gs.getCameraView()[3][0] << ", " << gs.getCameraView()[3][1] << ", " << gs.getCameraView()[3][2] << ", " << gs.getCameraView()[3][3] << std::endl;
+						break;
 					case SDLK_ESCAPE:	// (Pressing escape closes the window, useful for fullscreen);
 						quit = true;
 						break;
@@ -229,7 +236,7 @@ int main(int argc, char* argv[]) {
 
 		// BEGIN FRAMERATE COUNTER
 		ImGui::SetNextWindowSize(ImVec2(500, 100)); 
-		ImGui::Begin("Milestone 1");
+		ImGui::Begin("Milestone 2");
 		ImGui::Text("framerate: %d", framerate.framerate());
         ImGui::PlotLines("Frametime plot (ms)", framerate.m_time_queue.data(), framerate.m_time_queue.size());
         ImGui::PlotLines("Framerate plot (hz)", framerate.m_rate_queue.data(), framerate.m_rate_queue.size());
@@ -268,7 +275,7 @@ int main(int argc, char* argv[]) {
 		// END A BUTTON THING
 
 		// BEGIN JOYSTICK THING
-		auto axis = 0;
+		float axis = 0;
 		axis = SDL_GameControllerGetAxis(controller, SDL_CONTROLLER_AXIS_TRIGGERRIGHT);
 		ImGui::Begin("Axes aka Joysticks and triggers");
 		ImGui::Text("Right trigger: %hd", axis);
