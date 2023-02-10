@@ -343,13 +343,13 @@ int main(int argc, char* argv[]) {
 
 		// TODO(milestone 1): strip all non-milestone related imgui windows out
 		// BEGIN CAR PHYSICS PANEL
-		ImGui::Begin("Car Physics", nullptr);
-		ImGui::SliderFloat("acceleration", &carPhysics.m_acceleration, 0.f, 1000.f);
-		ImGui::SliderFloat("suspension", &carPhysics.m_suspension_force, 0.f, 1000.f);
-		if (ImGui::Button("Serialize")) carConfig.serialize();
-		ImGui::End();
-		// END CAR PHYSICS PANEL
-		
+		// ImGui::Begin("Car Physics", nullptr);
+		// ImGui::SliderFloat("acceleration", &carPhysics.m_acceleration, 0.f, 1000.f);
+		// ImGui::SliderFloat("suspension", &carPhysics.m_suspension_force, 0.f, 1000.f);
+		// if (ImGui::Button("Serialize")) carConfig.serialize();
+		// ImGui::End();
+
+
 		// BEGIN A BUTTON THING
 		bool cbutton = false;
 		cbutton = SDL_GameControllerGetButton(controller, SDL_CONTROLLER_BUTTON_A);
@@ -366,6 +366,16 @@ int main(int argc, char* argv[]) {
 		ImGui::End();
 		// END JOYSTICK THING
 
+		// HACK(beau): pull these out of CarSample.cpp
+		extern float carThrottle;
+		extern float carBrake;
+		extern float carAxis;
+		extern float carAxisScale;
+		ImGui::Begin("Car commands tuner", nullptr);
+		ImGui::Text("left stick horizontal tilt: %f", carAxis);
+		ImGui::Text("Laps: %d", lapCount);
+		ImGui::End();
+		// END CAR PHYSICS PANEL
 
 
 		// NOTE: the imgui bible - beau
