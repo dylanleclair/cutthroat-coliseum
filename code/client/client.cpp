@@ -247,7 +247,8 @@ int main(int argc, char* argv[]) {
 
 		// Finish line code
 		// TODO :: get proper transform
-		if (car_trans.getPosition().x >= 0.0f && car_trans.getPosition().x <= 2.0f)
+		if (car_trans.getPosition().x >= -0.5f && car_trans.getPosition().x <= 3.8f &&
+			car_trans.getPosition().z >= -1.9f && car_trans.getPosition().z <= -1.85f)
 		{
 			std::cout << "Finish line crossed !" << std::endl;
 		}

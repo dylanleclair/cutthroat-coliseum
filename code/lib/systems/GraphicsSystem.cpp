@@ -40,13 +40,17 @@ void GraphicsSystem::Update(ecs::Scene& scene, float deltaTime) {
 	for (int i = 0; i < numCamerasActive; i++) {
 		shader.use();
 		//matricies that need only be set once per camera
-		glm::mat4 P = glm::perspective(glm::radians(45.0f), (float)windowSize.x/ windowSize.y, 0.01f, 1000.f);
+		glm::mat4 P = glm::perspective(glm::radians(45.0f), (float)windowSize.x / windowSize.y, 0.01f, 1000.f);
 		glm::mat4 V = cameras[i].getView();
 		// Hardcoded camera value, it can't move after this 
-		//glm::mat4 V = { 0.236837, -0.415199, 0.878361, 0,
-		//				0, 0.904083, 0.427358, 0,
-		//				- 0.971549, -0.101214, 0.21412, 0,
-		//				0.0948601, -1.58747, -22.4296, 1 };
+		/*
+		glm::mat4 V = { 0.583542, -0.486457, 0.650261, 0,
+						0, 0.800731, 0.599024, 0,
+						-0.812083, -0.349555, 0.46726, 0,
+						9.34798, -1.19552, -28.525, 1
+						}
+		*/
+
 		glUniformMatrix4fv(perspectiveUniform, 1, GL_FALSE, glm::value_ptr(P));
 		glUniformMatrix4fv(viewUniform, 1, GL_FALSE, glm::value_ptr(V));
 
