@@ -77,7 +77,7 @@ void GraphicsSystem::Update(ecs::Scene& scene, float deltaTime) {
 			if(comp.appearance == 1)
 				glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
 			else
-				glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
+				glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
 
 			glUniform1i(shaderSelectorUniform, comp.shaderState);//0 = position and color, 1 = position and texture
 			if (comp.shaderState == 1)

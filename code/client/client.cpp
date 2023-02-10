@@ -139,6 +139,7 @@ int main(int argc, char* argv[]) {
 
 
 	// Level
+	
 	RenderComponent level_r = RenderComponent();
 	GraphicsSystem::readVertsFromFile(level_r, "models/large_test_torus.obj");
 	mainScene.AddComponent(level_e.guid, level_r);	
@@ -151,6 +152,7 @@ int main(int argc, char* argv[]) {
 	RenderComponent inWall = RenderComponent();
 	GraphicsSystem::readVertsFromFile(inWall, "models/large_test_torus_outwall.obj");
 	mainScene.AddComponent(inWall_e.guid, inWall);
+	
 
 
 	FramerateCounter framerate;
@@ -222,7 +224,23 @@ int main(int argc, char* argv[]) {
 			gs.input(window.event, controlledCamera);
 		}
 
+		//{-10.f, 0.5f, 0.0f},
+		//{-10.f, -1.f, 0.0f},
+		//{ -5.f, -1.f, 0.0f },
 
+		//{ -5.f, 0.5f, 0.0f },
+		//{ -5.f, -1.f, 0.0f },
+		//{ -10.f, 0.5f, 0.0f },
+
+		//std::cout << trans.getPosition().x << ", " << trans.getPosition().y << ", " << trans.getPosition().z << std::endl;
+
+
+		// Finish line code
+		// TODO :: get proper transform
+		//if (trans.getPosition().x >= 0.18f && trans.getPosition().x <= 3.2f ) 
+		//{
+		//	std::cout << "Finish line crossed !" << std::endl;
+		//}
 		
 		/*
 		// BEGIN ECS SYSTEMS UPDATES
