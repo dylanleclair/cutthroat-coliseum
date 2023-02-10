@@ -380,10 +380,8 @@ int main(int argc, char* argv[]) {
 		extern float carAxis;
 		extern float carAxisScale;
 		ImGui::Begin("Car commands tuner", nullptr);
-		ImGui::SliderFloat("throttle", &carThrottle, 0.f, 5.f);
-		ImGui::SliderFloat("brake", &carBrake, 0.f, 5.f);
-		ImGui::SliderFloat("\"axis\" i.e. steering", &carAxisScale, 0.f, 5.f);
 		ImGui::Text("left stick horizontal tilt: %f", carAxis);
+		ImGui::Text("Laps: %d", lapCount);
 		ImGui::End();
 		// END CAR PHYSICS PANEL
 
