@@ -332,8 +332,10 @@ PxRigidBody *getVehicleRigidBody()
 #include "SDL.h"
 #include <limits>
 
-void stepPhysics(SDL_GameController *controller, float timestep = 1 / 164.f)
+void stepPhysics(SDL_GameController *controller, float timestep)
 {
+    const float max_time_step = 0.2f;
+    timestep = std::min(timestep, max_time_step);
   // Apply the brake, throttle and steer to the command state of the vehicle.
   // const Command &command = gCommands[gCommandProgress];
 

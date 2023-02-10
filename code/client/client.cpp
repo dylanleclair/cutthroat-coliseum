@@ -24,7 +24,7 @@ using namespace physx;
 
 extern PxRigidBody* getVehicleRigidBody();
 extern bool initPhysics();
-extern void stepPhysics(SDL_GameController* controller, float timestep = 1 / 164.f);
+extern void stepPhysics(SDL_GameController* controller, float timestep);
 extern void cleanupPhysics();
 extern int carSampleInit();
 
@@ -339,8 +339,14 @@ int main(int argc, char* argv[]) {
 			//gScene->fetchResults(true);
 		}
 
+		float delta_time = framerate.m_time_queue.front() / 1000.f;
+		
+
+		float other_delta = 1 / 60.f;
+		//std::cout << "delta_time: " << delta_time << " other_delta: " << other_delta << " diff:" << delta_time - other_delta << std::endl;
+
 		// PHYSX DRIVER UPDATE
-		stepPhysics(controller);
+		stepPhysics(controller, delta_time);
 
 
 		// TODO(milestone 1): strip all non-milestone related imgui windows out
