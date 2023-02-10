@@ -13,9 +13,11 @@ include(SelectLibraryConfigurations)
 
 # the dlls need be copied to the output directory!! configure_file those bad boys
 
-set(PHYSX_LIB_PATH "${CMAKE_SOURCE_DIR}/thirdparty/physx/release/")
-set(PHYSX_LIB_DEBUG_PATH "${CMAKE_SOURCE_DIR}/thirdparty/physx/debug/")
+set(PHYSX_LIB_PATH "${CMAKE_SOURCE_DIR}/thirdparty/physx/Release/")
+set(PHYSX_LIB_DEBUG_PATH "${CMAKE_SOURCE_DIR}/thirdparty/physx/Debug/")
+set(PHYSX_LIB_DIR "${CMAKE_SOURCE_DIR}/thirdparty/physx/")
 
+message( ${PHYSX_LIB_DIR} )
 message( ${PHYSX_LIB_PATH} )
 message( ${PHYSX_LIB_DEBUG_PATH} )
 
@@ -92,16 +94,9 @@ target_compile_definitions(${BINARY} PUBLIC ASSETS_PATH="${CMAKE_CURRENT_SOURCE_
 
 # find some way to choose right dll directory
 
-# Copy all models and tell the build system to re-run CMAKE if one of them changes
-file(GLOB files ${PHYSX_LIB_DEBUG_PATH}/shared/*)
-foreach(file ${files})
-	get_filename_component(name ${file} NAME)
-	configure_file(${file} ${name})
-endforeach()
-
 add_custom_command(TARGET ${BINARY} POST_BUILD
     COMMAND ${CMAKE_COMMAND} -E copy_directory
-        "${PHYSX_LIB_DEBUG_PATH}/shared/"
+        "${PHYSX_LIB_DIR}/$<CONFIGURATION>/shared/"
         $<TARGET_FILE_DIR:${BINARY}>
     COMMAND ${CMAKE_COMMAND} -E copy_directory
         "${CMAKE_SOURCE_DIR}/assets/"
