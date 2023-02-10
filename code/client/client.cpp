@@ -114,13 +114,13 @@ int main(int argc, char* argv[]) {
 	CPU_Geometry finish_geom;
 
 	glm::vec3 rectangle[] = {
-		{10.f, 1.f, 0.0f},
-		{10.f, -1.f, 0.0f},
+		{-10.f, 0.5f, 0.0f},
 		{-10.f, -1.f, 0.0f},
+		{-5.f, -1.f, 0.0f},
 
-		{10.f, 1.f, 0.0f},
-		{-10.f, -1.f, 0.0f},
-		{-10.f, 1.f, 0.0f},
+		{-5.f, 0.5f, 0.0f},
+		{-5.f, -1.f, 0.0f},
+		{-10.f, 0.5f, 0.0f},
 	};
 	for (int i = 0; i < 6; i++) {
 		finish_geom.verts.push_back(rectangle[i]);
@@ -142,7 +142,7 @@ int main(int argc, char* argv[]) {
 	RenderComponent level_r = RenderComponent();
 	GraphicsSystem::readVertsFromFile(level_r, "models/large_test_torus.obj");
 	mainScene.AddComponent(level_e.guid, level_r);	
-	mainScene.AddComponent(level_e.guid, trans2);
+	//mainScene.AddComponent(level_e.guid, trans2);
 
 	RenderComponent outWall = RenderComponent();
 	GraphicsSystem::readVertsFromFile(outWall, "models/large_test_torus_inwall.obj");
