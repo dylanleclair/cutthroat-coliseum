@@ -98,6 +98,8 @@ int main(int argc, char* argv[]) {
 	//make an entity
 	ecs::Entity e = mainScene.CreateEntity();
 	ecs::Entity level_e = mainScene.CreateEntity();
+	ecs::Entity outWall_e = mainScene.CreateEntity();
+	ecs::Entity inWall_e = mainScene.CreateEntity();
 
 	// Car
 	RenderComponent rend = RenderComponent();
@@ -138,10 +140,17 @@ int main(int argc, char* argv[]) {
 
 	// Level
 	RenderComponent level_r = RenderComponent();
-	GraphicsSystem::readVertsFromFile(level_r, "models/torus_track.obj");
-	mainScene.AddComponent(level_e.guid, level_r);
-	
+	GraphicsSystem::readVertsFromFile(level_r, "models/large_test_torus.obj");
+	mainScene.AddComponent(level_e.guid, level_r);	
 	mainScene.AddComponent(level_e.guid, trans2);
+
+	RenderComponent outWall = RenderComponent();
+	GraphicsSystem::readVertsFromFile(outWall, "models/large_test_torus_inwall.obj");
+	mainScene.AddComponent(outWall_e.guid, outWall);
+
+	RenderComponent inWall = RenderComponent();
+	GraphicsSystem::readVertsFromFile(inWall, "models/large_test_torus_outwall.obj");
+	mainScene.AddComponent(inWall_e.guid, inWall);
 
 
 	FramerateCounter framerate;
