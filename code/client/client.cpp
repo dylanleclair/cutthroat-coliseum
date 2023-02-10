@@ -88,6 +88,7 @@ int main(int argc, char* argv[]) {
 		}
 	}
 
+	// Ground plane component
 	RenderComponent ground = RenderComponent(&ground_geom);
 	ground.appearance = 1;
 	mainScene.AddComponent(ground_e.guid, ground);
@@ -128,30 +129,43 @@ int main(int argc, char* argv[]) {
 	}
 
 
+	// Finishin line component
 	RenderComponent finish = RenderComponent(&finish_geom);
 	finish.appearance = 0;
 	mainScene.AddComponent(finish_e.guid, finish);
 
 	TransformComponent trans3 = TransformComponent();
-	trans3.setPosition(glm::vec3(10, 0, 0));
+	trans3.setPosition(glm::vec3(9, 1, 0));
 	mainScene.AddComponent(finish_e.guid, trans3);
 
 
 
 	// Level
-	
+
+
 	RenderComponent level_r = RenderComponent();
 	GraphicsSystem::readVertsFromFile(level_r, "models/large_test_torus.obj");
 	mainScene.AddComponent(level_e.guid, level_r);	
 	//mainScene.AddComponent(level_e.guid, trans2);
 
+	TransformComponent wall_t = TransformComponent();
+	wall_t.setPosition(glm::vec3(0, 2, 0));
+
 	RenderComponent outWall = RenderComponent();
 	GraphicsSystem::readVertsFromFile(outWall, "models/large_test_torus_inwall.obj");
 	mainScene.AddComponent(outWall_e.guid, outWall);
+	mainScene.AddComponent(outWall_e.guid, wall_t);
 
 	RenderComponent inWall = RenderComponent();
 	GraphicsSystem::readVertsFromFile(inWall, "models/large_test_torus_outwall.obj");
 	mainScene.AddComponent(inWall_e.guid, inWall);
+	mainScene.AddComponent(inWall_e.guid, wall_t);
+
+	// This is how to change the position of the object after it has been passed to the ECS
+	/*
+	auto &wallTrans = mainScene.GetComponent<TransformComponent>(outWall_e.guid);
+	wallTrans.setPosition(glm::vec3(0, 0, 0));
+	*/
 	
 
 
