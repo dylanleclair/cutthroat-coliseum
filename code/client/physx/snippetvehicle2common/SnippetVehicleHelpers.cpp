@@ -43,14 +43,18 @@ PxFilterObjectAttributes attributes0, PxFilterData filterData0,
 PxFilterObjectAttributes attributes1, PxFilterData filterData1,
 PxPairFlags& pairFlags, const void* constantBlock, PxU32 constantBlockSize)
 {
-	PX_UNUSED(attributes0);
-	PX_UNUSED(filterData0);
-	PX_UNUSED(attributes1);
-	PX_UNUSED(filterData1);
-	PX_UNUSED(pairFlags);
-	PX_UNUSED(constantBlock);
-	PX_UNUSED(constantBlockSize);
-	return PxFilterFlag::eSUPPRESS;
+	//PX_UNUSED(attributes0);
+	//PX_UNUSED(filterData0);
+	//PX_UNUSED(attributes1);
+	//PX_UNUSED(filterData1);
+	//PX_UNUSED(pairFlags);
+	//PX_UNUSED(constantBlock);
+	//PX_UNUSED(constantBlockSize);
+	//return PxFilterFlag::eSUPPRESS;
+
+	pairFlags = physx::PxPairFlag::eCONTACT_DEFAULT;
+
+	return physx::PxFilterFlag::eDEFAULT;
 }
 
 
