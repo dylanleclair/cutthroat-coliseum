@@ -2,6 +2,7 @@
 #include "PxPhysicsAPI.h"
 #include <glm/gtc/quaternion.hpp> 
 #include <glm/gtx/quaternion.hpp>
+#include <iostream>
 
 //Helper functions that allow for easy transforms between physx and glm
 inline glm::vec3 PxtoGLM(physx::PxVec3 _vec) {
@@ -84,21 +85,30 @@ struct RenderComponent
 	int numVerts = 0;
 	Texture* texture = nullptr;
 	float specular = 0;
-	GLuint shaderState = 0;
+	glm::vec3 color = glm::vec3(1);
+	GLuint shaderState = 1;
 	//color | texture | normals | specular
+	/*
+	* color: If this flag is set to true the component will render with the color field. Otherwise it will use a vertexColor
+	* texture: If this flag is true it will assume there is a texture attached and use it
+	* normals: if this is true that means that lighting will be applied to the model
+	* specular: DOESN'T WORK DO NOT USE!!! (It won't break, it just doesn't work properly)
+	*/
 	char appearance = 0; //0 = solid, 1 = wireframe, 2 = line strip
 	RenderComponent() = default;
 	RenderComponent(CPU_Geometry* _geom) { 
 		geom->setCols(_geom->cols); 
 		geom->setVerts(_geom->verts); 
+		geom->setTexCoords(_geom->texs);
+		geom->setNorms(_geom->norms);
 		numVerts = _geom->verts.size(); 
-		geom->setTexCoords(_geom->texs); 
+		std::cout << _geom->cols.size() << '\n';
+		if (_geom->cols.size() > 0)
+			shaderState ^= 1; 
+
 		if (_geom->texPath.length() > 0) {
 			texture = new Texture(_geom->texPath, GL_NEAREST);
 			shaderState |= 2;
-		}
-		else if (_geom->cols.size() > 0) {
-			shaderState |= 1;
 		}
 
 		if (_geom->norms.size() > 0)

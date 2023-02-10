@@ -39,6 +39,7 @@ private:
 	GLuint viewPosUniform = -1;
 	GLuint ambiantStrengthUniform = -1;
 	GLuint specularStrengthUniform = -1;
+	GLuint colorUniform = -1;
 
 	ShaderProgram shader;
 	glm::ivec2 windowSize;

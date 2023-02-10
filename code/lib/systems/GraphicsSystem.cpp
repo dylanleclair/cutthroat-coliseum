@@ -33,22 +33,22 @@ GraphicsSystem::GraphicsSystem(Window& _window) :
 	viewPosUniform = glGetUniformLocation(GLuint(shader), "viewPos");
 	ambiantStrengthUniform = glGetUniformLocation(GLuint(shader), "ambiantStr");
 	specularStrengthUniform = glGetUniformLocation(GLuint(shader), "specularStrength");
-
-	//uniforms that don't change, however I put them here just in case we want to change them
-	glUniformMatrix4fv(lightUniform, 1, GL_FALSE, glm::value_ptr(glm::vec3(10,30,0)));
-	glUniform1f(ambiantStrengthUniform, 0.75f);
+	colorUniform = glGetUniformLocation(GLuint(shader), "userColor");
 }
 
 void GraphicsSystem::Update(ecs::Scene& scene, float deltaTime) {
 	glEnable(GL_LINE_SMOOTH);
 	glEnable(GL_FRAMEBUFFER_SRGB);
-	glClearColor(0.0f, 0.0f, 0.0f, 1.0f);
+	glClearColor(0.50f, 0.80f, 0.97f, 0.0f);
 	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+	glEnable(GL_CULL_FACE);
+	glCullFace(GL_BACK);
+	glEnable(GL_DEPTH_TEST);
 
 	for (int i = 0; i < numCamerasActive; i++) {
 		shader.use();
 		//matricies that need only be set once per camera
-		glm::mat4 P = glm::perspective(glm::radians(45.0f), (float)windowSize.x/ windowSize.y, 0.01f, 1000.f);
+		glm::mat4 P = glm::perspective(glm::radians(45.0f), (float)windowSize.x/ windowSize.y, 0.1f, 1000.f);
 		glm::mat4 V = cameras[i].getView();
 		glUniformMatrix4fv(perspectiveUniform, 1, GL_FALSE, glm::value_ptr(P));
 		glUniformMatrix4fv(viewUniform, 1, GL_FALSE, glm::value_ptr(V));
@@ -81,6 +81,9 @@ void GraphicsSystem::Update(ecs::Scene& scene, float deltaTime) {
 			//properties the geometry is ALWAYS going to have
 			glm::mat4 M = glm::translate(glm::mat4(1), trans.getPosition()) * toMat4(trans.getRotation());
 			glUniformMatrix4fv(modelUniform, 1, GL_FALSE, glm::value_ptr(M));
+			//uniforms that don't change, however I put them here just in case we want to change them
+			glUniform3fv(lightUniform, 1, glm::value_ptr(glm::vec3(0, 20, 0)));
+			glUniform1f(ambiantStrengthUniform, 0.50f);
 
 			if(comp.appearance == 1)
 				glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
@@ -88,6 +91,9 @@ void GraphicsSystem::Update(ecs::Scene& scene, float deltaTime) {
 				glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
 
 			glUniform1ui(shaderSelectorUniform, comp.shaderState);
+
+			if ((comp.shaderState & 1) != 0)
+				glUniform3fv(colorUniform, 1, glm::value_ptr(comp.color));
 
 			//if there is an attached texture
 			if ((comp.shaderState & 2) != 0)
@@ -105,9 +111,7 @@ void GraphicsSystem::Update(ecs::Scene& scene, float deltaTime) {
 
 			// GEOMETRY
 			comp.geom->bind();
-
-			glm::mat4 M = glm::translate(glm::mat4(1), trans.getPosition()) * toMat4(trans.getRotation());
-			glUniformMatrix4fv(modelUniform, 1, GL_FALSE, glm::value_ptr(M));
+			
 			if (comp.appearance == 2)
 			{
 				glDrawArrays(GL_LINE_STRIP, 0, comp.numVerts);
@@ -163,25 +167,33 @@ void GraphicsSystem::processNode(aiNode* node, const aiScene* scene, CPU_Geometr
 		//retrieve all the verticies
 		std::vector<glm::vec3> tverts; //a tempoary vector to store nodes until they can be unindexed
 		std::vector<glm::vec2> ttexs;
+		std::vector<glm::vec3> tnorms;
 		tverts.reserve(mesh->mNumVertices);
 		for (int j = 0; j < mesh->mNumVertices; j++) {
 			tverts.push_back(glm::vec3(mesh->mVertices[j].x, -mesh->mVertices[j].y, mesh->mVertices[j].z));
 			if (mesh->mTextureCoords[0]) {
 				ttexs.push_back(glm::vec2(mesh->mTextureCoords[0][j].x, mesh->mTextureCoords[0][j].y));
 			}
+			if (mesh->HasNormals())
+				tnorms.push_back(-glm::vec3(mesh->mNormals[j].x, mesh->mNormals[j].y, mesh->mNormals[j].z));
 		}
 		
 		//retrieve all the indicies
 		//remove the dependency for indicies and store the final result
 		for (int j = 0; j < mesh->mNumFaces; j++) {
-			geom->verts.push_back(tverts[mesh->mFaces[j].mIndices[0]]);
-			geom->verts.push_back(tverts[mesh->mFaces[j].mIndices[1]]);
 			geom->verts.push_back(tverts[mesh->mFaces[j].mIndices[2]]);
+			geom->verts.push_back(tverts[mesh->mFaces[j].mIndices[1]]);
+			geom->verts.push_back(tverts[mesh->mFaces[j].mIndices[0]]);
 			if (mesh->mTextureCoords[0]) {
 				//push back the texture coordinates
-				geom->texs.push_back(ttexs[mesh->mFaces[j].mIndices[0]]);
-				geom->texs.push_back(ttexs[mesh->mFaces[j].mIndices[1]]);
 				geom->texs.push_back(ttexs[mesh->mFaces[j].mIndices[2]]);
+				geom->texs.push_back(ttexs[mesh->mFaces[j].mIndices[1]]);
+				geom->texs.push_back(ttexs[mesh->mFaces[j].mIndices[0]]);
+			}
+			if (mesh->HasNormals()) {
+				geom->norms.push_back(tnorms[mesh->mFaces[j].mIndices[2]]);
+				geom->norms.push_back(tnorms[mesh->mFaces[j].mIndices[1]]);
+				geom->norms.push_back(tnorms[mesh->mFaces[j].mIndices[0]]);
 			}
 			for (int z = 0; z < 3; z++)
 				geom->cols.push_back(glm::vec3(1));

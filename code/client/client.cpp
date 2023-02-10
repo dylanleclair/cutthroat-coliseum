@@ -43,6 +43,7 @@ int main(int argc, char* argv[]) {
 	carSampleInit();
 
 	SDL_Init(SDL_INIT_EVERYTHING); // initialize all sdl systems
+
 	Window window(800, 800, "Maximus Overdrive");
 
 	ImGuiIO& io = ImGui::GetIO(); (void)io;
@@ -65,9 +66,7 @@ int main(int argc, char* argv[]) {
 		std::cout << "initialized physx driving model\n";
 	}
 
-
 	//ground
-	ecs::Entity ground_e = mainScene.CreateEntity();
 	CPU_Geometry ground_geom;
 	glm::vec3 square[] = {
 		{1.f, 0.f, 1.0f},
@@ -79,41 +78,40 @@ int main(int argc, char* argv[]) {
 		{-1.f, 0.f, 1.0f},
 	};
 
-	const float scale = 5.f;
-	for (int x = -30; x <= 30; x++) {
-		for (int z = -30; z <= 30; z++) {
+	const float scale = 1.f;
+	for (int x = -10; x <= 10; x++) {
+		for (int z = -10; z <= 10; z++) {
 			for (int i = 0; i < 6; i++) {
-				ground_geom.verts.push_back(square[i]*scale + glm::vec3(x * scale,-1,z * scale));
-				ground_geom.cols.push_back(glm::vec3((float)((abs(x)+abs(z))%2) * glm::vec3(0.65, 0, .95)));
+				ground_geom.verts.push_back(square[i]*scale + glm::vec3(x * 2 * scale,-1,z * 2 * scale));
+				glm::vec3 color = (float)((abs(x) + abs(z)) % 2) * glm::vec3(0.65, 0, .95);
+				ground_geom.cols.push_back(glm::vec3(color));
 				ground_geom.norms.push_back(glm::vec3(0, 1, 0));
 			}
 		}
 	}
 
+	ecs::Entity ground_e = mainScene.CreateEntity();
 	RenderComponent ground = RenderComponent(&ground_geom);
-	ground.appearance = 0;
-	ground.specular = 1;
+	ground.shaderState |= 4;
 	mainScene.AddComponent(ground_e.guid, ground);
-
+	
 	TransformComponent trans2 = TransformComponent();
 	mainScene.AddComponent(ground_e.guid, trans2);
 	
+	
 	//make an entity
 	ecs::Entity e = mainScene.CreateEntity();
-	ecs::Entity level_e = mainScene.CreateEntity();
 
 	RenderComponent rend = RenderComponent();
 	GraphicsSystem::readVertsFromFile(rend, "models/torus.obj");
-	rend.shaderState |= 4; //enable lighting
-	//rend.shaderState |= 8; //enable specular shading
-	rend.specular = 0.25;
+	rend.shaderState |= 4;
 	mainScene.AddComponent(e.guid, rend);
 
 
 	TransformComponent trans = TransformComponent(getVehicleRigidBody());
 	mainScene.AddComponent(e.guid, trans);
 
-
+	
 	//finish box
 	ecs::Entity finish_e = mainScene.CreateEntity();
 	CPU_Geometry finish_geom;
@@ -131,13 +129,17 @@ int main(int argc, char* argv[]) {
 		finish_geom.verts.push_back(rectangle[i]);
 		finish_geom.cols.push_back(glm::vec3(1, 0, 0));
 	}
+	for (int i = 0; i < 6; i++) {
+		finish_geom.verts.push_back(rectangle[5-i]);
+		finish_geom.cols.push_back(glm::vec3(1, 0, 0));
+	}
 
 
 
 	PathfindingComponent car_pathfinder{finish_e.guid};
 	mainScene.AddComponent(e.guid,car_pathfinder);
 
-
+	
 	RenderComponent finish = RenderComponent(&finish_geom);
 	finish.appearance = 0;
 	mainScene.AddComponent(finish_e.guid, finish);
@@ -156,12 +158,14 @@ int main(int argc, char* argv[]) {
 
 
 	// Level
+	ecs::Entity level_e = mainScene.CreateEntity();
 	RenderComponent level_r = RenderComponent();
 	GraphicsSystem::readVertsFromFile(level_r, "models/torus_track.obj");
+	level_r.shaderState |= 4;
 	mainScene.AddComponent(level_e.guid, level_r);
+	TransformComponent trans4 = TransformComponent();
+	mainScene.AddComponent(level_e.guid, trans4);
 	
-	mainScene.AddComponent(level_e.guid, trans2);
-
 
 	FramerateCounter framerate;
 

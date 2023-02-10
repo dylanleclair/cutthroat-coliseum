@@ -8,6 +8,7 @@ uniform mat4 M;
 uniform mat4 V;
 uniform mat4 P;
 uniform mat3 normalMat;
+uniform uint selector;
 
 out vec3 n;
 out vec3 fragCol;
@@ -16,8 +17,8 @@ out vec2 tc;
 
 void main() {
 	fragPos = vec3(M * vec4(vertPos,1.0f));
+	gl_Position = P * V * M * vec4(vertPos, 1.0);
 	n = normalMat * vertNormal;
 	fragCol = vertCol;
 	tc = texCoord;
-	gl_Position = P * V * M * vec4(vertPos, 1.0);
 }
