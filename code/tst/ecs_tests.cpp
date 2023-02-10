@@ -191,7 +191,7 @@ TEST(ecs, iterator_bug_several_components)
   scene.AddComponent<Transform>(entity2.guid, Transform{1.0f, 1.0f, 1.0f});
 
   scene.AddComponent<DummyData>(entity.guid, DummyData{0,1}); 
-  scene.AddComponent<DummyData>(entity.guid, DummyData{1,2});
+  scene.AddComponent<DummyData>(entity2.guid, DummyData{1,2});
 
   ASSERT_TRUE(scene.getComponentFlags(entity.guid) == 0b11);
 
@@ -205,7 +205,7 @@ TEST(ecs, iterator_bug_several_components)
     entitiesIteratedOver++;
   }
 
-  ASSERT_TRUE(entitiesIteratedOver == 2);
+  ASSERT_EQ(entitiesIteratedOver,2);
 }
 
 TEST(ecs, iterator_not_picky_test)

@@ -17,6 +17,7 @@
 
 #include "CarPhysics.h"
 #include "FrameCounter.h"
+#include "systems/ai.h"
 
 
 using namespace physx;
@@ -120,6 +121,7 @@ int main(int argc, char* argv[]) {
 	mainScene.AddComponent(car_e.guid, car_t);
 
 
+
 	//finish box
 	ecs::Entity finish_e = mainScene.CreateEntity();
 	CPU_Geometry finish_geom;
@@ -139,7 +141,11 @@ int main(int argc, char* argv[]) {
 	}
 
 
-	// Finishin line component
+
+	PathfindingComponent car_pathfinder{finish_e.guid};
+	mainScene.AddComponent(e.guid,car_pathfinder);
+
+	// Finish line components
 	RenderComponent finish = RenderComponent(&finish_geom);
 	finish.appearance = 0;
 	mainScene.AddComponent(finish_e.guid, finish);
@@ -148,6 +154,13 @@ int main(int argc, char* argv[]) {
 	trans3.setPosition(glm::vec3(9, 1, -2));
 	mainScene.AddComponent(finish_e.guid, trans3);
 
+
+	// Path renderer
+	ecs::Entity path = mainScene.CreateEntity();
+	mainScene.AddComponent(path.guid, TransformComponent{});
+	mainScene.AddComponent(path.guid,RenderComponent{});
+
+	AISystem aiSystem{path.guid};
 
 
 	// Level
@@ -272,6 +285,7 @@ int main(int argc, char* argv[]) {
 		gScene->fetchResults(true); //block until the simulation is finished
 		*/
 		gs.Update(mainScene, 0.0f);
+		aiSystem.Update(mainScene, 0.f);
 
 		// END__ ECS SYSTEMS UPDATES
 

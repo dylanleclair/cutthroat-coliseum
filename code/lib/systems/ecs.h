@@ -265,7 +265,7 @@ namespace ecs
             // shift the component guid
             ComponentFlags bitmask = (static_cast<ComponentFlags>(1) << componentGuid);
 
-            return (bitmask & entities[entityGuid].components != 0) ? true : false;
+            return ((bitmask & entities[entityGuid].components)!= 0) ? true : false;
         }
 
         /// @brief Gets the component flags -> DO NOT USE unless for tests / absolutely needed.
@@ -343,7 +343,8 @@ namespace ecs
             }
             else
             {
-                Guid componentIds[] = {0, scene.GetComponentGuid<ComponentTypes>()...};
+                // TODO: try and fix the error with this array expandsion
+                Guid componentIds[] = {(scene.GetComponentGuid<ComponentTypes>())...};
                 for (const auto &id : componentIds)
                 {
                     m_componentMask |= (static_cast<ComponentFlags>(1) << id); // all we have to do is or it in~!
@@ -376,7 +377,7 @@ namespace ecs
             {
                 Guid e = m_scene.entities[index].guid;
                 if (m_scene.isValidEntity(e))
-                    return (m_all) ? true : (m_componentMask & m_scene.entities[index].components) != 0;
+                    return (m_all) ? true : (m_componentMask & m_scene.entities[index].components) == m_componentMask;
                 else
                 {
                     return false;
@@ -396,11 +397,10 @@ namespace ecs
             {
                 u64 firstIndex = 0;
 
-                ComponentFlags entityComponentsMasked = (m_componentMask & m_scene.entities[index].components);
-
-                while (index < m_scene.entities.size() && (m_componentMask == 0 || !m_scene.isValidEntity(m_scene.entities[index].guid)))
+                while (firstIndex < m_scene.entities.size() && (m_componentMask != (m_componentMask & m_scene.entities[firstIndex].components) || !m_scene.isValidEntity(m_scene.entities[firstIndex].guid)))
                 {
                     firstIndex++;
+                    
                 }
 
                 return Iterator{m_wrapper, firstIndex};
@@ -409,24 +409,24 @@ namespace ecs
             const Iterator end() const
             {
 
-                u64 firstIndex = m_scene.entities.size();
+                // u64 firstIndex = m_scene.entities.size();
 
-                if (firstIndex == 0)
-                {
-                    // return early -> no elements
-                    return Iterator{m_wrapper, firstIndex};
-                }
+                // if (firstIndex == 0)
+                // {
+                //     // return early -> no elements
+                //     return Iterator{m_wrapper, firstIndex};
+                // }
 
-                ComponentFlags entityComponents = m_scene.entities[index].components;
-                ComponentFlags entityComponentsMasked = (m_componentMask & entityComponents);
+                // ComponentFlags entityComponents = m_scene.entities[index].components;
+                // ComponentFlags entityComponentsMasked = (m_componentMask & entityComponents);
 
-                // goal: decrement index until we find a valid entity (ie: it matches component mask)
-                while (index > 0 && (entityComponentsMasked == 0 || !m_scene.isValidEntity(m_scene.entities[index].guid)))
-                {
-                    firstIndex--;
-                }
+                // // goal: decrement index until we find a valid entity (ie: it matches component mask)
+                // while (firstIndex > 0 && (entityComponentsMasked != m_componentMask || !m_scene.isValidEntity(m_scene.entities[index].guid)))
+                // {
+                //     firstIndex--;
+                // }
 
-                return Iterator{m_wrapper, firstIndex};
+                return Iterator{m_wrapper, m_scene.entities.size()};
             }
 
             bool m_all;
