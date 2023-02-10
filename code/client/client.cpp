@@ -117,6 +117,9 @@ int main(int argc, char* argv[]) {
 	car_t.setPosition(glm::vec3(0, 1, 0));
 	mainScene.AddComponent(car_e.guid, car_t);
 
+	auto& car_render = mainScene.GetComponent<RenderComponent>(car_e.guid);
+	std::cout << "Car Guid: " << car_e.guid << std::endl;
+	car_render.appearance = 0;
 
 
 	//finish box
@@ -268,7 +271,6 @@ int main(int argc, char* argv[]) {
 		}
 
 		// Finish line code
-		// TODO :: get proper transform
 		if (car_trans.getPosition().x >= -0.5f && car_trans.getPosition().x <= 3.8f &&
 			car_trans.getPosition().z >= -1.9f && car_trans.getPosition().z <= -1.85f)
 		{
