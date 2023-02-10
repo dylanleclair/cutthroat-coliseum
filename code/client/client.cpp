@@ -192,7 +192,7 @@ int main(int argc, char* argv[]) {
 						carConfig.deserialize();
 						break;
 					case SDLK_s:
-						carConfig.serialize();
+						// carConfig.serialize();
 						break;
 					case SDLK_0:
 						controlledCamera = 0;
