@@ -84,7 +84,7 @@ struct RenderComponent
 	int numVerts = 0;
 	Texture* texture = nullptr;
 	char shaderState = -1;
-	char appearance = 0; //0 = solid, 1 = wireframe
+	char appearance = 0; //0 = solid, 1 = wireframe, 2 = line strip
 	RenderComponent() = default;
 	RenderComponent(CPU_Geometry* _geom) { 
 		geom->setCols(_geom->cols); 
