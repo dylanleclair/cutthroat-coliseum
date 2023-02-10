@@ -10,6 +10,7 @@ public:
 	void lookat(float, float, float);
 	glm::mat4 getView();
 	void input(const SDL_Event&);
+	glm::vec3 getPos();
 private:
 	glm::vec3 cameraPos = glm::vec3(0.0f, 2.5f, 1.0f);
 	glm::vec3 cameraUp = glm::vec3(0.0f, 1.0f, 0.0f);

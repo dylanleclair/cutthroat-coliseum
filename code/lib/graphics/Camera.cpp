@@ -82,3 +82,8 @@ void Camera::input(const SDL_Event& _event) {
 		cameraDirection = glm::normalize(direction);
 	}
 }
+
+glm::vec3 Camera::getPos()
+{
+	return cameraPos;
+}

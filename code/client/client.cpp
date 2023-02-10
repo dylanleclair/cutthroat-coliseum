@@ -74,9 +74,7 @@ int main(int argc, char* argv[]) {
 		std::cout << "initialized physx driving model\n";
 	}
 
-
 	//ground
-	ecs::Entity ground_e = mainScene.CreateEntity();
 	CPU_Geometry ground_geom;
 	glm::vec3 square[] = {
 		{1.f, 0.f, 1.0f},
@@ -88,20 +86,26 @@ int main(int argc, char* argv[]) {
 		{-1.f, 0.f, 1.0f},
 	};
 
-	const float scale = 5.f;
-	for (int x = -30; x <= 30; x++) {
-		for (int z = -30; z <= 30; z++) {
+	const float scale = 1.f;
+	for (int x = -10; x <= 10; x++) {
+		for (int z = -10; z <= 10; z++) {
 			for (int i = 0; i < 6; i++) {
-				ground_geom.verts.push_back(square[i]*scale + glm::vec3(x * scale,0,z * scale));
-				ground_geom.cols.push_back(glm::vec3(0, 1, 0));
+				ground_geom.verts.push_back(square[i]*scale + glm::vec3(x * 2 * scale,-1,z * 2 * scale));
+				glm::vec3 color = (float)((abs(x) + abs(z)) % 2) * glm::vec3(0.65, 0, .95);
+				ground_geom.cols.push_back(glm::vec3(color));
+				ground_geom.norms.push_back(glm::vec3(0, 1, 0));
 			}
 		}
 	}
 
 	// Ground plane component
 	RenderComponent ground = RenderComponent(&ground_geom);
-	ground.appearance = 1;
+	ground.shaderState |= 4;
 	mainScene.AddComponent(ground_e.guid, ground);
+	
+	TransformComponent trans2 = TransformComponent();
+	mainScene.AddComponent(ground_e.guid, trans2);
+	
 	
 	//make an entity
 	ecs::Entity car_e = mainScene.CreateEntity();
@@ -139,9 +143,17 @@ int main(int argc, char* argv[]) {
 		finish_geom.verts.push_back(rectangle[i]);
 		finish_geom.cols.push_back(glm::vec3(1, 0, 0));
 	}
+	for (int i = 0; i < 6; i++) {
+		finish_geom.verts.push_back(rectangle[5-i]);
+		finish_geom.cols.push_back(glm::vec3(1, 0, 0));
+	}
 
 
 
+
+	
+	PathfindingComponent car_pathfinder{finish_e.guid};
+	mainScene.AddComponent(e.guid,car_pathfinder);
 
 	// Finish line components
 	RenderComponent finish = RenderComponent(&finish_geom);
