@@ -229,14 +229,14 @@ void cleanupPhysX()
 void initGroundPlane()
 {
   gGroundPlane = PxCreatePlane(*gPhysics, PxPlane(0, 1, 0, 0), *gMaterial);
-  std::cout << "Material: " << gMaterial->getStaticFriction() << std::endl;
+  //std::cout << "Material: " << gMaterial->getStaticFriction() << std::endl;
   for (PxU32 i = 0; i < gGroundPlane->getNbShapes(); i++)
   {
     PxShape *shape = NULL;
     gGroundPlane->getShapes(&shape, 1, i);
     shape->setFlag(PxShapeFlag::eSCENE_QUERY_SHAPE, true);
-    shape->setFlag(PxShapeFlag::eSIMULATION_SHAPE, false);
-    shape->setFlag(PxShapeFlag::eTRIGGER_SHAPE, false);
+    shape->setFlag(PxShapeFlag::eSIMULATION_SHAPE, true);
+    shape->setFlag(PxShapeFlag::eTRIGGER_SHAPE, true);
   }
   gScene->addActor(*gGroundPlane);
 }
@@ -302,6 +302,29 @@ bool initVehicles()
   return true;
 }
 
+void Boxes() {
+    float halfLen = 0.5f;
+    physx::PxShape* shape = gPhysics->createShape(physx::PxBoxGeometry(halfLen, halfLen, halfLen), *gMaterial);
+    physx::PxU32 size = 10;
+    physx::PxTransform tran(physx::PxVec3(-25.0f,3.f,0.f));
+
+    // Create a pyramid of physics-enabled boxes
+    for (physx::PxU32 i = 0; i < size; i++)
+    {
+        for (physx::PxU32 j = 0; j < size - i; j++)
+        {
+            physx::PxTransform localTran(physx::PxVec3(physx::PxReal(j * 2) - physx::PxReal(size - i), physx::PxReal(i * 2 - 1), 0) * halfLen);
+            physx::PxRigidDynamic* body = gPhysics->createRigidDynamic(tran.transform(localTran));
+            body->attachShape(*shape);
+            physx::PxRigidBodyExt::updateMassAndInertia(*body, 10.0f);
+            gScene->addActor(*body);
+        }
+    }
+
+    // Cleanup
+    shape->release();
+}
+
 void cleanupVehicles()
 {
   gVehicle.destroy();
@@ -312,6 +335,7 @@ bool initPhysics()
   initPhysX();
   initGroundPlane();
   initMaterialFrictionTable();
+  Boxes();
   if (!initVehicles())
     return false;
   return true;
@@ -331,6 +355,8 @@ PxRigidBody *getVehicleRigidBody()
 
 #include "SDL.h"
 #include <limits>
+
+
 
 void stepPhysics(SDL_GameController *controller, float timestep)
 {
@@ -417,3 +443,4 @@ int carSampleInit()
 
   return 0;
 }
+
