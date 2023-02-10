@@ -24,7 +24,7 @@ using namespace physx;
 
 extern PxRigidBody* getVehicleRigidBody();
 extern bool initPhysics();
-extern void stepPhysics(SDL_GameController* controller, float timestep = 1 / 164.f);
+extern void stepPhysics(SDL_GameController* controller, float timestep);
 extern void cleanupPhysics();
 extern int carSampleInit();
 
@@ -33,7 +33,17 @@ extern PxScene* gScene;
 CarPhysics carPhysics;
 CarPhysicsSerde carConfig(carPhysics);
 
+int lapCount = 0;
+bool isFinished = false;
 
+void finishLinePrint() {
+	lapCount++;
+	std::cout << "Lap: " << lapCount << std::endl;
+	if (lapCount == 2) {
+		std::cout << "You win !" << std::endl;
+	}
+	
+}
 
 
 int main(int argc, char* argv[]) {
@@ -43,7 +53,7 @@ int main(int argc, char* argv[]) {
 	carSampleInit();
 
 	SDL_Init(SDL_INIT_EVERYTHING); // initialize all sdl systems
-	Window window(800, 800, "Maximus Overdrive");
+	Window window(1200, 800, "Maximus Overdrive");
 
 	ImGuiIO& io = ImGui::GetIO(); (void)io;
 
@@ -65,9 +75,7 @@ int main(int argc, char* argv[]) {
 		std::cout << "initialized physx driving model\n";
 	}
 
-
 	//ground
-	ecs::Entity ground_e = mainScene.CreateEntity();
 	CPU_Geometry ground_geom;
 	glm::vec3 square[] = {
 		{1.f, 0.f, 1.0f},
@@ -79,35 +87,50 @@ int main(int argc, char* argv[]) {
 		{-1.f, 0.f, 1.0f},
 	};
 
-	const float scale = 5.f;
-	for (int x = -30; x <= 30; x++) {
-		for (int z = -30; z <= 30; z++) {
+	const float scale = 1.f;
+	for (int x = -10; x <= 10; x++) {
+		for (int z = -10; z <= 10; z++) {
 			for (int i = 0; i < 6; i++) {
-				ground_geom.verts.push_back(square[i]*scale + glm::vec3(x * scale,-1,z * scale));
-				ground_geom.cols.push_back(glm::vec3(0, 1, 0));
+				ground_geom.verts.push_back(square[i]*scale + glm::vec3(x * 2 * scale,-1,z * 2 * scale));
+				glm::vec3 color = (float)((abs(x) + abs(z)) % 2) * glm::vec3(0.65, 0, .95);
+				ground_geom.cols.push_back(glm::vec3(color));
+				ground_geom.norms.push_back(glm::vec3(0, 1, 0));
 			}
 		}
 	}
 
+
+	
+	//make an entity
+	ecs::Entity car_e = mainScene.CreateEntity();
+	ecs::Entity level_e = mainScene.CreateEntity();
+	ecs::Entity outWall_e = mainScene.CreateEntity();
+	ecs::Entity inWall_e = mainScene.CreateEntity();
+	ecs::Entity ground_e = mainScene.CreateEntity();
+
+	// Ground plane component
 	RenderComponent ground = RenderComponent(&ground_geom);
-	ground.appearance = 1;
+	ground.shaderState |= 4;
 	mainScene.AddComponent(ground_e.guid, ground);
 
 	TransformComponent trans2 = TransformComponent();
 	mainScene.AddComponent(ground_e.guid, trans2);
-	
-	//make an entity
-	ecs::Entity e = mainScene.CreateEntity();
-	ecs::Entity level_e = mainScene.CreateEntity();
-
-	RenderComponent rend = RenderComponent();
-	GraphicsSystem::readVertsFromFile(rend, "models/torus.obj");
-	mainScene.AddComponent(e.guid, rend);
 
 
-	TransformComponent trans = TransformComponent(getVehicleRigidBody());
-	mainScene.AddComponent(e.guid, trans);
+	// Car
+	RenderComponent car_r = RenderComponent();
+	GraphicsSystem::readVertsFromFile(car_r, "models/test_car.obj");
+	car_r.shaderState |= 4; // 4 is for shading
+	car_r.shaderState |= 1; // 1 is for colours
+	car_r.color = glm::vec3(0.5f, 0.5f, 0.f);
+	mainScene.AddComponent(car_e.guid, car_r);
+	TransformComponent car_t = TransformComponent(getVehicleRigidBody());
+	car_t.setPosition(glm::vec3(0, 1, 0));
+	mainScene.AddComponent(car_e.guid, car_t);
 
+	auto& car_render = mainScene.GetComponent<RenderComponent>(car_e.guid);
+	std::cout << "Car Guid: " << car_e.guid << std::endl;
+	car_render.appearance = 0;
 
 
 	//finish box
@@ -115,32 +138,36 @@ int main(int argc, char* argv[]) {
 	CPU_Geometry finish_geom;
 
 	glm::vec3 rectangle[] = {
-		{10.f, 1.f, 0.0f},
-		{10.f, -1.f, 0.0f},
+		{-10.f, 0.5f, 0.0f},
 		{-10.f, -1.f, 0.0f},
+		{-5.f, -1.f, 0.0f},
 
-		{10.f, 1.f, 0.0f},
-		{-10.f, -1.f, 0.0f},
-		{-10.f, 1.f, 0.0f},
+		{-5.f, 0.5f, 0.0f},
+		{-5.f, -1.f, 0.0f},
+		{-10.f, 0.5f, 0.0f},
 	};
 	for (int i = 0; i < 6; i++) {
 		finish_geom.verts.push_back(rectangle[i]);
 		finish_geom.cols.push_back(glm::vec3(1, 0, 0));
 	}
+	for (int i = 0; i < 6; i++) {
+		finish_geom.verts.push_back(rectangle[5-i]);
+		finish_geom.cols.push_back(glm::vec3(1, 0, 0));
+	}
 
 
-
-	PathfindingComponent car_pathfinder{finish_e.guid};
-	mainScene.AddComponent(e.guid,car_pathfinder);
-
-
+	// Finish line components
 	RenderComponent finish = RenderComponent(&finish_geom);
 	finish.appearance = 0;
 	mainScene.AddComponent(finish_e.guid, finish);
 
-	TransformComponent trans3 = TransformComponent();
-	trans3.setPosition(glm::vec3(10, 0, 0));
-	mainScene.AddComponent(finish_e.guid, trans3);
+	TransformComponent finish_t = TransformComponent();
+	finish_t.setPosition(glm::vec3(9, 1, -2));
+	mainScene.AddComponent(finish_e.guid, finish_t);
+
+	// Pathfinding
+	PathfindingComponent car_pathfinder{ finish_e.guid };
+	mainScene.AddComponent(car_e.guid, car_pathfinder);
 
 
 	// Path renderer
@@ -152,10 +179,44 @@ int main(int argc, char* argv[]) {
 
 
 	// Level
+	TransformComponent level_t = TransformComponent();
+	mainScene.AddComponent(ground_e.guid, level_t);
+
 	RenderComponent level_r = RenderComponent();
-	GraphicsSystem::readVertsFromFile(level_r, "models/torus_track.obj");
-	mainScene.AddComponent(level_e.guid, level_r);
-	mainScene.AddComponent(level_e.guid, trans2);
+	GraphicsSystem::readVertsFromFile(level_r, "models/large_test_torus.obj");
+	level_r.shaderState |= 1;
+	level_r.shaderState |= 4;
+	level_r.color = glm::vec3(0.f, 0.f, 1.f);
+	mainScene.AddComponent(level_e.guid, level_r);	
+	mainScene.AddComponent(level_e.guid, level_t);
+
+	TransformComponent wall_t = TransformComponent();
+	wall_t.setPosition(glm::vec3(0, 2, 0));
+
+	RenderComponent outWall = RenderComponent();
+	GraphicsSystem::readVertsFromFile(outWall, "models/large_test_torus_inwall.obj");
+	outWall.shaderState |= 1;
+	outWall.shaderState |= 4;
+	outWall.color = glm::vec3(0.2f, 0.2f, 0.6f);
+	mainScene.AddComponent(outWall_e.guid, outWall);
+	mainScene.AddComponent(outWall_e.guid, wall_t);
+
+	RenderComponent inWall = RenderComponent();
+	GraphicsSystem::readVertsFromFile(inWall, "models/large_test_torus_outwall.obj");
+	inWall.shaderState |= 1;
+	inWall.shaderState |= 4;
+	inWall.color = glm::vec3(0.2f, 0.2f, 0.6f);
+	mainScene.AddComponent(inWall_e.guid, inWall);
+	mainScene.AddComponent(inWall_e.guid, wall_t);
+
+	// This is how to change the position of the object after it has been passed to the ECS
+	/*
+	auto &wallTrans = mainScene.GetComponent<TransformComponent>(outWall_e.guid);
+	wallTrans.setPosition(glm::vec3(0, 0, 0));
+	*/
+	auto &finish_trans = mainScene.GetComponent<TransformComponent>(finish_e.guid);
+	TransformComponent &car_trans = mainScene.GetComponent<TransformComponent>(car_e.guid);
+	
 
 
 	FramerateCounter framerate;
@@ -207,6 +268,18 @@ int main(int argc, char* argv[]) {
 					case SDLK_3:
 						controlledCamera = 3;
 						break;
+
+					// Prinout of camera matrix
+					case SDLK_c:
+						std::cout << gs.getCameraView()[0][0] << ", " << gs.getCameraView()[0][1] << ", " << gs.getCameraView()[0][2] << ", " << gs.getCameraView()[0][3] << "," << std::endl;
+						std::cout << gs.getCameraView()[1][0] << ", " << gs.getCameraView()[1][1] << ", " << gs.getCameraView()[1][2] << ", " << gs.getCameraView()[1][3] << "," << std::endl;
+						std::cout << gs.getCameraView()[2][0] << ", " << gs.getCameraView()[2][1] << ", " << gs.getCameraView()[2][2] << ", " << gs.getCameraView()[2][3] << "," << std::endl;
+						std::cout << gs.getCameraView()[3][0] << ", " << gs.getCameraView()[3][1] << ", " << gs.getCameraView()[3][2] << ", " << gs.getCameraView()[3][3] << std::endl;
+						std::cout << std::endl;
+						
+						std::cout << finish_trans.getPosition().x << ", " << finish_trans.getPosition().y << ", " << finish_trans.getPosition().z << std::endl;
+						std::cout << car_t.getPosition().x << ", " << car_t.getPosition().y << ", " << car_t.getPosition().z << std::endl;
+						break;
 					case SDLK_ESCAPE:	// (Pressing escape closes the window, useful for fullscreen);
 						quit = true;
 						break;
@@ -219,7 +292,19 @@ int main(int argc, char* argv[]) {
 			gs.input(window.event, controlledCamera);
 		}
 
-
+		// Finish line code
+		if (car_trans.getPosition().x >= -1.5f && car_trans.getPosition().x <= 4.8f &&
+			car_trans.getPosition().z >= -3.0f && car_trans.getPosition().z <= -0.6f)
+		{	
+			if (isFinished == false) {
+				isFinished = true;
+				finishLinePrint();
+			}			
+			
+		}
+		else {
+			isFinished = false;
+		}
 		
 		/*
 		// BEGIN ECS SYSTEMS UPDATES
@@ -243,7 +328,7 @@ int main(int argc, char* argv[]) {
 
 		// BEGIN FRAMERATE COUNTER
 		ImGui::SetNextWindowSize(ImVec2(500, 100)); 
-		ImGui::Begin("Milestone 1");
+		ImGui::Begin("Milestone 2");
 		ImGui::Text("framerate: %d", framerate.framerate());
         ImGui::PlotLines("Frametime plot (ms)", framerate.m_time_queue.data(), framerate.m_time_queue.size());
         ImGui::PlotLines("Framerate plot (hz)", framerate.m_rate_queue.data(), framerate.m_rate_queue.size());
@@ -261,38 +346,48 @@ int main(int argc, char* argv[]) {
 		}
 
 		// PHYSX DRIVER UPDATE
-		stepPhysics(controller);
+		stepPhysics(controller, framerate.m_time_queue.front() / 1000.f);
 
 
 		// TODO(milestone 1): strip all non-milestone related imgui windows out
 		// BEGIN CAR PHYSICS PANEL
-		ImGui::Begin("Car Physics", nullptr);
-		ImGui::SliderFloat("acceleration", &carPhysics.m_acceleration, 0.f, 1000.f);
-		ImGui::SliderFloat("suspension", &carPhysics.m_suspension_force, 0.f, 1000.f);
-		if (ImGui::Button("Serialize")) carConfig.serialize();
-		ImGui::End();
-		// END CAR PHYSICS PANEL
-		
+		// ImGui::Begin("Car Physics", nullptr);
+		// ImGui::SliderFloat("acceleration", &carPhysics.m_acceleration, 0.f, 1000.f);
+		// ImGui::SliderFloat("suspension", &carPhysics.m_suspension_force, 0.f, 1000.f);
+		// if (ImGui::Button("Serialize")) carConfig.serialize();
+		// ImGui::End();
+
+
 		// BEGIN A BUTTON THING
-		bool cbutton = false;
+		/*bool cbutton = false;
 		cbutton = SDL_GameControllerGetButton(controller, SDL_CONTROLLER_BUTTON_A);
 		ImGui::Begin("Buttons", nullptr);
 		ImGui::Checkbox("a button", &cbutton);
-		ImGui::End();
+		ImGui::End();*/
 		// END A BUTTON THING
 
 		// BEGIN JOYSTICK THING
-		auto axis = 0;
-		axis = SDL_GameControllerGetAxis(controller, SDL_CONTROLLER_AXIS_TRIGGERRIGHT);
-		ImGui::Begin("Axes aka Joysticks and triggers");
-		ImGui::Text("Right trigger: %hd", axis);
-		ImGui::End();
+		//float axis = 0;
+		//axis = SDL_GameControllerGetAxis(controller, SDL_CONTROLLER_AXIS_TRIGGERRIGHT);
+		//ImGui::Begin("Axes aka Joysticks and triggers");
+		//ImGui::Text("Right trigger: %hd", axis);
+		//ImGui::End();
 		// END JOYSTICK THING
 
+		// HACK(beau): pull these out of CarSample.cpp
+		extern float carThrottle;
+		extern float carBrake;
+		extern float carAxis;
+		extern float carAxisScale;
+		ImGui::Begin("Car commands tuner", nullptr);
+		ImGui::Text("left stick horizontal tilt: %f", carAxis);
+		ImGui::Text("Laps: %d", lapCount);
+		ImGui::End();
+		// END CAR PHYSICS PANEL
 
 
 		// NOTE: the imgui bible - beau
-		ImGui::ShowDemoWindow();
+		//ImGui::ShowDemoWindow();
 
 		ImGui::Render();
 		glViewport(0, 0, (int)io.DisplaySize.x, (int)io.DisplaySize.y);

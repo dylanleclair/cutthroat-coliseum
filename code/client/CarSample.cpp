@@ -82,6 +82,7 @@
 // ****************************************************************************
 
 #include <ctype.h>
+#include <iostream>
 
 #include "PxPhysicsAPI.h"
 #include "vehicle2/PxVehicleAPI.h"
@@ -203,7 +204,7 @@ void initPhysX()
     pvdClient->setScenePvdFlag(PxPvdSceneFlag::eTRANSMIT_CONTACTS, true);
     pvdClient->setScenePvdFlag(PxPvdSceneFlag::eTRANSMIT_SCENEQUERIES, true);
   }
-  gMaterial = gPhysics->createMaterial(0.5f, 0.5f, 0.6f);
+  gMaterial = gPhysics->createMaterial(0.5f, 0.5f, 0.5f);
 
   PxInitVehicleExtension(*gFoundation);
 }
@@ -228,12 +229,13 @@ void cleanupPhysX()
 void initGroundPlane()
 {
   gGroundPlane = PxCreatePlane(*gPhysics, PxPlane(0, 1, 0, 0), *gMaterial);
+  //std::cout << "Material: " << gMaterial->getStaticFriction() << std::endl;
   for (PxU32 i = 0; i < gGroundPlane->getNbShapes(); i++)
   {
     PxShape *shape = NULL;
     gGroundPlane->getShapes(&shape, 1, i);
     shape->setFlag(PxShapeFlag::eSCENE_QUERY_SHAPE, true);
-    shape->setFlag(PxShapeFlag::eSIMULATION_SHAPE, false);
+    shape->setFlag(PxShapeFlag::eSIMULATION_SHAPE, true);
     shape->setFlag(PxShapeFlag::eTRIGGER_SHAPE, false);
   }
   gScene->addActor(*gGroundPlane);
@@ -297,6 +299,17 @@ bool initVehicles()
   gVehicleSimulationContext.gravity = gGravity;
   gVehicleSimulationContext.physxScene = gScene;
   gVehicleSimulationContext.physxActorUpdateMode = PxVehiclePhysXActorUpdateMode::eAPPLY_ACCELERATION;
+
+  PxU32 vehicle_shapes = gVehicle.mPhysXState.physxActor.rigidBody->getNbShapes();
+  for (PxU32 i = 0; i < vehicle_shapes; i++)
+  {
+      PxShape* shape = NULL;
+      gVehicle.mPhysXState.physxActor.rigidBody->getShapes(&shape, 1, i);
+      shape->setFlag(PxShapeFlag::eSCENE_QUERY_SHAPE, true);
+      shape->setFlag(PxShapeFlag::eSIMULATION_SHAPE, true);
+      shape->setFlag(PxShapeFlag::eTRIGGER_SHAPE, false);
+  }
+
   return true;
 }
 
@@ -330,31 +343,43 @@ PxRigidBody *getVehicleRigidBody()
 #include "SDL.h"
 #include <limits>
 
-void stepPhysics(SDL_GameController *controller, float timestep = 1 / 164.f)
+// HACK(beau): make these visible to tuning imgui panel
+float carThrottle = 1.f;
+float carBrake = 1.f;
+float carAxis = 0.f;
+float carAxisScale = 1.f;
+
+void stepPhysics(SDL_GameController *controller, float timestep)
 {
+    const float max_time_step = 0.2f;
+    timestep = std::min(timestep, max_time_step);
   // Apply the brake, throttle and steer to the command state of the vehicle.
   // const Command &command = gCommands[gCommandProgress];
 
   Command command = {0.f, 0.f, 0.f, gTargetGearCommand};
   // command.duration = timestep;
 
+  // Throttle to 2.f will cause weird behaviour
   if (SDL_GameControllerGetButton(controller, SDL_CONTROLLER_BUTTON_A))
   {
-    command.throttle = 5.f;
-    goto end; // so we don't attempt to throttle and break
+      command.throttle = carThrottle;
+    //goto end; // so we don't attempt to throttle and break
   }
-  if (SDL_GameControllerGetButton(controller, SDL_CONTROLLER_BUTTON_B))
+  else if (SDL_GameControllerGetButton(controller, SDL_CONTROLLER_BUTTON_B))
   {
-    command.brake = 2.f;
+      command.brake = carBrake;
     // goto end;????
   }
-end:
+//end:
 
   // Normalize controller axis
   // BUG: max positive is 1 less in magnitude than max min meaning full negative will be slightly above 1
-  auto axis = -SDL_GameControllerGetAxis(controller, SDL_CONTROLLER_AXIS_LEFTX) / SHRT_MAX;
-  command.steer = axis;
+  carAxis = (float) - SDL_GameControllerGetAxis(controller, SDL_CONTROLLER_AXIS_LEFTX) / SHRT_MAX;
+  //float axis = -SDL_GameControllerGetAxis(controller, SDL_CONTROLLER_AXIS_LEFTX);
+  //std::cout << axis << std::endl;
+  command.steer = carAxis * carAxisScale;
   // TODO: steer
+
 
   gVehicle.mCommandState.brakes[0] = command.brake;
   gVehicle.mCommandState.nbBrakes = 1;
@@ -409,3 +434,4 @@ int carSampleInit()
 
   return 0;
 }
+
