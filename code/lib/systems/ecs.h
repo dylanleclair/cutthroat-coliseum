@@ -21,7 +21,7 @@ using ComponentFlags = u64;
 namespace ecs
 {
 
-    const u32 MAX_ENTITIES = 50000;
+    const u32 MAX_ENTITIES = 1000;
 
     template <typename... ComponentTypes>
     struct EntitiesInScene;
