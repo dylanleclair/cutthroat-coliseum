@@ -17,6 +17,7 @@
 
 #include "CarPhysics.h"
 #include "FrameCounter.h"
+#include "graphics/GLDebug.h"
 
 
 using namespace physx;
@@ -38,7 +39,6 @@ CarPhysicsSerde carConfig(carPhysics);
 int main(int argc, char* argv[]) {
 	printf("Starting main");
 
-
 	carSampleInit();
 
 	SDL_Init(SDL_INIT_EVERYTHING); // initialize all sdl systems
@@ -47,7 +47,7 @@ int main(int argc, char* argv[]) {
 	ImGuiIO& io = ImGui::GetIO(); (void)io;
 
 	carConfig.deserialize();
-
+	GLDebug::enable();
 	// create instance of system to use.
 	GraphicsSystem gs(window);
 	//init_physics();
@@ -83,13 +83,15 @@ int main(int argc, char* argv[]) {
 		for (int z = -30; z <= 30; z++) {
 			for (int i = 0; i < 6; i++) {
 				ground_geom.verts.push_back(square[i]*scale + glm::vec3(x * scale,-1,z * scale));
-				ground_geom.cols.push_back(glm::vec3(0, 1, 0));
+				ground_geom.cols.push_back(glm::vec3((float)((abs(x)+abs(z))%2) * glm::vec3(0.65, 0, .95)));
+				ground_geom.norms.push_back(glm::vec3(0, 1, 0));
 			}
 		}
 	}
 
 	RenderComponent ground = RenderComponent(&ground_geom);
-	ground.appearance = 1;
+	ground.appearance = 0;
+	ground.specular = 1;
 	mainScene.AddComponent(ground_e.guid, ground);
 
 	TransformComponent trans2 = TransformComponent();
@@ -101,6 +103,9 @@ int main(int argc, char* argv[]) {
 
 	RenderComponent rend = RenderComponent();
 	GraphicsSystem::readVertsFromFile(rend, "models/torus.obj");
+	rend.shaderState |= 4; //enable lighting
+	//rend.shaderState |= 8; //enable specular shading
+	rend.specular = 0.25;
 	mainScene.AddComponent(e.guid, rend);
 
 
@@ -129,32 +134,32 @@ int main(int argc, char* argv[]) {
 
 	RenderComponent finish = RenderComponent(&finish_geom);
 	finish.appearance = 0;
-	mainScene.AddComponent(finish_e.guid, finish);
+	//mainScene.AddComponent(finish_e.guid, finish);
 
 	TransformComponent trans3 = TransformComponent();
 	trans3.setPosition(glm::vec3(10, 0, 0));
-	mainScene.AddComponent(finish_e.guid, trans3);
+	//mainScene.AddComponent(finish_e.guid, trans3);
 
 
 
 	// Level
 	RenderComponent level_r = RenderComponent();
 	GraphicsSystem::readVertsFromFile(level_r, "models/torus_track.obj");
-	mainScene.AddComponent(level_e.guid, level_r);
+	//mainScene.AddComponent(level_e.guid, level_r);
 	
-	mainScene.AddComponent(level_e.guid, trans2);
+	//mainScene.AddComponent(level_e.guid, trans2);
 
 
 	FramerateCounter framerate;
 
-	assert(SDL_NumJoysticks() > 0);
+	//assert(SDL_NumJoysticks() > 0);
 	// TODO: handle no controller
 	SDL_GameController* controller = nullptr;
 	controller = SDL_GameControllerOpen(0);
-	assert(controller);
+	//assert(controller);
 	SDL_Joystick* joy = nullptr;
 	joy = SDL_GameControllerGetJoystick(controller);
-	assert(joy);
+	//assert(joy);
 	int instanceID =  SDL_JoystickInstanceID(joy);
 
 

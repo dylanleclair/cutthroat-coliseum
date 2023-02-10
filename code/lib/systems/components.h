@@ -83,7 +83,9 @@ struct RenderComponent
 	GPU_Geometry* geom = new GPU_Geometry();
 	int numVerts = 0;
 	Texture* texture = nullptr;
-	char shaderState = -1;
+	float specular = 0;
+	GLuint shaderState = 0;
+	//color | texture | normals | specular
 	char appearance = 0; //0 = solid, 1 = wireframe
 	RenderComponent() = default;
 	RenderComponent(CPU_Geometry* _geom) { 
@@ -93,10 +95,13 @@ struct RenderComponent
 		geom->setTexCoords(_geom->texs); 
 		if (_geom->texPath.length() > 0) {
 			texture = new Texture(_geom->texPath, GL_NEAREST);
-			shaderState = 1;
+			shaderState |= 2;
 		}
-		else {
-			shaderState = 0;
+		else if (_geom->cols.size() > 0) {
+			shaderState |= 1;
 		}
+
+		if (_geom->norms.size() > 0)
+			shaderState |= 4;
 	}
 };

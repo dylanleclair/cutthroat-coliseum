@@ -27,12 +27,19 @@ public:
 	static void readVertsFromFile(RenderComponent& _component, const std::string _file, const std::string _textureFile = "");
 private:
 	Camera cameras[4];
+	//uniforms
 	int numCamerasActive = 1;
 	GLint modelUniform = -1;
 	GLuint viewUniform = -1;
 	GLuint perspectiveUniform = -1;
 	GLuint shaderSelectorUniform = -1;
 	GLuint textureUniform = -1;
+	GLuint normalMatUniform = -1;
+	GLuint lightUniform = -1;
+	GLuint viewPosUniform = -1;
+	GLuint ambiantStrengthUniform = -1;
+	GLuint specularStrengthUniform = -1;
+
 	ShaderProgram shader;
 	glm::ivec2 windowSize;
 	static void processNode(aiNode* node, const aiScene* scene, CPU_Geometry* geom);
