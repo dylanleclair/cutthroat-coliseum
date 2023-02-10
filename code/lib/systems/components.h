@@ -102,7 +102,7 @@ struct RenderComponent
 		geom->setTexCoords(_geom->texs);
 		geom->setNorms(_geom->norms);
 		numVerts = _geom->verts.size(); 
-		std::cout << _geom->cols.size() << '\n';
+		//std::cout << _geom->cols.size() << '\n';
 		if (_geom->cols.size() > 0)
 			shaderState ^= 1; 
 

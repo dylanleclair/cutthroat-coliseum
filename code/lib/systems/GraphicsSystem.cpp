@@ -97,7 +97,7 @@ void GraphicsSystem::Update(ecs::Scene& scene, float deltaTime) {
 			if(comp.appearance == 1)
 				glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
 			else
-				glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
+				glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
 
 			glUniform1ui(shaderSelectorUniform, comp.shaderState);
 

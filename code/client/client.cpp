@@ -98,24 +98,30 @@ int main(int argc, char* argv[]) {
 		}
 	}
 
-	// Ground plane component
-	RenderComponent ground = RenderComponent(&ground_geom);
-	ground.shaderState |= 4;
-	mainScene.AddComponent(ground_e.guid, ground);
-	
-	TransformComponent trans2 = TransformComponent();
-	mainScene.AddComponent(ground_e.guid, trans2);
-	
+
 	
 	//make an entity
 	ecs::Entity car_e = mainScene.CreateEntity();
 	ecs::Entity level_e = mainScene.CreateEntity();
 	ecs::Entity outWall_e = mainScene.CreateEntity();
 	ecs::Entity inWall_e = mainScene.CreateEntity();
+	ecs::Entity ground_e = mainScene.CreateEntity();
+
+	// Ground plane component
+	RenderComponent ground = RenderComponent(&ground_geom);
+	ground.shaderState |= 4;
+	mainScene.AddComponent(ground_e.guid, ground);
+
+	TransformComponent trans2 = TransformComponent();
+	mainScene.AddComponent(ground_e.guid, trans2);
+
 
 	// Car
 	RenderComponent car_r = RenderComponent();
 	GraphicsSystem::readVertsFromFile(car_r, "models/test_car.obj");
+	car_r.shaderState |= 4;
+	car_r.shaderState |= 1;
+	car_r.color = glm::vec3(0.5f, 0.5f, 0.f);
 	mainScene.AddComponent(car_e.guid, car_r);
 	TransformComponent car_t = TransformComponent(getVehicleRigidBody());
 	car_t.setPosition(glm::vec3(0, 1, 0));
@@ -151,10 +157,6 @@ int main(int argc, char* argv[]) {
 
 
 
-	
-	PathfindingComponent car_pathfinder{finish_e.guid};
-	mainScene.AddComponent(e.guid,car_pathfinder);
-
 	// Finish line components
 	RenderComponent finish = RenderComponent(&finish_geom);
 	finish.appearance = 0;
@@ -183,6 +185,9 @@ int main(int argc, char* argv[]) {
 
 	RenderComponent level_r = RenderComponent();
 	GraphicsSystem::readVertsFromFile(level_r, "models/large_test_torus.obj");
+	level_r.shaderState |= 1;
+	level_r.shaderState |= 4;
+	level_r.color = glm::vec3(0.f, 0.f, 1.f);
 	mainScene.AddComponent(level_e.guid, level_r);	
 	mainScene.AddComponent(level_e.guid, level_t);
 
@@ -191,11 +196,17 @@ int main(int argc, char* argv[]) {
 
 	RenderComponent outWall = RenderComponent();
 	GraphicsSystem::readVertsFromFile(outWall, "models/large_test_torus_inwall.obj");
+	outWall.shaderState |= 1;
+	outWall.shaderState |= 4;
+	outWall.color = glm::vec3(0.2f, 0.2f, 0.6f);
 	mainScene.AddComponent(outWall_e.guid, outWall);
 	mainScene.AddComponent(outWall_e.guid, wall_t);
 
 	RenderComponent inWall = RenderComponent();
 	GraphicsSystem::readVertsFromFile(inWall, "models/large_test_torus_outwall.obj");
+	inWall.shaderState |= 1;
+	inWall.shaderState |= 4;
+	inWall.color = glm::vec3(0.2f, 0.2f, 0.6f);
 	mainScene.AddComponent(inWall_e.guid, inWall);
 	mainScene.AddComponent(inWall_e.guid, wall_t);
 
