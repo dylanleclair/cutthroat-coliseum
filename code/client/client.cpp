@@ -32,7 +32,16 @@ extern PxScene* gScene;
 CarPhysics carPhysics;
 CarPhysicsSerde carConfig(carPhysics);
 
+int lapCount = 0;
 
+void finishLineLogic() {
+	lapCount++;
+	std::cout << "Lap: " << lapCount << std::endl;
+	if (lapCount == 2) {
+		std::cout << "You win !" << std::endl;
+	}
+	
+}
 
 
 int main(int argc, char* argv[]) {
@@ -250,7 +259,7 @@ int main(int argc, char* argv[]) {
 		if (car_trans.getPosition().x >= -0.5f && car_trans.getPosition().x <= 3.8f &&
 			car_trans.getPosition().z >= -1.9f && car_trans.getPosition().z <= -1.85f)
 		{
-			std::cout << "Finish line crossed !" << std::endl;
+			finishLineLogic();
 		}
 		
 		/*
