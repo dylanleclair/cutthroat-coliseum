@@ -42,7 +42,7 @@ int main(int argc, char* argv[]) {
 	carSampleInit();
 
 	SDL_Init(SDL_INIT_EVERYTHING); // initialize all sdl systems
-	Window window(800, 800, "Maximus Overdrive");
+	Window window(1200, 800, "Maximus Overdrive");
 
 	ImGuiIO& io = ImGui::GetIO(); (void)io;
 
@@ -82,7 +82,7 @@ int main(int argc, char* argv[]) {
 	for (int x = -30; x <= 30; x++) {
 		for (int z = -30; z <= 30; z++) {
 			for (int i = 0; i < 6; i++) {
-				ground_geom.verts.push_back(square[i]*scale + glm::vec3(x * scale,-1,z * scale));
+				ground_geom.verts.push_back(square[i]*scale + glm::vec3(x * scale,0,z * scale));
 				ground_geom.cols.push_back(glm::vec3(0, 1, 0));
 			}
 		}
