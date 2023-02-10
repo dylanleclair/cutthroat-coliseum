@@ -83,7 +83,12 @@ void GraphicsSystem::Update(ecs::Scene& scene, float deltaTime) {
 
 			glm::mat4 M = glm::translate(glm::mat4(1), trans.getPosition()) * toMat4(trans.getRotation());
 			glUniformMatrix4fv(modelUniform, 1, GL_FALSE, glm::value_ptr(M));
-			glDrawArrays(GL_TRIANGLES, 0, comp.numVerts);
+			if (comp.appearance == 2)
+			{
+				glDrawArrays(GL_LINE_STRIP, 0, comp.numVerts);
+			} else {
+				glDrawArrays(GL_TRIANGLES, 0, comp.numVerts);
+			}
 		}
 	}
 }
