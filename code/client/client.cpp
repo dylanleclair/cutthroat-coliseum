@@ -17,6 +17,7 @@
 
 #include "CarPhysics.h"
 #include "FrameCounter.h"
+#include "systems/ai.h"
 
 
 using namespace physx;
@@ -108,6 +109,7 @@ int main(int argc, char* argv[]) {
 	mainScene.AddComponent(e.guid, trans);
 
 
+
 	//finish box
 	ecs::Entity finish_e = mainScene.CreateEntity();
 	CPU_Geometry finish_geom;
@@ -127,6 +129,11 @@ int main(int argc, char* argv[]) {
 	}
 
 
+
+	PathfindingComponent car_pathfinder{finish_e.guid};
+	mainScene.AddComponent(e.guid,car_pathfinder);
+
+
 	RenderComponent finish = RenderComponent(&finish_geom);
 	finish.appearance = 0;
 	mainScene.AddComponent(finish_e.guid, finish);
@@ -136,12 +143,18 @@ int main(int argc, char* argv[]) {
 	mainScene.AddComponent(finish_e.guid, trans3);
 
 
+	// Path renderer
+	ecs::Entity path = mainScene.CreateEntity();
+	mainScene.AddComponent(path.guid, TransformComponent{});
+	mainScene.AddComponent(path.guid,RenderComponent{});
+
+	AISystem aiSystem{path.guid};
+
 
 	// Level
 	RenderComponent level_r = RenderComponent();
 	GraphicsSystem::readVertsFromFile(level_r, "models/torus_track.obj");
 	mainScene.AddComponent(level_e.guid, level_r);
-	
 	mainScene.AddComponent(level_e.guid, trans2);
 
 
@@ -218,6 +231,7 @@ int main(int argc, char* argv[]) {
 		gScene->fetchResults(true); //block until the simulation is finished
 		*/
 		gs.Update(mainScene, 0.0f);
+		aiSystem.Update(mainScene, 0.f);
 
 		// END__ ECS SYSTEMS UPDATES
 
