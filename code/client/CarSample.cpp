@@ -82,6 +82,7 @@
 // ****************************************************************************
 
 #include <ctype.h>
+#include <iostream>
 
 #include "PxPhysicsAPI.h"
 #include "vehicle2/PxVehicleAPI.h"
@@ -340,7 +341,7 @@ void stepPhysics(SDL_GameController *controller, float timestep = 1 / 164.f)
 
   if (SDL_GameControllerGetButton(controller, SDL_CONTROLLER_BUTTON_A))
   {
-    command.throttle = 5.f;
+    command.throttle = 2.f;
     goto end; // so we don't attempt to throttle and break
   }
   if (SDL_GameControllerGetButton(controller, SDL_CONTROLLER_BUTTON_B))
@@ -352,7 +353,9 @@ end:
 
   // Normalize controller axis
   // BUG: max positive is 1 less in magnitude than max min meaning full negative will be slightly above 1
-  auto axis = -SDL_GameControllerGetAxis(controller, SDL_CONTROLLER_AXIS_LEFTX) / SHRT_MAX;
+  float axis = -SDL_GameControllerGetAxis(controller, SDL_CONTROLLER_AXIS_LEFTX) / SHRT_MAX;
+  //float axis = -SDL_GameControllerGetAxis(controller, SDL_CONTROLLER_AXIS_LEFTX);
+  //std::cout << axis << std::endl;
   command.steer = axis;
   // TODO: steer
 
