@@ -363,10 +363,10 @@ void stepPhysics(SDL_GameController *controller, float timestep)
 
   // Normalize controller axis
   // BUG: max positive is 1 less in magnitude than max min meaning full negative will be slightly above 1
-  float axis = (float) - SDL_GameControllerGetAxis(controller, SDL_CONTROLLER_AXIS_LEFTX) / SHRT_MAX;
+  carAxis = (float) - SDL_GameControllerGetAxis(controller, SDL_CONTROLLER_AXIS_LEFTX) / SHRT_MAX;
   //float axis = -SDL_GameControllerGetAxis(controller, SDL_CONTROLLER_AXIS_LEFTX);
   //std::cout << axis << std::endl;
-  command.steer = axis * carAxisScale;
+  command.steer = carAxis * carAxisScale;
   // TODO: steer
 
 

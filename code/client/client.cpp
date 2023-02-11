@@ -357,17 +357,7 @@ int main(int argc, char* argv[]) {
 		// if (ImGui::Button("Serialize")) carConfig.serialize();
 		// ImGui::End();
 
-		// HACK(beau): pull these out of CarSample.cpp
-		extern float carThrottle;
-		extern float carBrake;
-		extern float carAxisScale;
-		ImGui::Begin("Car commands tuner", nullptr);
-		ImGui::SliderFloat("throttle", &carThrottle, 0.f, 5.f);
-		ImGui::SliderFloat("brake", &carBrake, 0.f, 5.f);
-		ImGui::SliderFloat("\"axis\" i.e. steering", &carAxisScale, 0.f, 5.f);
-		ImGui::End();
-		// END CAR PHYSICS PANEL
-		
+
 		// BEGIN A BUTTON THING
 		bool cbutton = false;
 		cbutton = SDL_GameControllerGetButton(controller, SDL_CONTROLLER_BUTTON_A);
@@ -384,6 +374,18 @@ int main(int argc, char* argv[]) {
 		ImGui::End();
 		// END JOYSTICK THING
 
+		// HACK(beau): pull these out of CarSample.cpp
+		extern float carThrottle;
+		extern float carBrake;
+		extern float carAxis;
+		extern float carAxisScale;
+		ImGui::Begin("Car commands tuner", nullptr);
+		ImGui::SliderFloat("throttle", &carThrottle, 0.f, 5.f);
+		ImGui::SliderFloat("brake", &carBrake, 0.f, 5.f);
+		ImGui::SliderFloat("\"axis\" i.e. steering", &carAxisScale, 0.f, 5.f);
+		ImGui::Text("left stick horizontal tilt: %f", carAxis);
+		ImGui::End();
+		// END CAR PHYSICS PANEL
 
 
 		// NOTE: the imgui bible - beau
