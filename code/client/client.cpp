@@ -221,14 +221,14 @@ int main(int argc, char* argv[]) {
 
 	FramerateCounter framerate;
 
-	//assert(SDL_NumJoysticks() > 0);
+	assert(SDL_NumJoysticks() > 0);
 	// TODO: handle no controller
 	SDL_GameController* controller = nullptr;
 	controller = SDL_GameControllerOpen(0);
-	//assert(controller);
+	assert(controller);
 	SDL_Joystick* joy = nullptr;
 	joy = SDL_GameControllerGetJoystick(controller);
-	//assert(joy);
+	assert(joy);
 	int instanceID =  SDL_JoystickInstanceID(joy);
 
 
@@ -346,7 +346,7 @@ int main(int argc, char* argv[]) {
 		}
 
 		// PHYSX DRIVER UPDATE
-		//stepPhysics(controller, framerate.m_time_queue.front() / 1000.f);
+		stepPhysics(controller, framerate.m_time_queue.front() / 1000.f);
 
 
 		// TODO(milestone 1): strip all non-milestone related imgui windows out
