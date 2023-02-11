@@ -332,6 +332,11 @@ PxRigidBody *getVehicleRigidBody()
 #include "SDL.h"
 #include <limits>
 
+// HACK(beau): make these visible to tuning imgui panel
+float carThrottle = 1.f;
+float carBrake = 1.f;
+float carAxisScale = 1.f;
+
 void stepPhysics(SDL_GameController *controller, float timestep)
 {
     const float max_time_step = 0.2f;
@@ -345,12 +350,12 @@ void stepPhysics(SDL_GameController *controller, float timestep)
   // Throttle to 2.f will cause weird behaviour
   if (SDL_GameControllerGetButton(controller, SDL_CONTROLLER_BUTTON_A))
   {
-    command.throttle = 1.f;
+      command.throttle = carThrottle;
     //goto end; // so we don't attempt to throttle and break
   }
   else if (SDL_GameControllerGetButton(controller, SDL_CONTROLLER_BUTTON_B))
   {
-    command.brake = 1.f;
+      command.brake = carBrake;
     // goto end;????
   }
 //end:
@@ -360,7 +365,7 @@ void stepPhysics(SDL_GameController *controller, float timestep)
   float axis = -SDL_GameControllerGetAxis(controller, SDL_CONTROLLER_AXIS_LEFTX) / SHRT_MAX;
   //float axis = -SDL_GameControllerGetAxis(controller, SDL_CONTROLLER_AXIS_LEFTX);
   //std::cout << axis << std::endl;
-  command.steer = axis;
+  command.steer = axis * carAxisScale;
   // TODO: steer
 
 

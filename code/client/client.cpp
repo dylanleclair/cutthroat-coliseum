@@ -351,10 +351,20 @@ int main(int argc, char* argv[]) {
 
 		// TODO(milestone 1): strip all non-milestone related imgui windows out
 		// BEGIN CAR PHYSICS PANEL
-		ImGui::Begin("Car Physics", nullptr);
-		ImGui::SliderFloat("acceleration", &carPhysics.m_acceleration, 0.f, 1000.f);
-		ImGui::SliderFloat("suspension", &carPhysics.m_suspension_force, 0.f, 1000.f);
-		if (ImGui::Button("Serialize")) carConfig.serialize();
+		// ImGui::Begin("Car Physics", nullptr);
+		// ImGui::SliderFloat("acceleration", &carPhysics.m_acceleration, 0.f, 1000.f);
+		// ImGui::SliderFloat("suspension", &carPhysics.m_suspension_force, 0.f, 1000.f);
+		// if (ImGui::Button("Serialize")) carConfig.serialize();
+		// ImGui::End();
+
+		// HACK(beau): pull these out of CarSample.cpp
+		extern float carThrottle;
+		extern float carBrake;
+		extern float carAxisScale;
+		ImGui::Begin("Car commands tuner", nullptr);
+		ImGui::SliderFloat("throttle", &carThrottle, 0.f, 5.f);
+		ImGui::SliderFloat("brake", &carBrake, 0.f, 5.f);
+		ImGui::SliderFloat("\"axis\" i.e. steering", &carAxisScale, 0.f, 5.f);
 		ImGui::End();
 		// END CAR PHYSICS PANEL
 		
