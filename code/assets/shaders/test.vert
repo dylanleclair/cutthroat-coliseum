@@ -16,9 +16,9 @@ out vec3 fragPos;
 out vec2 tc;
 
 void main() {
-	fragPos = vec3(M * vec4(vertPos,1.0f));
+	//fragPos = vec3(M * vec4(vertPos,1.0f));
 	gl_Position = P * V * M * vec4(vertPos, 1.0);
-	n = normalMat * vertNormal;
+	//n = normalMat * vertNormal;
 	fragCol = vertCol;
-	tc = texCoord;
+	//tc = texCoord;
 }
