@@ -1,8 +1,9 @@
 #pragma once
+#include "../graphics/Geometry.h"
+#include "../graphics/Texture.h"
 #include "PxPhysicsAPI.h"
 #include <glm/gtc/quaternion.hpp> 
 #include <glm/gtx/quaternion.hpp>
-#include <iostream>
 
 //Helper functions that allow for easy transforms between physx and glm
 inline glm::vec3 PxtoGLM(physx::PxVec3 _vec) {
@@ -76,42 +77,59 @@ private:
 
 };
 
+struct Mesh {
+	friend class GraphicsSystem;
+	unsigned int numberOfVerticies = 0;
+	int numberOfIndicies = 0;
+	unsigned int ID = -1;
+	GPU_Geometry* geometry = new GPU_Geometry;
+	unsigned int textureIndex = -1;
+	GLuint properties = 0; //texCoords | normals
+};
+
 /*
 * Render component is what is visible to the user
 */
-struct RenderComponent
-{
-	GPU_Geometry* geom = new GPU_Geometry();
-	int numVerts = 0;
-	Texture* texture = nullptr;
-	float specular = 0;
-	glm::vec3 color = glm::vec3(1);
-	GLuint shaderState = 1;
-	//color | texture | normals | specular
-	/*
-	* color: If this flag is set to true the component will render with the color field. Otherwise it will use a vertexColor
-	* texture: If this flag is true it will assume there is a texture attached and use it
-	* normals: if this is true that means that lighting will be applied to the model
-	* specular: DOESN'T WORK DO NOT USE!!! (It won't break, it just doesn't work properly)
-	*/
-	char appearance = 0; //0 = solid, 1 = wireframe, 2 = line strip
+struct RenderComponent {
+public:
+	//constructors
 	RenderComponent() = default;
-	RenderComponent(CPU_Geometry* _geom) { 
-		geom->setCols(_geom->cols); 
-		geom->setVerts(_geom->verts); 
-		geom->setTexCoords(_geom->texs);
-		geom->setNorms(_geom->norms);
-		numVerts = _geom->verts.size(); 
-		//std::cout << _geom->cols.size() << '\n';
-		if (_geom->cols.size() > 0)
-			shaderState ^= 1; 
+	//accessors
+	int g_numberOfVerts() {return numberOfVerts;};
+	int g_numberOfVerts(int _meshID) { int i = getMeshIndex(_meshID); if (i != -1) { return meshes[i].numberOfVerticies; } else { return -1; } }
+	bool g_hasNormals(int _meshID) { int i = getMeshIndex(_meshID); if (i != -1) { return (meshes[i].properties & 1) != 0; } else { return -1; } }
+	bool g_hasTextureCoords(int _meshID) { int i = getMeshIndex(_meshID); if (i != -1) { return (meshes[i].properties & 2) != 0; } else { return -1; } }
 
-		if (_geom->texPath.length() > 0) {
-			texture = new Texture(_geom->texPath, GL_NEAREST);
-			shaderState |= 2;
+	//modifiers
+	/*
+	* Attaches a mesh to the render.
+	* returns: -1 if a failure, local ID of the mesh otherwise
+	*/
+	int attachMesh(CPU_Geometry& _geometry);
+	/*
+	* Attaches a texture to a mesh already in the component
+	* returns: true if successful, false otherwise
+	*/
+	bool attachTexture(std::string _texturePath, unsigned int _meshID);
+//private functions
+private:
+	int getMeshIndex(int _meshID) {
+		for (int i = 0; i < meshes.size(); i++) {
+			if (meshes[i].ID == _meshID)
+				return i;
 		}
-
-		if (_geom->norms.size() > 0)
-			shaderState |= 4;
+		return -1;
 	}
+
+//friend fields
+private:
+	friend class GraphicsSystem;
+	//a single render component can have multiple meshes and corresponding textures attached
+	std::vector<Mesh> meshes;	
+	std::vector<Texture*> textures;	
+//private fields
+private:
+	unsigned int currentMeshID = 0;
+	int numberOfVerts = 0;
 };
+

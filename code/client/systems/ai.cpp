@@ -41,16 +41,16 @@ void AISystem::Update(ecs::Scene& scene, float deltaTime) {
             for (auto& pos: path)
             {
                 pathGeom.verts.push_back(glm::vec3{pos});
-                pathGeom.cols.push_back(glm::vec3(1.0f, 0.f, 1.0f));
+                //pathGeom.cols.push_back(glm::vec3(1.0f, 0.f, 1.0f));
             }
         }
     }
 
     // want some way to render the path!
 
-    RenderComponent& pathRenderer = scene.GetComponent<RenderComponent>(this->m_rendererGuid);
-    pathRenderer = RenderComponent{&pathGeom};
-    pathRenderer.appearance = 2;
+    //RenderComponent& pathRenderer = scene.GetComponent<RenderComponent>(this->m_rendererGuid);
+    //pathRenderer = RenderComponent{&pathGeom};
+    //pathRenderer.appearance = 2;
 
 }
 
