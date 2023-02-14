@@ -79,16 +79,32 @@ int main(int argc, char* argv[]) {
 	// init ecs 
 	ecs::Scene mainScene;
 
-	
 	//make an entity
 	ecs::Entity torus = mainScene.CreateEntity();
-	CPU_Geometry torus_geom;
-	RenderComponent torus_rend = RenderComponent();
-	GraphicsSystem::importOBJ(torus_rend, "cube.obj");
 	TransformComponent torus_trans = TransformComponent();
-	mainScene.AddComponent(torus.guid, torus_rend);
 	mainScene.AddComponent(torus.guid, torus_trans);
+	CPU_Geometry torus_geom;
+	RenderModel torus_rend = RenderModel();
+	GraphicsSystem::importOBJ(torus_rend, "torus.obj");
+	GraphicsSystem::importOBJ(torus_rend, "cube.obj");
+	mainScene.AddComponent(torus.guid, torus_rend);
 
+
+	//attach a texture to one of them
+	//mainScene.GetComponent<RenderModel>(torus.guid).attachTexture("CFHX3384.JPG", 0);
+	
+
+	ecs::Entity line = mainScene.CreateEntity();
+	CPU_Geometry line_geom = CPU_Geometry();
+	line_geom.verts.push_back(glm::vec3(0, 0, 0));
+	line_geom.verts.push_back(glm::vec3(0, 10, 0));
+	line_geom.verts.push_back(glm::vec3(10, 0, 0));
+	line_geom.verts.push_back(glm::vec3(10, 0, 10));
+	RenderLine line_rend = RenderLine(line_geom);
+	TransformComponent line_trans = TransformComponent();
+	line_rend.setColor(glm::vec3(0, 1, 0));
+	mainScene.AddComponent(line.guid, line_rend);
+	mainScene.AddComponent(line.guid, line_trans);
 
 	FramerateCounter framerate;
 

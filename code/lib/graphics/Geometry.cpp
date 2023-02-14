@@ -6,8 +6,8 @@
 GPU_Geometry::GPU_Geometry()
 	: vao()
 	, vertBuffer(0, 3, GL_FLOAT)
+	, normBuffer(1, 3, GL_FLOAT)
 	, texCoordBuffer(2, 2, GL_FLOAT)
-	, normBuffer(3, 3, GL_FLOAT)
 	, indexBuffer()
 {}
 

@@ -2,7 +2,7 @@
 #include <iostream>
 #include <algorithm>
 
-int RenderComponent::attachMesh(CPU_Geometry& _geometry)
+int RenderModel::attachMesh(CPU_Geometry& _geometry)
 {
 	std::cout << "attaching mesh...\n";
 	Mesh mesh = Mesh();
@@ -19,7 +19,7 @@ int RenderComponent::attachMesh(CPU_Geometry& _geometry)
 	if (_geometry.norms.size() == numberOfVerts) {
 		std::cout << "\tnormals: " << _geometry.norms.size() << '\n';
 		mesh.geometry->setNorms(_geometry.norms);
-		mesh.properties |= 1;
+		mesh.properties |= 0x1;
 	}
 	else if (_geometry.norms.size() > 0 && _geometry.norms.size() != numberOfVerts) {
 		std::cout << "WARNING: Trying to attach a geometry that has a different number of normals than verticies. Assuming no normals...\n";
@@ -28,7 +28,7 @@ int RenderComponent::attachMesh(CPU_Geometry& _geometry)
 	if (_geometry.texs.size() == numberOfVerts) {
 		std::cout << "\ttextCoords: " << _geometry.texs.size() << '\n';
 		mesh.geometry->setTexCoords(_geometry.texs);
-		mesh.properties |= 2;
+		mesh.properties |= 0x2;
 	}
 	else if (_geometry.texs.size() > 0 && _geometry.texs.size() != numberOfVerts) {
 		std::cout << "WARNING: Trying to attach a geometry that has a different number of normals than verticies. Assuming no normals...\n";
@@ -44,14 +44,15 @@ int RenderComponent::attachMesh(CPU_Geometry& _geometry)
 	return mesh.ID;
 }
 
-bool RenderComponent::attachTexture(std::string _texturePath, unsigned int _meshID)
+bool RenderModel::attachTexture(std::string _textureName, unsigned int _meshID)
 {
+	_textureName = "textures/" + _textureName;
 	//find the mesh with the corresponding ID
 	for each(Mesh mesh in meshes) {
 		if (mesh.ID == _meshID) {
 			//determine if the model already contains the texture in its memory
 			for (unsigned int i = 0; i < textures.size(); i++) {
-				if (textures[i]->getPath().compare(_texturePath)) {
+				if (textures[i]->getPath().compare(_textureName)) {
 					//if it already exists then set the meshes textureIndex to the right value
 					//check that the mesh doesn't already have a texture attached
 					if (mesh.textureIndex != -1) {
@@ -64,10 +65,24 @@ bool RenderComponent::attachTexture(std::string _texturePath, unsigned int _mesh
 				}
 			}
 			//if no texture already exists then make a new one and attach it
-			textures.push_back(new Texture(_texturePath, GL_LINEAR));
+			textures.push_back(new Texture(_textureName, GL_LINEAR));
 			mesh.textureIndex = textures.size() - 1;
+			//std::sort(meshes.begin(), meshes.end(), [](const Mesh a, const Mesh b) -> bool {return a.textureIndex < b.textureIndex; });
+			for each (auto t in meshes)
+				std::cout << t.textureIndex << '\n';
 			return true;
 		}
 	}
 	return false;
+}
+
+RenderLine::RenderLine(const CPU_Geometry _geometry)
+{
+	geometry->setVerts(_geometry.verts);
+	numberOfVerticies = _geometry.verts.size();
+}
+
+void RenderLine::setColor(const glm::vec3 _color)
+{
+	color = _color;
 }

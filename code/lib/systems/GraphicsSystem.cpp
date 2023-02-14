@@ -16,25 +16,10 @@
 #include <assimp/postprocess.h>
 
 GraphicsSystem::GraphicsSystem(Window& _window) :
-	shader("shaders/test.vert", "shaders/test.frag")
+	modelShader("shaders/lighting_simple.vert", "shaders/lighting_simple.frag"),
+	lineShader("shaders/lighting_simple.vert", "shaders/lighting_simple.frag")
 {
-	// SHADERS
-	shader.use();
-
 	windowSize = _window.getSize();
-
-	//get uniform locations
-	modelUniform = glGetUniformLocation(GLuint(shader), "M");
-	viewUniform = glGetUniformLocation(GLuint(shader), "V");
-	perspectiveUniform = glGetUniformLocation(GLuint(shader), "P"); 
-	//shaderSelectorUniform = glGetUniformLocation(GLuint(shader), "selector");
-	//textureUniform = glGetUniformLocation(GLuint(shader), "tex");
-	//normalMatUniform = glGetUniformLocation(GLuint(shader), "normalMat");
-	//lightUniform = glGetUniformLocation(GLuint(shader), "light");
-	//viewPosUniform = glGetUniformLocation(GLuint(shader), "viewPos");
-	//ambiantStrengthUniform = glGetUniformLocation(GLuint(shader), "ambiantStr");
-	//specularStrengthUniform = glGetUniformLocation(GLuint(shader), "specularStrength");
-	//colorUniform = glGetUniformLocation(GLuint(shader), "userColor");
 }
 
 void GraphicsSystem::Update(ecs::Scene& scene, float deltaTime) {
@@ -42,12 +27,11 @@ void GraphicsSystem::Update(ecs::Scene& scene, float deltaTime) {
 	glEnable(GL_FRAMEBUFFER_SRGB);
 	glClearColor(0.50f, 0.80f, 0.97f, 0.0f);
 	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-	//glEnable(GL_CULL_FACE);
-	//glCullFace(GL_BACK);
-	//glEnable(GL_DEPTH_TEST);
+	glEnable(GL_CULL_FACE);
+	glCullFace(GL_BACK);
+	glEnable(GL_DEPTH_TEST);
 
 	for (int i = 0; i < numCamerasActive; i++) {
-		shader.use();
 		//matricies that need only be set once per camera
 		glm::mat4 P = glm::perspective(glm::radians(45.0f), (float)windowSize.x / windowSize.y, 0.01f, 1000.f);
 		glm::mat4 V = cameras[i].getView();
@@ -59,11 +43,6 @@ void GraphicsSystem::Update(ecs::Scene& scene, float deltaTime) {
 						-0.752418, -0.494847, 0.434735, 0,
 						9.27202, -0.914308, -33.4781, 1
 		};*/
-		
-
-		glUniformMatrix4fv(perspectiveUniform, 1, GL_FALSE, glm::value_ptr(P));
-		glUniformMatrix4fv(viewUniform, 1, GL_FALSE, glm::value_ptr(V));
-		//glUniform3fv(viewPosUniform, 1, glm::value_ptr(cameras[i].getPos()));
 
 		//set the viewport
 		if (numCamerasActive <= 1) { //there can't be 0 cameras, assume always 1 minimum
@@ -84,58 +63,71 @@ void GraphicsSystem::Update(ecs::Scene& scene, float deltaTime) {
 			}
 		}
 		
-		//render dynamic components
-		for (Guid entityGuid : ecs::EntitiesInScene<RenderComponent,TransformComponent>(scene)) {
-			RenderComponent& comp = scene.GetComponent<RenderComponent>(entityGuid);
+		//render model components without textures
+		//switch the shader program
+		modelShader.use();
+		//get uniform locations
+		GLuint modelUniform = glGetUniformLocation(GLuint(modelShader), "M");
+		GLuint viewUniform = glGetUniformLocation(GLuint(modelShader), "V");
+		GLuint perspectiveUniform = glGetUniformLocation(GLuint(modelShader), "P");
+		GLuint textureUniform = glGetUniformLocation(GLuint(modelShader), "tex");
+		GLuint normalMatUniform = glGetUniformLocation(GLuint(modelShader), "normalMat");
+		GLuint lightUniform = glGetUniformLocation(GLuint(modelShader), "light");
+		GLuint viewPosUniform = glGetUniformLocation(GLuint(modelShader), "viewPos");
+		GLuint ambiantStrengthUniform = glGetUniformLocation(GLuint(modelShader), "ambiantStr");
+		GLuint specularStrengthUniform = glGetUniformLocation(GLuint(modelShader), "specularStrength");
+
+		//set the camera uniforms
+		glUniformMatrix4fv(perspectiveUniform, 1, GL_FALSE, glm::value_ptr(P));
+		glUniformMatrix4fv(viewUniform, 1, GL_FALSE, glm::value_ptr(V));
+		glUniform3fv(viewPosUniform, 1, glm::value_ptr(cameras[i].getPos()));
+
+		//draw the models
+		for (Guid entityGuid : ecs::EntitiesInScene<RenderModel,TransformComponent>(scene)) {
+			RenderModel& comp = scene.GetComponent<RenderModel>(entityGuid);
 			TransformComponent& trans = scene.GetComponent<TransformComponent>(entityGuid);
 			
 			//properties the geometry is ALWAYS going to have
 			glm::mat4 M = glm::translate(glm::mat4(1), trans.getPosition()) * toMat4(trans.getRotation());
 			glUniformMatrix4fv(modelUniform, 1, GL_FALSE, glm::value_ptr(M));
+			glm::mat3 normalsMatrix = glm::mat3(glm::transpose(glm::inverse(M)));
+			glUniformMatrix3fv(normalMatUniform, 1, GL_FALSE, glm::value_ptr(normalsMatrix));
 			//uniforms that don't change, however I put them here just in case we want to change them
-			//glUniform3fv(lightUniform, 1, glm::value_ptr(glm::vec3(0, 20, 0)));
-			//glUniform1f(ambiantStrengthUniform, 0.50f);
+			glUniform3fv(lightUniform, 1, glm::value_ptr(glm::vec3(0, 20, 0)));
+			glUniform1f(ambiantStrengthUniform, 0.50f);
+			glUniform1f(specularStrengthUniform, 1.5f);
 
 			//loop through each mesh in the renderComponent
 			for each (Mesh mesh in comp.meshes) {
+				if((mesh.properties & 2) != 0)
+					comp.textures[mesh.textureIndex]->bind();
 				mesh.geometry->bind();
 				glDrawElements(GL_TRIANGLES, mesh.numberOfIndicies, GL_UNSIGNED_INT, 0);
 			}
-			/*
-			if(comp.appearance == 1)
-				glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
-			else
-				glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
+		}
 
-			glUniform1ui(shaderSelectorUniform, 0);//comp.shaderState);
-
-			if ((comp.shaderState & 1) != 0)
-				glUniform3fv(colorUniform, 1, glm::value_ptr(comp.color));
-
-			//if there is an attached texture
-			if ((comp.shaderState & 2) != 0)
-				comp.texture->bind();
-
-			//if specular shading is enabled
-			if((comp.shaderState & 8) != 0)
-				glUniform1f(specularStrengthUniform, comp.specular);
-
-			//if the model has normals
-			if ((comp.shaderState & 4) != 0) {
-				glm::mat3 normalsMatrix = glm::mat3(glm::transpose(glm::inverse(M)));
-				glUniformMatrix3fv(normalMatUniform, 1, GL_FALSE, glm::value_ptr(normalsMatrix));
-			}
-			*/
-			// GEOMETRY
-			//comp.geometry->bind();
+		//render line components
+		//switch shader program
+		lineShader.use();
+		//bind uniforms
+		modelUniform = glGetUniformLocation(GLuint(lineShader), "M");
+		viewUniform = glGetUniformLocation(GLuint(lineShader), "V");
+		perspectiveUniform = glGetUniformLocation(GLuint(lineShader), "P");
+		GLuint colorUniform = glGetUniformLocation(GLuint(lineShader), "userColor");
+		//set camera uniforms
+		glUniformMatrix4fv(perspectiveUniform, 1, GL_FALSE, glm::value_ptr(P));
+		glUniformMatrix4fv(viewUniform, 1, GL_FALSE, glm::value_ptr(V));
+		for (Guid entityGuid : ecs::EntitiesInScene<RenderLine, TransformComponent>(scene)) {
+			RenderLine& comp = scene.GetComponent<RenderLine>(entityGuid);
+			TransformComponent& trans = scene.GetComponent<TransformComponent>(entityGuid);
 			
-			//if (comp.appearance == 2)
-			//{
-				//glDrawArrays(GL_LINE_STRIP, 0, comp.numberOfVerts);
-			//}
-			//else {
+			glm::mat4 M = glm::translate(glm::mat4(1), trans.getPosition()) * toMat4(trans.getRotation());
+			glUniformMatrix4fv(modelUniform, 1, GL_FALSE, glm::value_ptr(M));
+
+			glUniform3fv(colorUniform, 1, glm::value_ptr(comp.color));
 			
-			//}
+			comp.geometry->bind();
+			glDrawArrays(GL_LINE_STRIP, 0, comp.numberOfVerticies);
 		}
 	}
 }
@@ -151,10 +143,10 @@ void GraphicsSystem::input(SDL_Event& _event, int _cameraID)
 	cameras[_cameraID].input(_event);
 }
 
-void GraphicsSystem::importOBJ(RenderComponent& _component, const std::string _fileName) {
+void GraphicsSystem::importOBJ(RenderModel& _component, const std::string _fileName) {
 	std::cout << "Beginning to load model " << _fileName << "\n";
 	Assimp::Importer importer;
-	const aiScene* scene = importer.ReadFile("models/" + _fileName, aiProcess_Triangulate | aiProcess_FlipUVs | aiProcess_GenNormals);
+	const aiScene* scene = importer.ReadFile("models/" + _fileName, aiProcess_JoinIdenticalVertices | aiProcess_Triangulate | aiProcess_FlipUVs | aiProcess_GenNormals);
 	if (!scene || scene->mFlags & AI_SCENE_FLAGS_INCOMPLETE || !scene->mRootNode)
 	{
 		std::cout << "Error importing " << _fileName << " into scene\n";
@@ -165,7 +157,7 @@ void GraphicsSystem::importOBJ(RenderComponent& _component, const std::string _f
 }
 
 
-void GraphicsSystem::processNode(aiNode* node, const aiScene* scene, RenderComponent& _component) {
+void GraphicsSystem::processNode(aiNode* node, const aiScene* scene, RenderModel& _component) {
 	std::cout << "processing node...\n";
 	std::cout << "\tmeshes: " << node->mNumMeshes << '\n';
 	//process all the meshes contained in the node

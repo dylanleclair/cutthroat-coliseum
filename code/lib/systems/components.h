@@ -83,17 +83,18 @@ struct Mesh {
 	int numberOfIndicies = 0;
 	unsigned int ID = -1;
 	GPU_Geometry* geometry = new GPU_Geometry;
-	unsigned int textureIndex = -1;
+	int textureIndex = -1;
+	glm::vec3 meshColor = glm::vec3(1);
 	GLuint properties = 0; //texCoords | normals
 };
 
 /*
 * Render component is what is visible to the user
 */
-struct RenderComponent {
+struct RenderModel {
 public:
 	//constructors
-	RenderComponent() = default;
+	RenderModel() = default;
 	//accessors
 	int g_numberOfVerts() {return numberOfVerts;};
 	int g_numberOfVerts(int _meshID) { int i = getMeshIndex(_meshID); if (i != -1) { return meshes[i].numberOfVerticies; } else { return -1; } }
@@ -133,3 +134,13 @@ private:
 	int numberOfVerts = 0;
 };
 
+struct RenderLine {
+	RenderLine() = default;
+	RenderLine(const CPU_Geometry _geometry);
+	void setColor(const glm::vec3 _color);
+private:
+	friend class GraphicsSystem;
+	GPU_Geometry* geometry = new GPU_Geometry();
+	glm::vec3(color) = glm::vec3(1);
+	GLuint numberOfVerticies = 0;
+};
