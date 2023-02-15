@@ -250,12 +250,15 @@ int main(int argc, char* argv[]) {
 					case SDLK_r:
 						//TODO recompile the shader
 						break;
-					case SDLK_t:
+						
+					// TODO: change the file that is serializes (Want to do base.json and enginedrive.json)
+					case SDLK_i:// i means in
 						carConfig.deserialize();
 						break;
-					case SDLK_s:
+					case SDLK_o:// o means out
 						carConfig.serialize();
 						break;
+
 					case SDLK_0:
 						controlledCamera = 0;
 						break;
