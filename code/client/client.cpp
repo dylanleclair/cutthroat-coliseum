@@ -5,7 +5,6 @@
 #include "imgui_impl_sdl.h"
 #include "imgui_impl_opengl3.h"
 
-
 #include "graphics/Geometry.h"
 #include "PxPhysicsAPI.h"
 
@@ -19,6 +18,13 @@
 #include "FrameCounter.h"
 #include "systems/ai.h"
 
+glm::vec3 calculateSpherePoint(float s, float t)
+{
+	float z = cos(2 * M_PI * t) * sin(M_PI * s);
+	float x = sin(2 * M_PI * t) * sin(M_PI * s);
+	float y = cos(M_PI * s);
+	return(glm::vec3(x, y, z));
+}
 
 using namespace physx;
 
@@ -42,9 +48,7 @@ void finishLinePrint() {
 	if (lapCount == 2) {
 		std::cout << "You win !" << std::endl;
 	}
-
 }
-
 
 int main(int argc, char* argv[]) {
 	printf("Starting main");
@@ -222,8 +226,8 @@ int main(int argc, char* argv[]) {
 
 	bool quit = false;
 	int controlledCamera = 0;
-
-
+  
+  
 	// GAME LOOP
 	while (!quit) {
 		//polls all pending input events until there are none left in the queue
@@ -380,7 +384,7 @@ int main(int argc, char* argv[]) {
 		ImGui::Render();
 		glViewport(0, 0, (int)io.DisplaySize.x, (int)io.DisplaySize.y);
 		ImGui_ImplOpenGL3_RenderDrawData(ImGui::GetDrawData());
-
+		
 		window.swapBuffers();
 	}
 
