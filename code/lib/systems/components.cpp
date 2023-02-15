@@ -76,6 +76,13 @@ bool RenderModel::attachTexture(std::string _textureName, unsigned int _meshID)
 	return false;
 }
 
+void RenderModel::setModelColor(const glm::vec3 _color)
+{
+	for (Mesh mesh : meshes) {
+		mesh.meshColor = _color;
+	}
+}
+
 RenderLine::RenderLine(const CPU_Geometry _geometry)
 {
 	geometry->setVerts(_geometry.verts);
@@ -85,4 +92,10 @@ RenderLine::RenderLine(const CPU_Geometry _geometry)
 void RenderLine::setColor(const glm::vec3 _color)
 {
 	color = _color;
+}
+
+void RenderLine::setGeometry(const CPU_Geometry _geometry)
+{
+	geometry->setVerts(_geometry.verts);
+	numberOfVerticies = _geometry.verts.size();
 }

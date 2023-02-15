@@ -99,7 +99,7 @@ void GraphicsSystem::Update(ecs::Scene& scene, float deltaTime) {
 
 			//loop through each mesh in the renderComponent
 			for each (Mesh mesh in comp.meshes) {
-				if((mesh.properties & 2) != 0)
+				if((mesh.properties & 2) != 0 && mesh.textureIndex != 0)
 					comp.textures[mesh.textureIndex]->bind();
 				mesh.geometry->bind();
 				glDrawElements(GL_TRIANGLES, mesh.numberOfIndicies, GL_UNSIGNED_INT, 0);

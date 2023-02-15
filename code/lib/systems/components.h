@@ -112,6 +112,10 @@ public:
 	* returns: true if successful, false otherwise
 	*/
 	bool attachTexture(std::string _texturePath, unsigned int _meshID);
+	/*
+	* Updates the color of all meshes in the model
+	*/
+	void setModelColor(const glm::vec3 _color);
 //private functions
 private:
 	int getMeshIndex(int _meshID) {
@@ -138,6 +142,7 @@ struct RenderLine {
 	RenderLine() = default;
 	RenderLine(const CPU_Geometry _geometry);
 	void setColor(const glm::vec3 _color);
+	void setGeometry(const CPU_Geometry _geometry);
 private:
 	friend class GraphicsSystem;
 	GPU_Geometry* geometry = new GPU_Geometry();
