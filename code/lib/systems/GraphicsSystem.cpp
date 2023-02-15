@@ -41,15 +41,24 @@ void GraphicsSystem::Update(ecs::Scene& scene, float deltaTime) {
 	glEnable(GL_FRAMEBUFFER_SRGB);
 	glClearColor(0.50f, 0.80f, 0.97f, 0.0f);
 	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-	glEnable(GL_CULL_FACE);
-	glCullFace(GL_BACK);
+	//glEnable(GL_CULL_FACE);
+	//glCullFace(GL_BACK);
 	glEnable(GL_DEPTH_TEST);
 
 	for (int i = 0; i < numCamerasActive; i++) {
 		shader.use();
 		//matricies that need only be set once per camera
-		glm::mat4 P = glm::perspective(glm::radians(45.0f), (float)windowSize.x/ windowSize.y, 0.1f, 1000.f);
-		glm::mat4 V = cameras[i].getView();
+		glm::mat4 P = glm::perspective(glm::radians(45.0f), (float)windowSize.x / windowSize.y, 0.01f, 1000.f);
+		//glm::mat4 V = cameras[i].getView();
+		// Hardcoded camera value, it can't move after this 
+		
+		glm::mat4 V = { 0.658686, -0.565264, 0.496598, 0,
+						0, 0.660003, 0.751263, 0,
+						-0.752418, -0.494847, 0.434735, 0,
+						9.27202, -0.914308, -33.4781, 1
+		};
+		
+
 		glUniformMatrix4fv(perspectiveUniform, 1, GL_FALSE, glm::value_ptr(P));
 		glUniformMatrix4fv(viewUniform, 1, GL_FALSE, glm::value_ptr(V));
 		glUniform3fv(viewPosUniform, 1, glm::value_ptr(cameras[i].getPos()));
@@ -120,6 +129,12 @@ void GraphicsSystem::Update(ecs::Scene& scene, float deltaTime) {
 			}
 		}
 	}
+}
+
+// Function to return a camera view matrix (used for debug)
+// TODO:: add a cameraID to pass in for multiple cameras
+glm::mat4 GraphicsSystem::getCameraView() {
+	return cameras[0].getView();
 }
 
 void GraphicsSystem::input(SDL_Event& _event, int _cameraID)

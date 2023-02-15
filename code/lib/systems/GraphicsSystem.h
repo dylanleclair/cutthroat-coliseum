@@ -24,6 +24,7 @@ public:
 	GraphicsSystem(Window& _window);
 	void Update(ecs::Scene& scene, float deltaTime);
 	void input(SDL_Event&, int _cameraID);
+	glm::mat4 getCameraView();
 	static void readVertsFromFile(RenderComponent& _component, const std::string _file, const std::string _textureFile = "");
 private:
 	Camera cameras[4];
