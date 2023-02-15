@@ -221,20 +221,21 @@ int main(int argc, char* argv[]) {
 
 	FramerateCounter framerate;
 
-	assert(SDL_NumJoysticks() > 0);
+	//assert(SDL_NumJoysticks() > 0);
 	// TODO: handle no controller
 	SDL_GameController* controller = nullptr;
 	controller = SDL_GameControllerOpen(0);
-	assert(controller);
+	//assert(controller);
 	SDL_Joystick* joy = nullptr;
 	joy = SDL_GameControllerGetJoystick(controller);
-	assert(joy);
+	//assert(joy);
 	int instanceID =  SDL_JoystickInstanceID(joy);
 
 
 	bool quit = false;
 	int controlledCamera = 0;
-  
+	
+
   
 	// GAME LOOP
 	while (!quit) {
@@ -270,6 +271,8 @@ int main(int argc, char* argv[]) {
 						break;
 					case SDLK_3:
 						controlledCamera = 3;
+						break;
+					case SDLK_w:
 						break;
 
 					// Prinout of camera matrix
@@ -387,7 +390,6 @@ int main(int argc, char* argv[]) {
 		ImGui::Text("Laps: %d", lapCount);
 		ImGui::End();
 		// END CAR PHYSICS PANEL
-
 
 		// NOTE: the imgui bible - beau
 		//ImGui::ShowDemoWindow();

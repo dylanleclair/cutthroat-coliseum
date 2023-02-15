@@ -228,7 +228,7 @@ void cleanupPhysX()
 
 void initGroundPlane()
 {
-  gGroundPlane = PxCreatePlane(*gPhysics, PxPlane(0, 1, 0, 0), *gMaterial);
+  gGroundPlane = PxCreatePlane(*gPhysics, PxPlane(0, 0, 0, 0), *gMaterial);
   //std::cout << "Material: " << gMaterial->getStaticFriction() << std::endl;
   for (PxU32 i = 0; i < gGroundPlane->getNbShapes(); i++)
   {
@@ -350,7 +350,14 @@ float carAxis = 0.f;
 float carAxisScale = 1.f;
 
 void stepPhysics(SDL_GameController *controller, float timestep)
-{
+{   
+    
+    auto keys_arr = SDL_GetKeyboardState(nullptr);
+    auto w_key = keys_arr[SDL_SCANCODE_W];
+    auto s_key = keys_arr[SDL_SCANCODE_S];
+    auto a_key = keys_arr[SDL_SCANCODE_A];
+    auto d_key = keys_arr[SDL_SCANCODE_D];
+
     const float max_time_step = 0.2f;
     timestep = std::min(timestep, max_time_step);
   // Apply the brake, throttle and steer to the command state of the vehicle.
@@ -360,12 +367,12 @@ void stepPhysics(SDL_GameController *controller, float timestep)
   // command.duration = timestep;
 
   // Throttle to 2.f will cause weird behaviour
-  if (SDL_GameControllerGetButton(controller, SDL_CONTROLLER_BUTTON_A))
+  if (SDL_GameControllerGetButton(controller, SDL_CONTROLLER_BUTTON_A) || w_key)
   {
       command.throttle = carThrottle;
     //goto end; // so we don't attempt to throttle and break
   }
-  else if (SDL_GameControllerGetButton(controller, SDL_CONTROLLER_BUTTON_B))
+  else if (SDL_GameControllerGetButton(controller, SDL_CONTROLLER_BUTTON_B) || s_key)
   {
       command.brake = carBrake;
     // goto end;????
@@ -375,10 +382,16 @@ void stepPhysics(SDL_GameController *controller, float timestep)
   // Normalize controller axis
   // BUG: max positive is 1 less in magnitude than max min meaning full negative will be slightly above 1
   carAxis = (float) - SDL_GameControllerGetAxis(controller, SDL_CONTROLLER_AXIS_LEFTX) / SHRT_MAX;
-  //float axis = -SDL_GameControllerGetAxis(controller, SDL_CONTROLLER_AXIS_LEFTX);
   //std::cout << axis << std::endl;
-  command.steer = carAxis * carAxisScale;
-  // TODO: steer
+  if (a_key) {
+      command.steer = 1.f;
+  } else if (d_key) {
+      command.steer = -1.f;
+  }
+  else {
+      command.steer = carAxis * carAxisScale;
+  }
+  
 
 
   gVehicle.mCommandState.brakes[0] = command.brake;
