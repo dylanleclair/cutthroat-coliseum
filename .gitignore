@@ -17,9 +17,7 @@
 mono_crash.*
 
 # Build results
-[Dd]ebug/
 [Dd]ebugPublic/
-[Rr]elease/
 [Rr]eleases/
 x64/
 x86/
@@ -357,4 +355,5 @@ enc_temp_folder/
 # overrides for third party resources 
 
 # !code/thirdparty/physx/**/
-# !code/thirdparty/physx/**/debug/physx_binaries.zip
+**/*.lib
+**/*.dll
