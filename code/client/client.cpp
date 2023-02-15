@@ -65,7 +65,6 @@ int main(int argc, char* argv[]) {
 
 	// create instance of system to use.
 	GraphicsSystem gs(window);
-	//init_physics();
 
 	// init ecs 
 	ecs::Scene mainScene;
@@ -79,30 +78,6 @@ int main(int argc, char* argv[]) {
 		std::cout << "initialized physx driving model\n";
 	}
 
-	//ground
-	CPU_Geometry ground_geom;
-	glm::vec3 square[] = {
-		{1.f, 0.f, 1.0f},
-		{1.f, 0.f, -1.0f},
-		{-1.f, 0.f, -1.0f},
-
-		{1.f, 0.f, 1.0f},
-		{-1.f, 0.f, -1.0f},
-		{-1.f, 0.f, 1.0f},
-	};
-
-	const float scale = 1.f;
-	for (int x = -10; x <= 10; x++) {
-		for (int z = -10; z <= 10; z++) {
-			for (int i = 0; i < 6; i++) {
-				ground_geom.verts.push_back(square[i] * scale + glm::vec3(x * 2 * scale, -1, z * 2 * scale));
-				glm::vec3 color = (float)((abs(x) + abs(z)) % 2) * glm::vec3(0.65, 0, .95);
-				ground_geom.norms.push_back(glm::vec3(0, 1, 0));
-			}
-		}
-	}
-
-
 
 	//make an entity
 	ecs::Entity car_e = mainScene.CreateEntity();
@@ -110,14 +85,6 @@ int main(int argc, char* argv[]) {
 	ecs::Entity outWall_e = mainScene.CreateEntity();
 	ecs::Entity inWall_e = mainScene.CreateEntity();
 	ecs::Entity ground_e = mainScene.CreateEntity();
-
-	// Ground plane component
-	RenderModel ground = RenderModel();
-	ground.attachMesh(ground_geom);
-	mainScene.AddComponent(ground_e.guid, ground);
-
-	TransformComponent trans2 = TransformComponent();
-	mainScene.AddComponent(ground_e.guid, trans2);
 
 
 	// Car
@@ -131,8 +98,7 @@ int main(int argc, char* argv[]) {
 
 	auto& car_render = mainScene.GetComponent<RenderModel>(car_e.guid);
 	std::cout << "Car Guid: " << car_e.guid << std::endl;
-
-
+	
 	//finish box
 	ecs::Entity finish_e = mainScene.CreateEntity();
 	CPU_Geometry finish_geom;
@@ -153,7 +119,7 @@ int main(int argc, char* argv[]) {
 		finish_geom.verts.push_back(rectangle[5 - i]);
 	}
 
-
+	
 	// Finish line components
 	RenderModel finish = RenderModel();
 	finish.attachMesh(finish_geom);
@@ -166,7 +132,7 @@ int main(int argc, char* argv[]) {
 	// Pathfinding
 	PathfindingComponent car_pathfinder{ finish_e.guid };
 	mainScene.AddComponent(car_e.guid, car_pathfinder);
-
+	
 
 	// Path renderer
 	ecs::Entity path = mainScene.CreateEntity();
@@ -175,7 +141,7 @@ int main(int argc, char* argv[]) {
 
 	AISystem aiSystem{ path.guid };
 
-
+	
 	// Level
 	TransformComponent level_t = TransformComponent();
 	mainScene.AddComponent(ground_e.guid, level_t);
@@ -206,9 +172,10 @@ int main(int argc, char* argv[]) {
 	auto &wallTrans = mainScene.GetComponent<TransformComponent>(outWall_e.guid);
 	wallTrans.setPosition(glm::vec3(0, 0, 0));
 	*/
+	
 	auto& finish_trans = mainScene.GetComponent<TransformComponent>(finish_e.guid);
 	TransformComponent& car_trans = mainScene.GetComponent<TransformComponent>(car_e.guid);
-
+	
 
 
 	FramerateCounter framerate;
@@ -298,15 +265,6 @@ int main(int argc, char* argv[]) {
 			isFinished = false;
 		}
 
-		/*
-		// BEGIN ECS SYSTEMS UPDATES
-		//std::cout << "Beginning system updates\n";
-		if(framerate.m_time_queue.size() != 0)
-			gScene->simulate(framerate.m_time_queue.front() / 1000.0f);
-		else
-			gScene->simulate(0.1);
-		gScene->fetchResults(true); //block until the simulation is finished
-		*/
 		gs.Update(mainScene, 0.0f);
 		aiSystem.Update(mainScene, 0.f);
 
@@ -327,15 +285,6 @@ int main(int argc, char* argv[]) {
 		// TODO(milestone 1): display physx value as proof that physx is initialized
 		ImGui::End();
 		// END FRAMERATE COUNTER
-
-		// simulate physics with time delta = time of last frame
-		// XXX(beau): DOES NOT CLAMP TIME DELTA
-		// TODO(beau): make a setup for dealing with time - follow slides
-		{
-			//float frame_time_seconds = framerate.m_time_queue.front() / 1000.0f;
-			//gScene->simulate(frame_time_seconds);
-			//gScene->fetchResults(true);
-		}
 
 		// PHYSX DRIVER UPDATE
 		stepPhysics(controller, framerate.m_time_queue.front() / 1000.f);
@@ -384,7 +333,7 @@ int main(int argc, char* argv[]) {
 		ImGui::Render();
 		glViewport(0, 0, (int)io.DisplaySize.x, (int)io.DisplaySize.y);
 		ImGui_ImplOpenGL3_RenderDrawData(ImGui::GetDrawData());
-		
+
 		window.swapBuffers();
 	}
 

@@ -55,20 +55,14 @@ public:
 		if (actor == nullptr)
 			return glm::quat(rotation);
 		else
-			return PxtoGLM(actor->getGlobalPose().q);
+			return PxtoGLM(actor->getGlobalPose().q) * rotation;
 	}
 
 	void setPosition(glm::vec3 _position) {
-		if (actor == nullptr)
-			position = _position;
-		else
-			actor->setGlobalPose(physx::PxTransform(GLMtoPx(_position)));
+		position = _position;
 	}
 	void setRotation(glm::quat _rotation) {
-		if (actor == nullptr)
-			rotation = _rotation;
-		else
-			actor->setGlobalPose(physx::PxTransform(GLMtoPx(_rotation)));
+		rotation = _rotation;
 	}
 private:
 	glm::vec3 position = glm::vec3(0);

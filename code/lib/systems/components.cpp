@@ -39,7 +39,7 @@ int RenderModel::attachMesh(CPU_Geometry& _geometry)
 	//add the mesh to the array
 	meshes.push_back(mesh);
 	//sorting the meshes lets us batch draws without having to rebind the same texture multiple times
-	std::sort(meshes.begin(), meshes.end(), [](const Mesh a, const Mesh b) -> bool {return a.textureIndex < b.textureIndex; });
+	//std::sort(meshes.begin(), meshes.end(), [](const Mesh a, const Mesh b) -> bool {return a.textureIndex < b.textureIndex; });
 	std::cout << "mesh attached with id " << mesh.ID << "\n";
 	return mesh.ID;
 }
@@ -74,7 +74,7 @@ bool RenderModel::attachTexture(std::string _textureName, unsigned int _meshID)
 
 void RenderModel::setModelColor(const glm::vec3 _color)
 {
-	for (Mesh mesh : meshes) {
+	for (Mesh& mesh : meshes) {
 		mesh.meshColor = _color;
 	}
 }

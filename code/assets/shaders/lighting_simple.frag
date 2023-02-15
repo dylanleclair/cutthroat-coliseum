@@ -11,13 +11,16 @@ uniform vec3 viewPos;
 uniform float ambiantStr;
 uniform float specularStrength;
 uniform uint shaderState;
+uniform vec3 userColor;
 
 void main()
 {             
     //determine the fragment color
-	vec3 sampleCol = vec3(shaderState,1,0);
+	vec3 sampleCol = vec3(1);
 	if(shaderState == 1) {
 		sampleCol = vec3(texture(tex, tc));
+	} else {
+		sampleCol = userColor;
 	}
 
 	//determine the lighting

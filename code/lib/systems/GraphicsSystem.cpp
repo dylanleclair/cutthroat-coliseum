@@ -9,6 +9,8 @@
 #include "graphics/Camera.h"
 #include "glm/gtc/quaternion.hpp"
 #include <glm/gtx/quaternion.hpp>
+#define GLM_ENABLE_EXPERIMENTAL
+#include <glm/gtx/string_cast.hpp>
 #include "components.h"
 
 #include <assimp/Importer.hpp>
@@ -70,14 +72,14 @@ void GraphicsSystem::Update(ecs::Scene& scene, float deltaTime) {
 		GLuint modelUniform = glGetUniformLocation(GLuint(modelShader), "M");
 		GLuint viewUniform = glGetUniformLocation(GLuint(modelShader), "V");
 		GLuint perspectiveUniform = glGetUniformLocation(GLuint(modelShader), "P");
-		GLuint textureUniform = glGetUniformLocation(GLuint(modelShader), "tex");
+		//GLuint textureUniform = glGetUniformLocation(GLuint(modelShader), "tex");
 		GLuint normalMatUniform = glGetUniformLocation(GLuint(modelShader), "normalMat");
 		GLuint lightUniform = glGetUniformLocation(GLuint(modelShader), "light");
 		GLuint viewPosUniform = glGetUniformLocation(GLuint(modelShader), "viewPos");
 		GLuint ambiantStrengthUniform = glGetUniformLocation(GLuint(modelShader), "ambiantStr");
 		GLuint specularStrengthUniform = glGetUniformLocation(GLuint(modelShader), "specularStrength");
 		GLuint shaderStateUniform = glGetUniformLocation(GLuint(modelShader), "shaderState");
-
+		GLuint userColorUniform = glGetUniformLocation(GLuint(modelShader), "userColor");
 		//set the camera uniforms
 		glUniformMatrix4fv(perspectiveUniform, 1, GL_FALSE, glm::value_ptr(P));
 		glUniformMatrix4fv(viewUniform, 1, GL_FALSE, glm::value_ptr(V));
@@ -105,6 +107,7 @@ void GraphicsSystem::Update(ecs::Scene& scene, float deltaTime) {
 					glUniform1ui(shaderStateUniform, 1);
 				}
 				else {
+					glUniform3fv(userColorUniform, 1, glm::value_ptr(mesh.meshColor));
 					glUniform1ui(shaderStateUniform, 0);
 				}
 				mesh.geometry->bind();
@@ -152,7 +155,7 @@ void GraphicsSystem::input(SDL_Event& _event, int _cameraID)
 void GraphicsSystem::importOBJ(RenderModel& _component, const std::string _fileName) {
 	std::cout << "Beginning to load model " << _fileName << "\n";
 	Assimp::Importer importer;
-	const aiScene* scene = importer.ReadFile("models/" + _fileName, aiProcess_JoinIdenticalVertices | aiProcess_Triangulate | aiProcess_FlipUVs | aiProcess_GenNormals);
+	const aiScene* scene = importer.ReadFile("models/" + _fileName, aiProcess_Triangulate );
 	if (!scene || scene->mFlags & AI_SCENE_FLAGS_INCOMPLETE || !scene->mRootNode)
 	{
 		std::cout << "Error importing " << _fileName << " into scene\n";
@@ -167,8 +170,8 @@ void GraphicsSystem::processNode(aiNode* node, const aiScene* scene, RenderModel
 	std::cout << "processing node...\n";
 	std::cout << "\tmeshes: " << node->mNumMeshes << '\n';
 	//process all the meshes contained in the node
-	for (int i = 0; i < node->mNumMeshes; i++) {
-		const aiMesh* mesh = scene->mMeshes[node->mMeshes[i]];
+	for (int m = 0; m < node->mNumMeshes; m++) {
+		const aiMesh* mesh = scene->mMeshes[node->mMeshes[m]];
 		CPU_Geometry geometry;
 
 		//process the aiMess into a CPU_Geometry to pass to the render component to create a new mesh
@@ -185,8 +188,9 @@ void GraphicsSystem::processNode(aiNode* node, const aiScene* scene, RenderModel
 		for (unsigned int i = 0; i < mesh->mNumFaces; i++)
 		{
 			aiFace face = mesh->mFaces[i];
-			for (unsigned int j = 0; j < face.mNumIndices; j++)
-				geometry.indicies.push_back(face.mIndices[j]);
+			geometry.indicies.push_back(face.mIndices[0]);
+			geometry.indicies.push_back(face.mIndices[1]);
+			geometry.indicies.push_back(face.mIndices[2]);
 		}
 		std::cout << "\t\tindicies: " << geometry.indicies.size() << '\n';
 		// process material
