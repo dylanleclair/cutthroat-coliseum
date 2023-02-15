@@ -228,7 +228,8 @@ void cleanupPhysX()
 
 void initGroundPlane()
 {
-  gGroundPlane = PxCreatePlane(*gPhysics, PxPlane(0, 0, 0, 0), *gMaterial);
+    // Can't set PxPlane to all zero's 
+  gGroundPlane = PxCreatePlane(*gPhysics, PxPlane(0, 1, 0, 0), *gMaterial);
   //std::cout << "Material: " << gMaterial->getStaticFriction() << std::endl;
   for (PxU32 i = 0; i < gGroundPlane->getNbShapes(); i++)
   {
