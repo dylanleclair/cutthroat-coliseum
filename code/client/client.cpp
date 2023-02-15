@@ -91,7 +91,7 @@ int main(int argc, char* argv[]) {
 
 
 	//attach a texture to one of them
-	//mainScene.GetComponent<RenderModel>(torus.guid).attachTexture("CFHX3384.JPG", 0);
+	mainScene.GetComponent<RenderModel>(torus.guid).attachTexture("CFHX3384.JPG", 0);
 	
 
 	ecs::Entity line = mainScene.CreateEntity();
@@ -162,7 +162,7 @@ int main(int argc, char* argv[]) {
 		// END__ ECS SYSTEMS UPDATES
 
 		glDisable(GL_FRAMEBUFFER_SRGB); // disable sRGB for things like imgui
-
+		
 		ImGui_ImplOpenGL3_NewFrame();
 		ImGui_ImplSDL2_NewFrame();
 		ImGui::NewFrame();

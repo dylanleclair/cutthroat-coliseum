@@ -17,7 +17,7 @@
 
 GraphicsSystem::GraphicsSystem(Window& _window) :
 	modelShader("shaders/lighting_simple.vert", "shaders/lighting_simple.frag"),
-	lineShader("shaders/lighting_simple.vert", "shaders/lighting_simple.frag")
+	lineShader("shaders/line.vert", "shaders/line.frag")
 {
 	windowSize = _window.getSize();
 }
@@ -76,6 +76,7 @@ void GraphicsSystem::Update(ecs::Scene& scene, float deltaTime) {
 		GLuint viewPosUniform = glGetUniformLocation(GLuint(modelShader), "viewPos");
 		GLuint ambiantStrengthUniform = glGetUniformLocation(GLuint(modelShader), "ambiantStr");
 		GLuint specularStrengthUniform = glGetUniformLocation(GLuint(modelShader), "specularStrength");
+		GLuint shaderStateUniform = glGetUniformLocation(GLuint(modelShader), "shaderState");
 
 		//set the camera uniforms
 		glUniformMatrix4fv(perspectiveUniform, 1, GL_FALSE, glm::value_ptr(P));
@@ -99,8 +100,13 @@ void GraphicsSystem::Update(ecs::Scene& scene, float deltaTime) {
 
 			//loop through each mesh in the renderComponent
 			for each (Mesh mesh in comp.meshes) {
-				if((mesh.properties & 2) != 0)
+				if ((mesh.properties & 2) != 0 && mesh.textureIndex != -1) {
 					comp.textures[mesh.textureIndex]->bind();
+					glUniform1ui(shaderStateUniform, 1);
+				}
+				else {
+					glUniform1ui(shaderStateUniform, 0);
+				}
 				mesh.geometry->bind();
 				glDrawElements(GL_TRIANGLES, mesh.numberOfIndicies, GL_UNSIGNED_INT, 0);
 			}

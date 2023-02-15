@@ -48,20 +48,16 @@ bool RenderModel::attachTexture(std::string _textureName, unsigned int _meshID)
 {
 	_textureName = "textures/" + _textureName;
 	//find the mesh with the corresponding ID
-	for each(Mesh mesh in meshes) {
+	for (Mesh& mesh : meshes) {
 		if (mesh.ID == _meshID) {
+			if (mesh.textureIndex != -1)
+				return false;
 			//determine if the model already contains the texture in its memory
 			for (unsigned int i = 0; i < textures.size(); i++) {
 				if (textures[i]->getPath().compare(_textureName)) {
 					//if it already exists then set the meshes textureIndex to the right value
 					//check that the mesh doesn't already have a texture attached
-					if (mesh.textureIndex != -1) {
-						mesh.textureIndex = i;
-						return true;
-					} 
-					else {
-						return false;
-					}
+					mesh.textureIndex = i;
 				}
 			}
 			//if no texture already exists then make a new one and attach it
