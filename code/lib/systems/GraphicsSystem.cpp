@@ -72,7 +72,6 @@ void GraphicsSystem::Update(ecs::Scene& scene, float deltaTime) {
 		GLuint modelUniform = glGetUniformLocation(GLuint(modelShader), "M");
 		GLuint viewUniform = glGetUniformLocation(GLuint(modelShader), "V");
 		GLuint perspectiveUniform = glGetUniformLocation(GLuint(modelShader), "P");
-		//GLuint textureUniform = glGetUniformLocation(GLuint(modelShader), "tex");
 		GLuint normalMatUniform = glGetUniformLocation(GLuint(modelShader), "normalMat");
 		GLuint lightUniform = glGetUniformLocation(GLuint(modelShader), "light");
 		GLuint viewPosUniform = glGetUniformLocation(GLuint(modelShader), "viewPos");
@@ -91,7 +90,7 @@ void GraphicsSystem::Update(ecs::Scene& scene, float deltaTime) {
 			TransformComponent& trans = scene.GetComponent<TransformComponent>(entityGuid);
 			
 			//properties the geometry is ALWAYS going to have
-			glm::mat4 M = glm::translate(glm::mat4(1), trans.getPosition()) * toMat4(trans.getRotation());
+			glm::mat4 M = glm::translate(glm::mat4(1), trans.getPosition()) * toMat4(trans.getRotation()) * glm::scale(glm::mat4(1), trans.getScale());
 			glUniformMatrix4fv(modelUniform, 1, GL_FALSE, glm::value_ptr(M));
 			glm::mat3 normalsMatrix = glm::mat3(glm::transpose(glm::inverse(M)));
 			glUniformMatrix3fv(normalMatUniform, 1, GL_FALSE, glm::value_ptr(normalsMatrix));

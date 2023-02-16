@@ -57,6 +57,9 @@ public:
 		else
 			return PxtoGLM(actor->getGlobalPose().q) * rotation;
 	}
+	glm::vec3 getScale() {
+		return scale;
+	}
 
 	void setPosition(glm::vec3 _position) {
 		position = _position;
@@ -64,9 +67,14 @@ public:
 	void setRotation(glm::quat _rotation) {
 		rotation = _rotation;
 	}
+
+	glm::vec3 setScale(glm::vec3 _scale) {
+		scale = _scale;
+	}
 private:
 	glm::vec3 position = glm::vec3(0);
 	glm::quat rotation = glm::quat(0, 0, 0, 0);
+	glm::vec3 scale = glm::vec3(1);
 	physx::PxRigidActor* actor = nullptr;
 
 };
