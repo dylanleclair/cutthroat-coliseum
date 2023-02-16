@@ -7,10 +7,11 @@
 class Camera {
 public:
 	Camera();
-	void lookat(float, float, float);
+	void lookat(glm::vec3 _target);
 	glm::mat4 getView();
 	void input(const SDL_Event&);
 	glm::vec3 getPos();
+	void setPos(glm::vec3 _position);
 private:
 	glm::vec3 cameraPos = glm::vec3(-4.0f, 2.0f, 0.0f);
 	glm::vec3 cameraUp = glm::vec3(0.0f, 1.0f, 0.0f);

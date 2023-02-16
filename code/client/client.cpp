@@ -94,6 +94,7 @@ int main(int argc, char* argv[]) {
 	mainScene.AddComponent(car_e.guid, car_r);
 	TransformComponent car_t = TransformComponent(getVehicleRigidBody());
 	car_t.setPosition(glm::vec3(0, 1, 0));
+	car_t.setRotation(glm::quat(0, 0, 0, 1));
 	mainScene.AddComponent(car_e.guid, car_t);
 
 	auto& car_render = mainScene.GetComponent<RenderModel>(car_e.guid);

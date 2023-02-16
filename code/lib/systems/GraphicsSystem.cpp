@@ -34,6 +34,9 @@ void GraphicsSystem::ImGuiPanel() {
 	if (ImGui::Button("Fixed Camera")) {
 		cam_mode = 2;
 	}
+	if (ImGui::Button("Follow Camera")) {
+		cam_mode = 3;
+	}
 
 	ImGui::End();
 }
@@ -51,7 +54,6 @@ void GraphicsSystem::Update(ecs::Scene& scene, float deltaTime) {
 		//matricies that need only be set once per camera
 		glm::mat4 P = glm::perspective(glm::radians(45.0f), (float)windowSize.x / windowSize.y, 0.01f, 1000.f);
 		glm::mat4 V = cameras[i].getView();
-		// Hardcoded camera value, it can't move after this 
 		
 
 		// If camera mode is 1 - use freecam
@@ -68,7 +70,24 @@ void GraphicsSystem::Update(ecs::Scene& scene, float deltaTime) {
 		}
 		// TODO: Follow camera mode
 		else {
-			V = cameras[i].getView();
+			//MASSIVE ASSUMPTION!!! Car is ALWAYS Guid = 0
+			//TODO: Find a clean way to pass the cars Guid to the camera. Idealy also refactor the camera class to handle this logic
+			//Main goal rn: Implement the logic...
+			static glm::vec3 previousCarPosition = glm::vec3(0);
+			TransformComponent& trans = scene.GetComponent<TransformComponent>(0);
+			//calculate where the camera should aim to be positioned
+			glm::vec3 cameraTargetLocation = glm::translate(glm::mat4(1), trans.getPosition()) * toMat4(trans.getRotation()) * glm::vec4(0, 2, -4, 1);
+			//calculate the speed of the car
+			float speed = glm::distance(previousCarPosition, trans.getPosition());
+			//calculate how far the camera is from the target position
+			float cameraOffset = glm::distance(cameraTargetLocation, cameras[0].getPos());
+			//use a sigmoid function to determine how much to move the camera to the target position (can't go higher than 1)
+			float correctionAmount = cameraOffset / (40 + cameraOffset);
+			//lerp between the 2 positions according to the correction amount
+			previousCarPosition = trans.getPosition();
+			//lerp the camera to a good location based on the correction amount
+			cameras[0].setPos(cameras[0].getPos() * (1-correctionAmount) + correctionAmount * cameraTargetLocation);
+			V = glm::lookAt(cameras[0].getPos(), trans.getPosition(), glm::vec3(0.0f, 1.0f, 0.0f));
 		}
 
 		//set the viewport
