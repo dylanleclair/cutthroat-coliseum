@@ -24,6 +24,20 @@ GraphicsSystem::GraphicsSystem(Window& _window) :
 	windowSize = _window.getSize();
 }
 
+// Panel to controls the cameras
+void GraphicsSystem::ImGuiPanel() {
+	ImGui::Begin("Camera States");
+
+	if (ImGui::Button("Free Camera")) {
+		cam_mode = 1;
+	}
+	if (ImGui::Button("Fixed Camera")) {
+		cam_mode = 2;
+	}
+
+	ImGui::End();
+}
+
 void GraphicsSystem::Update(ecs::Scene& scene, float deltaTime) {
 	glEnable(GL_LINE_SMOOTH);
 	glEnable(GL_FRAMEBUFFER_SRGB);
@@ -39,12 +53,28 @@ void GraphicsSystem::Update(ecs::Scene& scene, float deltaTime) {
 		glm::mat4 V = cameras[i].getView();
 		// Hardcoded camera value, it can't move after this 
 		
-		/*
-		glm::mat4 V = { 0.658686, -0.565264, 0.496598, 0,
-						0, 0.660003, 0.751263, 0,
-						-0.752418, -0.494847, 0.434735, 0,
-						9.27202, -0.914308, -33.4781, 1
-		};*/
+
+		// If camera mode is 1 - use freecam
+		if (cam_mode == 1) {
+			V = cameras[i].getView();
+		}
+		// If cam mode is 2 - use fixed camera (values from milestone 2)
+		else if (cam_mode == 2) {
+			V = { 0.658686, -0.565264, 0.496598, 0,
+				0, 0.660003, 0.751263, 0,
+				-0.752418, -0.494847, 0.434735, 0,
+				9.27202, -0.914308, -33.4781, 1
+			};
+		}
+		// TODO: Follow camera mode
+		else {
+			V = cameras[i].getView();
+		}
+
+		glUniformMatrix4fv(perspectiveUniform, 1, GL_FALSE, glm::value_ptr(P));
+		glUniformMatrix4fv(viewUniform, 1, GL_FALSE, glm::value_ptr(V));
+		glUniform3fv(viewPosUniform, 1, glm::value_ptr(cameras[i].getPos()));
+
 
 		//set the viewport
 		if (numCamerasActive <= 1) { //there can't be 0 cameras, assume always 1 minimum

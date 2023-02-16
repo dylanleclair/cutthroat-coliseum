@@ -22,6 +22,7 @@
 struct GraphicsSystem : ecs::ISystem {
 public:
 	GraphicsSystem(Window& _window);
+	void GraphicsSystem::ImGuiPanel();
 	void Update(ecs::Scene& scene, float deltaTime);
 	void input(SDL_Event&, int _cameraID);
 	glm::mat4 getCameraView();
@@ -30,6 +31,10 @@ private:
 	Camera cameras[4];
 	//uniforms
 	int numCamerasActive = 1;
+
+	int cam_mode = 1; // Used to determine what mode the camera should use (free, fixed, follow)
+	glm::mat4 V = glm::mat4(1.f); // Had to declare this variable here for the rest of the program to work
+
 
 	ShaderProgram modelShader;
 	ShaderProgram lineShader;

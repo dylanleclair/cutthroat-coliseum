@@ -180,20 +180,23 @@ int main(int argc, char* argv[]) {
 
 	FramerateCounter framerate;
 
-	assert(SDL_NumJoysticks() > 0);
+	//assert(SDL_NumJoysticks() > 0);
 	// TODO: handle no controller
 	SDL_GameController* controller = nullptr;
 	controller = SDL_GameControllerOpen(0);
-	assert(controller);
+	//assert(controller);
 	SDL_Joystick* joy = nullptr;
 	joy = SDL_GameControllerGetJoystick(controller);
-	assert(joy);
-	int instanceID = SDL_JoystickInstanceID(joy);
+
+	//assert(joy);
+	int instanceID =  SDL_JoystickInstanceID(joy);
+
 
 
 	bool quit = false;
 	int controlledCamera = 0;
-  
+	
+
   
 	// GAME LOOP
 	while (!quit) {
@@ -206,27 +209,34 @@ int main(int argc, char* argv[]) {
 
 			if (window.event.type == SDL_KEYDOWN) {
 				switch (window.event.key.keysym.sym) {
-				case SDLK_r:
-					//TODO recompile the shader
-					break;
-				case SDLK_t:
-					carConfig.deserialize();
-					break;
-				case SDLK_s:
-					carConfig.serialize();
-					break;
-				case SDLK_0:
-					controlledCamera = 0;
-					break;
-				case SDLK_1:
-					controlledCamera = 1;
-					break;
-				case SDLK_2:
-					controlledCamera = 2;
-					break;
-				case SDLK_3:
-					controlledCamera = 3;
-					break;
+
+					case SDLK_r:
+						//TODO recompile the shader
+						break;
+						
+					// TODO: change the file that is serializes (Want to do base.json and enginedrive.json)
+					case SDLK_i:// i means in
+						carConfig.deserialize();
+						break;
+					case SDLK_o:// o means out
+						carConfig.serialize();
+						break;
+
+					case SDLK_0:
+						controlledCamera = 0;
+						break;
+					case SDLK_1:
+						controlledCamera = 1;
+						break;
+					case SDLK_2:
+						controlledCamera = 2;
+						break;
+					case SDLK_3:
+						controlledCamera = 3;
+						break;
+					case SDLK_w:
+						break;
+
 
 					// Prinout of camera matrix
 				case SDLK_c:
@@ -326,9 +336,10 @@ int main(int argc, char* argv[]) {
 		ImGui::End();
 		// END CAR PHYSICS PANEL
 
-
 		// NOTE: the imgui bible - beau
 		//ImGui::ShowDemoWindow();
+
+		gs.ImGuiPanel();
 
 		ImGui::Render();
 		glViewport(0, 0, (int)io.DisplaySize.x, (int)io.DisplaySize.y);
