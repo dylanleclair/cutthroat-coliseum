@@ -71,11 +71,6 @@ void GraphicsSystem::Update(ecs::Scene& scene, float deltaTime) {
 			V = cameras[i].getView();
 		}
 
-		glUniformMatrix4fv(perspectiveUniform, 1, GL_FALSE, glm::value_ptr(P));
-		glUniformMatrix4fv(viewUniform, 1, GL_FALSE, glm::value_ptr(V));
-		glUniform3fv(viewPosUniform, 1, glm::value_ptr(cameras[i].getPos()));
-
-
 		//set the viewport
 		if (numCamerasActive <= 1) { //there can't be 0 cameras, assume always 1 minimum
 			glViewport(0, 0, windowSize.x, windowSize.y);
