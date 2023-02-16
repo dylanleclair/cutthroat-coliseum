@@ -394,6 +394,8 @@ int main(int argc, char* argv[]) {
 		// NOTE: the imgui bible - beau
 		//ImGui::ShowDemoWindow();
 
+		gs.ImGuiPanel();
+
 		ImGui::Render();
 		glViewport(0, 0, (int)io.DisplaySize.x, (int)io.DisplaySize.y);
 		ImGui_ImplOpenGL3_RenderDrawData(ImGui::GetDrawData());
