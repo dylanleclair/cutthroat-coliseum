@@ -1,19 +1,36 @@
 #include "ImGuiDebug.h"
 #include <iostream>
 
-void reloadVehicleJSON() {
-	ImGui::Begin("Serialize");
+// Initializes variables
+void variableInit() {
+	rigid_mass = gVehicle.mBaseParams.rigidBodyParams.mass;
+}
 
-	if (ImGui::Button("Reload Base.Json")) {
-		readBaseParamsFromJsonFile("../../../../assets/vehicledata", "Base.json", gVehicle.mBaseParams);
-		
-		//gVehicle.mBaseParams.rigidBodyParams.mass = 300.0f;
-		std::cout << gVehicle.mBaseParams.rigidBodyParams.mass << std::endl;
+void vehicleTuning() {
+	ImGui::Begin("Tuning");
+
+	if (ImGui::InputFloat("Mass", &rigid_mass)) {
+		gVehicle.mBaseParams.rigidBodyParams.mass = rigid_mass;
 	}
 
-	if (ImGui::Button("Reload EngineDrive.Json")) {
-		readEngineDrivetrainParamsFromJsonFile(gVehicleDataPath, "EngineDrive.json",
-			gVehicle.mEngineDriveParams);
+	ImGui::End();
+}
+
+void reloadVehicleJSON() {
+	ImGui::Begin("Vehicle Variables");
+
+
+
+	// Reads the JSON in the assets vehicle data
+	// If first param set to gVehicleDataPath it goes to the out folder path instead
+	if (ImGui::Button("Read Base.Json")) {
+		readBaseParamsFromJsonFile("../../../../assets/vehicledata", "Base.json", gVehicle.mBaseParams);
+	}
+
+	// Reads the JSON in the assets vehicle data
+	// If first param set to gVehicleDataPath it goes to the out folder path instead
+	if (ImGui::Button("Read EngineDrive.Json")) {
+		readEngineDrivetrainParamsFromJsonFile("../../../../assets/vehicledata", "EngineDrive.json", gVehicle.mEngineDriveParams);
 	}
 	
 	ImGui::End();

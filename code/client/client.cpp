@@ -205,7 +205,8 @@ int main(int argc, char* argv[]) {
 	bool quit = false;
 	int controlledCamera = 0;
 	
-
+	// Initalizes variables for the vehicle tuning Imgui
+	variableInit();
   
 	// GAME LOOP
 	while (!quit) {
@@ -358,11 +359,12 @@ int main(int argc, char* argv[]) {
 		// END CAR PHYSICS PANEL
 
 		// NOTE: the imgui bible - beau
-		//ImGui::ShowDemoWindow();
+		ImGui::ShowDemoWindow();
 
 		gs.ImGuiPanel();
 		// Loads the imgui panel that lets you reload vehicle JSONs
 		reloadVehicleJSON();
+		vehicleTuning();
 
 		ImGui::Render();
 		glViewport(0, 0, (int)io.DisplaySize.x, (int)io.DisplaySize.y);
