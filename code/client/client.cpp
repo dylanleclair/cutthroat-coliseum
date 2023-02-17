@@ -249,13 +249,12 @@ int main(int argc, char* argv[]) {
 		{
 			uint32_t now_millisecs = SDL_GetTicks();
 			uint32_t delta_millisecs = now_millisecs - lastTime_millisecs;
-			if (delta_millisecs == 0); delta_millisecs = 1; // HACK: pretend at least one millisecond passes between each frame
+			if (delta_millisecs == 0) delta_millisecs = 1; // HACK: pretend at least one millisecond passes between each frame
 			if (delta_millisecs > 200) delta_millisecs = 200; // HACK: clamp delta time between frames so physics doesn't go boom
-			timestep = float(now_millisecs - lastTime_millisecs);
+			timestep = (float) delta_millisecs;
 			lastTime_millisecs = now_millisecs;
 		}
 
-		std::cout << "Time delta: " << timestep.getMilliseconds() << std::endl;
 
 		//polls all pending input events until there are none left in the queue
 		while (SDL_PollEvent(&window.event)) {
