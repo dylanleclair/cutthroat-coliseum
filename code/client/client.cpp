@@ -22,6 +22,10 @@
 
 #include "Time.h"
 
+#include "systems/PhysicsSystem.h"
+
+#include "Car.h"
+
 glm::vec3 calculateSpherePoint(float s, float t)
 {
 	float z = cos(2 * M_PI * t) * sin(M_PI * s);
@@ -32,13 +36,15 @@ glm::vec3 calculateSpherePoint(float s, float t)
 
 using namespace physx;
 
-extern PxRigidBody* getVehicleRigidBody();
-extern bool initPhysics();
-extern void stepPhysics(SDL_GameController* controller, Timestep timestep);
-extern void cleanupPhysics();
-extern int carSampleInit();
+// extern PxRigidBody* getVehicleRigidBody();
+// extern bool initPhysics();
+// extern void stepPhysics(SDL_GameController* controller, Timestep timestep);
+// extern void cleanupPhysics();
+// extern int carSampleInit();
 
-extern PxScene* gScene;
+// extern PxScene* gScene;
+
+
 
 CarPhysics carPhysics;
 CarPhysicsSerde carConfig(carPhysics);
@@ -60,7 +66,11 @@ int main(int argc, char* argv[]) {
 	printf("Starting main");
 
 
-	carSampleInit();
+	physics::PhysicsSystem physicsSystem{};
+	physicsSystem.Initialize();
+	Car car{physicsSystem};
+
+	// carSampleInit();
 
 	SDL_Init(SDL_INIT_EVERYTHING); // initialize all sdl systems
 	Window window(1200, 800, "Maximus Overdrive");
@@ -81,10 +91,10 @@ int main(int argc, char* argv[]) {
 	std::cout << "Component initalization finished\n";
 
 
-	if (initPhysics())
-	{
-		std::cout << "initialized physx driving model\n";
-	}
+	// if (initPhysics())
+	// {
+	// 	std::cout << "initialized physx driving model\n";
+	// }
 
 
 	//make an entity
@@ -100,7 +110,7 @@ int main(int argc, char* argv[]) {
 	GraphicsSystem::importOBJ(car_r, "test_car.obj");
 	car_r.setModelColor(glm::vec3(0.5f, 0.5f, 0.f));
 	mainScene.AddComponent(car_e.guid, car_r);
-	TransformComponent car_t = TransformComponent(getVehicleRigidBody());
+	TransformComponent car_t = TransformComponent(car.getVehicleRigidBody());
 	car_t.setPosition(glm::vec3(0, 1, 0));
 	car_t.setRotation(glm::quat(0, 0, 0, 1));
 	mainScene.AddComponent(car_e.guid, car_t);
@@ -318,7 +328,10 @@ int main(int argc, char* argv[]) {
 		// END FRAMERATE COUNTER
 
 		// PHYSX DRIVER UPDATE
-		stepPhysics(controller, timestep);
+		// stepPhysics(controller, timestep);
+
+		// TODO(dylan): should really happen via the physics system update because the car is a physics object
+		car.stepPhysics(controller, timestep);
 
 
 		// TODO(milestone 1): strip all non-milestone related imgui windows out
@@ -362,7 +375,7 @@ int main(int argc, char* argv[]) {
 
 		gs.ImGuiPanel();
 		// Loads the imgui panel that lets you reload vehicle JSONs
-		reloadVehicleJSON();
+		// reloadVehicleJSON();
 
 		ImGui::Render();
 		glViewport(0, 0, (int)io.DisplaySize.x, (int)io.DisplaySize.y);
@@ -376,7 +389,8 @@ int main(int argc, char* argv[]) {
 	ImGui::DestroyContext();
 
 
-	cleanupPhysics();
+	// cleanupPhysics();
+	physicsSystem.Cleanup();
 
 	SDL_JoystickClose(joy);
 	joy = nullptr;
