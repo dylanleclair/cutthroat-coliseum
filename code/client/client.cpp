@@ -19,6 +19,8 @@
 #include "FrameCounter.h"
 #include "systems/ai.h"
 
+#include "Time.h"
+
 
 using namespace physx;
 
@@ -35,6 +37,8 @@ CarPhysicsSerde carConfig(carPhysics);
 
 int lapCount = 0;
 bool isFinished = false;
+
+uint32_t lastTime_millisecs;
 
 void finishLinePrint() {
 	lapCount++;
@@ -54,6 +58,8 @@ int main(int argc, char* argv[]) {
 
 	SDL_Init(SDL_INIT_EVERYTHING); // initialize all sdl systems
 	Window window(1200, 800, "Maximus Overdrive");
+
+	lastTime_millisecs = SDL_GetTicks();
 
 	ImGuiIO& io = ImGui::GetIO(); (void)io;
 
@@ -239,6 +245,18 @@ int main(int argc, char* argv[]) {
   
 	// GAME LOOP
 	while (!quit) {
+		Timestep timestep; // Time since last frame
+		{
+			uint32_t now_millisecs = SDL_GetTicks();
+			uint32_t delta_millisecs = now_millisecs - lastTime_millisecs;
+			if (delta_millisecs == 0); delta_millisecs = 1; // HACK: pretend at least one millisecond passes between each frame
+			if (delta_millisecs > 200) delta_millisecs = 200;
+			timestep = float(now_millisecs - lastTime_millisecs);
+			lastTime_millisecs = now_millisecs;
+		}
+
+		std::cout << "Time delta: " << timestep.getMilliseconds() << std::endl;
+
 		//polls all pending input events until there are none left in the queue
 		while (SDL_PollEvent(&window.event)) {
 			ImGui_ImplSDL2_ProcessEvent(&window.event);
