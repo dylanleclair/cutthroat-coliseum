@@ -259,3 +259,44 @@ void GraphicsSystem::processNode(aiNode* node, const aiScene* scene, RenderModel
 	}
 }
 
+
+void GraphicsSystem::importOBJ(CPU_Geometry& _geometry, const std::string _fileName) {
+	std::cout << "Beginning to load model " << _fileName << "\n";
+	Assimp::Importer importer;
+	const aiScene* scene = importer.ReadFile("models/" + _fileName, aiProcess_Triangulate);
+	if (!scene || scene->mFlags & AI_SCENE_FLAGS_INCOMPLETE || !scene->mRootNode)
+	{
+		std::cout << "Error importing " << _fileName << " into scene\n";
+		return;
+	}
+
+	processNode(scene->mRootNode, scene, _geometry);
+}
+
+
+void GraphicsSystem::processNode(aiNode* node, const aiScene* scene, CPU_Geometry& _geometry) {
+	//process all the meshes contained in the node
+	for (int m = 0; m < node->mNumMeshes; m++) {
+		const aiMesh* mesh = scene->mMeshes[node->mMeshes[m]];
+
+		//process the aiMess into a CPU_Geometry to pass to the render component to create a new mesh
+		for (unsigned int i = 0; i < mesh->mNumVertices; i++)
+		{
+			_geometry.verts.push_back(glm::vec3(mesh->mVertices[i].x, mesh->mVertices[i].y, mesh->mVertices[i].z));
+		}
+		// process indices
+		for (unsigned int i = 0; i < mesh->mNumFaces; i++)
+		{
+			aiFace face = mesh->mFaces[i];
+			_geometry.indicies.push_back(face.mIndices[0]);
+			_geometry.indicies.push_back(face.mIndices[1]);
+			_geometry.indicies.push_back(face.mIndices[2]);
+		}
+	}
+
+	//process each of the nodes children
+	for (int i = 0; i < node->mNumChildren; i++)
+	{
+		processNode(node->mChildren[i], scene, _geometry);
+	}
+}

@@ -26,6 +26,7 @@ public:
 	void Update(ecs::Scene& scene, float deltaTime);
 	void input(SDL_Event&, int _cameraID);
 	glm::mat4 getCameraView();
+	static void importOBJ(CPU_Geometry& _geometry, const std::string _fileName);
 	static void importOBJ(RenderModel& _component, const std::string _fileName);
 private:
 	Camera cameras[4];
@@ -40,4 +41,5 @@ private:
 	ShaderProgram lineShader;
 	glm::ivec2 windowSize;
 	static void processNode(aiNode* node, const aiScene* scene, RenderModel& _component);
+	static void processNode(aiNode* node, const aiScene* scene, CPU_Geometry& _geometry);
 };
