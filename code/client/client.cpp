@@ -18,6 +18,8 @@
 #include "FrameCounter.h"
 #include "systems/ai.h"
 
+#include "ImGuiDebug.h"
+
 #include "Time.h"
 
 glm::vec3 calculateSpherePoint(float s, float t)
@@ -359,6 +361,8 @@ int main(int argc, char* argv[]) {
 		//ImGui::ShowDemoWindow();
 
 		gs.ImGuiPanel();
+		// Loads the imgui panel that lets you reload vehicle JSONs
+		reloadVehicleJSON();
 
 		ImGui::Render();
 		glViewport(0, 0, (int)io.DisplaySize.x, (int)io.DisplaySize.y);
