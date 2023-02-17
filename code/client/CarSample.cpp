@@ -81,23 +81,7 @@
 // It is a good idea to record and playback with pvd (PhysX Visual Debugger).
 // ****************************************************************************
 
-#include <ctype.h>
-#include <iostream>
-
-#include "PxPhysicsAPI.h"
-#include "vehicle2/PxVehicleAPI.h"
-#include "physx/snippetvehicle2common/enginedrivetrain/EngineDrivetrain.h"
-#include "physx/snippetvehicle2common/serialization/BaseSerialization.h"
-#include "physx/snippetvehicle2common/serialization/EngineDrivetrainSerialization.h"
-#include "physx/snippetvehicle2common/SnippetVehicleHelpers.h"
-
-#include "physx/snippetcommon/SnippetPVD.h"
-
-#include "Time.h"
-
-using namespace physx;
-using namespace physx::vehicle2;
-using namespace snippetvehicle2;
+#include "CarSample.h"
 
 // PhysX management class instances.
 
@@ -132,15 +116,6 @@ PxReal gPhysXDefaultMaterialFriction = 1.0f;
 // Give the vehicle a name so it can be identified in PVD.
 const char gVehicleName[] = "engineDrive";
 
-// Commands are issued to the vehicle in a pre-choreographed sequence.
-struct Command
-{
-  PxF32 brake;
-  PxF32 throttle;
-  PxF32 steer;
-  PxU32 gear;
-  // PxF32 duration;
-};
 const PxU32 gTargetGearCommand = PxVehicleEngineDriveTransmissionCommandState::eAUTOMATIC_GEAR;
 Command gCommands[] =
     {
