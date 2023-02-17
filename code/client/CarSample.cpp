@@ -93,6 +93,8 @@
 
 #include "physx/snippetcommon/SnippetPVD.h"
 
+#include "Time.h"
+
 using namespace physx;
 using namespace physx::vehicle2;
 using namespace snippetvehicle2;
@@ -350,7 +352,7 @@ float carBrake = 1.f;
 float carAxis = 0.f;
 float carAxisScale = 1.f;
 
-void stepPhysics(SDL_GameController *controller, float timestep)
+void stepPhysics(SDL_GameController *controller, Timestep timestep)
 {   
     
     auto keys_arr = SDL_GetKeyboardState(nullptr);
@@ -359,8 +361,8 @@ void stepPhysics(SDL_GameController *controller, float timestep)
     auto a_key = keys_arr[SDL_SCANCODE_A];
     auto d_key = keys_arr[SDL_SCANCODE_D];
 
-    const float max_time_step = 0.2f;
-    timestep = std::min(timestep, max_time_step);
+    float delta_seconds = timestep.getSeconds();
+    assert(delta_seconds > 0.f && delta_seconds < 0.2000001f);
   // Apply the brake, throttle and steer to the command state of the vehicle.
   // const Command &command = gCommands[gCommandProgress];
 
@@ -408,10 +410,10 @@ void stepPhysics(SDL_GameController *controller, float timestep)
   const PxReal forwardSpeed = linVel.dot(forwardDir);
   const PxU8 nbSubsteps = (forwardSpeed < 5.0f ? 3 : 1);
   gVehicle.mComponentSequence.setSubsteps(gVehicle.mComponentSequenceSubstepGroupHandle, nbSubsteps);
-  gVehicle.step(timestep, gVehicleSimulationContext);
+  gVehicle.step(delta_seconds, gVehicleSimulationContext);
 
   // Forward integrate the phsyx scene by a single timestep.
-  gScene->simulate(timestep);
+  gScene->simulate(delta_seconds);
   gScene->fetchResults(true);
 }
 
