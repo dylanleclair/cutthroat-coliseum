@@ -19,10 +19,23 @@
 void variableInit() {
 	rigid_mass = gVehicle.mBaseParams.rigidBodyParams.mass;
 	rigid_MOI = gVehicle.mBaseParams.rigidBodyParams.moi;
+
 	brake_max = gVehicle.mBaseParams.brakeResponseParams->maxResponse;
 	brake_response_multip = gVehicle.mBaseParams.brakeResponseParams->wheelResponseMultipliers;
+
 	steer_max_response = gVehicle.mBaseParams.steerResponseParams.maxResponse;
 	steer_multiplier = gVehicle.mBaseParams.steerResponseParams.wheelResponseMultipliers;
+
+	number_of_wheels = 4;
+	// Grabs values from each wheel and assigns it to variables for this file to edit
+	for (int i = 0; i < number_of_wheels; i++) {
+		wheel_radius[i] = gVehicle.mBaseParams.wheelParams[i].radius;
+		wheel_half_width[i] = gVehicle.mBaseParams.wheelParams[i].halfWidth;
+		wheel_mass[i] = gVehicle.mBaseParams.wheelParams[i].mass;
+		wheel_moi[i] = gVehicle.mBaseParams.wheelParams[i].moi;
+		wheel_dampening[i] = gVehicle.mBaseParams.wheelParams[i].dampingRate;
+	}
+	
 }
 
 // Possible other tuning to add - Ackerman, Axle 
@@ -62,20 +75,19 @@ void vehicleTuning() {
 		}
 
 		if (ImGui::TreeNode("Wheel Response Multipliers")) {
-			ImGui::Text("Left and right might not be in the right order, front and left and rear are correct");
 			ImGui::Text("These are multipliers, 0.0 means the brake is disabled, 1.0 is full brake power");
 			ImGui::Text("Handbrake = 0 front, 1 back");
 
-			if (ImGui::SliderFloat("Front Left Wheel:", &brake_response_multip[0], 0.f, 1.f)) {
+			if (ImGui::SliderFloat("Front Right Wheel:", &brake_response_multip[0], 0.f, 1.f)) {
 				gVehicle.mBaseParams.brakeResponseParams->wheelResponseMultipliers[0] = brake_response_multip[0];
 			}
-			if (ImGui::SliderFloat("Front Right Wheel:", &brake_response_multip[1], 0.f, 1.f)) {
+			if (ImGui::SliderFloat("Front Left Wheel:", &brake_response_multip[1], 0.f, 1.f)) {
 				gVehicle.mBaseParams.brakeResponseParams->wheelResponseMultipliers[1] = brake_response_multip[1];
 			}
-			if (ImGui::SliderFloat("Rear Left Wheel:", &brake_response_multip[2], 0.f, 1.f)) {
+			if (ImGui::SliderFloat("Rear Right Wheel:", &brake_response_multip[2], 0.f, 1.f)) {
 				gVehicle.mBaseParams.brakeResponseParams->wheelResponseMultipliers[2] = brake_response_multip[2];
 			}
-			if (ImGui::SliderFloat("Read Right Wheel:", &brake_response_multip[3], 0.f, 1.f)) {
+			if (ImGui::SliderFloat("Read Left Wheel:", &brake_response_multip[3], 0.f, 1.f)) {
 				gVehicle.mBaseParams.brakeResponseParams->wheelResponseMultipliers[3] = brake_response_multip[3];
 			}
 
@@ -97,18 +109,17 @@ void vehicleTuning() {
 
 		if (ImGui::TreeNode("Wheel Response Multiplier")) {
 			ImGui::Text("0.0 disables steering with that wheel");
-			ImGui::Text("These might be in the wrong order, forward and backwards is correct though");
 
-			if (ImGui::SliderFloat("Front Left Wheel", &steer_multiplier[0], 0.f, 1.f)) {
+			if (ImGui::SliderFloat("Front Right Wheel", &steer_multiplier[0], 0.f, 1.f)) {
 				gVehicle.mBaseParams.steerResponseParams.wheelResponseMultipliers[0] = steer_multiplier[0];
 			}
-			if (ImGui::SliderFloat("Front Right Wheel", &steer_multiplier[1], 0.f, 1.f)) {
+			if (ImGui::SliderFloat("Front Left Wheel", &steer_multiplier[1], 0.f, 1.f)) {
 				gVehicle.mBaseParams.steerResponseParams.wheelResponseMultipliers[1] = steer_multiplier[1];
 			}
-			if (ImGui::SliderFloat("Back Left Wheel", &steer_multiplier[2], 0.f, 1.f)) {
+			if (ImGui::SliderFloat("Back Right Wheel", &steer_multiplier[2], 0.f, 1.f)) {
 				gVehicle.mBaseParams.steerResponseParams.wheelResponseMultipliers[2] = steer_multiplier[2];
 			}
-			if (ImGui::SliderFloat("Back Right Wheel", &steer_multiplier[3], 0.f, 1.f)) {
+			if (ImGui::SliderFloat("Back Left Wheel", &steer_multiplier[3], 0.f, 1.f)) {
 				gVehicle.mBaseParams.steerResponseParams.wheelResponseMultipliers[3] = steer_multiplier[3];
 			}
 
@@ -118,12 +129,143 @@ void vehicleTuning() {
 	}
 
 
+	// TODO:: Make this dynamic based on number of wheels - probably unecessary for this project
+	// Wheel Params
+	if (ImGui::TreeNode("Wheel Params:")) {
+		ImGui::Text("Caution: Changing these values may break the simulation")
+		// Front Right Wheel
+		if (ImGui::TreeNode("Front Right Wheel:")) {
+			ImGui::Text("Distance between the center of the wheel and the outside of the rim");
+			ImGui::Text("Ideally exported from 3D modeler");
+			if (ImGui::InputFloat("Radius", &wheel_radius[0])) {
+				gVehicle.mBaseParams.wheelParams[0].radius = wheel_radius[0];
+			}
+			if (ImGui::InputFloat("Half Width", &wheel_half_width[0])) {
+				gVehicle.mBaseParams.wheelParams[0].halfWidth = wheel_half_width[0];
+			}
+			ImGui::Text("Combined mass of wheel + tire. Typical mass 20-80kg");
+			if (ImGui::InputFloat("Mass", &wheel_mass[0])) {
+				gVehicle.mBaseParams.wheelParams[0].mass = wheel_mass[0];
+			}
+			ImGui::Text("Large MOI values make it harder for the wheel to rotate around its axis");
+			ImGui::Text("Large MOI = less wheelspin when high acceleration");
+			ImGui::Text("Formula: moi = 0.5 * mass * radius^2");
+			if (ImGui::InputFloat("MOI", & wheel_moi[0])) {
+				gVehicle.mBaseParams.wheelParams[0].moi = wheel_moi[0];
+			}
+			ImGui::Text("Dampening is how quickly a spinning wheel comes to rest");
+			ImGui::Text("Higher values make wheel come to rest faster (short amount of time)");
+			ImGui::Text("Sensible Range 0.25-2, avoid value of 0");
+			if (ImGui::InputFloat("Dampening", &wheel_dampening[0])) {
+				gVehicle.mBaseParams.wheelParams[0].dampingRate = wheel_dampening[0];
+			}
+
+
+			ImGui::TreePop();
+		}
+
+		// Front Left Wheel
+		if (ImGui::TreeNode("Front Left Wheel:")) {
+			ImGui::Text("Distance between the center of the wheel and the outside of the rim");
+			ImGui::Text("Ideally exported from 3D modeler");
+			if (ImGui::InputFloat("Radius", &wheel_radius[1])) {
+				gVehicle.mBaseParams.wheelParams[1].radius = wheel_radius[1];
+			}
+			if (ImGui::InputFloat("Half Width", &wheel_half_width[1])) {
+				gVehicle.mBaseParams.wheelParams[1].halfWidth = wheel_half_width[1];
+			}
+			ImGui::Text("Combined mass of wheel + tire. Typical mass 20-80kg");
+			if (ImGui::InputFloat("Mass", &wheel_mass[1])) {
+				gVehicle.mBaseParams.wheelParams[1].mass = wheel_mass[1];
+			}
+			ImGui::Text("Large MOI values make it harder for the wheel to rotate around its axis");
+			ImGui::Text("Large MOI = less wheelspin when high acceleration");
+			ImGui::Text("Formula: moi = 0.5 * mass * radius^2");
+			if (ImGui::InputFloat("MOI", &wheel_moi[1])) {
+				gVehicle.mBaseParams.wheelParams[1].moi = wheel_moi[1];
+			}
+			ImGui::Text("Dampening is how quickly a spinning wheel comes to rest");
+			ImGui::Text("Higher values make wheel come to rest faster (short amount of time)");
+			ImGui::Text("Sensible Range 0.25-2, avoid value of 0");
+			if (ImGui::InputFloat("Dampening", &wheel_dampening[1])) {
+				gVehicle.mBaseParams.wheelParams[1].dampingRate = wheel_dampening[1];
+			}
+
+
+			ImGui::TreePop();
+		}
+
+		// Rear Right Wheel
+		if (ImGui::TreeNode("Rear Right Wheel:")) {
+			ImGui::Text("Distance between the center of the wheel and the outside of the rim");
+			ImGui::Text("Ideally exported from 3D modeler");
+			if (ImGui::InputFloat("Radius", &wheel_radius[2])) {
+				gVehicle.mBaseParams.wheelParams[2].radius = wheel_radius[2];
+			}
+			if (ImGui::InputFloat("Half Width", &wheel_half_width[0])) {
+				gVehicle.mBaseParams.wheelParams[2].halfWidth = wheel_half_width[2];
+			}
+			ImGui::Text("Combined mass of wheel + tire. Typical mass 20-80kg");
+			if (ImGui::InputFloat("Mass", &wheel_mass[2])) {
+				gVehicle.mBaseParams.wheelParams[2].mass = wheel_mass[2];
+			}
+			ImGui::Text("Large MOI values make it harder for the wheel to rotate around its axis");
+			ImGui::Text("Large MOI = less wheelspin when high acceleration");
+			ImGui::Text("Formula: moi = 0.5 * mass * radius^2");
+			if (ImGui::InputFloat("MOI", &wheel_moi[2])) {
+				gVehicle.mBaseParams.wheelParams[2].moi = wheel_moi[2];
+			}
+			ImGui::Text("Dampening is how quickly a spinning wheel comes to rest");
+			ImGui::Text("Higher values make wheel come to rest faster (short amount of time)");
+			ImGui::Text("Sensible Range 0.25-2, avoid value of 0");
+			if (ImGui::InputFloat("Dampening", &wheel_dampening[2])) {
+				gVehicle.mBaseParams.wheelParams[2].dampingRate = wheel_dampening[2];
+			}
+
+
+			ImGui::TreePop();
+		}
+
+		// Rear Left Wheel
+		if (ImGui::TreeNode("Rear Left Wheel:")) {
+			ImGui::Text("Distance between the center of the wheel and the outside of the rim");
+			ImGui::Text("Ideally exported from 3D modeler");
+			if (ImGui::InputFloat("Radius", &wheel_radius[3])) {
+				gVehicle.mBaseParams.wheelParams[3].radius = wheel_radius[3];
+			}
+			if (ImGui::InputFloat("Half Width", &wheel_half_width[3])) {
+				gVehicle.mBaseParams.wheelParams[3].halfWidth = wheel_half_width[3];
+			}
+			ImGui::Text("Combined mass of wheel + tire. Typical mass 20-80kg");
+			if (ImGui::InputFloat("Mass", &wheel_mass[3])) {
+				gVehicle.mBaseParams.wheelParams[3].mass = wheel_mass[3];
+			}
+			ImGui::Text("Large MOI values make it harder for the wheel to rotate around its axis");
+			ImGui::Text("Large MOI = less wheelspin when high acceleration");
+			ImGui::Text("Formula: moi = 0.5 * mass * radius^2");
+			if (ImGui::InputFloat("MOI", &wheel_moi[3])) {
+				gVehicle.mBaseParams.wheelParams[3].moi = wheel_moi[3];
+			}
+			ImGui::Text("Dampening is how quickly a spinning wheel comes to rest");
+			ImGui::Text("Higher values make wheel come to rest faster (short amount of time)");
+			ImGui::Text("Sensible Range 0.25-2, avoid value of 0");
+			if (ImGui::InputFloat("Dampening", &wheel_dampening[3])) {
+				gVehicle.mBaseParams.wheelParams[3].dampingRate = wheel_dampening[3];
+			}
+
+
+			ImGui::TreePop();
+		}
+
+		ImGui::TreePop();
+	}
+
 
 	ImGui::End();
 }
 
 void reloadVehicleJSON() {
-	ImGui::Begin("Vehicle Variables");
+	ImGui::Begin("Vehicle Serialization");
 
 
 
