@@ -236,20 +236,36 @@ void GraphicsSystem::processNode(aiNode* node, const aiScene* scene, RenderModel
 			geometry.indicies.push_back(face.mIndices[2]);
 		}
 		std::cout << "\t\tindicies: " << geometry.indicies.size() << '\n';
+		std::cout << "finished processing node\n";
+		int ID = _component.attachMesh(geometry);
 		// process material
-		/* SAM TODO. Quite frankly this breaks my mind rn with the fact a material can have MULTIPLE textures SOMEHOW
+		//SAM TODO. Quite frankly this breaks my mind rn with the fact a material can have MULTIPLE textures SOMEHOW
 		if (mesh->mMaterialIndex >= 0)
 		{
 			aiMaterial* material = scene->mMaterials[mesh->mMaterialIndex];
-			vector<Texture> diffuseMaps = loadMaterialTextures(material,
-				aiTextureType_DIFFUSE, "texture_diffuse");
-			textures.insert(textures.end(), diffuseMaps.begin(), diffuseMaps.end());
-			vector<Texture> specularMaps = loadMaterialTextures(material,
-				aiTextureType_SPECULAR, "texture_specular");
-			textures.insert(textures.end(), specularMaps.begin(), specularMaps.end());
-		}*/
-		std::cout << "finished processing node\n";
-		_component.attachMesh(geometry);
+			//std::cout << "HELLO           " << material->GetTextureCount(aiTextureType_DIFFUSE) << '\n';
+			if (material->GetTextureCount(aiTextureType_DIFFUSE) > 0) {
+				//get the textures name(?)
+				aiString str;
+				material->GetTexture(aiTextureType_DIFFUSE, 0, &str);
+				std::cout << "Material has a texture " << str.C_Str() << '\n';
+				std::string temp = std::string(str.C_Str());
+				std::string temp2;
+				for (int i = temp.size()-1; i >= 0; i--) {
+					if (temp[i] != '\\')
+						temp2.push_back(temp[i]);
+					else
+						break;
+				}
+				temp.clear();
+				//reverse the string
+				for (int i = temp2.size() - 1; i >= 0; i--) {
+					temp.push_back(temp2[i]);
+				}
+				
+				_component.attachTexture(temp, ID);
+			}
+		}
 	}
 
 	//process each of the nodes children
