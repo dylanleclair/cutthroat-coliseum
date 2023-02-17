@@ -15,7 +15,7 @@ float euclideanXZ(glm::vec3 a, glm::vec3 b)
     float deltaX = b.x - a.x;
     float deltaZ = b.z - a.z;
 
-    float dist = pow(deltaX, 2) + pow(deltaZ,2);
+    float dist = pow(deltaX, 2) + pow(deltaZ, 2);
     return sqrt(dist);
 }
 
@@ -33,32 +33,29 @@ void AISystem::Update(ecs::Scene& scene, float deltaTime) {
         Guid targetEntity = p.targetEntity;
 
         if (scene.HasComponent<TransformComponent>(targetEntity))
-        {   
+        {
             TransformComponent targetPosition = scene.GetComponent<TransformComponent>(targetEntity);
-            std::vector<glm::vec3> path = pathfinding::AStar<glm::vec3>(roundPosition(position.getPosition()),roundPosition(targetPosition.getPosition()),euclideanXZ,AISystem::generateNearby);
-            
+            std::vector<glm::vec3> path = pathfinding::AStar<glm::vec3>(roundPosition(position.getPosition()), roundPosition(targetPosition.getPosition()), euclideanXZ, AISystem::generateNearby);
+
             // std::vector<glm::vec3> path = {glm::vec3{0.f},glm::vec3{0.5f}, glm::vec3{0.6f}};
-            for (auto& pos: path)
+            for (auto& pos : path)
             {
-                pathGeom.verts.push_back(glm::vec3{pos});
-                pathGeom.cols.push_back(glm::vec3(1.0f, 0.f, 1.0f));
+                pathGeom.verts.push_back(glm::vec3{ pos });
+                //pathGeom.cols.push_back(glm::vec3(1.0f, 0.f, 1.0f));
             }
         }
     }
 
     // want some way to render the path!
-
-    RenderComponent& pathRenderer = scene.GetComponent<RenderComponent>(this->m_rendererGuid);
-    pathRenderer = RenderComponent{&pathGeom};
-    pathRenderer.appearance = 2;
-
+    scene.GetComponent<RenderLine>(this->m_rendererGuid).setGeometry(pathGeom);
+    scene.GetComponent<RenderLine>(this->m_rendererGuid).setColor(glm::vec3(1,0,0));
 }
 
 std::vector<std::pair<glm::vec3, float>> AISystem::generateNearby(glm::vec3 initial)
 {
     std::vector<std::pair<glm::vec3, float>> output;
     // we will only go along z plane for now
-    glm::vec3 current{initial};
+    glm::vec3 current{ initial };
 
 
     // four cardinal directions (on x-z plane)
@@ -74,4 +71,4 @@ std::vector<std::pair<glm::vec3, float>> AISystem::generateNearby(glm::vec3 init
     output.push_back({ { initial.x - 1, initial.y, initial.z + 1}, sqrt(2.f) });
 
     return output;
-}        
+}

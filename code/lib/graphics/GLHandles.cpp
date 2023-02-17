@@ -145,6 +145,43 @@ GLuint VertexBufferHandle::value() const {
 	return vboID;
 }
 
+//------------------------------------------------------------------------------
+
+
+IndexBufferHandle::IndexBufferHandle()
+	: vboID(0) // Due to OpenGL syntax, we can't initial directly here, like we want.
+{
+	glGenBuffers(1, &vboID);
+}
+
+
+IndexBufferHandle::IndexBufferHandle(IndexBufferHandle&& other) noexcept
+	: vboID(std::move(other.vboID))
+{
+	other.vboID = 0;
+}
+
+
+IndexBufferHandle& IndexBufferHandle::operator=(IndexBufferHandle&& other) noexcept {
+	std::swap(vboID, other.vboID);
+	return *this;
+}
+
+
+IndexBufferHandle::~IndexBufferHandle() {
+	glDeleteBuffers(1, &vboID);
+}
+
+
+IndexBufferHandle::operator GLuint() const {
+	return vboID;
+}
+
+
+GLuint IndexBufferHandle::value() const {
+	return vboID;
+}
+
 
 //------------------------------------------------------------------------------
 

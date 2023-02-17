@@ -26,26 +26,18 @@ public:
 	void Update(ecs::Scene& scene, float deltaTime);
 	void input(SDL_Event&, int _cameraID);
 	glm::mat4 getCameraView();
-	static void readVertsFromFile(RenderComponent& _component, const std::string _file, const std::string _textureFile = "");
+	static void importOBJ(RenderModel& _component, const std::string _fileName);
 private:
 	Camera cameras[4];
 	//uniforms
 	int numCamerasActive = 1;
+
 	int cam_mode = 1; // Used to determine what mode the camera should use (free, fixed, follow)
-	GLint modelUniform = -1;
-	GLuint viewUniform = -1;
-	GLuint perspectiveUniform = -1;
-	GLuint shaderSelectorUniform = -1;
-	GLuint textureUniform = -1;
-	GLuint normalMatUniform = -1;
-	GLuint lightUniform = -1;
-	GLuint viewPosUniform = -1;
-	GLuint ambiantStrengthUniform = -1;
-	GLuint specularStrengthUniform = -1;
-	GLuint colorUniform = -1;
 	glm::mat4 V = glm::mat4(1.f); // Had to declare this variable here for the rest of the program to work
 
-	ShaderProgram shader;
+
+	ShaderProgram modelShader;
+	ShaderProgram lineShader;
 	glm::ivec2 windowSize;
-	static void processNode(aiNode* node, const aiScene* scene, CPU_Geometry* geom);
+	static void processNode(aiNode* node, const aiScene* scene, RenderModel& _component);
 };
