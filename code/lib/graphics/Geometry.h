@@ -8,6 +8,7 @@
 
 #include "VertexArray.h"
 #include "VertexBuffer.h"
+#include "IndexBuffer.h"
 
 #include <GL/glew.h>
 #include <glm/glm.hpp>
@@ -20,7 +21,7 @@
 struct CPU_Geometry {
 	std::string texPath;
 	std::vector<glm::vec3> verts;
-	std::vector<glm::vec3> cols;
+	std::vector<GLuint> indicies;
 	std::vector<glm::vec2> texs;
 	std::vector<glm::vec3> norms;
 };
@@ -33,20 +34,21 @@ public:
 	GPU_Geometry();
 
 	// Public interface
-	void bind() { vao.bind(); }
+	void bind() { vao.bind(); indexBuffer.bind(); }
 
 	void setVerts(const std::vector<glm::vec3>& verts);
-	void setCols(const std::vector<glm::vec3>& cols);
 	void setTexCoords(const std::vector<glm::vec2>& texCoords);
 	void setNorms(const std::vector<glm::vec3>& norms);
+	void setIndexBuff(const std::vector<GLuint>);
 
 private:
 	// note: due to how OpenGL works, vao needs to be 
 	// defined and initialized before the vertex buffers
 	VertexArray vao;
 
+	IndexBuffer indexBuffer;
+
 	VertexBuffer vertBuffer;
-	VertexBuffer colBuffer;
 	VertexBuffer texCoordBuffer;
 	VertexBuffer normBuffer;
 };

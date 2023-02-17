@@ -6,7 +6,8 @@
 Camera::Camera() {}
 
 // takes in a point and calculates the angles for the camera to look at that point from its position
-void Camera::lookat(float x, float y, float z) {
+void Camera::lookat(glm::vec3 _target) {
+
 }
 
 glm::mat4 Camera::getView()
@@ -86,4 +87,9 @@ void Camera::input(const SDL_Event& _event) {
 glm::vec3 Camera::getPos()
 {
 	return cameraPos;
+}
+
+void Camera::setPos(glm::vec3 _position)
+{
+	cameraPos = _position;
 }
