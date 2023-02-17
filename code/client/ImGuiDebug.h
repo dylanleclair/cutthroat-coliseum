@@ -13,7 +13,11 @@ static PxVec3 rigid_MOI;
 
 // Brake Command Response Params
 static float brake_max;
-static PxReal *wheel_response_multip;
+static PxReal *brake_response_multip;
+
+// Steer Command Response Params
+static PxF32 steer_max_response;
+static PxReal *steer_multiplier;
 
 void variableInit();
 void vehicleTuning();

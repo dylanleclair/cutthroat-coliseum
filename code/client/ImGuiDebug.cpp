@@ -20,12 +20,17 @@ void variableInit() {
 	rigid_mass = gVehicle.mBaseParams.rigidBodyParams.mass;
 	rigid_MOI = gVehicle.mBaseParams.rigidBodyParams.moi;
 	brake_max = gVehicle.mBaseParams.brakeResponseParams->maxResponse;
-	wheel_response_multip = gVehicle.mBaseParams.brakeResponseParams->wheelResponseMultipliers;
+	brake_response_multip = gVehicle.mBaseParams.brakeResponseParams->wheelResponseMultipliers;
+	steer_max_response = gVehicle.mBaseParams.steerResponseParams.maxResponse;
+	steer_multiplier = gVehicle.mBaseParams.steerResponseParams.wheelResponseMultipliers;
 }
+
+// Possible other tuning to add - Ackerman, Axle 
 
 void vehicleTuning() {
 	ImGui::Begin("Tuning");
 
+	// Rigid Body params
 	if (ImGui::TreeNode("Rigid Body:")) {
 
 		if (ImGui::InputFloat("Mass: (in kg)", &rigid_mass)) {
@@ -49,7 +54,8 @@ void vehicleTuning() {
 		ImGui::TreePop();
 	}
 
-	if (ImGui::TreeNode("Brake Command Reponse Params:")) {
+	// Brake Commands
+	if (ImGui::TreeNode("Brake Command Response Params:")) {
 		ImGui::Text("Higher torque locks wheels quicker - Value strongly related to wheel MOI");
 		if (ImGui::InputFloat("Max Response:", &brake_max)) {			
 			gVehicle.mBaseParams.brakeResponseParams->maxResponse = brake_max;
@@ -58,23 +64,56 @@ void vehicleTuning() {
 		if (ImGui::TreeNode("Wheel Response Multipliers")) {
 			ImGui::Text("Left and right might not be in the right order, front and left and rear are correct");
 			ImGui::Text("These are multipliers, 0.0 means the brake is disabled, 1.0 is full brake power");
+			ImGui::Text("Handbrake = 0 front, 1 back");
 
-			if (ImGui::SliderFloat("Front Left Wheel:", &wheel_response_multip[0], 0.f, 1.f)) {
-				gVehicle.mBaseParams.brakeResponseParams->wheelResponseMultipliers[0] = wheel_response_multip[0];
+			if (ImGui::SliderFloat("Front Left Wheel:", &brake_response_multip[0], 0.f, 1.f)) {
+				gVehicle.mBaseParams.brakeResponseParams->wheelResponseMultipliers[0] = brake_response_multip[0];
 			}
-			if (ImGui::SliderFloat("Front Right Wheel:", &wheel_response_multip[1], 0.f, 1.f)) {
-				gVehicle.mBaseParams.brakeResponseParams->wheelResponseMultipliers[1] = wheel_response_multip[1];
+			if (ImGui::SliderFloat("Front Right Wheel:", &brake_response_multip[1], 0.f, 1.f)) {
+				gVehicle.mBaseParams.brakeResponseParams->wheelResponseMultipliers[1] = brake_response_multip[1];
 			}
-			if (ImGui::SliderFloat("Rear Left Wheel:", &wheel_response_multip[2], 0.f, 1.f)) {
-				gVehicle.mBaseParams.brakeResponseParams->wheelResponseMultipliers[2] = wheel_response_multip[2];
+			if (ImGui::SliderFloat("Rear Left Wheel:", &brake_response_multip[2], 0.f, 1.f)) {
+				gVehicle.mBaseParams.brakeResponseParams->wheelResponseMultipliers[2] = brake_response_multip[2];
 			}
-			if (ImGui::SliderFloat("Read Right Wheel:", &wheel_response_multip[3], 0.f, 1.f)) {
-				gVehicle.mBaseParams.brakeResponseParams->wheelResponseMultipliers[3] = wheel_response_multip[3];
+			if (ImGui::SliderFloat("Read Right Wheel:", &brake_response_multip[3], 0.f, 1.f)) {
+				gVehicle.mBaseParams.brakeResponseParams->wheelResponseMultipliers[3] = brake_response_multip[3];
 			}
 
 			ImGui::TreePop();
 		}
 
+		ImGui::TreePop();
+	}
+
+	// Steer Commands
+	if (ImGui::TreeNode("Steer Response Params:")) {
+		ImGui::Text("Yaw angle of the wheel in radians when steering wheel is at full lock");
+		ImGui::Text("30 - 90 Degrees is a good starting point (0.523 - 1.57)");
+		ImGui::Text("Large angles at large speeds will cause vehicle to lose traction");
+		ImGui::Text("To avoid traction loss, filter the steer angle passed to the car at run-time to generate smaller steer angles are larger speeds");
+		if (ImGui::InputFloat("Max Response:", &steer_max_response)) {
+			gVehicle.mBaseParams.steerResponseParams.maxResponse = steer_max_response;
+		}
+
+		if (ImGui::TreeNode("Wheel Response Multiplier")) {
+			ImGui::Text("0.0 disables steering with that wheel");
+			ImGui::Text("These might be in the wrong order, forward and backwards is correct though");
+
+			if (ImGui::SliderFloat("Front Left Wheel", &steer_multiplier[0], 0.f, 1.f)) {
+				gVehicle.mBaseParams.steerResponseParams.wheelResponseMultipliers[0] = steer_multiplier[0];
+			}
+			if (ImGui::SliderFloat("Front Right Wheel", &steer_multiplier[1], 0.f, 1.f)) {
+				gVehicle.mBaseParams.steerResponseParams.wheelResponseMultipliers[1] = steer_multiplier[1];
+			}
+			if (ImGui::SliderFloat("Back Left Wheel", &steer_multiplier[2], 0.f, 1.f)) {
+				gVehicle.mBaseParams.steerResponseParams.wheelResponseMultipliers[2] = steer_multiplier[2];
+			}
+			if (ImGui::SliderFloat("Back Right Wheel", &steer_multiplier[3], 0.f, 1.f)) {
+				gVehicle.mBaseParams.steerResponseParams.wheelResponseMultipliers[3] = steer_multiplier[3];
+			}
+
+			ImGui::TreePop();
+		}
 		ImGui::TreePop();
 	}
 
