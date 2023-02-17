@@ -250,7 +250,7 @@ int main(int argc, char* argv[]) {
 			uint32_t now_millisecs = SDL_GetTicks();
 			uint32_t delta_millisecs = now_millisecs - lastTime_millisecs;
 			if (delta_millisecs == 0); delta_millisecs = 1; // HACK: pretend at least one millisecond passes between each frame
-			if (delta_millisecs > 200) delta_millisecs = 200;
+			if (delta_millisecs > 200) delta_millisecs = 200; // HACK: clamp delta time between frames so physics doesn't go boom
 			timestep = float(now_millisecs - lastTime_millisecs);
 			lastTime_millisecs = now_millisecs;
 		}
@@ -351,10 +351,11 @@ int main(int argc, char* argv[]) {
 		ImGui::NewFrame();
 
 		// BEGIN FRAMERATE COUNTER
+		framerate.update(timestep);
 		ImGui::SetNextWindowSize(ImVec2(500, 100)); 
 		ImGui::Begin("Milestone 2");
-		ImGui::Text("framerate: %d", framerate.framerate());
-        ImGui::PlotLines("Frametime plot (ms)", framerate.m_time_queue.data(), framerate.m_time_queue.size());
+		ImGui::Text("framerate: %d", (int) framerate.framerate());
+        ImGui::PlotLines("Frametime plot (ms)", framerate.m_time_queue_ms.data(), framerate.m_time_queue_ms.size());
         ImGui::PlotLines("Framerate plot (hz)", framerate.m_rate_queue.data(), framerate.m_rate_queue.size());
 		// TODO(milestone 1): display physx value as proof that physx is initialized
 		ImGui::End();
@@ -370,7 +371,7 @@ int main(int argc, char* argv[]) {
 		}
 
 		// PHYSX DRIVER UPDATE
-		stepPhysics(controller, framerate.m_time_queue.front() / 1000.f);
+		//stepPhysics(controller, framerate.m_time_queue_ms.front() / 1000.f);
 
 
 		// TODO(milestone 1): strip all non-milestone related imgui windows out
