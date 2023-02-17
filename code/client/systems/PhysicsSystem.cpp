@@ -10,7 +10,7 @@ namespace physics
     {
 		initPhysX();
 		initGroundPlane();
-		// initMaterialFrictionTable();
+		initMaterialFrictionTable();
 		// if (!initVehicles())
 		// 	return false;
 		// return true;

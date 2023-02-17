@@ -45,7 +45,7 @@ struct PhysicsSystem : ecs::ISystem
     PxRigidStatic* gGroundPlane;
 
 	// Gravitational acceleration
-	const PxVec3 m_Gravity;
+	const PxVec3 m_Gravity{0.0f, -9.81f, 0.0f};
 
 	virtual void Update(ecs::Scene& scene, float deltaTime);
 

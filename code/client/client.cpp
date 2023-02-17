@@ -34,18 +34,6 @@ glm::vec3 calculateSpherePoint(float s, float t)
 	return(glm::vec3(x, y, z));
 }
 
-using namespace physx;
-
-// extern PxRigidBody* getVehicleRigidBody();
-// extern bool initPhysics();
-// extern void stepPhysics(SDL_GameController* controller, Timestep timestep);
-// extern void cleanupPhysics();
-// extern int carSampleInit();
-
-// extern PxScene* gScene;
-
-
-
 CarPhysics carPhysics;
 CarPhysicsSerde carConfig(carPhysics);
 
