@@ -132,7 +132,7 @@ void vehicleTuning() {
 	// TODO:: Make this dynamic based on number of wheels - probably unecessary for this project
 	// Wheel Params
 	if (ImGui::TreeNode("Wheel Params:")) {
-		ImGui::Text("Caution: Changing these values may break the simulation")
+		ImGui::Text("Caution: Changing these values may break the simulation");
 		// Front Right Wheel
 		if (ImGui::TreeNode("Front Right Wheel:")) {
 			ImGui::Text("Distance between the center of the wheel and the outside of the rim");
