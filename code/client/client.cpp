@@ -18,6 +18,10 @@
 #include "FrameCounter.h"
 #include "systems/ai.h"
 
+#include "ImGuiDebug.h"
+
+#include "Time.h"
+
 glm::vec3 calculateSpherePoint(float s, float t)
 {
 	float z = cos(2 * M_PI * t) * sin(M_PI * s);
@@ -30,7 +34,7 @@ using namespace physx;
 
 extern PxRigidBody* getVehicleRigidBody();
 extern bool initPhysics();
-extern void stepPhysics(SDL_GameController* controller, float timestep);
+extern void stepPhysics(SDL_GameController* controller, Timestep timestep);
 extern void cleanupPhysics();
 extern int carSampleInit();
 
@@ -41,6 +45,8 @@ CarPhysicsSerde carConfig(carPhysics);
 
 int lapCount = 0;
 bool isFinished = false;
+
+uint32_t lastTime_millisecs;
 
 void finishLinePrint() {
 	lapCount++;
@@ -58,6 +64,8 @@ int main(int argc, char* argv[]) {
 
 	SDL_Init(SDL_INIT_EVERYTHING); // initialize all sdl systems
 	Window window(1200, 800, "Maximus Overdrive");
+
+	lastTime_millisecs = SDL_GetTicks();
 
 	ImGuiIO& io = ImGui::GetIO(); (void)io;
 
@@ -201,6 +209,17 @@ int main(int argc, char* argv[]) {
   
 	// GAME LOOP
 	while (!quit) {
+		Timestep timestep; // Time since last frame
+		{
+			uint32_t now_millisecs = SDL_GetTicks();
+			uint32_t delta_millisecs = now_millisecs - lastTime_millisecs;
+			if (delta_millisecs == 0) delta_millisecs = 1; // HACK: pretend at least one millisecond passes between each frame
+			if (delta_millisecs > 200) delta_millisecs = 200; // HACK: clamp delta time between frames so physics doesn't go boom
+			timestep = (float) delta_millisecs;
+			lastTime_millisecs = now_millisecs;
+		}
+
+
 		//polls all pending input events until there are none left in the queue
 		while (SDL_PollEvent(&window.event)) {
 			ImGui_ImplSDL2_ProcessEvent(&window.event);
@@ -288,17 +307,18 @@ int main(int argc, char* argv[]) {
 		ImGui::NewFrame();
 
 		// BEGIN FRAMERATE COUNTER
-		ImGui::SetNextWindowSize(ImVec2(500, 100));
+		framerate.update(timestep);
+		ImGui::SetNextWindowSize(ImVec2(500, 100)); 
 		ImGui::Begin("Milestone 2");
-		ImGui::Text("framerate: %d", framerate.framerate());
-		ImGui::PlotLines("Frametime plot (ms)", framerate.m_time_queue.data(), framerate.m_time_queue.size());
-		ImGui::PlotLines("Framerate plot (hz)", framerate.m_rate_queue.data(), framerate.m_rate_queue.size());
+		ImGui::Text("framerate: %d", (int) framerate.framerate());
+        ImGui::PlotLines("Frametime plot (ms)", framerate.m_time_queue_ms.data(), framerate.m_time_queue_ms.size());
+        ImGui::PlotLines("Framerate plot (hz)", framerate.m_rate_queue.data(), framerate.m_rate_queue.size());
 		// TODO(milestone 1): display physx value as proof that physx is initialized
 		ImGui::End();
 		// END FRAMERATE COUNTER
 
 		// PHYSX DRIVER UPDATE
-		stepPhysics(controller, framerate.m_time_queue.front() / 1000.f);
+		stepPhysics(controller, timestep);
 
 
 		// TODO(milestone 1): strip all non-milestone related imgui windows out
@@ -341,6 +361,8 @@ int main(int argc, char* argv[]) {
 		//ImGui::ShowDemoWindow();
 
 		gs.ImGuiPanel();
+		// Loads the imgui panel that lets you reload vehicle JSONs
+		reloadVehicleJSON();
 
 		ImGui::Render();
 		glViewport(0, 0, (int)io.DisplaySize.x, (int)io.DisplaySize.y);

@@ -4,7 +4,7 @@ file(GLOB_RECURSE SOURCES LIST_DIRECTORIES true *.h *.cpp *.hpp)
 
 set(SOURCES ${SOURCES})
 
-add_executable(${BINARY} ${SOURCES})
+add_executable(${BINARY} ${SOURCES} "ImGuiDebug.cpp" "CarSample.h" "ImGuiDebug.h")
 set_property(TARGET ${BINARY} PROPERTY MSVC_RUNTIME_LIBRARY "MultiThreadedDebugDLL")
 
 # PhysX does not have a find_package setup therefore we have to find it manually

@@ -81,21 +81,7 @@
 // It is a good idea to record and playback with pvd (PhysX Visual Debugger).
 // ****************************************************************************
 
-#include <ctype.h>
-#include <iostream>
-
-#include "PxPhysicsAPI.h"
-#include "vehicle2/PxVehicleAPI.h"
-#include "physx/snippetvehicle2common/enginedrivetrain/EngineDrivetrain.h"
-#include "physx/snippetvehicle2common/serialization/BaseSerialization.h"
-#include "physx/snippetvehicle2common/serialization/EngineDrivetrainSerialization.h"
-#include "physx/snippetvehicle2common/SnippetVehicleHelpers.h"
-
-#include "physx/snippetcommon/SnippetPVD.h"
-
-using namespace physx;
-using namespace physx::vehicle2;
-using namespace snippetvehicle2;
+#include "CarSample.h"
 
 // PhysX management class instances.
 
@@ -130,15 +116,6 @@ PxReal gPhysXDefaultMaterialFriction = 1.0f;
 // Give the vehicle a name so it can be identified in PVD.
 const char gVehicleName[] = "engineDrive";
 
-// Commands are issued to the vehicle in a pre-choreographed sequence.
-struct Command
-{
-  PxF32 brake;
-  PxF32 throttle;
-  PxF32 steer;
-  PxU32 gear;
-  // PxF32 duration;
-};
 const PxU32 gTargetGearCommand = PxVehicleEngineDriveTransmissionCommandState::eAUTOMATIC_GEAR;
 Command gCommands[] =
     {
@@ -350,7 +327,7 @@ float carBrake = 1.f;
 float carAxis = 0.f;
 float carAxisScale = 1.f;
 
-void stepPhysics(SDL_GameController *controller, float timestep)
+void stepPhysics(SDL_GameController *controller, Timestep timestep)
 {   
     
     auto keys_arr = SDL_GetKeyboardState(nullptr);
@@ -359,8 +336,8 @@ void stepPhysics(SDL_GameController *controller, float timestep)
     auto a_key = keys_arr[SDL_SCANCODE_A];
     auto d_key = keys_arr[SDL_SCANCODE_D];
 
-    const float max_time_step = 0.2f;
-    timestep = std::min(timestep, max_time_step);
+    float delta_seconds = timestep.getSeconds();
+    assert(delta_seconds > 0.f && delta_seconds < 0.2000001f);
   // Apply the brake, throttle and steer to the command state of the vehicle.
   // const Command &command = gCommands[gCommandProgress];
 
@@ -408,10 +385,10 @@ void stepPhysics(SDL_GameController *controller, float timestep)
   const PxReal forwardSpeed = linVel.dot(forwardDir);
   const PxU8 nbSubsteps = (forwardSpeed < 5.0f ? 3 : 1);
   gVehicle.mComponentSequence.setSubsteps(gVehicle.mComponentSequenceSubstepGroupHandle, nbSubsteps);
-  gVehicle.step(timestep, gVehicleSimulationContext);
+  gVehicle.step(delta_seconds, gVehicleSimulationContext);
 
   // Forward integrate the phsyx scene by a single timestep.
-  gScene->simulate(timestep);
+  gScene->simulate(delta_seconds);
   gScene->fetchResults(true);
 }
 
