@@ -1,20 +1,6 @@
 #include "ImGuiDebug.h"
 #include <iostream>
 
-//if (ImGui::TreeNode("Bullets"))
-//{
-//	ImGui::BulletText("Bullet point 1");
-//	ImGui::BulletText("Bullet point 2\nOn multiple lines");
-//	if (ImGui::TreeNode("Tree node"))
-//	{
-//		ImGui::BulletText("Another bullet point");
-//		ImGui::TreePop();
-//	}
-//	ImGui::Bullet(); ImGui::Text("Bullet point 3 (two calls)");
-//	ImGui::Bullet(); ImGui::SmallButton("Button");
-//	ImGui::TreePop();
-//}
-
 // Initializes variables
 void variableInit() {
 	rigid_mass = gVehicle.mBaseParams.rigidBodyParams.mass;
@@ -38,7 +24,22 @@ void variableInit() {
 	
 }
 
-// Possible other tuning to add - Ackerman, Axle 
+// Possible other tuning to add - these are not necessary for the game:
+// Ackerman Angle (Rotates wheels in the zx direction when turning)
+// Axle (Might be important if custom vehicle), (changes the size, length ect.. of axle)
+// Suspension Params (How much suspension squishes and in which direction)
+// Suspension State Calc (Leads to better simulation results, more computationally expensive)
+// Suspension Compliance (Complex variables to help the car straighten after a turn)
+// Suspension Force Params
+// Anti Roll Bar
+// Tire Force (Slip Params)
+// 
+// Engine Params (Engine Torques)
+// Gearbox Params
+// Autobox Params
+// Clutch Command Response
+// Differentials 
+
 
 void vehicleTuning() {
 	ImGui::Begin("Tuning");
