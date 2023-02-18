@@ -98,22 +98,25 @@ int main(int argc, char* argv[]) {
 	ecs::Entity inWall_e = mainScene.CreateEntity();
 	ecs::Entity ground_e = mainScene.CreateEntity();
 
-	
-	Car car{&physicsSystem};
+	mainScene.AddComponent(car_e.guid, Car{});
+	Car& testCar = mainScene.GetComponent<Car>(car_e.guid);
+	testCar.physicsSystem = &physicsSystem;
+	if (!testCar.initVehicle())
+	{
+		std::cout << "ERROR: could not initialize vehicle";
+	}
+
+
+
 	// Car
 	RenderModel car_r = RenderModel();
 	GraphicsSystem::importOBJ(car_r, "test_car.obj");
 	car_r.setModelColor(glm::vec3(0.5f, 0.5f, 0.f));
 	mainScene.AddComponent(car_e.guid, car_r);
-	TransformComponent car_t = TransformComponent(car.getVehicleRigidBody());
+	TransformComponent car_t = TransformComponent(testCar.getVehicleRigidBody());
 	car_t.setPosition(glm::vec3(0, 1, 0));
 	car_t.setRotation(glm::quat(0, 0, 0, 1));
 	mainScene.AddComponent(car_e.guid, car_t);
-	
-
-
-		// add the car physics object
-		mainScene.AddComponent(car_e.guid, car);
 	
 
 	auto& car_render = mainScene.GetComponent<RenderModel>(car_e.guid);
@@ -202,8 +205,8 @@ int main(int argc, char* argv[]) {
 
 	bool quit = false;
 	int controlledCamera = 0;
-	
 
+	
   
 	// GAME LOOP
 	while (!quit) {
@@ -351,14 +354,14 @@ int main(int argc, char* argv[]) {
 		//ImGui::End();
 		// END JOYSTICK THING
 
-		car.stepPhysics(timestep);
+		// car.stepPhysics(timestep);
 
 		// the car isn't working inside of the ecs??? :(
 			// maybe define the custom constructors, etc.
 			// perhaps its the gravity thing again
 		// Car& c = mainScene.GetComponent<Car>(car_e.guid);
 		// c.stepPhysics(timestep);
-		// physicsSystem.Update(mainScene,timestep);
+		physicsSystem.Update(mainScene,timestep);
 
 		// HACK(beau): pull these out of CarSample.cpp
 		extern float carThrottle;
