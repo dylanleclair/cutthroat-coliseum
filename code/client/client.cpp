@@ -20,7 +20,8 @@
 
 #include "ImGuiDebug.h"
 
-#include "Time.h"
+#include "utils/Time.h"
+#include "Input.h"
 
 #include "systems/PhysicsSystem.h"
 
@@ -82,7 +83,7 @@ int main(int argc, char* argv[]) {
 	physicsSystem.Initialize();
 
 
-	Car car{physicsSystem};
+
 
 
 	// init ecs 
@@ -97,7 +98,8 @@ int main(int argc, char* argv[]) {
 	ecs::Entity inWall_e = mainScene.CreateEntity();
 	ecs::Entity ground_e = mainScene.CreateEntity();
 
-
+	
+	Car car{&physicsSystem};
 	// Car
 	RenderModel car_r = RenderModel();
 	GraphicsSystem::importOBJ(car_r, "test_car.obj");
@@ -107,6 +109,12 @@ int main(int argc, char* argv[]) {
 	car_t.setPosition(glm::vec3(0, 1, 0));
 	car_t.setRotation(glm::quat(0, 0, 0, 1));
 	mainScene.AddComponent(car_e.guid, car_t);
+	
+
+
+		// add the car physics object
+		mainScene.AddComponent(car_e.guid, car);
+	
 
 	auto& car_render = mainScene.GetComponent<RenderModel>(car_e.guid);
 	std::cout << "Car Guid: " << car_e.guid << std::endl;
@@ -192,19 +200,6 @@ int main(int argc, char* argv[]) {
 
 	FramerateCounter framerate;
 
-	//assert(SDL_NumJoysticks() > 0);
-	// TODO: handle no controller
-	SDL_GameController* controller = nullptr;
-	controller = SDL_GameControllerOpen(0);
-	//assert(controller);
-	SDL_Joystick* joy = nullptr;
-	joy = SDL_GameControllerGetJoystick(controller);
-
-	//assert(joy);
-	int instanceID =  SDL_JoystickInstanceID(joy);
-
-
-
 	bool quit = false;
 	int controlledCamera = 0;
 	
@@ -226,6 +221,16 @@ int main(int argc, char* argv[]) {
 		//polls all pending input events until there are none left in the queue
 		while (SDL_PollEvent(&window.event)) {
 			ImGui_ImplSDL2_ProcessEvent(&window.event);
+
+			if (window.event.type == SDL_CONTROLLERDEVICEADDED) {
+				std::cout << "Adding controller\n";
+				ControllerInput::init_controller();
+			}
+
+			if (window.event.type == SDL_CONTROLLERDEVICEREMOVED) {
+				std::cout << "removing controller\n";
+				ControllerInput::deinit_controller();
+			}
 
 			if (window.event.type == SDL_QUIT)
 				quit = true;
@@ -270,7 +275,7 @@ int main(int argc, char* argv[]) {
 					std::cout << std::endl;
 
 					std::cout << finish_trans.getPosition().x << ", " << finish_trans.getPosition().y << ", " << finish_trans.getPosition().z << std::endl;
-					std::cout << car_t.getPosition().x << ", " << car_t.getPosition().y << ", " << car_t.getPosition().z << std::endl;
+					std::cout << car_trans.getPosition().x << ", " << car_trans.getPosition().y << ", " << car_trans.getPosition().z << std::endl;
 					break;
 				case SDLK_ESCAPE:	// (Pressing escape closes the window, useful for fullscreen);
 					quit = true;
@@ -321,12 +326,6 @@ int main(int argc, char* argv[]) {
 		// END FRAMERATE COUNTER
 
 		// PHYSX DRIVER UPDATE
-		// stepPhysics(controller, timestep);
-
-		// TODO(dylan): should really happen via the physics system update because the car is a physics object
-		car.stepPhysics(controller, timestep);
-
-
 		// TODO(milestone 1): strip all non-milestone related imgui windows out
 		// BEGIN CAR PHYSICS PANEL
 		// ImGui::Begin("Car Physics", nullptr);
@@ -351,6 +350,10 @@ int main(int argc, char* argv[]) {
 		//ImGui::Text("Right trigger: %hd", axis);
 		//ImGui::End();
 		// END JOYSTICK THING
+
+		car.stepPhysics(timestep);
+
+		// physicsSystem.Update(mainScene,timestep);
 
 		// HACK(beau): pull these out of CarSample.cpp
 		extern float carThrottle;
@@ -385,10 +388,7 @@ int main(int argc, char* argv[]) {
 	// cleanupPhysics();
 	physicsSystem.Cleanup();
 
-	SDL_JoystickClose(joy);
-	joy = nullptr;
-	SDL_GameControllerClose(controller);
-	controller = nullptr;
+	ControllerInput::deinit_controller();
 
 	SDL_Quit();
 	return 0;

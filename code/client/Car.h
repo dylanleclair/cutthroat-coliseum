@@ -48,9 +48,9 @@ struct Car {
 
     
 
-    physics::PhysicsSystem& physicsSystem;
+    physics::PhysicsSystem* physicsSystem;
 
-    const char* m_vehicleName = "Player";
+    char* m_vehicleName = "Player";
 
     // The vehicle with engine drivetrain
     EngineDriveVehicle m_Vehicle;
@@ -60,7 +60,7 @@ struct Car {
     // gravitational acceleration.
     PxVehiclePhysXSimulationContext m_VehicleSimulationContext;
 
-    const PxU32 m_TargetGearCommand = PxVehicleEngineDriveTransmissionCommandState::eAUTOMATIC_GEAR;
+    PxU32 m_TargetGearCommand = PxVehicleEngineDriveTransmissionCommandState::eAUTOMATIC_GEAR;
     Command m_Commands[5] = 
     {
         {
@@ -95,10 +95,10 @@ struct Car {
         } // 5.0f}  // light throttle and steer for 5 seconds.
 };
 
-    const PxU32 m_NbCommands = sizeof(m_Commands) / sizeof(Command);
+    PxU32 m_NbCommands = sizeof(m_Commands) / sizeof(Command);
 
     // all the physics stuff lives in the physics system
-    Car(physics::PhysicsSystem& physicsSystem) : physicsSystem(physicsSystem)
+    Car(physics::PhysicsSystem* physicsSystem) : physicsSystem(physicsSystem)
     {
         // The vehicle with engine 
         bool success = initVehicle();
@@ -108,14 +108,16 @@ struct Car {
         }
     }
 
+    Car() : physicsSystem(nullptr) {};
+
     bool initVehicle();
     void cleanupVehicle();
 
-    void stepPhysics(SDL_GameController* controller, Timestep timestep);
+    void stepPhysics(Timestep timestep);
 
     PxRigidBody* getVehicleRigidBody();
 
-    virtual void Update();
+    virtual void Update(float deltaTime);
 
 };
 

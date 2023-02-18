@@ -1,5 +1,6 @@
 #include "PxPhysicsAPI.h"
 #include "PhysicsSystem.h"
+#include "utils/Time.h"
 #include "../Car.h"
 
 namespace physics
@@ -23,9 +24,15 @@ namespace physics
         {
             // get the car, and update it.
             Car& car = scene.GetComponent<Car>(entityGuid);
-            car.stepPhysics();
-
+            car.Update(deltaTime);
         }
+
+
+    }
+
+    void PhysicsSystem::Update(ecs::Scene& scene, Timestep timestep)
+    {
+        Update(scene, timestep.getSeconds());
     }
 
 
