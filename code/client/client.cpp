@@ -308,6 +308,8 @@ int main(int argc, char* argv[]) {
 
 		gs.Update(mainScene, 0.0f);
 		aiSystem.Update(mainScene, 0.f);
+		physicsSystem.Update(mainScene,timestep);
+
 
 		// END__ ECS SYSTEMS UPDATES
 
@@ -353,15 +355,6 @@ int main(int argc, char* argv[]) {
 		//ImGui::Text("Right trigger: %hd", axis);
 		//ImGui::End();
 		// END JOYSTICK THING
-
-		// car.stepPhysics(timestep);
-
-		// the car isn't working inside of the ecs??? :(
-			// maybe define the custom constructors, etc.
-			// perhaps its the gravity thing again
-		// Car& c = mainScene.GetComponent<Car>(car_e.guid);
-		// c.stepPhysics(timestep);
-		physicsSystem.Update(mainScene,timestep);
 
 		// HACK(beau): pull these out of CarSample.cpp
 		extern float carThrottle;
