@@ -353,6 +353,11 @@ int main(int argc, char* argv[]) {
 
 		car.stepPhysics(timestep);
 
+		// the car isn't working inside of the ecs??? :(
+			// maybe define the custom constructors, etc.
+			// perhaps its the gravity thing again
+		// Car& c = mainScene.GetComponent<Car>(car_e.guid);
+		// c.stepPhysics(timestep);
 		// physicsSystem.Update(mainScene,timestep);
 
 		// HACK(beau): pull these out of CarSample.cpp
