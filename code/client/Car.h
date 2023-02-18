@@ -115,7 +115,7 @@ struct Car {
 
     PxRigidBody* getVehicleRigidBody();
 
-    // virtual void Update() = 0;
+    virtual void Update();
 
 };
 

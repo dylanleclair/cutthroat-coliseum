@@ -54,11 +54,7 @@ int main(int argc, char* argv[]) {
 	printf("Starting main");
 
 
-	physics::PhysicsSystem physicsSystem{};
-	physicsSystem.Initialize();
-	Car car{physicsSystem};
 
-	// carSampleInit();
 
 	SDL_Init(SDL_INIT_EVERYTHING); // initialize all sdl systems
 	Window window(1200, 800, "Maximus Overdrive");
@@ -69,21 +65,30 @@ int main(int argc, char* argv[]) {
 
 	carConfig.deserialize();
 
-	// create instance of system to use.
+
+	/**
+	 * Begin initialization of ECS systems, entities, etc.
+	 * - Graphics
+	 * - Physics
+	 * - AI
+	 */
+
+	// first and foremost, create a scene.
+	ecs::Scene mainScene;
+
 	GraphicsSystem gs(window);
 
+	physics::PhysicsSystem physicsSystem{};
+	physicsSystem.Initialize();
+
+
+	Car car{physicsSystem};
+
+
 	// init ecs 
-	ecs::Scene mainScene;
 
 
 	std::cout << "Component initalization finished\n";
-
-
-	// if (initPhysics())
-	// {
-	// 	std::cout << "initialized physx driving model\n";
-	// }
-
 
 	//make an entity
 	ecs::Entity car_e = mainScene.CreateEntity();
