@@ -190,9 +190,6 @@ int main(int argc, char* argv[]) {
 
 	FramerateCounter framerate;
 
-	if (SDL_NumJoysticks() == 1) ControllerInput::init_controller();
-
-
 	bool quit = false;
 	int controlledCamera = 0;
 	
@@ -214,6 +211,16 @@ int main(int argc, char* argv[]) {
 		//polls all pending input events until there are none left in the queue
 		while (SDL_PollEvent(&window.event)) {
 			ImGui_ImplSDL2_ProcessEvent(&window.event);
+
+			if (window.event.type == SDL_CONTROLLERDEVICEADDED) {
+				std::cout << "Adding controller\n";
+				ControllerInput::init_controller();
+			}
+
+			if (window.event.type == SDL_CONTROLLERDEVICEREMOVED) {
+				std::cout << "removing controller\n";
+				ControllerInput::deinit_controller();
+			}
 
 			if (window.event.type == SDL_QUIT)
 				quit = true;
