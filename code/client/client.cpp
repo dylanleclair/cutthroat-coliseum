@@ -21,6 +21,7 @@
 #include "ImGuiDebug.h"
 
 #include "Time.h"
+#include "Input.h"
 
 glm::vec3 calculateSpherePoint(float s, float t)
 {
@@ -34,7 +35,7 @@ using namespace physx;
 
 extern PxRigidBody* getVehicleRigidBody();
 extern bool initPhysics();
-extern void stepPhysics(SDL_GameController* controller, Timestep timestep);
+extern void stepPhysics(Timestep timestep);
 extern void cleanupPhysics();
 extern int carSampleInit();
 
@@ -189,17 +190,7 @@ int main(int argc, char* argv[]) {
 
 	FramerateCounter framerate;
 
-	//assert(SDL_NumJoysticks() > 0);
-	// TODO: handle no controller
-	SDL_GameController* controller = nullptr;
-	controller = SDL_GameControllerOpen(0);
-	//assert(controller);
-	SDL_Joystick* joy = nullptr;
-	joy = SDL_GameControllerGetJoystick(controller);
-
-	//assert(joy);
-	int instanceID =  SDL_JoystickInstanceID(joy);
-
+	if (SDL_NumJoysticks() == 1) ControllerInput::init_controller();
 
 
 	bool quit = false;
@@ -318,33 +309,7 @@ int main(int argc, char* argv[]) {
 		// END FRAMERATE COUNTER
 
 		// PHYSX DRIVER UPDATE
-		stepPhysics(controller, timestep);
-
-
-		// TODO(milestone 1): strip all non-milestone related imgui windows out
-		// BEGIN CAR PHYSICS PANEL
-		// ImGui::Begin("Car Physics", nullptr);
-		// ImGui::SliderFloat("acceleration", &carPhysics.m_acceleration, 0.f, 1000.f);
-		// ImGui::SliderFloat("suspension", &carPhysics.m_suspension_force, 0.f, 1000.f);
-		// if (ImGui::Button("Serialize")) carConfig.serialize();
-		// ImGui::End();
-
-
-		// BEGIN A BUTTON THING
-		/*bool cbutton = false;
-		cbutton = SDL_GameControllerGetButton(controller, SDL_CONTROLLER_BUTTON_A);
-		ImGui::Begin("Buttons", nullptr);
-		ImGui::Checkbox("a button", &cbutton);
-		ImGui::End();*/
-		// END A BUTTON THING
-
-		// BEGIN JOYSTICK THING
-		//float axis = 0;
-		//axis = SDL_GameControllerGetAxis(controller, SDL_CONTROLLER_AXIS_TRIGGERRIGHT);
-		//ImGui::Begin("Axes aka Joysticks and triggers");
-		//ImGui::Text("Right trigger: %hd", axis);
-		//ImGui::End();
-		// END JOYSTICK THING
+		stepPhysics(timestep);
 
 		// HACK(beau): pull these out of CarSample.cpp
 		extern float carThrottle;
@@ -378,10 +343,7 @@ int main(int argc, char* argv[]) {
 
 	cleanupPhysics();
 
-	SDL_JoystickClose(joy);
-	joy = nullptr;
-	SDL_GameControllerClose(controller);
-	controller = nullptr;
+	ControllerInput::deinit_controller();
 
 	SDL_Quit();
 	return 0;

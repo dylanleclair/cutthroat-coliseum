@@ -82,6 +82,7 @@
 // ****************************************************************************
 
 #include "CarSample.h"
+#include "Input.h"
 
 // PhysX management class instances.
 
@@ -327,7 +328,7 @@ float carBrake = 1.f;
 float carAxis = 0.f;
 float carAxisScale = 1.f;
 
-void stepPhysics(SDL_GameController *controller, Timestep timestep)
+void stepPhysics(Timestep timestep)
 {   
     
     auto keys_arr = SDL_GetKeyboardState(nullptr);
@@ -345,12 +346,12 @@ void stepPhysics(SDL_GameController *controller, Timestep timestep)
   // command.duration = timestep;
 
   // Throttle to 2.f will cause weird behaviour
-  if (SDL_GameControllerGetButton(controller, SDL_CONTROLLER_BUTTON_A) || w_key)
+  if (SDL_GameControllerGetButton(ControllerInput::controller, SDL_CONTROLLER_BUTTON_A) || w_key)
   {
       command.throttle = carThrottle;
     //goto end; // so we don't attempt to throttle and break
   }
-  else if (SDL_GameControllerGetButton(controller, SDL_CONTROLLER_BUTTON_B) || s_key)
+  else if (SDL_GameControllerGetButton(ControllerInput::controller, SDL_CONTROLLER_BUTTON_B) || s_key)
   {
       command.brake = carBrake;
     // goto end;????
@@ -359,7 +360,7 @@ void stepPhysics(SDL_GameController *controller, Timestep timestep)
 
   // Normalize controller axis
   // BUG: max positive is 1 less in magnitude than max min meaning full negative will be slightly above 1
-  carAxis = (float) - SDL_GameControllerGetAxis(controller, SDL_CONTROLLER_AXIS_LEFTX) / SHRT_MAX;
+  carAxis = (float) - SDL_GameControllerGetAxis(ControllerInput::controller, SDL_CONTROLLER_AXIS_LEFTX) / SHRT_MAX;
   //std::cout << axis << std::endl;
   if (a_key) {
       command.steer = 1.f;
