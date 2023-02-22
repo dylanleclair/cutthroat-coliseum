@@ -3,6 +3,8 @@
 
 // Initializes variables
 void variableInit() {
+	all_wheels = true; // sets the boolean flag to affect all wheels
+
 	rigid_mass = gVehicle.mBaseParams.rigidBodyParams.mass;
 	rigid_MOI = gVehicle.mBaseParams.rigidBodyParams.moi;
 
@@ -20,6 +22,12 @@ void variableInit() {
 		wheel_mass[i] = gVehicle.mBaseParams.wheelParams[i].mass;
 		wheel_moi[i] = gVehicle.mBaseParams.wheelParams[i].moi;
 		wheel_dampening[i] = gVehicle.mBaseParams.wheelParams[i].dampingRate;
+
+		// Suspension Force Params
+		sus_sprung_mass[i] = gVehicle.mBaseParams.suspensionForceParams[i].sprungMass;
+		sus_stiffness[i] = gVehicle.mBaseParams.suspensionForceParams[i].stiffness;
+		sus_dampening[i] = gVehicle.mBaseParams.suspensionForceParams[i].damping;
+		dampening_ratio[i] = sus_dampening[i] / (2 * sqrt(sus_stiffness[i] * sus_sprung_mass[i]));
 	}
 
 	// Unused wheel ID's supposed be a pair [0,1] means front wheels, [2,3] means back wheels
@@ -28,16 +36,32 @@ void variableInit() {
 	ack_wheel_base = gVehicle.mBaseParams.ackermannParams->wheelBase;
 	ack_track_width = gVehicle.mBaseParams.ackermannParams->trackWidth;
 	ack_strength = gVehicle.mBaseParams.ackermannParams->strength;
+
+	// Suspension Params (How much suspension squishes and in which direction)
+	//sus_attach = gVehicle.mBaseParams.suspensionParams->suspensionAttachment;
+	//sus_travel_dir = gVehicle.mBaseParams.suspensionParams->suspensionTravelDir;
+	sus_travel_dist = gVehicle.mBaseParams.suspensionParams->suspensionTravelDist;
+	//sus_wheel_attach = gVehicle.mBaseParams.suspensionParams->wheelAttachment;*/
+
+	// Suspension State Calculations
+	//sus_jounce = gVehicle.mBaseParams.suspensionStateCalculationParams.suspensionJounceCalculationType;
+	sus_limit_xpvel = gVehicle.mBaseParams.suspensionStateCalculationParams.limitSuspensionExpansionVelocity;
+
+	// Suspension Compliance (Way too complex parameters, not needed for this project)
+	// TODO:: Need to initate header values
+	//gVehicle.mBaseParams.suspensionComplianceParams->wheelToeAngle;
+	//gVehicle.mBaseParams.suspensionComplianceParams->wheelCamberAngle;
+	//gVehicle.mBaseParams.suspensionComplianceParams->suspForceAppPoint;
+	//gVehicle.mBaseParams.suspensionComplianceParams->tireForceAppPoint;
+	
+
 	
 }
 
 // Possible other tuning to add - these are not necessary for the game:
-// Ackerman Angle (Rotates wheels in the zx direction when turning)
 // Axle (Might be important if custom vehicle), (changes the size, length ect.. of axle)
-// Suspension Params (How much suspension squishes and in which direction)
-// Suspension State Calc (Leads to better simulation results, more computationally expensive)
-// Suspension Compliance (Complex variables to help the car straighten after a turn)
-// Suspension Force Params
+
+
 // Anti Roll Bar
 // Tire Force (Slip Params)
 // 
@@ -45,7 +69,7 @@ void variableInit() {
 // Gearbox Params
 // Autobox Params
 // Clutch Command Response
-// Differentials 
+// Differentials
 
 
 void vehicleTuning() {
@@ -289,6 +313,118 @@ void vehicleTuning() {
 
 			ImGui::TreePop();
 		}
+
+		ImGui::TreePop();
+	}
+
+	// Suspension (Currently setup for only 4 wheels)
+	if (ImGui::TreeNode("Suspension:")) {
+		ImGui::Text("Distance between wheel at maximum droop, and maximum compression");
+		if (ImGui::InputFloat("Travel Direction:", &sus_travel_dist)) {
+			gVehicle.mBaseParams.suspensionParams->suspensionTravelDist = sus_travel_dist;
+		}
+
+		ImGui::Text("Setting to TRUE leads to greater simulation integrity (takes longer for spring to expand)");
+		ImGui::Text("This may be undersirable as the vehicle will spend more time not touching the ground");
+		ImGui::Text("This leads to the player losing control of the vehicle more often");
+		if (ImGui::Checkbox("Limit Expansion Velocity", &sus_limit_xpvel)) {
+			gVehicle.mBaseParams.suspensionStateCalculationParams.limitSuspensionExpansionVelocity = sus_limit_xpvel;
+		}
+
+		ImGui::Separator();
+		ImGui::Separator();
+		ImGui::Checkbox("Uniform values for all wheels", &all_wheels);
+
+		if (all_wheels) {
+			ImGui::Text("Dampening ratio formula = ratio = dampening / [2 * sqrt(stiffness * sprungMass)]");
+			if (dampening_ratio[0] > 1.0f) {
+				ImGui::Text("Dampening Ratio: %f", dampening_ratio[0]);
+				ImGui::Text("Over dampened - try not to exceed a ratio of 1.2");
+				ImGui::Text("Handling may be twitchy beyond this rate");
+			}
+			else if (dampening_ratio[0] == 1.0f) {
+				ImGui::Text("Dampening Ratio: %f", dampening_ratio[0]);
+				ImGui::Text("Critical dampened - This is a good thing");
+			}
+			else {
+				ImGui::Text("Dampening Ratio: %f", dampening_ratio[0]);
+				ImGui::Text("Under dampened - try not to have a ratio lower than 0.8");
+				ImGui::Text("Handling may be sluggish beyond this rate");
+			}
+			
+			ImGui::Separator();
+			ImGui::Text("Mass supported by the springs, if center of mass is in middle, these should");
+			ImGui::Text("all be 1/4 of the mass of the rigid body");
+			if (ImGui::InputFloat("Sprung Mass", &sus_sprung_mass[0])) {
+				for (int i = 0; i < 4; i++) {
+					gVehicle.mBaseParams.suspensionForceParams[i].sprungMass = sus_sprung_mass[i]; // recalculate dampening ratio
+					dampening_ratio[i] = sus_dampening[i] / (2 * sqrt(sus_stiffness[i] * sus_sprung_mass[i]));
+				}
+			}
+			ImGui::Separator();
+			ImGui::Text("Higher Stiffness = harder to turn vehicle");
+			ImGui::Text("Higher Stiffness = Bumpier ride");
+			if (ImGui::InputFloat("Stiffness", &sus_stiffness[0])) {
+				for (int i = 0; i < 4; i++) {
+					gVehicle.mBaseParams.suspensionForceParams[i].sprungMass = sus_sprung_mass[i]; // recalculate dampening ratio
+					gVehicle.mBaseParams.suspensionForceParams[i].stiffness = sus_stiffness[i];
+				}
+			}
+			if (ImGui::InputFloat("Dampening", &sus_dampening[0])) {
+				for (int i = 0; i < 4; i++) {
+					gVehicle.mBaseParams.suspensionForceParams[i].sprungMass = sus_sprung_mass[i]; // recalculate dampening ratio
+					gVehicle.mBaseParams.suspensionForceParams[i].damping = sus_dampening[i];
+				}
+			}
+		}
+		else {	
+			ImGui::Text("Mass supported by the springs, if center of mass is in middle, these should");
+			ImGui::Text("all be 1/4 of the mass of the rigid body");
+
+				if (ImGui::InputFloat("Sprung Mass - Front Right", &sus_sprung_mass[0])) {
+					gVehicle.mBaseParams.suspensionForceParams[0].sprungMass = sus_sprung_mass[0];
+				}
+				if (ImGui::InputFloat("Sprung Mass - Front Left", &sus_sprung_mass[1])) {
+					gVehicle.mBaseParams.suspensionForceParams[1].sprungMass = sus_sprung_mass[1];
+				}
+				if (ImGui::InputFloat("Sprung Mass - Rear Right", &sus_sprung_mass[2])) {
+					gVehicle.mBaseParams.suspensionForceParams[2].sprungMass = sus_sprung_mass[2];
+				}
+				if (ImGui::InputFloat("Sprung Mass - Rear Left", &sus_sprung_mass[3])) {
+					gVehicle.mBaseParams.suspensionForceParams[3].sprungMass = sus_sprung_mass[3];
+				}
+
+				ImGui::Separator();
+				ImGui::Text("Higher Stiffness = harder to turn vehicle");
+				ImGui::Text("Higher Stiffness = Bumpier ride");
+
+				if (ImGui::InputFloat("Stiffness - Front Right", &sus_stiffness[0])) {
+					gVehicle.mBaseParams.suspensionForceParams[0].stiffness = sus_stiffness[0];
+				}
+				if (ImGui::InputFloat("Stiffness - Front Left", &sus_stiffness[1])) {
+					gVehicle.mBaseParams.suspensionForceParams[1].stiffness = sus_stiffness[1];
+				}
+				if (ImGui::InputFloat("Stiffness - Rear Right", &sus_stiffness[2])) {
+					gVehicle.mBaseParams.suspensionForceParams[2].stiffness = sus_stiffness[2];
+				}
+				if (ImGui::InputFloat("Stiffness - Rear Left", &sus_stiffness[3])) {
+					gVehicle.mBaseParams.suspensionForceParams[3].stiffness = sus_stiffness[3];
+				}
+
+				if (ImGui::InputFloat("Dampening - Front Right", &sus_dampening[0])) {
+					gVehicle.mBaseParams.suspensionForceParams[0].damping = sus_dampening[0];
+				}
+				if (ImGui::InputFloat("Dampening - Front Left", &sus_dampening[1])) {
+					gVehicle.mBaseParams.suspensionForceParams[1].damping = sus_dampening[1];
+				}
+				if (ImGui::InputFloat("Dampening - Rear Right", &sus_dampening[2])) {
+					gVehicle.mBaseParams.suspensionForceParams[2].damping = sus_dampening[2];
+				}
+				if (ImGui::InputFloat("Dampening - Rear Left", &sus_dampening[3])) {
+					gVehicle.mBaseParams.suspensionForceParams[3].damping = sus_dampening[3];
+				}
+		}
+
 
 		ImGui::TreePop();
 	}

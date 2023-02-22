@@ -7,6 +7,8 @@
 
 using namespace physx;
 
+static bool all_wheels;
+
 // Rigid Body Params
 static float rigid_mass;
 static PxVec3 rigid_MOI;
@@ -33,6 +35,20 @@ static PxReal wheel_half_width[4];
 static PxReal wheel_mass[4];
 static PxReal wheel_moi[4];
 static PxReal wheel_dampening[4];
+
+// Suspension Params
+static PxTransform sus_attach;
+static PxVec3 sus_travel_dir;
+static PxReal sus_travel_dist;
+static PxTransform sus_wheel_attach;
+
+static PxReal sus_jounce;
+static bool sus_limit_xpvel;
+
+static PxReal sus_sprung_mass[4];
+static PxReal sus_stiffness[4];
+static PxReal sus_dampening[4];
+static float dampening_ratio[4];
 
 void variableInit();
 void vehicleTuning();
