@@ -50,6 +50,18 @@ static PxReal sus_stiffness[4];
 static PxReal sus_dampening[4];
 static float dampening_ratio[4];
 
-void variableInit();
+// Engine Params
+static PxReal eng_moi;
+static PxReal eng_torque;
+static PxVehicleFixedSizeLookupTable<physx::PxReal, 8U> eng_torque_curve;
+static PxReal eng_idle_omega;
+static PxReal eng_max_omega;
+static PxReal eng_damp_full;
+static PxReal eng_damp_engage;
+static PxReal eng_damp_disengage;
+
+void baseVariablesInit();
+void engineVariablesInit();
 void vehicleTuning();
+void engineTuning();
 void reloadVehicleJSON();

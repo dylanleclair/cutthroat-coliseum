@@ -2,7 +2,7 @@
 #include <iostream>
 
 // Initializes variables
-void variableInit() {
+void baseVariablesInit() {
 	all_wheels = true; // sets the boolean flag to affect all wheels
 
 	rigid_mass = gVehicle.mBaseParams.rigidBodyParams.mass;
@@ -52,18 +52,27 @@ void variableInit() {
 	//gVehicle.mBaseParams.suspensionComplianceParams->wheelToeAngle;
 	//gVehicle.mBaseParams.suspensionComplianceParams->wheelCamberAngle;
 	//gVehicle.mBaseParams.suspensionComplianceParams->suspForceAppPoint;
-	//gVehicle.mBaseParams.suspensionComplianceParams->tireForceAppPoint;
-	
+	//gVehicle.mBaseParams.suspensionComplianceParams->tireForceAppPoint;	
+}
 
-	
+// Initalizes variables for the engine drive model
+void engineVariablesInit() {
+	eng_moi = gVehicle.mEngineDriveParams.engineParams.moi;
+	eng_torque = gVehicle.mEngineDriveParams.engineParams.peakTorque;
+	eng_torque_curve = gVehicle.mEngineDriveParams.engineParams.torqueCurve;
+	eng_idle_omega = gVehicle.mEngineDriveParams.engineParams.idleOmega;
+	eng_max_omega = gVehicle.mEngineDriveParams.engineParams.maxOmega;
+	eng_damp_full = gVehicle.mEngineDriveParams.engineParams.dampingRateFullThrottle;
+	eng_damp_engage = gVehicle.mEngineDriveParams.engineParams.dampingRateZeroThrottleClutchEngaged;
+	eng_damp_disengage = gVehicle.mEngineDriveParams.engineParams.dampingRateZeroThrottleClutchDisengaged;
 }
 
 // Possible other tuning to add - these are not necessary for the game:
 // Axle (Might be important if custom vehicle), (changes the size, length ect.. of axle)
 
 
-// Anti Roll Bar
-// Tire Force (Slip Params)
+// Anti Roll Bar (not used in the base.json ?)
+// Tire Force (Slip Params) (Complex parameters possibly not needed for this project)
 // 
 // Engine Params (Engine Torques)
 // Gearbox Params
@@ -71,6 +80,7 @@ void variableInit() {
 // Clutch Command Response
 // Differentials
 
+// Function to print different ratio outputs for the dampening portion of the suspension code
 void dampeningRatioPrint(int i) {
 	ImGui::Text("Dampening ratio formula = ratio = dampening / [2 * sqrt(stiffness * sprungMass)]");
 	if (dampening_ratio[i] > 1.0f) {
@@ -88,7 +98,6 @@ void dampeningRatioPrint(int i) {
 		ImGui::Text("Handling may be sluggish beyond this rate");
 	}
 }
-
 
 void vehicleTuning() {
 	ImGui::Begin("Tuning");
@@ -454,6 +463,60 @@ void vehicleTuning() {
 				}
 		}
 
+
+		ImGui::TreePop();
+	}
+
+
+	ImGui::End();
+}
+
+void engineTuning() {
+	ImGui::Begin("Engine Tuning");
+
+	if (ImGui::TreeNode("Engine Params:")) {
+
+		ImGui::Text("Larger values make it harder to accelerate (1.0 is a good starting value)");
+		if (ImGui::InputFloat("MOI", &eng_moi)) {
+			gVehicle.mEngineDriveParams.engineParams.moi = eng_moi;
+		}
+
+		ImGui::Separator();
+		ImGui::Text("Max Torque - 600 good starting value - expressed in Newton Metres");
+		if (ImGui::InputFloat("Peak Torque", &eng_torque)) {
+			gVehicle.mEngineDriveParams.engineParams.peakTorque = eng_torque;
+		}
+
+		eng_torque_curve = gVehicle.mEngineDriveParams.engineParams.torqueCurve;
+
+		ImGui::Separator();
+		ImGui::Text("Lowest rotation speed of the engine, expressed in radians per second");
+		if (ImGui::InputFloat("Idle Omega", &eng_idle_omega)) {
+			gVehicle.mEngineDriveParams.engineParams.idleOmega = eng_idle_omega;
+		}
+
+		ImGui::Separator();
+		ImGui::Text("Maximum rotation speed of the engine, expressed in radians per second");
+		if (ImGui::InputFloat("Max Omega", &eng_max_omega)) {
+			gVehicle.mEngineDriveParams.engineParams.maxOmega = eng_max_omega;
+		}
+
+		ImGui::Separator();
+		ImGui::Text("(0.25 to 3) are good values, 0 will make simulation unstable");
+		ImGui::Text("Dampening rates for the following situations: ");
+
+		if (ImGui::InputFloat("Full Throttle", &eng_damp_full)) {
+			gVehicle.mEngineDriveParams.engineParams.dampingRateFullThrottle = eng_damp_full;
+		}
+
+		if (ImGui::InputFloat("Clutch Engaged", &eng_damp_engage)) {
+			gVehicle.mEngineDriveParams.engineParams.dampingRateZeroThrottleClutchEngaged = eng_damp_engage;
+		}
+
+		if (ImGui::InputFloat("Clutch Disengaged", &eng_damp_disengage)) {
+			gVehicle.mEngineDriveParams.engineParams.dampingRateZeroThrottleClutchDisengaged = eng_damp_disengage;
+		}
+				
 
 		ImGui::TreePop();
 	}
