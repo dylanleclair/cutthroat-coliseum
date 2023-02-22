@@ -71,6 +71,24 @@ void variableInit() {
 // Clutch Command Response
 // Differentials
 
+void dampeningRatioPrint(int i) {
+	ImGui::Text("Dampening ratio formula = ratio = dampening / [2 * sqrt(stiffness * sprungMass)]");
+	if (dampening_ratio[i] > 1.0f) {
+		ImGui::Text("Dampening Ratio: %f", dampening_ratio[i]);
+		ImGui::Text("Over dampened - try not to exceed a ratio of 1.2");
+		ImGui::Text("Handling may be twitchy beyond this rate");
+	}
+	else if (dampening_ratio[i] == 1.0f) {
+		ImGui::Text("Dampening Ratio: %f", dampening_ratio[i]);
+		ImGui::Text("Critical dampened - This is a good thing");
+	}
+	else {
+		ImGui::Text("Dampening Ratio: %f", dampening_ratio[i]);
+		ImGui::Text("Under dampened - try not to have a ratio lower than 0.8");
+		ImGui::Text("Handling may be sluggish beyond this rate");
+	}
+}
+
 
 void vehicleTuning() {
 	ImGui::Begin("Tuning");
@@ -336,6 +354,27 @@ void vehicleTuning() {
 		ImGui::Checkbox("Uniform values for all wheels", &all_wheels);
 
 		if (all_wheels) {
+						
+			ImGui::Separator();
+			ImGui::Text("Mass supported by the springs, if center of mass is in middle, these should");
+			ImGui::Text("all be 1/4 of the mass of the rigid body");
+			if (ImGui::InputFloat("Sprung Mass", &sus_sprung_mass[0])) {
+				for (int i = 0; i < 4; i++) {
+					gVehicle.mBaseParams.suspensionForceParams[i].sprungMass = sus_sprung_mass[i]; // recalculate dampening ratio
+					dampening_ratio[i] = sus_dampening[i] / (2 * sqrt(sus_stiffness[i] * sus_sprung_mass[i]));
+				}
+			}
+
+			ImGui::Separator();
+			ImGui::Text("Higher Stiffness = harder to turn vehicle");
+			ImGui::Text("Higher Stiffness = Bumpier ride");
+			if (ImGui::InputFloat("Stiffness", &sus_stiffness[0])) {
+				for (int i = 0; i < 4; i++) {
+					gVehicle.mBaseParams.suspensionForceParams[i].sprungMass = sus_sprung_mass[i]; // recalculate dampening ratio
+					gVehicle.mBaseParams.suspensionForceParams[i].stiffness = sus_stiffness[i];
+				}
+			}
+
 			ImGui::Text("Dampening ratio formula = ratio = dampening / [2 * sqrt(stiffness * sprungMass)]");
 			if (dampening_ratio[0] > 1.0f) {
 				ImGui::Text("Dampening Ratio: %f", dampening_ratio[0]);
@@ -351,25 +390,7 @@ void vehicleTuning() {
 				ImGui::Text("Under dampened - try not to have a ratio lower than 0.8");
 				ImGui::Text("Handling may be sluggish beyond this rate");
 			}
-			
-			ImGui::Separator();
-			ImGui::Text("Mass supported by the springs, if center of mass is in middle, these should");
-			ImGui::Text("all be 1/4 of the mass of the rigid body");
-			if (ImGui::InputFloat("Sprung Mass", &sus_sprung_mass[0])) {
-				for (int i = 0; i < 4; i++) {
-					gVehicle.mBaseParams.suspensionForceParams[i].sprungMass = sus_sprung_mass[i]; // recalculate dampening ratio
-					dampening_ratio[i] = sus_dampening[i] / (2 * sqrt(sus_stiffness[i] * sus_sprung_mass[i]));
-				}
-			}
-			ImGui::Separator();
-			ImGui::Text("Higher Stiffness = harder to turn vehicle");
-			ImGui::Text("Higher Stiffness = Bumpier ride");
-			if (ImGui::InputFloat("Stiffness", &sus_stiffness[0])) {
-				for (int i = 0; i < 4; i++) {
-					gVehicle.mBaseParams.suspensionForceParams[i].sprungMass = sus_sprung_mass[i]; // recalculate dampening ratio
-					gVehicle.mBaseParams.suspensionForceParams[i].stiffness = sus_stiffness[i];
-				}
-			}
+
 			if (ImGui::InputFloat("Dampening", &sus_dampening[0])) {
 				for (int i = 0; i < 4; i++) {
 					gVehicle.mBaseParams.suspensionForceParams[i].sprungMass = sus_sprung_mass[i]; // recalculate dampening ratio
@@ -411,16 +432,24 @@ void vehicleTuning() {
 					gVehicle.mBaseParams.suspensionForceParams[3].stiffness = sus_stiffness[3];
 				}
 
+				dampeningRatioPrint(0);
 				if (ImGui::InputFloat("Dampening - Front Right", &sus_dampening[0])) {
+					gVehicle.mBaseParams.suspensionForceParams[0].sprungMass = sus_sprung_mass[0]; // recalculate dampening ratio
 					gVehicle.mBaseParams.suspensionForceParams[0].damping = sus_dampening[0];
 				}
+				dampeningRatioPrint(1);
 				if (ImGui::InputFloat("Dampening - Front Left", &sus_dampening[1])) {
+					gVehicle.mBaseParams.suspensionForceParams[1].sprungMass = sus_sprung_mass[1]; // recalculate dampening ratio
 					gVehicle.mBaseParams.suspensionForceParams[1].damping = sus_dampening[1];
 				}
+				dampeningRatioPrint(2);
 				if (ImGui::InputFloat("Dampening - Rear Right", &sus_dampening[2])) {
+					gVehicle.mBaseParams.suspensionForceParams[2].sprungMass = sus_sprung_mass[2]; // recalculate dampening ratio
 					gVehicle.mBaseParams.suspensionForceParams[2].damping = sus_dampening[2];
 				}
+				dampeningRatioPrint(3);
 				if (ImGui::InputFloat("Dampening - Rear Left", &sus_dampening[3])) {
+					gVehicle.mBaseParams.suspensionForceParams[3].sprungMass = sus_sprung_mass[3]; // recalculate dampening ratio
 					gVehicle.mBaseParams.suspensionForceParams[3].damping = sus_dampening[3];
 				}
 		}
