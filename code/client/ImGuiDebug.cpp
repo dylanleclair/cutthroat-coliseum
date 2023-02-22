@@ -487,7 +487,37 @@ void engineTuning() {
 			gVehicle.mEngineDriveParams.engineParams.peakTorque = eng_torque;
 		}
 
-		eng_torque_curve = gVehicle.mEngineDriveParams.engineParams.torqueCurve;
+		ImGui::Separator();
+		ImGui::Text("Torque Curve");
+		ImGui::Text("X values are normalized engine speed");
+		ImGui::Text("Y values are multiplier range (0,1)");
+		if (ImGui::InputFloat("", &eng_torque_curve.xVals[0])) {
+			gVehicle.mEngineDriveParams.engineParams.torqueCurve.xVals[0] = eng_torque_curve.xVals[0];
+		}
+		ImGui::SameLine();
+		if (ImGui::InputFloat("", &eng_torque_curve.yVals[0])) {
+			gVehicle.mEngineDriveParams.engineParams.torqueCurve.yVals[0] = eng_torque_curve.yVals[0];
+		}
+
+
+		if (ImGui::InputFloat("", &eng_torque_curve.xVals[1])) {
+			gVehicle.mEngineDriveParams.engineParams.torqueCurve.xVals[1] = eng_torque_curve.xVals[1];
+		}
+		ImGui::SameLine();
+		if (ImGui::InputFloat("", &eng_torque_curve.yVals[1])) {
+			gVehicle.mEngineDriveParams.engineParams.torqueCurve.yVals[1] = eng_torque_curve.yVals[1];
+		}
+
+
+		if (ImGui::InputFloat("", &eng_torque_curve.xVals[2])) {
+			gVehicle.mEngineDriveParams.engineParams.torqueCurve.xVals[2] = eng_torque_curve.xVals[2];
+		}
+		ImGui::SameLine();
+		if (ImGui::InputFloat("", &eng_torque_curve.yVals[2])) {
+			gVehicle.mEngineDriveParams.engineParams.torqueCurve.yVals[2] = eng_torque_curve.yVals[2];
+		}
+
+
 
 		ImGui::Separator();
 		ImGui::Text("Lowest rotation speed of the engine, expressed in radians per second");
