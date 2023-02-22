@@ -55,7 +55,10 @@ find_library(PhysX_LIBRARY_DEBUG NAMES PhysX_64 PhysX_static_64 PATH_SUFFIXES li
 select_library_configurations(PhysX)
 
 
+set(FMOD_LIB_PATH ${CMAKE_SOURCE_DIR}/thirdparty/fmod/lib/)
 
+find_library(FMOD_LIB fmod_vc HINTS ${FMOD_LIB_PATH})
+find_library(FMODL_LIB fmodL_vc HINTS ${FMOD_LIB_PATH})
 
 if(WIN32 OR APPLE)
   target_link_libraries(${BINARY} PRIVATE ${CMAKE_PROJECT_NAME}_lib 
@@ -69,6 +72,8 @@ if(WIN32 OR APPLE)
     fmt
     tomlplusplus::tomlplusplus
     imgui::imgui
+    ${FMOD_LIB}
+    ${FMODL_LIB}
     
     ${PhysXPvdSDK_LIBRARY} ${PhysXExtensions_LIBRARY} ${PhysXFoundation_LIBRARY} ${PhysXCommon_LIBRARY} ${PhysXCooking_LIBRARY} ${PhysXVehicle2_LIBRARY}  ${PhysX_LIBRARY} 
   )
@@ -100,4 +105,7 @@ add_custom_command(TARGET ${BINARY} POST_BUILD
         $<TARGET_FILE_DIR:${BINARY}>
     COMMAND ${CMAKE_COMMAND} -E copy_directory
         "${CMAKE_SOURCE_DIR}/assets/"
+        $<TARGET_FILE_DIR:${BINARY}>
+    COMMAND ${CMAKE_COMMAND} -E copy_directory
+        "${FMOD_LIB_PATH}/shared/"
         $<TARGET_FILE_DIR:${BINARY}>)
