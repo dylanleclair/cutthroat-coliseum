@@ -57,6 +57,7 @@ void baseVariablesInit() {
 
 // Initalizes variables for the engine drive model
 void engineVariablesInit() {
+	// Engine
 	eng_moi = gVehicle.mEngineDriveParams.engineParams.moi;
 	eng_torque = gVehicle.mEngineDriveParams.engineParams.peakTorque;
 	eng_torque_curve = gVehicle.mEngineDriveParams.engineParams.torqueCurve;
@@ -65,6 +66,18 @@ void engineVariablesInit() {
 	eng_damp_full = gVehicle.mEngineDriveParams.engineParams.dampingRateFullThrottle;
 	eng_damp_engage = gVehicle.mEngineDriveParams.engineParams.dampingRateZeroThrottleClutchEngaged;
 	eng_damp_disengage = gVehicle.mEngineDriveParams.engineParams.dampingRateZeroThrottleClutchDisengaged;
+
+	// Gearing
+	// Index of the neutral gear, we are using default gearing for this project so I am commenting it out
+	// if you uncomment this don't forget to uncomment the header
+	//gear_neutral = gVehicle.mEngineDriveParams.gearBoxParams.neutralGear;	
+	gear_final = gVehicle.mEngineDriveParams.gearBoxParams.finalRatio;
+	gear_switch_time = gVehicle.mEngineDriveParams.gearBoxParams.switchTime;
+
+	//gear_nb = gVehicle.mEngineDriveParams.gearBoxParams.nbRatios; //number of gears, we will use default value for this project
+	for (int i = 0; i < 7; i++) {
+		gear_ratios[i] = gVehicle.mEngineDriveParams.gearBoxParams.ratios[i];
+	}
 }
 
 // Possible other tuning to add - these are not necessary for the game:
@@ -551,6 +564,52 @@ void engineTuning() {
 		ImGui::TreePop();
 	}
 
+	if (ImGui::TreeNode("Gearbox:")) {
+		ImGui::Text("Current gear is multipled by final ratio");
+		ImGui::Text("Fast way to edit all gear ratios without having to edit each one");
+		ImGui::Text("Typical value is around 4");
+		if (ImGui::InputFloat("Final Ratio", &gear_final)) {
+			gVehicle.mEngineDriveParams.gearBoxParams.finalRatio = gear_final;
+		}
+
+		ImGui::Separator();
+		ImGui::Text("If you want to edit each gear ratio manually");
+		ImGui::Text("First gear is reverse, second gear is neutral (must be 0)");
+		if (ImGui::InputFloat("Reverse Gear", &gear_ratios[0])) {
+			gVehicle.mEngineDriveParams.gearBoxParams.ratios[0] = gear_ratios[0];
+		}
+		if (ImGui::InputFloat("Neutral Gear", &gear_ratios[1])) {
+			gVehicle.mEngineDriveParams.gearBoxParams.ratios[1] = gear_ratios[1];
+		}
+		if (ImGui::InputFloat("1st Gear", &gear_ratios[2])) {
+			gVehicle.mEngineDriveParams.gearBoxParams.ratios[2] = gear_ratios[2];
+		}
+		if (ImGui::InputFloat("2nd Gear", &gear_ratios[3])) {
+			gVehicle.mEngineDriveParams.gearBoxParams.ratios[3] = gear_ratios[3];
+		}
+		if (ImGui::InputFloat("3rd Gear", &gear_ratios[4])) {
+			gVehicle.mEngineDriveParams.gearBoxParams.ratios[4] = gear_ratios[4];
+		}
+		if (ImGui::InputFloat("4th Gear", &gear_ratios[5])) {
+			gVehicle.mEngineDriveParams.gearBoxParams.ratios[5] = gear_ratios[5];
+		}
+		if (ImGui::InputFloat("5th Gear", &gear_ratios[6])) {
+			gVehicle.mEngineDriveParams.gearBoxParams.ratios[6] = gear_ratios[6];
+		}
+
+		ImGui::Separator();
+		ImGui::Text("How long it takes in seconds for gears to switch");
+		if (ImGui::InputFloat("Switch Time", &gear_switch_time)) {
+			gear_switch_time = gVehicle.mEngineDriveParams.gearBoxParams.switchTime;
+		}		
+		
+
+		ImGui::TreePop();
+	}
+
+	//static PxReal gear_nb;
+	static PxReal gear_ratios[7];
+	static PxReal gear_switch_time;
 
 	ImGui::End();
 }

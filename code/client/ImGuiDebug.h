@@ -60,6 +60,13 @@ static PxReal eng_damp_full;
 static PxReal eng_damp_engage;
 static PxReal eng_damp_disengage;
 
+// Gearbox Params
+//static PxReal gear_neutral;
+//static PxReal gear_nb;
+static PxReal gear_ratios[7];
+static PxReal gear_final;
+static PxReal gear_switch_time;
+
 void baseVariablesInit();
 void engineVariablesInit();
 void vehicleTuning();
