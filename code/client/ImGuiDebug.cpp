@@ -21,6 +21,13 @@ void variableInit() {
 		wheel_moi[i] = gVehicle.mBaseParams.wheelParams[i].moi;
 		wheel_dampening[i] = gVehicle.mBaseParams.wheelParams[i].dampingRate;
 	}
+
+	// Unused wheel ID's supposed be a pair [0,1] means front wheels, [2,3] means back wheels
+	// The pair is a designation of which wheel pair is the ackerman angle
+	//ack_wheel_ids = gVehicle.mBaseParams.ackermannParams->wheelIds;
+	ack_wheel_base = gVehicle.mBaseParams.ackermannParams->wheelBase;
+	ack_track_width = gVehicle.mBaseParams.ackermannParams->trackWidth;
+	ack_strength = gVehicle.mBaseParams.ackermannParams->strength;
 	
 }
 
@@ -126,6 +133,31 @@ void vehicleTuning() {
 
 			ImGui::TreePop();
 		}
+		ImGui::TreePop();
+	}
+
+	// Ackerman Angle (Angle of the wheels on the y axis when turning)
+	if (ImGui::TreeNode("Ackerman Angle:")) {
+		ImGui::Text("Ackerman Angle allows for better cornering.");
+		ImGui::Text("Steers the left and right wheels differently around corners");
+
+		ImGui::Separator();
+
+		ImGui::Text("Distance between center of the axle and references axle (rear axle)");
+		if (ImGui::InputFloat("Wheel Base", &ack_wheel_base)) {
+			gVehicle.mBaseParams.ackermannParams->wheelBase = ack_wheel_base;
+		}
+
+		ImGui::Text("Distance between the wheels and the axle being corrected");
+		if (ImGui::InputFloat("Track Width", &ack_track_width)) {
+			gVehicle.mBaseParams.ackermannParams->trackWidth = ack_track_width;
+		}
+
+		ImGui::Text("Strength of the correction from 0 is no correction, 1 is full correction");
+		if (ImGui::SliderFloat("Strength", &ack_strength, 0.f, 1.f)) {
+			gVehicle.mBaseParams.ackermannParams->strength = ack_strength;
+		}
+		
 		ImGui::TreePop();
 	}
 

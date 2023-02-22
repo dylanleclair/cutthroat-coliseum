@@ -19,6 +19,13 @@ static PxReal *brake_response_multip;
 static PxF32 steer_max_response;
 static PxReal *steer_multiplier;
 
+// Ackerman Angle
+
+static PxU32 *ack_wheel_ids;
+static PxReal ack_wheel_base;
+static PxReal ack_track_width;
+static PxReal ack_strength;
+
 // Wheel Params
 static int number_of_wheels; // This is a hardcoded value, may need to grab this dynamically
 static PxReal wheel_radius[4];
