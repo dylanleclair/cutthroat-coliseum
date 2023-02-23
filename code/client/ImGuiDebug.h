@@ -1,7 +1,11 @@
-// #include "CarSample.h";
+#pragma once
 #include "imgui.h"
 #include "imgui_impl_sdl.h"
 #include "imgui_impl_opengl3.h"
+#include "Car.h"
+//#include "PxPhysicsAPI.h"
+//#include "vehicle2/PxVehicleAPI.h"
+//#include "physx/snippetvehicle2common/enginedrivetrain/EngineDrivetrain.h"
 
 #include <glm/glm.hpp>
 
@@ -72,8 +76,8 @@ static PxReal auto_up[7];
 static PxReal auto_down[7];
 static PxReal auto_latency;
 
-void baseVariablesInit();
-void engineVariablesInit();
-void vehicleTuning();
-void engineTuning();
-void reloadVehicleJSON();
+void baseVariablesInit(EngineDriveVehicle m_Vehicle);
+void engineVariablesInit(EngineDriveVehicle m_Vehicle);
+void vehicleTuning(EngineDriveVehicle m_Vehicle);
+void engineTuning(EngineDriveVehicle m_Vehicle);
+void reloadVehicleJSON(EngineDriveVehicle m_Vehicle);

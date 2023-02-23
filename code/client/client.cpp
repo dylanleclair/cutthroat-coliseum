@@ -109,9 +109,7 @@ int main(int argc, char* argv[]) {
 		std::cout << "ERROR: could not initialize vehicle";
 	}
 
-
-
-	// Car
+	// Car Entity
 	RenderModel car_r = RenderModel();
 	GraphicsSystem::importOBJ(car_r, "test_car.obj");
 	car_r.setModelColor(glm::vec3(0.5f, 0.5f, 0.f));
@@ -210,8 +208,8 @@ int main(int argc, char* argv[]) {
 	int controlledCamera = 0;
 	
 	// Initalizes variables for the vehicle tuning Imgui
-	baseVariablesInit();
-	engineVariablesInit();
+	baseVariablesInit(testCar.m_Vehicle);
+	engineVariablesInit(testCar.m_Vehicle);
   
 	// GAME LOOP
 	while (!quit) {
@@ -379,8 +377,8 @@ int main(int argc, char* argv[]) {
 		// Loads the imgui panel that lets you reload vehicle JSONs
 
 		//reloadVehicleJSON();
-		vehicleTuning();
-		engineTuning();
+		vehicleTuning(testCar.m_Vehicle);
+		engineTuning(testCar.m_Vehicle);
 
 
 		ImGui::Render();
