@@ -51,6 +51,7 @@ void finishLinePrint() {
 	}
 }
 
+
 int main(int argc, char* argv[]) {
 	printf("Starting main");
 
@@ -86,10 +87,12 @@ int main(int argc, char* argv[]) {
 
 
 
+
 	// init ecs 
 
 
 	std::cout << "Component initalization finished\n";
+
 
 	//make an entity
 	ecs::Entity car_e = mainScene.CreateEntity();

@@ -36,9 +36,21 @@ private:
 	int cam_mode = 1; // Used to determine what mode the camera should use (free, fixed, follow)
 	glm::mat4 V = glm::mat4(1.f); // Had to declare this variable here for the rest of the program to work
 
+	//debug panel variables
+	bool showColliders = false;
+	struct renderableInfo {
+		std::vector<Guid> ids; 
+		std::vector<std::string> names; 
+		std::vector<glm::vec3> positions; 
+		std::vector <glm::vec3> scales;
+		std::vector <glm::quat> rotations;
+		int count = 0;
+	};
+	renderableInfo entityTransforms;
 
 	ShaderProgram modelShader;
 	ShaderProgram lineShader;
+	ShaderProgram wireframeShader;
 	glm::ivec2 windowSize;
 	static void processNode(aiNode* node, const aiScene* scene, RenderModel& _component);
 	static void processNode(aiNode* node, const aiScene* scene, CPU_Geometry& _geometry);

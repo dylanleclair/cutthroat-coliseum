@@ -32,7 +32,7 @@ public:
 		if (actor == nullptr)
 			return glm::vec3(position);
 		else
-			return PxtoGLM(actor->getGlobalPose().p);
+			return PxtoGLM(actor->getGlobalPose().p) + glm::vec3(toMat4(getRotation()) * glm::vec4(position,1));
 	}
 	glm::quat getRotation() {
 		if (actor == nullptr)
@@ -51,10 +51,11 @@ public:
 		rotation = _rotation;
 	}
 
-	glm::vec3 setScale(glm::vec3 _scale) {
+	void setScale(glm::vec3 _scale) {
 		scale = _scale;
 	}
 private:
+	friend class GraphicsSystem;
 	glm::vec3 position = glm::vec3(0);
 	glm::quat rotation = glm::quat(1, 0, 0, 0);
 	glm::vec3 scale = glm::vec3(1);
@@ -85,6 +86,7 @@ public:
 	int g_numberOfVerts(int _meshID) { int i = getMeshIndex(_meshID); if (i != -1) { return meshes[i].numberOfVerticies; } else { return -1; } }
 	bool g_hasNormals(int _meshID) { int i = getMeshIndex(_meshID); if (i != -1) { return (meshes[i].properties & 1) != 0; } else { return -1; } }
 	bool g_hasTextureCoords(int _meshID) { int i = getMeshIndex(_meshID); if (i != -1) { return (meshes[i].properties & 2) != 0; } else { return -1; } }
+	std::string g_name() { return std::string(name); }
 
 	//modifiers
 	/*
@@ -117,6 +119,7 @@ private:
 	//a single render component can have multiple meshes and corresponding textures attached
 	std::vector<Mesh> meshes;	
 	std::vector<Texture*> textures;	
+	std::string name = "Dave";
 //private fields
 private:
 	unsigned int currentMeshID = 0;
