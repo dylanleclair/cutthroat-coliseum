@@ -3,9 +3,6 @@
 #include "imgui_impl_sdl.h"
 #include "imgui_impl_opengl3.h"
 #include "Car.h"
-//#include "PxPhysicsAPI.h"
-//#include "vehicle2/PxVehicleAPI.h"
-//#include "physx/snippetvehicle2common/enginedrivetrain/EngineDrivetrain.h"
 
 #include <glm/glm.hpp>
 

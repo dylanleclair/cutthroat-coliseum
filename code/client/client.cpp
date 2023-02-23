@@ -18,7 +18,7 @@
 #include "FrameCounter.h"
 #include "systems/ai.h"
 
-#include "ImGuiDebug.h"
+#include "ImGuiTuneables.h"
 
 #include "utils/Time.h"
 #include "Input.h"
