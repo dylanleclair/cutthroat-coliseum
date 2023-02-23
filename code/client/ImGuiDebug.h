@@ -67,6 +67,11 @@ static PxReal gear_ratios[7];
 static PxReal gear_final;
 static PxReal gear_switch_time;
 
+// Autobox
+static PxReal auto_up[7];
+static PxReal auto_down[7];
+static PxReal auto_latency;
+
 void baseVariablesInit();
 void engineVariablesInit();
 void vehicleTuning();

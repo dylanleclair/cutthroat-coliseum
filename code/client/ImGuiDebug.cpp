@@ -77,19 +77,20 @@ void engineVariablesInit() {
 	//gear_nb = gVehicle.mEngineDriveParams.gearBoxParams.nbRatios; //number of gears, we will use default value for this project
 	for (int i = 0; i < 7; i++) {
 		gear_ratios[i] = gVehicle.mEngineDriveParams.gearBoxParams.ratios[i];
+
+		// Autobox
+		auto_up[i] = gVehicle.mEngineDriveParams.autoboxParams.upRatios[i];
+		auto_down[i] = gVehicle.mEngineDriveParams.autoboxParams.downRatios[i];
 	}
+	
+	auto_latency = gVehicle.mEngineDriveParams.autoboxParams.latency;
 }
 
 // Possible other tuning to add - these are not necessary for the game:
 // Axle (Might be important if custom vehicle), (changes the size, length ect.. of axle)
-
-
 // Anti Roll Bar (not used in the base.json ?)
 // Tire Force (Slip Params) (Complex parameters possibly not needed for this project)
 // 
-// Engine Params (Engine Torques)
-// Gearbox Params
-// Autobox Params
 // Clutch Command Response
 // Differentials
 
@@ -500,35 +501,39 @@ void engineTuning() {
 			gVehicle.mEngineDriveParams.engineParams.peakTorque = eng_torque;
 		}
 
-		ImGui::Separator();
-		ImGui::Text("Torque Curve");
-		ImGui::Text("X values are normalized engine speed");
-		ImGui::Text("Y values are multiplier range (0,1)");
-		if (ImGui::InputFloat("", &eng_torque_curve.xVals[0])) {
-			gVehicle.mEngineDriveParams.engineParams.torqueCurve.xVals[0] = eng_torque_curve.xVals[0];
-		}
-		ImGui::SameLine();
-		if (ImGui::InputFloat("", &eng_torque_curve.yVals[0])) {
-			gVehicle.mEngineDriveParams.engineParams.torqueCurve.yVals[0] = eng_torque_curve.yVals[0];
-		}
+		// CURRENTLY BUGGY NOT WORKING
+		// TODO:: The .xVals .yVals calls are not working as intended (they are grabbing all values)
+		// May need to change the header type 
+		// 
+		//ImGui::Separator();
+		//ImGui::Text("Torque Curve");
+		//ImGui::Text("X values are normalized engine speed");
+		//ImGui::Text("Y values are multiplier range (0,1)");
+		//if (ImGui::InputFloat("x", &eng_torque_curve.xVals[0])) {
+		//	gVehicle.mEngineDriveParams.engineParams.torqueCurve.xVals[0] = eng_torque_curve.xVals[0];
+		//}
+		//ImGui::SameLine();
+		//if (ImGui::InputFloat("y", &eng_torque_curve.yVals[0])) {
+		//	gVehicle.mEngineDriveParams.engineParams.torqueCurve.yVals[0] = eng_torque_curve.yVals[0];
+		//}
 
 
-		if (ImGui::InputFloat("", &eng_torque_curve.xVals[1])) {
-			gVehicle.mEngineDriveParams.engineParams.torqueCurve.xVals[1] = eng_torque_curve.xVals[1];
-		}
-		ImGui::SameLine();
-		if (ImGui::InputFloat("", &eng_torque_curve.yVals[1])) {
-			gVehicle.mEngineDriveParams.engineParams.torqueCurve.yVals[1] = eng_torque_curve.yVals[1];
-		}
+		//if (ImGui::InputFloat("x", &eng_torque_curve.xVals[1])) {
+		//	gVehicle.mEngineDriveParams.engineParams.torqueCurve.xVals[1] = eng_torque_curve.xVals[1];
+		//}
+		//ImGui::SameLine();
+		//if (ImGui::InputFloat("y", &eng_torque_curve.yVals[1])) {
+		//	gVehicle.mEngineDriveParams.engineParams.torqueCurve.yVals[1] = eng_torque_curve.yVals[1];
+		//}
 
 
-		if (ImGui::InputFloat("", &eng_torque_curve.xVals[2])) {
-			gVehicle.mEngineDriveParams.engineParams.torqueCurve.xVals[2] = eng_torque_curve.xVals[2];
-		}
-		ImGui::SameLine();
-		if (ImGui::InputFloat("", &eng_torque_curve.yVals[2])) {
-			gVehicle.mEngineDriveParams.engineParams.torqueCurve.yVals[2] = eng_torque_curve.yVals[2];
-		}
+		//if (ImGui::InputFloat("x", &eng_torque_curve.xVals[2])) {
+		//	gVehicle.mEngineDriveParams.engineParams.torqueCurve.xVals[2] = eng_torque_curve.xVals[2];
+		//}
+		//ImGui::SameLine();
+		//if (ImGui::InputFloat("y", &eng_torque_curve.yVals[2])) {
+		//	gVehicle.mEngineDriveParams.engineParams.torqueCurve.yVals[2] = eng_torque_curve.yVals[2];
+		//}
 
 
 
@@ -600,16 +605,25 @@ void engineTuning() {
 		ImGui::Separator();
 		ImGui::Text("How long it takes in seconds for gears to switch");
 		if (ImGui::InputFloat("Switch Time", &gear_switch_time)) {
-			gear_switch_time = gVehicle.mEngineDriveParams.gearBoxParams.switchTime;
+			gVehicle.mEngineDriveParams.gearBoxParams.switchTime = gear_switch_time;
 		}		
-		
+		ImGui::TreePop();
+	}
+
+	if (ImGui::TreeNode("Autobox:")) {
+		ImGui::Text("How long (in seconds) until the next gear change happens");
+		ImGui::Text("You want to make sure this is higher than your gear switch time");
+		if (ImGui::InputFloat("Lantency", &auto_latency)) {
+			gVehicle.mEngineDriveParams.autoboxParams.latency = auto_latency;
+		}
 
 		ImGui::TreePop();
 	}
 
-	//static PxReal gear_nb;
-	static PxReal gear_ratios[7];
-	static PxReal gear_switch_time;
+
+	/*auto_up[i] = gVehicle.mEngineDriveParams.autoboxParams.upRatios[i];
+	auto_down[i] = gVehicle.mEngineDriveParams.autoboxParams.downRatios[i];*/
+	
 
 	ImGui::End();
 }
