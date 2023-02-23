@@ -16,10 +16,15 @@
 #include <assimp/Importer.hpp>
 #include <assimp/scene.h>
 #include <assimp/postprocess.h>
+#include <PxPhysicsAPI.h>
+
+//DEBUG IMPORTS
+#include "../lib/graphics/snippetrender/SnippetRender.h"
 
 GraphicsSystem::GraphicsSystem(Window& _window) :
 	modelShader("shaders/lighting_simple.vert", "shaders/lighting_simple.frag"),
-	lineShader("shaders/line.vert", "shaders/line.frag")
+	lineShader("shaders/line.vert", "shaders/line.frag"),
+	wireframeShader("shaders/wireframe.vert", "shaders/wireframe.frag")
 {
 	windowSize = _window.getSize();
 }
@@ -39,6 +44,31 @@ void GraphicsSystem::ImGuiPanel() {
 	}
 
 	ImGui::End();
+
+	ImGui::Begin("Debug Rendering");
+	ImGui::Checkbox("Collider Meshes", &showColliders);
+	ImGui::End();
+
+	ImGui::Begin("Debug Rendering");
+	//show all renderables in a list
+	static int item_current_idx = 0;
+	if (ImGui::BeginCombo("Transforms", entityTransforms.names[item_current_idx].c_str())) {
+		for (int i = 0; i < entityTransforms.count; i++) {
+			const bool is_selected = (item_current_idx == i);
+			if (ImGui::Selectable(entityTransforms.names[i].c_str(), is_selected))
+				item_current_idx = i;
+			if (is_selected)
+				ImGui::SetItemDefaultFocus();
+		}
+		ImGui::EndCombo();
+	}
+
+	ImGui::InputFloat3("position", &(entityTransforms.positions[item_current_idx].x));
+	ImGui::InputFloat4("rotation", &(entityTransforms.rotations[item_current_idx].x));
+	ImGui::InputFloat3("scale", &(entityTransforms.scales[item_current_idx].x));
+	
+	
+	ImGui::End();
 }
 
 void GraphicsSystem::Update(ecs::Scene& scene, float deltaTime) {
@@ -49,6 +79,7 @@ void GraphicsSystem::Update(ecs::Scene& scene, float deltaTime) {
 	glEnable(GL_CULL_FACE);
 	glCullFace(GL_BACK);
 	glEnable(GL_DEPTH_TEST);
+	glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
 
 	for (int i = 0; i < numCamerasActive; i++) {
 		//matricies that need only be set once per camera
@@ -132,7 +163,24 @@ void GraphicsSystem::Update(ecs::Scene& scene, float deltaTime) {
 		for (Guid entityGuid : ecs::EntitiesInScene<RenderModel,TransformComponent>(scene)) {
 			RenderModel& comp = scene.GetComponent<RenderModel>(entityGuid);
 			TransformComponent& trans = scene.GetComponent<TransformComponent>(entityGuid);
-			
+
+			//search if it is already in the debug list, and if it is update it
+			for (int i = 0; i < entityTransforms.count; i++) {
+				if (entityTransforms.ids[i] == entityGuid) {
+					trans.setPosition(entityTransforms.positions[i]);
+					trans.setRotation(entityTransforms.rotations[i]);
+					trans.setScale(entityTransforms.scales[i]);
+					goto end;
+				}
+			}
+			//add it to the list if it wasn't found
+			entityTransforms.ids.push_back(entityGuid);
+			entityTransforms.names.push_back(comp.name);
+			entityTransforms.positions.push_back(trans.position);
+			entityTransforms.rotations.push_back(trans.rotation);
+			entityTransforms.scales.push_back(trans.scale);
+			entityTransforms.count++;
+end:
 			//properties the geometry is ALWAYS going to have
 			glm::mat4 M = glm::translate(glm::mat4(1), trans.getPosition()) * toMat4(trans.getRotation()) * glm::scale(glm::mat4(1), trans.getScale());
 			glUniformMatrix4fv(modelUniform, 1, GL_FALSE, glm::value_ptr(M));
@@ -181,6 +229,30 @@ void GraphicsSystem::Update(ecs::Scene& scene, float deltaTime) {
 			comp.geometry->bind();
 			glDrawArrays(GL_LINE_STRIP, 0, comp.numberOfVerticies);
 		}
+
+		if (showColliders) {
+			//Render debug wireframes of physx colliders
+			wireframeShader.use();
+			modelUniform = glGetUniformLocation(GLuint(lineShader), "M");
+			viewUniform = glGetUniformLocation(GLuint(lineShader), "V");
+			perspectiveUniform = glGetUniformLocation(GLuint(lineShader), "P");
+			glUniformMatrix4fv(perspectiveUniform, 1, GL_FALSE, glm::value_ptr(P));
+			glUniformMatrix4fv(viewUniform, 1, GL_FALSE, glm::value_ptr(V));
+			physx::PxScene* physxScene;
+			PxGetPhysics().getScenes(&physxScene, 1);
+			int nbActors = physxScene->getNbActors(physx::PxActorTypeFlag::eRIGID_DYNAMIC | physx::PxActorTypeFlag::eRIGID_STATIC);
+			if (nbActors)
+			{
+				glDisable(GL_DEPTH_TEST);
+				glDisable(GL_CULL_FACE);
+				glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
+				const int MAX_NUM_ACTOR_SHAPES = 128;
+				using namespace physx;
+				std::vector<PxRigidActor*> actors(nbActors);
+				physxScene->getActors(PxActorTypeFlag::eRIGID_DYNAMIC | PxActorTypeFlag::eRIGID_STATIC, reinterpret_cast<PxActor**>(&actors[0]), nbActors);
+				Snippets::renderActors(&actors[0], static_cast<PxU32>(actors.size()), modelUniform);
+			}
+		}
 	}
 }
 
@@ -197,6 +269,7 @@ void GraphicsSystem::input(SDL_Event& _event, int _cameraID)
 
 void GraphicsSystem::importOBJ(RenderModel& _component, const std::string _fileName) {
 	std::cout << "Beginning to load model " << _fileName << "\n";
+	_component.name = std::string(_fileName);
 	Assimp::Importer importer;
 	const aiScene* scene = importer.ReadFile("models/" + _fileName, aiProcess_Triangulate );
 	if (!scene || scene->mFlags & AI_SCENE_FLAGS_INCOMPLETE || !scene->mRootNode)
@@ -236,20 +309,36 @@ void GraphicsSystem::processNode(aiNode* node, const aiScene* scene, RenderModel
 			geometry.indicies.push_back(face.mIndices[2]);
 		}
 		std::cout << "\t\tindicies: " << geometry.indicies.size() << '\n';
+		std::cout << "finished processing node\n";
+		int ID = _component.attachMesh(geometry);
 		// process material
-		/* SAM TODO. Quite frankly this breaks my mind rn with the fact a material can have MULTIPLE textures SOMEHOW
+		//SAM TODO. Quite frankly this breaks my mind rn with the fact a material can have MULTIPLE textures SOMEHOW
 		if (mesh->mMaterialIndex >= 0)
 		{
 			aiMaterial* material = scene->mMaterials[mesh->mMaterialIndex];
-			vector<Texture> diffuseMaps = loadMaterialTextures(material,
-				aiTextureType_DIFFUSE, "texture_diffuse");
-			textures.insert(textures.end(), diffuseMaps.begin(), diffuseMaps.end());
-			vector<Texture> specularMaps = loadMaterialTextures(material,
-				aiTextureType_SPECULAR, "texture_specular");
-			textures.insert(textures.end(), specularMaps.begin(), specularMaps.end());
-		}*/
-		std::cout << "finished processing node\n";
-		_component.attachMesh(geometry);
+			//std::cout << "HELLO           " << material->GetTextureCount(aiTextureType_DIFFUSE) << '\n';
+			if (material->GetTextureCount(aiTextureType_DIFFUSE) > 0) {
+				//get the textures name(?)
+				aiString str;
+				material->GetTexture(aiTextureType_DIFFUSE, 0, &str);
+				std::cout << "Material has a texture " << str.C_Str() << '\n';
+				std::string temp = std::string(str.C_Str());
+				std::string temp2;
+				for (int i = temp.size()-1; i >= 0; i--) {
+					if (temp[i] != '\\')
+						temp2.push_back(temp[i]);
+					else
+						break;
+				}
+				temp.clear();
+				//reverse the string
+				for (int i = temp2.size() - 1; i >= 0; i--) {
+					temp.push_back(temp2[i]);
+				}
+				
+				_component.attachTexture(temp, ID);
+			}
+		}
 	}
 
 	//process each of the nodes children

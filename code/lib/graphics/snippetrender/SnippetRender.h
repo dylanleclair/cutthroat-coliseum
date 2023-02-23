@@ -26,49 +26,61 @@
 // Copyright (c) 2004-2008 AGEIA Technologies, Inc. All rights reserved.
 // Copyright (c) 2001-2004 NovodeX AG. All rights reserved.  
 
-#pragma once
+#ifndef PHYSX_SNIPPET_RENDER_H
+#define PHYSX_SNIPPET_RENDER_H
 
-#include "vehicle2/PxVehicleAPI.h"
+#include "PxPhysicsAPI.h"
+#include "PxPreprocessor.h"
 
-#include "../directdrivetrain/DirectDrivetrain.h"
-
-#if PX_SWITCH
-#pragma clang diagnostic push
-#pragma clang diagnostic ignored "-Wexpansion-to-defined"
+#if PX_WINDOWS
+	#include <windows.h>
+	#pragma warning(disable: 4505)
+	#include <GL/glew.h>
+#elif PX_LINUX_FAMILY
+	#if PX_CLANG
+		#pragma clang diagnostic push
+		#pragma clang diagnostic ignored "-Wreserved-identifier"
+	#endif
+	#include <GL/glew.h>
+	#include <GL/freeglut.h>	
+	#if PX_CLANG
+		#pragma clang diagnostic pop
+	#endif
 #elif PX_OSX
-#pragma clang diagnostic push
-#pragma clang diagnostic ignored "-Wexpansion-to-defined"
-#pragma clang diagnostic ignored "-Wdocumentation"
-#pragma clang diagnostic ignored "-Wimplicit-fallthrough"
-#elif PX_LINUX && PX_CLANG
-#pragma clang diagnostic push
-#pragma clang diagnostic ignored "-Wdocumentation"
-#endif
-#include "rapidjson/document.h"
-#include "rapidjson/prettywriter.h"
-#if (PX_LINUX && PX_CLANG) || PX_SWITCH
-#pragma clang diagnostic pop
+	#include <GL/glew.h>
+	#include <GLUT/glut.h>	
+#else
+	#error platform not supported.
 #endif
 
-namespace snippetvehicle2
+typedef	void	(*KeyboardCallback)	(unsigned char key, const physx::PxTransform& camera);
+typedef	void	(*RenderCallback)	();
+typedef	void	(*ExitCallback)		();
+
+namespace Snippets
 {
+	class Camera;
 
-using namespace physx;
-using namespace physx::vehicle2;
+	class TriggerRender
+	{
+		public:
+		virtual	bool	isTrigger(physx::PxShape*)	const	= 0;
+	};
 
-bool readThrottleResponseParams
-(const rapidjson::Document& config, const PxVehicleAxleDescription& axleDesc,
-	PxVehicleDirectDriveThrottleCommandResponseParams& throttleResponseParams);
+#if PX_SUPPORT_GPU_PHYSX
+	class SharedGLBuffer
+	{
+	private:
+		physx::PxCudaContextManager* cudaContextManager;
+		void* vbo_res;
+		void* devicePointer;
+	public:
+		GLuint vbo; //Opengl vertex buffer object
+		physx::PxU32 size;
+	};
+#endif
 
-bool writeThrottleResponseParams
-(const PxVehicleDirectDriveThrottleCommandResponseParams& throttleResponseParams, const PxVehicleAxleDescription& axleDesc,
-	rapidjson::PrettyWriter<rapidjson::StringBuffer>& writer);
+	void	renderActors(physx::PxRigidActor** actors, const physx::PxU32 numActors, GLuint modelUniform);
+}
 
-
-bool readDirectDrivetrainParamsFromJsonFile(const char* directory, const char* filename,
-	const PxVehicleAxleDescription& axleDescription, DirectDrivetrainParams&);
-
-bool writeDirectDrivetrainParamsToJsonFile(const char* directory, const char* filename,
-	const PxVehicleAxleDescription& axleDescription, const DirectDrivetrainParams&);
-
-}//namespace snippetvehicle2
+#endif //PHYSX_SNIPPET_RENDER_H

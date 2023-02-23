@@ -20,7 +20,12 @@
 
 #include "ImGuiDebug.h"
 
-#include "Time.h"
+#include "utils/Time.h"
+#include "Input.h"
+
+#include "systems/PhysicsSystem.h"
+
+#include "Car.h"
 
 glm::vec3 calculateSpherePoint(float s, float t)
 {
@@ -29,16 +34,6 @@ glm::vec3 calculateSpherePoint(float s, float t)
 	float y = cos(M_PI * s);
 	return(glm::vec3(x, y, z));
 }
-
-using namespace physx;
-
-extern PxRigidBody* getVehicleRigidBody();
-extern bool initPhysics();
-extern void stepPhysics(SDL_GameController* controller, Timestep timestep);
-extern void cleanupPhysics();
-extern int carSampleInit();
-
-extern PxScene* gScene;
 
 CarPhysics carPhysics;
 CarPhysicsSerde carConfig(carPhysics);
@@ -56,11 +51,12 @@ void finishLinePrint() {
 	}
 }
 
+
 int main(int argc, char* argv[]) {
 	printf("Starting main");
 
 
-	carSampleInit();
+
 
 	SDL_Init(SDL_INIT_EVERYTHING); // initialize all sdl systems
 	Window window(1200, 800, "Maximus Overdrive");
@@ -71,20 +67,31 @@ int main(int argc, char* argv[]) {
 
 	carConfig.deserialize();
 
-	// create instance of system to use.
+
+	/**
+	 * Begin initialization of ECS systems, entities, etc.
+	 * - Graphics
+	 * - Physics
+	 * - AI
+	 */
+
+	// first and foremost, create a scene.
+	ecs::Scene mainScene;
+
 	GraphicsSystem gs(window);
 
+	physics::PhysicsSystem physicsSystem{};
+	physicsSystem.Initialize();
+
+
+
+
+
+
 	// init ecs 
-	ecs::Scene mainScene;
 
 
 	std::cout << "Component initalization finished\n";
-
-
-	if (initPhysics())
-	{
-		std::cout << "initialized physx driving model\n";
-	}
 
 
 	//make an entity
@@ -94,16 +101,26 @@ int main(int argc, char* argv[]) {
 	ecs::Entity inWall_e = mainScene.CreateEntity();
 	ecs::Entity ground_e = mainScene.CreateEntity();
 
+	mainScene.AddComponent(car_e.guid, Car{});
+	Car& testCar = mainScene.GetComponent<Car>(car_e.guid);
+	testCar.physicsSystem = &physicsSystem;
+	if (!testCar.initVehicle())
+	{
+		std::cout << "ERROR: could not initialize vehicle";
+	}
+
+
 
 	// Car
 	RenderModel car_r = RenderModel();
 	GraphicsSystem::importOBJ(car_r, "test_car.obj");
 	car_r.setModelColor(glm::vec3(0.5f, 0.5f, 0.f));
 	mainScene.AddComponent(car_e.guid, car_r);
-	TransformComponent car_t = TransformComponent(getVehicleRigidBody());
+	TransformComponent car_t = TransformComponent(testCar.getVehicleRigidBody());
 	car_t.setPosition(glm::vec3(0, 1, 0));
 	car_t.setRotation(glm::quat(0, 0, 0, 1));
 	mainScene.AddComponent(car_e.guid, car_t);
+	
 
 	auto& car_render = mainScene.GetComponent<RenderModel>(car_e.guid);
 	std::cout << "Car Guid: " << car_e.guid << std::endl;
@@ -189,19 +206,6 @@ int main(int argc, char* argv[]) {
 
 	FramerateCounter framerate;
 
-	//assert(SDL_NumJoysticks() > 0);
-	// TODO: handle no controller
-	SDL_GameController* controller = nullptr;
-	controller = SDL_GameControllerOpen(0);
-	//assert(controller);
-	SDL_Joystick* joy = nullptr;
-	joy = SDL_GameControllerGetJoystick(controller);
-
-	//assert(joy);
-	int instanceID =  SDL_JoystickInstanceID(joy);
-
-
-
 	bool quit = false;
 	int controlledCamera = 0;
 	
@@ -225,6 +229,16 @@ int main(int argc, char* argv[]) {
 		//polls all pending input events until there are none left in the queue
 		while (SDL_PollEvent(&window.event)) {
 			ImGui_ImplSDL2_ProcessEvent(&window.event);
+
+			if (window.event.type == SDL_CONTROLLERDEVICEADDED) {
+				std::cout << "Adding controller\n";
+				ControllerInput::init_controller();
+			}
+
+			if (window.event.type == SDL_CONTROLLERDEVICEREMOVED) {
+				std::cout << "removing controller\n";
+				ControllerInput::deinit_controller();
+			}
 
 			if (window.event.type == SDL_QUIT)
 				quit = true;
@@ -269,7 +283,7 @@ int main(int argc, char* argv[]) {
 					std::cout << std::endl;
 
 					std::cout << finish_trans.getPosition().x << ", " << finish_trans.getPosition().y << ", " << finish_trans.getPosition().z << std::endl;
-					std::cout << car_t.getPosition().x << ", " << car_t.getPosition().y << ", " << car_t.getPosition().z << std::endl;
+					std::cout << car_trans.getPosition().x << ", " << car_trans.getPosition().y << ", " << car_trans.getPosition().z << std::endl;
 					break;
 				case SDLK_ESCAPE:	// (Pressing escape closes the window, useful for fullscreen);
 					quit = true;
@@ -299,6 +313,8 @@ int main(int argc, char* argv[]) {
 
 		gs.Update(mainScene, 0.0f);
 		aiSystem.Update(mainScene, 0.f);
+		physicsSystem.Update(mainScene,timestep);
+
 
 		// END__ ECS SYSTEMS UPDATES
 
@@ -320,9 +336,6 @@ int main(int argc, char* argv[]) {
 		// END FRAMERATE COUNTER
 
 		// PHYSX DRIVER UPDATE
-		stepPhysics(controller, timestep);
-
-
 		// TODO(milestone 1): strip all non-milestone related imgui windows out
 		// BEGIN CAR PHYSICS PANEL
 		// ImGui::Begin("Car Physics", nullptr);
@@ -360,13 +373,15 @@ int main(int argc, char* argv[]) {
 		// END CAR PHYSICS PANEL
 
 		// NOTE: the imgui bible - beau
-		ImGui::ShowDemoWindow();
+		//ImGui::ShowDemoWindow();
 
 		gs.ImGuiPanel();
 		// Loads the imgui panel that lets you reload vehicle JSONs
+
 		//reloadVehicleJSON();
 		vehicleTuning();
 		engineTuning();
+
 
 		ImGui::Render();
 		glViewport(0, 0, (int)io.DisplaySize.x, (int)io.DisplaySize.y);
@@ -380,12 +395,10 @@ int main(int argc, char* argv[]) {
 	ImGui::DestroyContext();
 
 
-	cleanupPhysics();
+	// cleanupPhysics();
+	physicsSystem.Cleanup();
 
-	SDL_JoystickClose(joy);
-	joy = nullptr;
-	SDL_GameControllerClose(controller);
-	controller = nullptr;
+	ControllerInput::deinit_controller();
 
 	SDL_Quit();
 	return 0;
