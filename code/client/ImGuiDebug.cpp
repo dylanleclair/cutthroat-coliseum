@@ -114,7 +114,7 @@ void dampeningRatioPrint(int i) {
 }
 
 void vehicleTuning() {
-	ImGui::Begin("Tuning");
+	ImGui::Begin("Vehicle Tuning");
 
 	// Rigid Body params
 	if (ImGui::TreeNode("Rigid Body:")) {
@@ -613,16 +613,84 @@ void engineTuning() {
 	if (ImGui::TreeNode("Autobox:")) {
 		ImGui::Text("How long (in seconds) until the next gear change happens");
 		ImGui::Text("You want to make sure this is higher than your gear switch time");
+		ImGui::Text("Current gear switch time: %f", gear_switch_time);
 		if (ImGui::InputFloat("Lantency", &auto_latency)) {
 			gVehicle.mEngineDriveParams.autoboxParams.latency = auto_latency;
+		}
+
+		ImGui::Separator();
+		ImGui::Text("Autobox will initate a gear change if the ratio of the engine rotation speed");
+		ImGui::Text("is greater than the ratio in the table, the inverse for shifting down");
+		ImGui::Text("Up From || ");
+		ImGui::SameLine();
+		ImGui::Text("Down From");
+		ImGui::Text("Rev");
+		ImGui::SameLine();
+		if (ImGui::InputFloat("", &auto_up[0])) {
+			gVehicle.mEngineDriveParams.autoboxParams.upRatios[0] = auto_up[0];
+		}
+		ImGui::SameLine();
+		if (ImGui::InputFloat("", &auto_down[0])) {
+			gVehicle.mEngineDriveParams.autoboxParams.downRatios[0] = auto_down[0];
+		}
+		ImGui::Text("Neu");
+		ImGui::SameLine();
+		if (ImGui::InputFloat("", &auto_up[1])) {
+			gVehicle.mEngineDriveParams.autoboxParams.upRatios[1] = auto_up[1];
+		}
+		ImGui::SameLine();
+		if (ImGui::InputFloat("", &auto_down[1])) {
+			gVehicle.mEngineDriveParams.autoboxParams.downRatios[1] = auto_down[1];
+		}
+		ImGui::Text("1st");
+		ImGui::SameLine();
+		if (ImGui::InputFloat("", &auto_up[2])) {
+			gVehicle.mEngineDriveParams.autoboxParams.upRatios[2] = auto_up[2];
+		}
+		ImGui::SameLine();
+		if (ImGui::InputFloat("", &auto_down[2])) {
+			gVehicle.mEngineDriveParams.autoboxParams.downRatios[2] = auto_down[2];
+		}
+		ImGui::Text("2nd");
+		ImGui::SameLine();
+		if (ImGui::InputFloat("", &auto_up[3])) {
+			gVehicle.mEngineDriveParams.autoboxParams.upRatios[3] = auto_up[3];
+		}
+		ImGui::SameLine();
+		if (ImGui::InputFloat("", &auto_down[3])) {
+			gVehicle.mEngineDriveParams.autoboxParams.downRatios[3] = auto_down[3];
+		}
+		ImGui::Text("3rd");
+		ImGui::SameLine();
+		if (ImGui::InputFloat("", &auto_up[4])) {
+			gVehicle.mEngineDriveParams.autoboxParams.upRatios[4] = auto_up[4];
+		}
+		ImGui::SameLine();
+		if (ImGui::InputFloat("", &auto_down[4])) {
+			gVehicle.mEngineDriveParams.autoboxParams.downRatios[4] = auto_down[4];
+		}
+		ImGui::Text("4th");
+		ImGui::SameLine();
+		if (ImGui::InputFloat("", &auto_up[5])) {
+			gVehicle.mEngineDriveParams.autoboxParams.upRatios[5] = auto_up[5];
+		}
+		ImGui::SameLine();
+		if (ImGui::InputFloat("", &auto_down[5])) {
+			gVehicle.mEngineDriveParams.autoboxParams.downRatios[5] = auto_down[5];
+		}
+		ImGui::Text("5th");
+		ImGui::SameLine();
+		if (ImGui::InputFloat("", &auto_up[6])) {
+			gVehicle.mEngineDriveParams.autoboxParams.upRatios[6] = auto_up[6];
+		}
+		ImGui::SameLine();
+		if (ImGui::InputFloat("", &auto_down[6])) {
+			gVehicle.mEngineDriveParams.autoboxParams.downRatios[6] = auto_down[6];
 		}
 
 		ImGui::TreePop();
 	}
 
-
-	/*auto_up[i] = gVehicle.mEngineDriveParams.autoboxParams.upRatios[i];
-	auto_down[i] = gVehicle.mEngineDriveParams.autoboxParams.downRatios[i];*/
 	
 
 	ImGui::End();
