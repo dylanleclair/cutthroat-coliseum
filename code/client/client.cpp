@@ -56,6 +56,7 @@ void finishLinePrint() {
 	}
 }
 
+
 int main(int argc, char* argv[]) {
 	printf("Starting main");
 
@@ -85,7 +86,6 @@ int main(int argc, char* argv[]) {
 	{
 		std::cout << "initialized physx driving model\n";
 	}
-
 
 	//make an entity
 	ecs::Entity car_e = mainScene.CreateEntity();
