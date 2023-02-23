@@ -1,19 +1,20 @@
 #include "ImGuiDebug.h"
 #include <iostream>
+#include "Car.h"
 
-void reloadVehicleJSON() {
+void reloadVehicleJSON(Car& car) {
 	ImGui::Begin("Serialize");
 
 	if (ImGui::Button("Reload Base.Json")) {
-		readBaseParamsFromJsonFile("../../../../assets/vehicledata", "Base.json", gVehicle.mBaseParams);
+		readBaseParamsFromJsonFile("../../../../assets/vehicledata", "Base.json", car.m_Vehicle.mBaseParams);
 		
 		//gVehicle.mBaseParams.rigidBodyParams.mass = 300.0f;
-		std::cout << gVehicle.mBaseParams.rigidBodyParams.mass << std::endl;
+		std::cout << car.m_Vehicle.mBaseParams.rigidBodyParams.mass << std::endl;
 	}
 
 	if (ImGui::Button("Reload EngineDrive.Json")) {
 		readEngineDrivetrainParamsFromJsonFile(gVehicleDataPath, "EngineDrive.json",
-			gVehicle.mEngineDriveParams);
+			car.m_Vehicle.mEngineDriveParams);
 	}
 	
 	ImGui::End();

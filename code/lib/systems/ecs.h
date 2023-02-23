@@ -57,7 +57,8 @@ namespace ecs
             void push_back(Guid entityGuid, T component)
             {
                 size_t componentIndex = m_size;
-                m_components[componentIndex] = component;
+                // m_components[componentIndex] = component;
+                m_components.push_back(component); // save some memory
                 m_mappings[entityGuid] = componentIndex; // add the mapping to our lookup table for them
                 m_size++;
             }
@@ -92,8 +93,9 @@ namespace ecs
         private:
             // std::vector<T> m_components = std::vector<T>{};                       // we're *supposed* to use an array here, but a vector will do.
             size_t m_size{0};
-            std::array<T, MAX_ENTITIES> m_components;
+            // std::array<T, MAX_ENTITIES> m_components;
             std::array<size_t, MAX_ENTITIES> m_mappings; // helps us access components even if others are removed. component guid -> index in pool
+            std::vector<T> m_components;
         };
     }
 
