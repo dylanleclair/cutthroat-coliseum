@@ -24,6 +24,9 @@ glm::mat4 Camera::getView()
 * Used to forward callback events into the camera
 */
 void Camera::input(const SDL_Event& _event) {
+	auto& io = ImGui::GetIO();
+	if (io.WantCaptureKeyboard && _event.type == SDL_MOUSEBUTTONDOWN) return;
+
 	if(_event.type == SDL_KEYDOWN)
 	{
 		if (_event.key.keysym.sym == SDLK_UP)

@@ -4,6 +4,10 @@
 #include "SDL_opengl.h"
 #include <glm/glm.hpp>
 
+#include "imgui.h"
+#include "imgui_impl_sdl.h"
+#include "imgui_impl_opengl3.h"
+
 class Camera {
 public:
 	Camera();
