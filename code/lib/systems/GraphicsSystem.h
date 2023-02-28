@@ -54,4 +54,9 @@ private:
 	glm::ivec2 windowSize;
 	static void processNode(aiNode* node, const aiScene* scene, RenderModel& _component);
 	static void processNode(aiNode* node, const aiScene* scene, CPU_Geometry& _geometry);
+
+	float follow_cam_x;
+	float follow_cam_y;
+	float follow_cam_z;
+	float follow_correction_strength;
 };

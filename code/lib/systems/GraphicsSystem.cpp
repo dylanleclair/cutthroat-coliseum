@@ -27,6 +27,10 @@ GraphicsSystem::GraphicsSystem(Window& _window) :
 	wireframeShader("shaders/wireframe.vert", "shaders/wireframe.frag")
 {
 	windowSize = _window.getSize();
+	follow_cam_x = 0.f;
+	follow_cam_y = 2.f;
+	follow_cam_z = -4.f;
+	follow_correction_strength = 40.f;
 }
 
 // Panel to controls the cameras
@@ -41,6 +45,13 @@ void GraphicsSystem::ImGuiPanel() {
 	}
 	if (ImGui::Button("Follow Camera")) {
 		cam_mode = 3;
+	}
+
+	if (cam_mode == 3) {
+		ImGui::InputFloat("X Distance: ", &follow_cam_x);
+		ImGui::InputFloat("Y Distance: ", &follow_cam_y);
+		ImGui::InputFloat("Z Distance: ", &follow_cam_z);
+		ImGui::InputFloat("Correction Strength", &follow_correction_strength);
 	}
 
 	ImGui::End();
@@ -107,13 +118,13 @@ void GraphicsSystem::Update(ecs::Scene& scene, float deltaTime) {
 			static glm::vec3 previousCarPosition = glm::vec3(0);
 			TransformComponent& trans = scene.GetComponent<TransformComponent>(0);
 			//calculate where the camera should aim to be positioned
-			glm::vec3 cameraTargetLocation = glm::translate(glm::mat4(1), trans.getPosition()) * toMat4(trans.getRotation()) * glm::vec4(0, 2, -4, 1);
+			glm::vec3 cameraTargetLocation = glm::translate(glm::mat4(1), trans.getPosition()) * toMat4(trans.getRotation()) * glm::vec4(follow_cam_x, follow_cam_y, follow_cam_z, 1);
 			//calculate the speed of the car
 			float speed = glm::distance(previousCarPosition, trans.getPosition());
 			//calculate how far the camera is from the target position
 			float cameraOffset = glm::distance(cameraTargetLocation, cameras[0].getPos());
 			//use a sigmoid function to determine how much to move the camera to the target position (can't go higher than 1)
-			float correctionAmount = cameraOffset / (40 + cameraOffset);
+			float correctionAmount = cameraOffset / (follow_correction_strength + cameraOffset);
 			//lerp between the 2 positions according to the correction amount
 			previousCarPosition = trans.getPosition();
 			//lerp the camera to a good location based on the correction amount
