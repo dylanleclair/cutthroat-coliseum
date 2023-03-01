@@ -104,7 +104,14 @@ PxRigidBody* Car::getVehicleRigidBody()
   return m_Vehicle.mPhysXState.physxActor.rigidBody;
 }
 
-void Car::Jump() {
+// Very jank right now as you can spam it
+void Car::TetherSteer() {
+    //m_Vehicle.mPhysXState.physxActor.rigidBody->addForce(PxVec3(0.f, 0.f, 10.f), PxForceMode::eVELOCITY_CHANGE, true);
+    m_Vehicle.mPhysXState.physxActor.rigidBody->addTorque(PxVec3(0.f, -2.f, 0.f), PxForceMode::eVELOCITY_CHANGE, true);
+}
+
+// Having issues with bouncing
+void Car::TetherJump() {
     auto vel = m_Vehicle.mPhysXState.physxActor.rigidBody->getGlobalPose();
     // For modes
     //eIMPULSE
@@ -114,7 +121,8 @@ void Car::Jump() {
     // if vel.p.y is to prevent jumping if the car is already in the air
     // This is a very messy way of doing this - there might be a flag for if the car is in the air
     if (vel.p.y < 2.0f) {
-        m_Vehicle.mPhysXState.physxActor.rigidBody->addForce(PxVec3(0.f, 10.f, 0.f), PxForceMode::eVELOCITY_CHANGE, true);
+        //m_Vehicle.mPhysXState.physxActor.rigidBody->addForce(PxVec3(0.f, 10.f, 0.f), PxForceMode::eVELOCITY_CHANGE, true);
+        m_Vehicle.mPhysXState.physxActor.rigidBody->addTorque(PxVec3(0.f, 10.f, 0.f), PxForceMode::eVELOCITY_CHANGE, true);
     }
 }
 
