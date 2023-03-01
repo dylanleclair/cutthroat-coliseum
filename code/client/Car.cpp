@@ -100,74 +100,12 @@ void Car::cleanupVehicle()
 }
 
 PxRigidBody* Car::getVehicleRigidBody()
-{
+{  
   return m_Vehicle.mPhysXState.physxActor.rigidBody;
 }
 
-void Car::stepPhysics(Timestep timestep)
-{
-        
-    auto keys_arr = SDL_GetKeyboardState(nullptr);
-    auto w_key = keys_arr[SDL_SCANCODE_W];
-    auto s_key = keys_arr[SDL_SCANCODE_S];
-    auto a_key = keys_arr[SDL_SCANCODE_A];
-    auto d_key = keys_arr[SDL_SCANCODE_D];
-
-    float delta_seconds = timestep.getSeconds();
-    assert(delta_seconds > 0.f && delta_seconds < 0.2000001f);
-  // Apply the brake, throttle and steer to the command state of the vehicle.
-  // const Command &command = gCommands[gCommandProgress];
-
-  Command command = {0.f, 0.f, 0.f, m_TargetGearCommand};
-  // command.duration = timestep;
-
-  // Throttle to 2.f will cause weird behaviour
-  if (SDL_GameControllerGetButton(ControllerInput::controller, SDL_CONTROLLER_BUTTON_A) || w_key)
-  {
-      command.throttle = carThrottle;
-    //goto end; // so we don't attempt to throttle and break
-  }
-  else if (SDL_GameControllerGetButton(ControllerInput::controller, SDL_CONTROLLER_BUTTON_B) || s_key)
-  {
-      command.brake = carBrake;
-    // goto end;????
-  }
-//end:
-
-  // Normalize controller axis
-  // BUG: max positive is 1 less in magnitude than max min meaning full negative will be slightly above 1
-  carAxis = (float) - SDL_GameControllerGetAxis(ControllerInput::controller, SDL_CONTROLLER_AXIS_LEFTX) / SHRT_MAX;
-  //std::cout << axis << std::endl;
-  if (a_key) {
-      command.steer = 1.f;
-  } else if (d_key) {
-      command.steer = -1.f;
-  }
-  else {
-      command.steer = carAxis * carAxisScale;
-  }
-  
 
 
-  m_Vehicle.mCommandState.brakes[0] = command.brake;
-  m_Vehicle.mCommandState.nbBrakes = 1;
-  m_Vehicle.mCommandState.throttle = command.throttle;
-  m_Vehicle.mCommandState.steer = command.steer;
-  m_Vehicle.mTransmissionCommandState.targetGear = command.gear;
-
-  // Forward integrate the vehicle by a single timestep.
-  // Apply substepping at low forward speed to improve simulation fidelity.
-  const PxVec3 linVel = m_Vehicle.mPhysXState.physxActor.rigidBody->getLinearVelocity();
-  const PxVec3 forwardDir = m_Vehicle.mPhysXState.physxActor.rigidBody->getGlobalPose().q.getBasisVector2();
-  const PxReal forwardSpeed = linVel.dot(forwardDir);
-  const PxU8 nbSubsteps = (forwardSpeed < 5.0f ? 3 : 1);
-  m_Vehicle.mComponentSequence.setSubsteps(m_Vehicle.mComponentSequenceSubstepGroupHandle, nbSubsteps);
-  m_Vehicle.step(delta_seconds, m_VehicleSimulationContext);
-
-  // Forward integrate the phsyx scene by a single timestep.
-  physicsSystem->m_Scene->simulate(delta_seconds);
-  physicsSystem->m_Scene->fetchResults(true);
-}
 
 void Car::Update(float deltaTime)
 {
@@ -177,6 +115,7 @@ void Car::Update(float deltaTime)
   auto s_key = keys_arr[SDL_SCANCODE_S];
   auto a_key = keys_arr[SDL_SCANCODE_A];
   auto d_key = keys_arr[SDL_SCANCODE_D];
+  auto space_bar = keys_arr[SDL_SCANCODE_SPACE];
 
   float delta_seconds = deltaTime;
   assert(delta_seconds > 0.f && delta_seconds < 0.2000001f);
@@ -215,6 +154,21 @@ void Car::Update(float deltaTime)
   {
       command.steer = carAxis * carAxisScale;
   }
+  
+
+  auto vel = m_Vehicle.mPhysXState.physxActor.rigidBody->getGlobalPose();
+  // For modes
+  //eIMPULSE
+  // or
+  //eVELOCITY_CHANGE
+
+  // if vel.p.y is to prevent jumping if the car is already in the air
+  // This is a very messy way of doing this - there might be a flag for if the car is in the air
+  if (space_bar && vel.p.y < 2.0f) {
+      m_Vehicle.mPhysXState.physxActor.rigidBody->addForce(PxVec3(0.f, 1.f, 0.f), PxForceMode::eVELOCITY_CHANGE, true);
+  }
+
+  
 
   m_Vehicle.mCommandState.brakes[0] = command.brake;
   m_Vehicle.mCommandState.nbBrakes = 1;
