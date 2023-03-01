@@ -38,6 +38,10 @@ void main()
 	vec3 ambiant = sampleCol * ambiantStr;
 
 	//calculate final color
-	color = vec4((diff + ambiant + specular) * sampleCol, 1.0f);
+	//color = vec4(n.x,n.y,n.z,1);
+	//if(dot(n, viewDir) < 0.2)
+		//color = vec4(0,0,0,1);
+	//else
+		color = vec4((diff + ambiant + specular) * sampleCol, 1.0f);
 
 }

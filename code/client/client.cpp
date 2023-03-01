@@ -14,6 +14,8 @@
 #include "systems/GraphicsSystem.h"
 #include "systems/components.h"
 
+#include "GRAPHICS_TESTBENCH.h"
+
 #include "CarPhysics.h"
 #include "FrameCounter.h"
 #include "systems/ai.h"
@@ -53,6 +55,7 @@ void finishLinePrint() {
 
 
 int main(int argc, char* argv[]) {
+	//RUN_GRAPHICS_TEST_BENCH();
 	printf("Starting main");
 
 

@@ -1,6 +1,6 @@
 set(BINARY ${CMAKE_PROJECT_NAME}_client)
 
-file(GLOB_RECURSE SOURCES LIST_DIRECTORIES true *.h *.cpp *.hpp)
+file(GLOB_RECURSE SOURCES LIST_DIRECTORIES true *.h *.cpp *.hpp *.frag *.vert)
 
 set(SOURCES ${SOURCES})
 
