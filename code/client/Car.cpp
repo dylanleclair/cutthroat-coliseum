@@ -104,7 +104,19 @@ PxRigidBody* Car::getVehicleRigidBody()
   return m_Vehicle.mPhysXState.physxActor.rigidBody;
 }
 
+void Car::Jump() {
+    auto vel = m_Vehicle.mPhysXState.physxActor.rigidBody->getGlobalPose();
+    // For modes
+    //eIMPULSE
+    // or
+    //eVELOCITY_CHANGE
 
+    // if vel.p.y is to prevent jumping if the car is already in the air
+    // This is a very messy way of doing this - there might be a flag for if the car is in the air
+    if (vel.p.y < 2.0f) {
+        m_Vehicle.mPhysXState.physxActor.rigidBody->addForce(PxVec3(0.f, 10.f, 0.f), PxForceMode::eVELOCITY_CHANGE, true);
+    }
+}
 
 
 void Car::Update(float deltaTime)
@@ -153,22 +165,7 @@ void Car::Update(float deltaTime)
   else
   {
       command.steer = carAxis * carAxisScale;
-  }
-  
-
-  auto vel = m_Vehicle.mPhysXState.physxActor.rigidBody->getGlobalPose();
-  // For modes
-  //eIMPULSE
-  // or
-  //eVELOCITY_CHANGE
-
-  // if vel.p.y is to prevent jumping if the car is already in the air
-  // This is a very messy way of doing this - there might be a flag for if the car is in the air
-  if (space_bar && vel.p.y < 2.0f) {
-      m_Vehicle.mPhysXState.physxActor.rigidBody->addForce(PxVec3(0.f, 1.f, 0.f), PxForceMode::eVELOCITY_CHANGE, true);
-  }
-
-  
+  }  
 
   m_Vehicle.mCommandState.brakes[0] = command.brake;
   m_Vehicle.mCommandState.nbBrakes = 1;

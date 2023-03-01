@@ -277,6 +277,9 @@ int main(int argc, char* argv[]) {
 						break;
 					case SDLK_w:
 						break;
+					case SDLK_SPACE:
+						testCar.Jump();
+						break;
 
 
 					// Prinout of camera matrix
