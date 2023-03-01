@@ -113,7 +113,8 @@ struct Car {
     bool initVehicle();
     void cleanupVehicle();
 
-    void Jump();
+    void TetherSteer();
+    void TetherJump();
 
     PxRigidBody* getVehicleRigidBody();
 

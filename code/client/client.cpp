@@ -101,6 +101,8 @@ int main(int argc, char* argv[]) {
 	ecs::Entity inWall_e = mainScene.CreateEntity();
 	ecs::Entity ground_e = mainScene.CreateEntity();
 	ecs::Entity finish_line = mainScene.CreateEntity();
+	ecs::Entity tetherPole1_e = mainScene.CreateEntity();
+	ecs::Entity tetherPole2_e = mainScene.CreateEntity();
 
 	mainScene.AddComponent(car_e.guid, Car{});
 	Car& testCar = mainScene.GetComponent<Car>(car_e.guid);
@@ -198,6 +200,25 @@ int main(int argc, char* argv[]) {
 	mainScene.AddComponent(inWall_e.guid, inWall);
 	mainScene.AddComponent(inWall_e.guid, wall_t);
 
+	// Tether poles
+	RenderModel tetherPole1_r = RenderModel();
+	GraphicsSystem::importOBJ(tetherPole1_r, "alpha_tether_pole.obj");
+	tetherPole1_r.setModelColor(glm::vec3(205.f / 255.f, 133.f / 255.f, 63.f / 255.f));
+	mainScene.AddComponent(tetherPole1_e.guid, tetherPole1_r);
+	TransformComponent tetherPole1_t = TransformComponent();
+	tetherPole1_t.setPosition(glm::vec3(0.f, 0.f, 0.f));
+	tetherPole1_t.setScale(glm::vec3(3.2f, 3.2f, 3.2f));
+	mainScene.AddComponent(tetherPole1_e.guid, tetherPole1_t);
+
+	RenderModel tetherPole2_r = RenderModel();
+	GraphicsSystem::importOBJ(tetherPole2_r, "alpha_tether_pole.obj");
+	tetherPole2_r.setModelColor(glm::vec3(205.f / 255.f, 133.f / 255.f, 63.f / 255.f));
+	mainScene.AddComponent(tetherPole2_e.guid, tetherPole2_r);
+	TransformComponent tetherPole2_t = TransformComponent();
+	tetherPole2_t.setPosition(glm::vec3(0.f, 0.f, -100.f));
+	tetherPole2_t.setScale(glm::vec3(3.2f, 3.2f, 3.2f));
+	mainScene.AddComponent(tetherPole2_e.guid, tetherPole2_t);
+
 	// This is how to change the position of the object after it has been passed to the ECS
 	/*
 	auto &wallTrans = mainScene.GetComponent<TransformComponent>(outWall_e.guid);
@@ -278,9 +299,11 @@ int main(int argc, char* argv[]) {
 					case SDLK_w:
 						break;
 					case SDLK_SPACE:
-						testCar.Jump();
+						testCar.TetherJump();
 						break;
-
+					case SDLK_m:
+						testCar.TetherSteer();
+						break;
 
 					// Prinout of camera matrix
 				case SDLK_c:
@@ -292,6 +315,9 @@ int main(int argc, char* argv[]) {
 
 					std::cout << finish_trans.getPosition().x << ", " << finish_trans.getPosition().y << ", " << finish_trans.getPosition().z << std::endl;
 					std::cout << car_trans.getPosition().x << ", " << car_trans.getPosition().y << ", " << car_trans.getPosition().z << std::endl;
+					std::cout << "Car Transform: " << testCar.getVehicleRigidBody()->getGlobalPose().p.x << ", "
+							  << testCar.getVehicleRigidBody()->getGlobalPose().p.y << ", "
+						      << testCar.getVehicleRigidBody()->getGlobalPose().p.z << std::endl;
 					break;
 				case SDLK_ESCAPE:	// (Pressing escape closes the window, useful for fullscreen);
 					quit = true;
