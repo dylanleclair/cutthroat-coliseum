@@ -103,6 +103,7 @@ int main(int argc, char* argv[]) {
 	ecs::Entity outWall_e = mainScene.CreateEntity();
 	ecs::Entity inWall_e = mainScene.CreateEntity();
 	ecs::Entity ground_e = mainScene.CreateEntity();
+	ecs::Entity finish_line = mainScene.CreateEntity();
 
 	mainScene.AddComponent(car_e.guid, Car{});
 	Car& testCar = mainScene.GetComponent<Car>(car_e.guid);
@@ -118,13 +119,14 @@ int main(int argc, char* argv[]) {
 	car_r.setModelColor(glm::vec3(0.5f, 0.5f, 0.f));
 	mainScene.AddComponent(car_e.guid, car_r);
 	TransformComponent car_t = TransformComponent(testCar.getVehicleRigidBody());
-	car_t.setPosition(glm::vec3(0, 1, 0));
+	car_t.setPosition(glm::vec3(0, 0, 1));
 	car_t.setRotation(glm::quat(0, 0, 0, 1));
+	car_t.setScale(glm::vec3(3.2f, 3.2f, 3.2f));
 	mainScene.AddComponent(car_e.guid, car_t);
 	
 
 	auto& car_render = mainScene.GetComponent<RenderModel>(car_e.guid);
-	std::cout << "Car Guid: " << car_e.guid << std::endl;
+	//std::cout << "Car Guid: " << car_e.guid << std::endl;
 	
 	//finish box
 	ecs::Entity finish_e = mainScene.CreateEntity();
@@ -149,12 +151,15 @@ int main(int argc, char* argv[]) {
 	
 	// Finish line components
 	RenderModel finish = RenderModel();
-	finish.attachMesh(finish_geom);
-	mainScene.AddComponent(finish_e.guid, finish);
+	GraphicsSystem::importOBJ(finish, "basic_finish.obj");
+	//finish.attachMesh(finish_geom);
+	finish.setModelColor(glm::vec3(1.f, 0.f, 0.f));
+	mainScene.AddComponent(finish_line.guid, finish);
 
 	TransformComponent finish_t = TransformComponent();
-	finish_t.setPosition(glm::vec3(9, 1, -2));
-	mainScene.AddComponent(finish_e.guid, finish_t);
+	finish_t.setPosition(glm::vec3(0, 0, 0));
+	finish_t.setScale(glm::vec3(3.2f, 3.2f, 3.2f));
+	mainScene.AddComponent(finish_line.guid, finish_t);
 
 	// Pathfinding
 	PathfindingComponent car_pathfinder{ finish_e.guid };
@@ -171,6 +176,7 @@ int main(int argc, char* argv[]) {
 	
 	// Level
 	TransformComponent level_t = TransformComponent();
+	level_t.setScale(glm::vec3(3.2f, 1.f, 3.2f));
 	mainScene.AddComponent(ground_e.guid, level_t);
 
 	RenderModel level_r = RenderModel();
@@ -180,7 +186,8 @@ int main(int argc, char* argv[]) {
 	mainScene.AddComponent(level_e.guid, level_t);
 
 	TransformComponent wall_t = TransformComponent();
-	wall_t.setPosition(glm::vec3(0, 2, 0));
+	wall_t.setPosition(glm::vec3(0, 0, 0));
+	wall_t.setScale(glm::vec3(3.2f, 3.2f, 3.2f));
 
 	RenderModel outWall = RenderModel();
 	GraphicsSystem::importOBJ(outWall, "large_test_torus_inwall.obj");
@@ -272,6 +279,9 @@ int main(int argc, char* argv[]) {
 						controlledCamera = 3;
 						break;
 					case SDLK_w:
+						break;
+					case SDLK_SPACE:
+						testCar.Jump();
 						break;
 
 

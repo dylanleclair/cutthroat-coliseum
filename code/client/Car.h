@@ -113,7 +113,7 @@ struct Car {
     bool initVehicle();
     void cleanupVehicle();
 
-    void stepPhysics(Timestep timestep);
+    void Jump();
 
     PxRigidBody* getVehicleRigidBody();
 
