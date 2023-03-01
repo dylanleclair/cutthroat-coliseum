@@ -170,20 +170,25 @@ void GraphicsSystem::Update(ecs::Scene& scene, float deltaTime) {
 		glUniformMatrix4fv(viewUniform, 1, GL_FALSE, glm::value_ptr(V));
 		glUniform3fv(viewPosUniform, 1, glm::value_ptr(cameras[i].getPos()));
 
-		//draw the models
-		for (Guid entityGuid : ecs::EntitiesInScene<RenderModel,TransformComponent>(scene)) {
+		/*
+		* UPDATE THE TRANSFORM COMPONENTS
+		*/
+		for (Guid entityGuid : ecs::EntitiesInScene<RenderModel, TransformComponent>(scene)) {
 			RenderModel& comp = scene.GetComponent<RenderModel>(entityGuid);
 			TransformComponent& trans = scene.GetComponent<TransformComponent>(entityGuid);
-
+			bool cont = false;
 			//search if it is already in the debug list, and if it is update it
 			for (int i = 0; i < entityTransforms.count; i++) {
 				if (entityTransforms.ids[i] == entityGuid) {
 					trans.setPosition(entityTransforms.positions[i]);
 					trans.setRotation(entityTransforms.rotations[i]);
 					trans.setScale(entityTransforms.scales[i]);
-					goto end;
+					cont = true;
+					break;
 				}
 			}
+			if (cont)
+				continue;
 			//add it to the list if it wasn't found
 			entityTransforms.ids.push_back(entityGuid);
 			entityTransforms.names.push_back(comp.name);
@@ -191,7 +196,15 @@ void GraphicsSystem::Update(ecs::Scene& scene, float deltaTime) {
 			entityTransforms.rotations.push_back(trans.rotation);
 			entityTransforms.scales.push_back(trans.scale);
 			entityTransforms.count++;
-end:
+		}
+
+		/*
+		* RENDER THE DEPTH BUFFER AND THE SCENE BUFFER
+		*/
+		for (Guid entityGuid : ecs::EntitiesInScene<RenderModel,TransformComponent>(scene)) {
+			RenderModel& comp = scene.GetComponent<RenderModel>(entityGuid);
+			TransformComponent& trans = scene.GetComponent<TransformComponent>(entityGuid);
+
 			//properties the geometry is ALWAYS going to have
 			glm::mat4 M = glm::translate(glm::mat4(1), trans.getPosition()) * toMat4(trans.getRotation()) * glm::scale(glm::mat4(1), trans.getScale());
 			glUniformMatrix4fv(modelUniform, 1, GL_FALSE, glm::value_ptr(M));
@@ -216,6 +229,15 @@ end:
 				glDrawElements(GL_TRIANGLES, mesh.numberOfIndicies, GL_UNSIGNED_INT, 0);
 			}
 		}
+
+		/*
+		* RENDER THE NORMAL BUFFER
+		*/
+		//glDisable(GL_DEPTH_BUFFER); //don't render to the depth buffer
+
+		/*
+		* RENDER THE OUTLINES AND DRAW TO SCREEN
+		*/
 
 		//render line components
 		//switch shader program
@@ -282,7 +304,7 @@ void GraphicsSystem::importOBJ(RenderModel& _component, const std::string _fileN
 	std::cout << "Beginning to load model " << _fileName << "\n";
 	_component.name = std::string(_fileName);
 	Assimp::Importer importer;
-	const aiScene* scene = importer.ReadFile("models/" + _fileName, aiProcess_Triangulate );
+	const aiScene* scene = importer.ReadFile("models/" + _fileName, aiProcess_Triangulate | aiProcess_GenSmoothNormals );
 	if (!scene || scene->mFlags & AI_SCENE_FLAGS_INCOMPLETE || !scene->mRootNode)
 	{
 		std::cout << "Error importing " << _fileName << " into scene\n";
