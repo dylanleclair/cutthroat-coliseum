@@ -13,6 +13,7 @@ uniform float specularStrength;
 uniform uint shaderState;
 uniform vec3 userColor;
 
+
 void main()
 {             
     //determine the fragment color

@@ -55,7 +55,7 @@ void finishLinePrint() {
 
 
 int main(int argc, char* argv[]) {
-	//RUN_GRAPHICS_TEST_BENCH();
+	RUN_GRAPHICS_TEST_BENCH();
 	printf("Starting main");
 
 

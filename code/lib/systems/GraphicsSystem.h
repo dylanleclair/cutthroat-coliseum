@@ -22,6 +22,7 @@
 struct GraphicsSystem : ecs::ISystem {
 public:
 	GraphicsSystem(Window& _window);
+	~GraphicsSystem();
 	void GraphicsSystem::ImGuiPanel();
 	void Update(ecs::Scene& scene, float deltaTime);
 	void input(SDL_Event&, int _cameraID);
@@ -51,6 +52,17 @@ private:
 	ShaderProgram modelShader;
 	ShaderProgram lineShader;
 	ShaderProgram wireframeShader;
+	ShaderProgram offscreenShader;
+	ShaderProgram celShader;
+	//buffer for offscreen rendering
+	GLuint offscreenBuffer;
+	GLuint depthTexture;
+	GLuint colorTexture;
+	GLuint normalTexture;
+
+	GLuint quad_vertexArray;
+	GLuint quad_vertexBuffer;
+
 	glm::ivec2 windowSize;
 	static void processNode(aiNode* node, const aiScene* scene, RenderModel& _component);
 	static void processNode(aiNode* node, const aiScene* scene, CPU_Geometry& _geometry);
