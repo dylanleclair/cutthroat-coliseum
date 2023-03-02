@@ -405,6 +405,8 @@ int main(int argc, char* argv[]) {
 		extern float carAxisScale;
 		ImGui::Begin("Car commands tuner", nullptr);
 		ImGui::Text("left stick horizontal tilt: %f", carAxis);
+		ImGui::Text("Current Gear: %d", testCar.m_Vehicle.mEngineDriveState.gearboxState.currentGear);
+		ImGui::Text("Current engine rotational speed: %f", testCar.m_Vehicle.mEngineDriveState.engineState.rotationSpeed);
 		ImGui::Text("Laps: %d", lapCount);
 		ImGui::End();
 		// END CAR PHYSICS PANEL
