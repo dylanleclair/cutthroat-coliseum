@@ -31,11 +31,13 @@ GraphicsSystem::GraphicsSystem(Window& _window) :
 	follow_cam_y = 6.f;
 	follow_cam_z = -10.f;
 	follow_correction_strength = 40.f;
+	faceCulling = true;
 }
 
 // Panel to controls the cameras
 void GraphicsSystem::ImGuiPanel() {
 	ImGui::Begin("Camera States");
+	ImGui::Checkbox("Face Culling", &faceCulling);
 
 	if (ImGui::Button("Free Camera")) {
 		cam_mode = 1;
@@ -87,8 +89,13 @@ void GraphicsSystem::Update(ecs::Scene& scene, float deltaTime) {
 	glEnable(GL_FRAMEBUFFER_SRGB);
 	glClearColor(0.50f, 0.80f, 0.97f, 0.0f);
 	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-	glEnable(GL_CULL_FACE);
-	glCullFace(GL_BACK);
+	if (faceCulling) {
+		glEnable(GL_CULL_FACE);
+		glCullFace(GL_BACK);
+	}
+	else {
+		glDisable(GL_CULL_FACE);
+	}
 	glEnable(GL_DEPTH_TEST);
 	glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
 
