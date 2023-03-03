@@ -10,6 +10,9 @@ float carBrake = 1.f;
 float carAxis = 0.f;
 float carAxisScale = 1.f;
 
+PxTransform c_mass_init_v;
+PxReal angular_damp_init_v;
+
 bool Car::initVehicle()
 {
 
@@ -80,6 +83,11 @@ bool Car::initVehicle()
   m_VehicleSimulationContext.physxScene = physicsSystem->m_Scene;
   m_VehicleSimulationContext.physxActorUpdateMode = PxVehiclePhysXActorUpdateMode::eAPPLY_ACCELERATION;
 
+  // Grabs the initial center of mass to be able to restore it later
+  c_mass_init_v = m_Vehicle.mPhysXParams.physxActorCMassLocalPose;
+  angular_damp_init_v = m_Vehicle.mPhysXState.physxActor.rigidBody->getAngularDamping();
+
+
   PxU32 vehicle_shapes = m_Vehicle.mPhysXState.physxActor.rigidBody->getNbShapes();
   for (PxU32 i = 0; i < vehicle_shapes; i++)
   {
@@ -104,25 +112,35 @@ PxRigidBody* Car::getVehicleRigidBody()
   return m_Vehicle.mPhysXState.physxActor.rigidBody;
 }
 
+void Car::resetModifications() {
+    m_Vehicle.mPhysXParams.physxActorCMassLocalPose.p = c_mass_init_v.p;
+    m_Vehicle.mPhysXState.physxActor.rigidBody->setAngularDamping(angular_damp_init_v);
+}
+
 // Very jank right now as you can spam it
 void Car::TetherSteer() {
     //m_Vehicle.mPhysXState.physxActor.rigidBody->addForce(PxVec3(0.f, 0.f, 10.f), PxForceMode::eVELOCITY_CHANGE, true);
-    m_Vehicle.mPhysXState.physxActor.rigidBody->addTorque(PxVec3(0.f, -2.f, 0.f), PxForceMode::eVELOCITY_CHANGE, true);
+    //m_Vehicle.mPhysXState.physxActor.rigidBody->addTorque(PxVec3(0.f, -2.f, 0.f), PxForceMode::eVELOCITY_CHANGE, true);
 }
 
 // Having issues with bouncing
 void Car::TetherJump() {
-    auto vel = m_Vehicle.mPhysXState.physxActor.rigidBody->getGlobalPose();
+    auto v_pos = m_Vehicle.mPhysXState.physxActor.rigidBody->getGlobalPose();
     // For modes
     //eIMPULSE
     // or
     //eVELOCITY_CHANGE
 
-    // if vel.p.y is to prevent jumping if the car is already in the air
+    // if v_pos.p.y is to prevent jumping if the car is already in the air
     // This is a very messy way of doing this - there might be a flag for if the car is in the air
-    if (vel.p.y < 2.0f) {
-        //m_Vehicle.mPhysXState.physxActor.rigidBody->addForce(PxVec3(0.f, 10.f, 0.f), PxForceMode::eVELOCITY_CHANGE, true);
-        m_Vehicle.mPhysXState.physxActor.rigidBody->addTorque(PxVec3(0.f, 10.f, 0.f), PxForceMode::eVELOCITY_CHANGE, true);
+    if (v_pos.p.y < 2.0f) {
+        m_Vehicle.mPhysXState.physxActor.rigidBody->addForce(PxVec3(0.f, 20000.f, 0.f), PxForceMode::eIMPULSE, true);
+        m_Vehicle.mPhysXParams.physxActorCMassLocalPose.p.y = -30.0f;
+        m_Vehicle.mPhysXParams.physxActorCMassLocalPose.p.z = 0.0f;
+        // applying angular dampening prevents the car from rotating while in the air
+        // it will prevent the car from turning when landing however
+        m_Vehicle.mPhysXState.physxActor.rigidBody->setAngularDamping(20.f); 
+        //m_Vehicle.mPhysXState.physxActor.rigidBody->addTorque(PxVec3(0.f, 10.f, 0.f), PxForceMode::eVELOCITY_CHANGE, true);
     }
 }
 

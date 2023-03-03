@@ -113,6 +113,7 @@ struct Car {
     bool initVehicle();
     void cleanupVehicle();
 
+    void resetModifications();
     void TetherSteer();
     void TetherJump();
 

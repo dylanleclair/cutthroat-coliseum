@@ -42,6 +42,7 @@ CarPhysicsSerde carConfig(carPhysics);
 
 int lapCount = 0;
 bool isFinished = false;
+int time_elapsed;
 
 uint32_t lastTime_millisecs;
 
@@ -277,6 +278,8 @@ int main(int argc, char* argv[]) {
 
 					case SDLK_r:
 						//TODO recompile the shader
+						// Rudementary car reset (will keep using the velocity and rotation of the car through the rest)
+						testCar.m_Vehicle.mPhysXState.physxActor.rigidBody->setGlobalPose(PxTransform(0.f, 0.f, 0.f));
 						break;
 						
 					// TODO: change the file that is serializes (Want to do base.json and enginedrive.json)
@@ -332,6 +335,19 @@ int main(int argc, char* argv[]) {
 
 			//pass the event to the camera
 			gs.input(window.event, controlledCamera);
+		}
+
+		// NOTE: There is probably a better way to do this
+		// If the car is grounded reset to default values
+		// The time elapsed is a hack as the modifications were reset as soon as it left the ground
+		if (!testCar.m_Vehicle.mBaseState.roadGeomStates->hitState) {
+			time_elapsed += 1;
+		// This makes it so that it waits a bit of air time before checking the ground state
+		} else if (time_elapsed > 10) {
+			if (testCar.m_Vehicle.mBaseState.roadGeomStates->hitState) {
+				testCar.resetModifications();
+				time_elapsed = 0;
+			}
 		}
 
 		// Finish line code
@@ -407,6 +423,13 @@ int main(int argc, char* argv[]) {
 		ImGui::Text("left stick horizontal tilt: %f", carAxis);
 		ImGui::Text("Current Gear: %d", testCar.m_Vehicle.mEngineDriveState.gearboxState.currentGear);
 		ImGui::Text("Current engine rotational speed: %f", testCar.m_Vehicle.mEngineDriveState.engineState.rotationSpeed);
+		ImGui::Text("Center of Gravity: %f, %f, %f", testCar.m_Vehicle.mPhysXParams.physxActorCMassLocalPose.p.x, 
+													testCar.m_Vehicle.mPhysXParams.physxActorCMassLocalPose.p.y, 
+													testCar.m_Vehicle.mPhysXParams.physxActorCMassLocalPose.p.z);
+		ImGui::Text("Suspension force x: %f", testCar.m_Vehicle.mBaseState.suspensionForces->force.x);
+		ImGui::Text("Suspension force y: %f", testCar.m_Vehicle.mBaseState.suspensionForces->force.y);
+		ImGui::Text("Suspension force z: %f", testCar.m_Vehicle.mBaseState.suspensionForces->force.z);
+		ImGui::Text("On the ground ?: %s", testCar.m_Vehicle.mBaseState.roadGeomStates->hitState ? "true" : "false");
 		ImGui::Text("Laps: %d", lapCount);
 		ImGui::End();
 		// END CAR PHYSICS PANEL
@@ -414,9 +437,10 @@ int main(int argc, char* argv[]) {
 		// NOTE: the imgui bible - beau
 		//ImGui::ShowDemoWindow();
 
+		// Graphics imgui panel for graphics tuneables
 		gs.ImGuiPanel();
-		// Loads the imgui panel that lets you reload vehicle JSONs
-
+	
+		//ImGui Panels for tuning
 		//reloadVehicleJSON();
 		vehicleTuning(testCar.m_Vehicle);
 		engineTuning(testCar.m_Vehicle);
