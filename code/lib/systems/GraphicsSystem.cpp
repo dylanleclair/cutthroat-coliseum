@@ -68,7 +68,7 @@ GraphicsSystem::GraphicsSystem(Window& _window) :
 	glTexImage2D(GL_TEXTURE_2D, 0, GL_DEPTH_COMPONENT, windowSize.x, windowSize.y, 0, GL_DEPTH_COMPONENT, GL_FLOAT, NULL);
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
-	glFramebufferTexture2D(GL_FRAMEBUFFER, GL_DEPTH_COMPONENT, GL_TEXTURE_2D, gDepth, 0);
+	glFramebufferTexture2D(GL_FRAMEBUFFER, GL_DEPTH_ATTACHMENT, GL_TEXTURE_2D, gDepth, 0);
 
 	// finally check if framebuffer is complete
 	if (glCheckFramebufferStatus(GL_FRAMEBUFFER) != GL_FRAMEBUFFER_COMPLETE)
@@ -94,6 +94,12 @@ GraphicsSystem::GraphicsSystem(Window& _window) :
 	glBindVertexArray(quad_vertexArray);
 	glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 3 * sizeof(float), (void*)0);
 	glEnableVertexAttribArray(0);
+
+	celShader.use();
+	glUniform1i(glGetUniformLocation(GLuint(celShader), "gPosition"), 0);
+	glUniform1i(glGetUniformLocation(GLuint(celShader), "gNormal"), 1);
+	glUniform1i(glGetUniformLocation(GLuint(celShader), "gColor"), 2);
+	glUniform1i(glGetUniformLocation(GLuint(celShader), "gDepth"), 3);
 }
 
 GraphicsSystem::~GraphicsSystem() {
@@ -158,7 +164,7 @@ void GraphicsSystem::ImGuiPanel() {
 void GraphicsSystem::Update(ecs::Scene& scene, float deltaTime) {
 	for (int i = 0; i < numCamerasActive; i++) {
 		//matricies that need only be set once per camera
-		glm::mat4 P = glm::perspective(glm::radians(45.0f), (float)windowSize.x / windowSize.y, 2.f, 1000.f);
+		glm::mat4 P = glm::perspective(glm::radians(45.0f), (float)windowSize.x / windowSize.y, 2.f, 100.f);
 		glm::mat4 V = cameras[i].getView();
 		
 
@@ -253,7 +259,6 @@ void GraphicsSystem::Update(ecs::Scene& scene, float deltaTime) {
 		glCullFace(GL_BACK);
 		glEnable(GL_DEPTH_TEST);
 		glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
-		glDepthFunc(GL_LESS);
 		/*
 		* RENDER THE DEPTH, COLOR AND NORMAL TEXTURES
 		*/
