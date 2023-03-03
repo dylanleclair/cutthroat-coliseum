@@ -104,7 +104,7 @@ int main(int argc, char* argv[]) {
 	ecs::Entity outWall_e = mainScene.CreateEntity();
 	ecs::Entity inWall_e = mainScene.CreateEntity();
 	ecs::Entity ground_e = mainScene.CreateEntity();
-	ecs::Entity finish_line = mainScene.CreateEntity();
+	ecs::Entity finish_e = mainScene.CreateEntity();
 	ecs::Entity tetherPole1_e = mainScene.CreateEntity();
 	ecs::Entity tetherPole2_e = mainScene.CreateEntity();
 
@@ -132,7 +132,6 @@ int main(int argc, char* argv[]) {
 	//std::cout << "Car Guid: " << car_e.guid << std::endl;
 	
 	//finish box
-	ecs::Entity finish_e = mainScene.CreateEntity();
 	CPU_Geometry finish_geom;
 
 	glm::vec3 rectangle[] = {
@@ -157,12 +156,12 @@ int main(int argc, char* argv[]) {
 	GraphicsSystem::importOBJ(finish, "basic_finish.obj");
 	//finish.attachMesh(finish_geom);
 	finish.setModelColor(glm::vec3(1.f, 0.f, 0.f));
-	mainScene.AddComponent(finish_line.guid, finish);
+	mainScene.AddComponent(finish_e.guid, finish);
 
 	TransformComponent finish_t = TransformComponent();
 	finish_t.setPosition(glm::vec3(0, 0, 0));
 	finish_t.setScale(glm::vec3(3.2f, 3.2f, 3.2f));
-	mainScene.AddComponent(finish_line.guid, finish_t);
+	mainScene.AddComponent(finish_e.guid, finish_t);
 
 	// Pathfinding
 	PathfindingComponent car_pathfinder{ finish_e.guid };
