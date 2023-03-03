@@ -1,12 +1,15 @@
 #version 410 core
 out vec4 color;
 
-//uniform sampler2D normalTexture;
-uniform sampler2D colorTexture;
+uniform sampler2D gPosition;
+uniform sampler2D gNormal;
+uniform sampler2D gColor;
+uniform sampler2D gDepth;
 
-uniform vec3 light;
+//uniform vec3 light;
 //uniform float ambiantStr;
 
+in vec2 tc;
 
 void main()
 {             
@@ -28,6 +31,6 @@ void main()
 
 	//calculate final color
 	//color = vec4((diff + ambiant) * sampleCol, 1.0f);
-	color = texture(colorTexture, vec2(gl_FragCoord.x, gl_FragCoord.y));
+	color = texture(gDepth, tc);
 	//color = vec4(gl_FragCoord.x / 1200, gl_FragCoord.y / 800, 0, 1);
 }

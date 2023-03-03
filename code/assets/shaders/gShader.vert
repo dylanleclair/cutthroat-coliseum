@@ -11,9 +11,11 @@ uniform mat3 normalMat;
 
 out vec3 n;
 out vec2 tc;
+out vec3 fragPos;
 
 void main() {
 	gl_Position = P * V * M * vec4(vertPos, 1.0);
 	n = normalMat * vertNormal;
 	tc = texCoord;
+	fragPos = vec3(M * vec4(vertPos, 1.0));
 }

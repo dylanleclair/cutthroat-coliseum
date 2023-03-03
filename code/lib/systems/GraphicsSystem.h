@@ -55,10 +55,11 @@ private:
 	ShaderProgram offscreenShader;
 	ShaderProgram celShader;
 	//buffer for offscreen rendering
-	GLuint offscreenBuffer;
-	GLuint depthTexture;
-	GLuint colorTexture;
-	GLuint normalTexture;
+	GLuint gBuffer;
+	GLuint gDepth;
+	GLuint gColor;
+	GLuint gNormal;
+	GLuint gPosition;
 
 	GLuint quad_vertexArray;
 	GLuint quad_vertexBuffer;

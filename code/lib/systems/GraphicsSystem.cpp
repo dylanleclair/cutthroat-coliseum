@@ -25,7 +25,7 @@ GraphicsSystem::GraphicsSystem(Window& _window) :
 	modelShader("shaders/lighting_simple.vert", "shaders/lighting_simple.frag"),
 	lineShader("shaders/line.vert", "shaders/line.frag"),
 	wireframeShader("shaders/wireframe.vert", "shaders/wireframe.frag"),
-	offscreenShader("shaders/offscreen.vert", "shaders/offscreen.frag"),
+	offscreenShader("shaders/gShader.vert", "shaders/gShader.frag"),
 	celShader("shaders/cel.vert", "shaders/cel.frag")
 {
 	windowSize = _window.getSize();
@@ -34,38 +34,46 @@ GraphicsSystem::GraphicsSystem(Window& _window) :
 	follow_cam_z = -10.f;
 	follow_correction_strength = 40.f;
 
-	glGenFramebuffers(1, &offscreenBuffer);
-	//glGenTextures(1, &depthTexture);
-	//glGenTextures(1, &normalTexture);
-	glGenTextures(1, &colorTexture);
-
-	/*
-	glBindTexture(GL_TEXTURE_2D, depthTexture);
+	// configure g-buffer framebuffer
+	// ------------------------------
+	glGenFramebuffers(1, &gBuffer);
+	glBindFramebuffer(GL_FRAMEBUFFER, gBuffer);
+	// position color buffer
+	glGenTextures(1, &gPosition);
+	glBindTexture(GL_TEXTURE_2D, gPosition);
+	glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA16F, windowSize.x, windowSize.y, 0, GL_RGBA, GL_FLOAT, NULL);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+	glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, gPosition, 0);
+	// normal color buffer
+	glGenTextures(1, &gNormal);
+	glBindTexture(GL_TEXTURE_2D, gNormal);
+	glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA16F, windowSize.x, windowSize.y, 0, GL_RGBA, GL_FLOAT, NULL);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+	glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT1, GL_TEXTURE_2D, gNormal, 0);
+	// color 
+	glGenTextures(1, &gColor);
+	glBindTexture(GL_TEXTURE_2D, gColor);
+	glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, windowSize.x, windowSize.y, 0, GL_RGBA, GL_UNSIGNED_BYTE, NULL);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+	glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT2, GL_TEXTURE_2D, gColor, 0);
+	// tell OpenGL which color attachments we'll use (of this framebuffer) for rendering 
+	unsigned int attachments[3] = { GL_COLOR_ATTACHMENT0, GL_COLOR_ATTACHMENT1, GL_COLOR_ATTACHMENT2 };
+	glDrawBuffers(3, attachments);
+	// create and attach depth buffer (renderbuffer)
+	glGenTextures(1, &gDepth);
+	glBindTexture(GL_TEXTURE_2D, gDepth);
 	glTexImage2D(GL_TEXTURE_2D, 0, GL_DEPTH_COMPONENT, windowSize.x, windowSize.y, 0, GL_DEPTH_COMPONENT, GL_FLOAT, NULL);
-	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
-	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
-	glBindTexture(GL_TEXTURE_2D, normalTexture);
-	glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, windowSize.x, windowSize.y, 0, GL_RGB, GL_UNSIGNED_BYTE, NULL);
-	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
-	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
-	*/
-	glBindTexture(GL_TEXTURE_2D, colorTexture);
-	glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, windowSize.x, windowSize.y, 0, GL_RGB, GL_UNSIGNED_BYTE, NULL);
-	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
-	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+	glFramebufferTexture2D(GL_FRAMEBUFFER, GL_DEPTH_COMPONENT, GL_TEXTURE_2D, gDepth, 0);
 
-	glGenRenderbuffers(1, &depthTexture);
-	glBindRenderbuffer(GL_RENDERBUFFER, depthTexture);
-	glRenderbufferStorage(GL_RENDERBUFFER, GL_DEPTH_COMPONENT, windowSize.x, windowSize.y);
-	glFramebufferRenderbuffer(GL_FRAMEBUFFER, GL_DEPTH_ATTACHMENT, GL_RENDERBUFFER, depthTexture);
-
-	glBindFramebuffer(GL_FRAMEBUFFER, offscreenBuffer);
-	glFramebufferTexture(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, colorTexture, 0);
-	//glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT1, GL_TEXTURE_2D, normalTexture, 0);
-	//glFramebufferTexture2D(GL_FRAMEBUFFER, GL_DEPTH_ATTACHMENT, GL_TEXTURE_2D, depthTexture, 0);
-
+	// finally check if framebuffer is complete
 	if (glCheckFramebufferStatus(GL_FRAMEBUFFER) != GL_FRAMEBUFFER_COMPLETE)
-		std::cout << "ERROR::FRAMEBUFFER:: Framebuffer is not complete!" << std::hex << glCheckFramebufferStatus(GL_FRAMEBUFFER)  << std::endl;
+		std::cout << "Framebuffer not complete!" << std::endl;
+	glBindFramebuffer(GL_FRAMEBUFFER, 0);
 
 	glBindFramebuffer(GL_FRAMEBUFFER, 0);
 	glBindTexture(GL_TEXTURE_2D, 0);
@@ -86,16 +94,14 @@ GraphicsSystem::GraphicsSystem(Window& _window) :
 	glBindVertexArray(quad_vertexArray);
 	glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 3 * sizeof(float), (void*)0);
 	glEnableVertexAttribArray(0);
-	
-	
-
 }
 
 GraphicsSystem::~GraphicsSystem() {
-	glDeleteFramebuffers(1, &offscreenBuffer);
-	glDeleteTextures(1, &colorTexture);
-	glDeleteTextures(1, &normalTexture);
-	glDeleteTextures(1, &depthTexture);
+	glDeleteFramebuffers(1, &gBuffer);
+	glDeleteTextures(1, &gColor);
+	glDeleteTextures(1, &gNormal);
+	glDeleteTextures(1, &gDepth);
+	glDeleteTextures(1, &gPosition);
 	glDeleteVertexArrays(1, &quad_vertexArray);
 	glDeleteBuffers(1, &quad_vertexBuffer);
 }
@@ -237,7 +243,7 @@ void GraphicsSystem::Update(ecs::Scene& scene, float deltaTime) {
 			entityTransforms.count++;
 		}
 
-		glBindFramebuffer(GL_FRAMEBUFFER, offscreenBuffer);
+		glBindFramebuffer(GL_FRAMEBUFFER, gBuffer);
 		glViewport(0, 0, windowSize.x, windowSize.y);
 		glEnable(GL_LINE_SMOOTH);
 		glEnable(GL_FRAMEBUFFER_SRGB);
@@ -262,11 +268,7 @@ void GraphicsSystem::Update(ecs::Scene& scene, float deltaTime) {
 		//set the camera uniforms
 		glUniformMatrix4fv(perspectiveUniform, 1, GL_FALSE, glm::value_ptr(P));
 		glUniformMatrix4fv(viewUniform, 1, GL_FALSE, glm::value_ptr(V));
-		// Set the list of draw buffers.
-		GLenum DrawBuffers[1] = { GL_COLOR_ATTACHMENT0 };
-		glDrawBuffers(1, DrawBuffers);
-		if (glCheckFramebufferStatus(GL_FRAMEBUFFER) != GL_FRAMEBUFFER_COMPLETE)
-			std::cout << "ERRRRRRRRRRRRRRRRRRRRRRRRRRRRR\n";
+
 		for (Guid entityGuid : ecs::EntitiesInScene<RenderModel,TransformComponent>(scene)) {
 			RenderModel& comp = scene.GetComponent<RenderModel>(entityGuid);
 			TransformComponent& trans = scene.GetComponent<TransformComponent>(entityGuid);
@@ -305,16 +307,20 @@ void GraphicsSystem::Update(ecs::Scene& scene, float deltaTime) {
 		glDisable(GL_DEPTH_TEST);
 
 		//GLuint normID = glGetUniformLocation(celShader, "normalTexture");
-		GLuint colID = glGetUniformLocation(celShader, "colorTexture");
+		//Luint colID = glGetUniformLocation(celShader, "colorTexture");
 		
-		GLuint lightUniform = glGetUniformLocation(GLuint(celShader), "light");
+		//GLuint lightUniform = glGetUniformLocation(GLuint(celShader), "light");
 		//GLuint ambiantUniform = glGetUniformLocation(GLuint(celShader), "ambiantStr");
-		glUniform3fv(lightUniform, 1, glm::value_ptr(glm::vec3(10,0,0)));
+		//glUniform3fv(lightUniform, 1, glm::value_ptr(glm::vec3(10,0,0)));
 		//bind the textures
-		//glActiveTexture(GL_TEXTURE0);
-		//glBindTexture(GL_TEXTURE_2D, normalTexture);
-		//glActiveTexture(GL_TEXTURE0 + 1);
-		glBindTexture(GL_TEXTURE_2D, colorTexture);
+		glActiveTexture(GL_TEXTURE0);
+		glBindTexture(GL_TEXTURE_2D, gPosition);
+		glActiveTexture(GL_TEXTURE1);
+		glBindTexture(GL_TEXTURE_2D, gNormal);
+		glActiveTexture(GL_TEXTURE2);
+		glBindTexture(GL_TEXTURE_2D, gColor);
+		glActiveTexture(GL_TEXTURE3);
+		glBindTexture(GL_TEXTURE_2D, gDepth);
 		
 		glDrawArrays(GL_TRIANGLES, 0, 6);
 		

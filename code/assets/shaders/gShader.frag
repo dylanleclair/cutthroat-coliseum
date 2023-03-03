@@ -1,9 +1,11 @@
 #version 410 core
-layout(location = 0) out vec3 color;
-//layout(location = 1) out vec3 normal;
+layout (location = 0) out vec3 gPosition;
+layout (location = 1) out vec3 gNormal;
+layout (location = 2) out vec3 gColor;
 
 in vec2 tc;
 in vec3 n;
+in vec3 fragPos;
 
 uniform sampler2D tex;
 uniform uint shaderState;
@@ -21,6 +23,7 @@ void main()
 	}
 
 	//calculate final color
-	color = vec3(0,0,1);//sampleCol;
-	//normal = vec3(1,0,0);//normalize(n);
+	gColor = sampleCol;
+	gNormal = normalize(n);
+	gPosition = fragPos;
 }
