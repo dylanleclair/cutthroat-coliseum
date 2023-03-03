@@ -13,8 +13,8 @@ in vec2 tc;
 
 float near = 2.0; 
 float far  = 100.0; 
-float hstep = 1/1200.0;
-float vstep = 1/800.0;
+float hstep = 1.0/1200.0;
+float vstep = 1.0/800.0;
   
 float LinearizeDepth(float depth) 
 {
@@ -50,17 +50,20 @@ void main()
 	//color = vec4(tdepth, 0, 0, 1);
 
 	float depthDiff = 0.0;
-	depthDiff += abs(tdepth - LinearizeDepth(texture(gDepth, tc + vec2(tc.x + hstep, 0)).x));
-	depthDiff += abs(tdepth - LinearizeDepth(texture(gDepth, tc + vec2(tc.x - hstep, 0)).x));
-	depthDiff += abs(tdepth - LinearizeDepth(texture(gDepth, tc + vec2(0, tc.y + vstep)).x));
-	depthDiff += abs(tdepth - LinearizeDepth(texture(gDepth, tc + vec2(0, tc.y - vstep)).x));
+	depthDiff += abs(tdepth - LinearizeDepth(texture(gDepth, tc + vec2(hstep, 0)).x));
+	depthDiff += abs(tdepth - LinearizeDepth(texture(gDepth, tc + vec2(-hstep, 0)).x));
+	depthDiff += abs(tdepth - LinearizeDepth(texture(gDepth, tc + vec2(0, vstep)).x));
+	depthDiff += abs(tdepth - LinearizeDepth(texture(gDepth, tc + vec2(0, vstep)).x));
 
 	float normalDiff = 0.0;
-	depthDiff += abs(tdepth - LinearizeDepth(texture(gNormal, tc + vec2(tc.x + hstep, 0)).x));
-	depthDiff += abs(tdepth - LinearizeDepth(texture(gNormal, tc + vec2(tc.x - hstep, 0)).x));
-	depthDiff += abs(tdepth - LinearizeDepth(texture(gNormal, tc + vec2(0, tc.y + vstep)).x));
-	depthDiff += abs(tdepth - LinearizeDepth(texture(gNormal, tc + vec2(0, tc.y - vstep)).x));
+	depthDiff += abs(tdepth - LinearizeDepth(texture(gNormal, tc + vec2(hstep, 0)).x));
+	depthDiff += abs(tdepth - LinearizeDepth(texture(gNormal, tc + vec2(-hstep, 0)).x));
+	depthDiff += abs(tdepth - LinearizeDepth(texture(gNormal, tc + vec2(0, vstep)).x));
+	depthDiff += abs(tdepth - LinearizeDepth(texture(gNormal, tc + vec2(0, -vstep)).x));
 
-	float outline = (normalDiff + depthDiff) / far;
-	color = vec4(vec3(outline), 1.0);
+	float outline = (depthDiff + normalDiff);
+	if(outline > 10)
+		color = vec4(vec3(outline), 1.0);
+	else
+		color = vec4(vec3(tcolor),1);
 }
