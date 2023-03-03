@@ -113,7 +113,8 @@ PxRigidBody* Car::getVehicleRigidBody()
 }
 
 void Car::resetModifications() {
-    m_Vehicle.mPhysXParams.physxActorCMassLocalPose.p = c_mass_init_v.p;
+    // ORIGINALLY MEANT TO RESET THE CENTER OF GRAVITY, BUT WORKS BETTER WITHOUT CHANGING ?
+    //m_Vehicle.mPhysXParams.physxActorCMassLocalPose.p = c_mass_init_v.p;
     m_Vehicle.mPhysXState.physxActor.rigidBody->setAngularDamping(angular_damp_init_v);
 }
 
@@ -135,8 +136,9 @@ void Car::TetherJump() {
     // This is a very messy way of doing this - there might be a flag for if the car is in the air
     if (v_pos.p.y < 2.0f) {
         m_Vehicle.mPhysXState.physxActor.rigidBody->addForce(PxVec3(0.f, 20000.f, 0.f), PxForceMode::eIMPULSE, true);
-        m_Vehicle.mPhysXParams.physxActorCMassLocalPose.p.y = -30.0f;
-        m_Vehicle.mPhysXParams.physxActorCMassLocalPose.p.z = 0.0f;
+        // SEEMS TO CURRENTLY WORK BETTER WITHOUT CHANGING THE CENTER OF GRAVITY
+        //m_Vehicle.mPhysXParams.physxActorCMassLocalPose.p.y = -30.0f;
+        //m_Vehicle.mPhysXParams.physxActorCMassLocalPose.p.z = 0.0f;
         // applying angular dampening prevents the car from rotating while in the air
         // it will prevent the car from turning when landing however
         m_Vehicle.mPhysXState.physxActor.rigidBody->setAngularDamping(20.f); 

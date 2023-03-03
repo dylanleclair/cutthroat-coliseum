@@ -107,6 +107,7 @@ int main(int argc, char* argv[]) {
 	ecs::Entity finish_e = mainScene.CreateEntity();
 	ecs::Entity tetherPole1_e = mainScene.CreateEntity();
 	ecs::Entity tetherPole2_e = mainScene.CreateEntity();
+	ecs::Entity sphere_e = mainScene.CreateEntity();
 
 	mainScene.AddComponent(car_e.guid, Car{});
 	Car& testCar = mainScene.GetComponent<Car>(car_e.guid);
@@ -118,19 +119,34 @@ int main(int argc, char* argv[]) {
 
 	// Car Entity
 	RenderModel car_r = RenderModel();
-	GraphicsSystem::importOBJ(car_r, "test_car.obj");
+	GraphicsSystem::importOBJ(car_r, "alpha_cart.obj");
 	car_r.setModelColor(glm::vec3(0.5f, 0.5f, 0.f));
 	mainScene.AddComponent(car_e.guid, car_r);
 	TransformComponent car_t = TransformComponent(testCar.getVehicleRigidBody());
-	car_t.setPosition(glm::vec3(0, 0, 1));
+	car_t.setPosition(glm::vec3(0, 0, 0.5f));
 	car_t.setRotation(glm::quat(0, 0, 0, 1));
 	car_t.setScale(glm::vec3(3.2f, 3.2f, 3.2f));
 	mainScene.AddComponent(car_e.guid, car_t);
 	
-
-	auto& car_render = mainScene.GetComponent<RenderModel>(car_e.guid);
-	//std::cout << "Car Guid: " << car_e.guid << std::endl;
+	// Center of gravity sphere - used for debug
+	RenderModel sphere_r = RenderModel();
+	GraphicsSystem::importOBJ(sphere_r, "sphere.obj");
+	sphere_r.setModelColor(glm::vec3(0.5f, 0.0f, 0.5f));
+	mainScene.AddComponent(sphere_e.guid, sphere_r);
+	TransformComponent sphere_t = TransformComponent();
+	//sphere_t.setPosition(glm::vec3(testCar.m_Vehicle.mPhysXParams.physxActorCMassLocalPose.p.x,
+	//	testCar.m_Vehicle.mPhysXParams.physxActorCMassLocalPose.p.y,
+	////	testCar.m_Vehicle.mPhysXParams.physxActorCMassLocalPose.p.z));
+	//sphere_t.setPosition(glm::vec3(testCar.m_Vehicle.mPhysXState.physxActor.rigidBody->getCMassLocalPose().p.x,
+	//	testCar.m_Vehicle.mPhysXState.physxActor.rigidBody->getCMassLocalPose().p.y,
+	//	testCar.m_Vehicle.mPhysXState.physxActor.rigidBody->getCMassLocalPose().p.z));
+	sphere_t.setPosition(glm::vec3(car_t.getPosition().x, car_t.getPosition().y, car_t.getPosition().z));
 	
+	sphere_t.setScale(glm::vec3(0.5f, 0.5f, 0.5f));
+	mainScene.AddComponent(sphere_e.guid, sphere_t);
+
+
+
 	//finish box
 	CPU_Geometry finish_geom;
 
@@ -228,8 +244,8 @@ int main(int argc, char* argv[]) {
 	wallTrans.setPosition(glm::vec3(0, 0, 0));
 	*/
 	
-	auto& finish_trans = mainScene.GetComponent<TransformComponent>(finish_e.guid);
-	TransformComponent& car_trans = mainScene.GetComponent<TransformComponent>(car_e.guid);
+	auto finish_trans = mainScene.GetComponent<TransformComponent>(finish_e.guid);
+	TransformComponent car_trans = mainScene.GetComponent<TransformComponent>(car_e.guid);
 	
 
 
@@ -318,9 +334,21 @@ int main(int argc, char* argv[]) {
 					std::cout << gs.getCameraView()[3][0] << ", " << gs.getCameraView()[3][1] << ", " << gs.getCameraView()[3][2] << ", " << gs.getCameraView()[3][3] << std::endl;
 					std::cout << std::endl;
 
-					std::cout << finish_trans.getPosition().x << ", " << finish_trans.getPosition().y << ", " << finish_trans.getPosition().z << std::endl;
+					std::cout << "finish line: " << finish_trans.getPosition().x << ", " << finish_trans.getPosition().y << ", " << finish_trans.getPosition().z << std::endl;
+					std::cout << std::endl;
+
+					std::cout << "tether pole 1" << tetherPole1_t.getPosition().x << ", " << tetherPole1_t.getPosition().y << "," << tetherPole1_t.getPosition().z << std::endl;
+					std::cout << std::endl;
+
+					std::cout << "Car Transform: " << std::endl;
+
 					std::cout << car_trans.getPosition().x << ", " << car_trans.getPosition().y << ", " << car_trans.getPosition().z << std::endl;
-					std::cout << "Car Transform: " << testCar.getVehicleRigidBody()->getGlobalPose().p.x << ", "
+
+					std::cout << mainScene.GetComponent<TransformComponent>(car_e.guid).getPosition().x << ","
+						<< mainScene.GetComponent<TransformComponent>(car_e.guid).getPosition().y << ","
+						<< mainScene.GetComponent<TransformComponent>(car_e.guid).getPosition().z << std::endl;
+
+					std::cout << testCar.getVehicleRigidBody()->getGlobalPose().p.x << ", "
 							  << testCar.getVehicleRigidBody()->getGlobalPose().p.y << ", "
 						      << testCar.getVehicleRigidBody()->getGlobalPose().p.z << std::endl;
 					break;
@@ -348,6 +376,13 @@ int main(int argc, char* argv[]) {
 				time_elapsed = 0;
 			}
 		}
+
+		// Supposed to update the visual location of the sphere
+		//sphere_t.setPosition(glm::vec3(testCar.m_Vehicle.mPhysXState.physxActor.rigidBody->getCMassLocalPose().p.x + car_trans.getPosition().x,
+		//	testCar.m_Vehicle.mPhysXState.physxActor.rigidBody->getCMassLocalPose().p.y + car_trans.getPosition().y,
+		//	testCar.m_Vehicle.mPhysXState.physxActor.rigidBody->getCMassLocalPose().p.z + car_trans.getPosition().z));
+
+		sphere_t.setPosition(glm::vec3(car_t.getPosition().x, car_t.getPosition().y, car_t.getPosition().z));
 
 		// Finish line code
 		if (car_trans.getPosition().x >= -1.5f && car_trans.getPosition().x <= 4.8f &&
