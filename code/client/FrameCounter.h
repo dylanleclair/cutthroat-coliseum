@@ -1,3 +1,4 @@
+#pragma once
 // TODO(beau): turn this file into our general time handling system
 #include <cassert>
 #include "utils/Time.h"
