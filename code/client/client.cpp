@@ -122,7 +122,7 @@ int main(int argc, char* argv[]) {
 	mainScene.AddComponent(car_e.guid, car_r);
 	TransformComponent car_t = TransformComponent(testCar.getVehicleRigidBody());
 	car_t.setPosition(glm::vec3(0, 0, 1));
-	car_t.setRotation(glm::quat(0, 0, 0, 1));
+	//car_t.setRotation(glm::quat(0, 0, 0, 1));
 	car_t.setScale(glm::vec3(3.2f, 3.2f, 3.2f));
 	mainScene.AddComponent(car_e.guid, car_t);
 	
@@ -316,8 +316,8 @@ int main(int argc, char* argv[]) {
 					std::cout << gs.getCameraView()[3][0] << ", " << gs.getCameraView()[3][1] << ", " << gs.getCameraView()[3][2] << ", " << gs.getCameraView()[3][3] << std::endl;
 					std::cout << std::endl;
 
-					std::cout << finish_trans.getPosition().x << ", " << finish_trans.getPosition().y << ", " << finish_trans.getPosition().z << std::endl;
-					std::cout << car_trans.getPosition().x << ", " << car_trans.getPosition().y << ", " << car_trans.getPosition().z << std::endl;
+					std::cout << finish_trans.getTranslation().x << ", " << finish_trans.getTranslation().y << ", " << finish_trans.getTranslation().z << std::endl;
+					std::cout << car_trans.getTranslation().x << ", " << car_trans.getTranslation().y << ", " << car_trans.getTranslation().z << std::endl;
 					std::cout << "Car Transform: " << testCar.getVehicleRigidBody()->getGlobalPose().p.x << ", "
 							  << testCar.getVehicleRigidBody()->getGlobalPose().p.y << ", "
 						      << testCar.getVehicleRigidBody()->getGlobalPose().p.z << std::endl;
@@ -335,8 +335,8 @@ int main(int argc, char* argv[]) {
 		}
 
 		// Finish line code
-		if (car_trans.getPosition().x >= -1.5f && car_trans.getPosition().x <= 4.8f &&
-			car_trans.getPosition().z >= -3.0f && car_trans.getPosition().z <= -0.6f)
+		if (car_trans.getTranslation().x >= -1.5f && car_trans.getTranslation().x <= 4.8f &&
+			car_trans.getTranslation().z >= -3.0f && car_trans.getTranslation().z <= -0.6f)
 		{
 			if (isFinished == false) {
 				isFinished = true;

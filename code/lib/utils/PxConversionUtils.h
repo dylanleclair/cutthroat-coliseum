@@ -11,8 +11,11 @@ inline glm::vec3 PxtoGLM(physx::PxVec3 _vec) {
 	return glm::vec3(_vec.x, _vec.y, _vec.z);
 }
 
+/*
+* Physx stores quaternions as xyzw and GLM uses wxyz
+*/
 inline glm::quat PxtoGLM(physx::PxQuat _quat) {
-	return glm::quat(_quat.x, _quat.y, _quat.z, _quat.w);
+	return glm::quat(_quat.w, _quat.x, _quat.y, _quat.z);
 }
 
 inline physx::PxVec3 GLMtoPx(glm::vec3 _vec) {

@@ -142,22 +142,46 @@ void GraphicsSystem::ImGuiPanel() {
 	ImGui::Begin("Debug Rendering");
 	//show all renderables in a list
 	static int item_current_idx = 0;
-	if (ImGui::BeginCombo("Transforms", entityTransforms.names[item_current_idx].c_str())) {
-		for (int i = 0; i < entityTransforms.count; i++) {
-			const bool is_selected = (item_current_idx == i);
-			if (ImGui::Selectable(entityTransforms.names[i].c_str(), is_selected))
-				item_current_idx = i;
-			if (is_selected)
-				ImGui::SetItemDefaultFocus();
+	if (entityTransforms.count > 0) {
+		if (ImGui::BeginCombo("Transforms", entityTransforms.names[item_current_idx].c_str())) {
+			for (int i = 0; i < entityTransforms.count; i++) {
+				const bool is_selected = (item_current_idx == i);
+				if (ImGui::Selectable(entityTransforms.names[i].c_str(), is_selected))
+					item_current_idx = i;
+				if (is_selected)
+					ImGui::SetItemDefaultFocus();
+			}
+			ImGui::EndCombo();
 		}
-		ImGui::EndCombo();
+	}
+	
+	static glm::vec3 pos = glm::vec3(0);
+	static glm::vec4 rot = glm::vec4(0); //x, y, z, angle
+	static glm::vec3 sca = glm::vec3(0);
+	ImGui::InputFloat3("position", &(pos.x));
+	ImGui::InputFloat4("rotation", &(rot.x));
+	ImGui::InputFloat3("scale", &(sca.x));
+	
+	static bool reading = false;
+	if (reading) {
+		reading = false;
+		pos = entityTransforms.positions[item_current_idx];
+		rot = glm::vec4(glm::vec3(entityTransforms.rotations[item_current_idx]), glm::degrees(entityTransforms.rotations[item_current_idx][3]));
+		sca = entityTransforms.scales[item_current_idx];
+	}
+	if (ImGui::Button("Read")) {
+		reading = true;
+		entityTransforms.read_write[item_current_idx] = 1;
 	}
 
-	ImGui::InputFloat3("position", &(entityTransforms.positions[item_current_idx].x));
-	ImGui::InputFloat4("rotation", &(entityTransforms.rotations[item_current_idx].x));
-	ImGui::InputFloat3("scale", &(entityTransforms.scales[item_current_idx].x));
-	
-	
+	if (ImGui::Button("Write")) {
+		//save to the vector
+		entityTransforms.positions[item_current_idx] = glm::vec3(pos);
+		entityTransforms.rotations[item_current_idx] = glm::vec4(glm::vec3(rot), glm::radians(rot[3]));
+		entityTransforms.scales[item_current_idx] = glm::vec3(sca);	
+		entityTransforms.read_write[item_current_idx] = 2;
+	}
+
 	ImGui::End();
 }
 
@@ -188,18 +212,18 @@ void GraphicsSystem::Update(ecs::Scene& scene, float deltaTime) {
 			static glm::vec3 previousCarPosition = glm::vec3(0);
 			TransformComponent& trans = scene.GetComponent<TransformComponent>(0);
 			//calculate where the camera should aim to be positioned
-			glm::vec3 cameraTargetLocation = glm::translate(glm::mat4(1), trans.getPosition()) * toMat4(trans.getRotation()) * glm::vec4(follow_cam_x, follow_cam_y, follow_cam_z, 1);
+			glm::vec3 cameraTargetLocation = glm::translate(glm::mat4(1), trans.getTranslation()) * toMat4(trans.getRotation()) * glm::vec4(follow_cam_x, follow_cam_y, follow_cam_z, 1);
 			//calculate the speed of the car
-			float speed = glm::distance(previousCarPosition, trans.getPosition());
+			float speed = glm::distance(previousCarPosition, trans.getTranslation());
 			//calculate how far the camera is from the target position
 			float cameraOffset = glm::distance(cameraTargetLocation, cameras[0].getPos());
 			//use a sigmoid function to determine how much to move the camera to the target position (can't go higher than 1)
 			float correctionAmount = cameraOffset / (follow_correction_strength + cameraOffset);
 			//lerp between the 2 positions according to the correction amount
-			previousCarPosition = trans.getPosition();
+			previousCarPosition = trans.getTranslation();
 			//lerp the camera to a good location based on the correction amount
 			cameras[0].setPos(cameras[0].getPos() * (1-correctionAmount) + correctionAmount * cameraTargetLocation);
-			V = glm::lookAt(cameras[0].getPos(), trans.getPosition(), glm::vec3(0.0f, 1.0f, 0.0f));
+			V = glm::lookAt(cameras[0].getPos(), trans.getTranslation(), glm::vec3(0.0f, 1.0f, 0.0f));
 		}
 
 		//set the viewport
@@ -224,16 +248,28 @@ void GraphicsSystem::Update(ecs::Scene& scene, float deltaTime) {
 		/*
 		* UPDATE THE TRANSFORM COMPONENTS
 		*/
+		
 		for (Guid entityGuid : ecs::EntitiesInScene<RenderModel, TransformComponent>(scene)) {
 			RenderModel& comp = scene.GetComponent<RenderModel>(entityGuid);
 			TransformComponent& trans = scene.GetComponent<TransformComponent>(entityGuid);
 			bool cont = false;
 			//search if it is already in the debug list, and if it is update it
 			for (int i = 0; i < entityTransforms.count; i++) {
-				if (entityTransforms.ids[i] == entityGuid) {
-					trans.setPosition(entityTransforms.positions[i]);
-					trans.setRotation(entityTransforms.rotations[i]);
-					trans.setScale(entityTransforms.scales[i]);
+				if (entityTransforms.ids[i] == entityGuid && entityTransforms.read_write[i] != 0) {
+					//read
+					if (entityTransforms.read_write[i] == 1) {
+						entityTransforms.positions[i] = trans.position;
+						entityTransforms.rotations[i] = glm::vec4(trans.rotationAxis, trans.rotationAngle);
+						entityTransforms.scales[i] = trans.scale;
+					}
+					//write
+					else {
+						trans.position = entityTransforms.positions[i];
+						trans.setRotation(glm::vec3(entityTransforms.rotations[i]), entityTransforms.rotations[i][3]);
+						trans.scale = entityTransforms.scales[i];
+					}
+					entityTransforms.read_write[i] = 0;
+
 					cont = true;
 					break;
 				}
@@ -244,8 +280,9 @@ void GraphicsSystem::Update(ecs::Scene& scene, float deltaTime) {
 			entityTransforms.ids.push_back(entityGuid);
 			entityTransforms.names.push_back(comp.name);
 			entityTransforms.positions.push_back(trans.position);
-			entityTransforms.rotations.push_back(trans.rotation);
+			entityTransforms.rotations.push_back(glm::vec4(trans.rotationAxis, trans.rotationAngle));
 			entityTransforms.scales.push_back(trans.scale);
+			entityTransforms.read_write.push_back(0);
 			entityTransforms.count++;
 		}
 
@@ -279,7 +316,7 @@ void GraphicsSystem::Update(ecs::Scene& scene, float deltaTime) {
 			TransformComponent& trans = scene.GetComponent<TransformComponent>(entityGuid);
 
 			//properties the geometry is ALWAYS going to have
-			glm::mat4 M = glm::translate(glm::mat4(1), trans.getPosition()) * toMat4(trans.getRotation()) * glm::scale(glm::mat4(1), trans.getScale());
+			glm::mat4 M = glm::translate(glm::mat4(1), trans.getTranslation()) * toMat4(trans.getRotation()) * glm::scale(glm::mat4(1), trans.getScale());
 			glUniformMatrix4fv(modelUniform, 1, GL_FALSE, glm::value_ptr(M));
 			glm::mat3 normalsMatrix = glm::mat3(glm::transpose(glm::inverse(M)));
 			glUniformMatrix3fv(normalMatUniform, 1, GL_FALSE, glm::value_ptr(normalsMatrix));
@@ -329,7 +366,7 @@ void GraphicsSystem::Update(ecs::Scene& scene, float deltaTime) {
 		
 		glDrawArrays(GL_TRIANGLES, 0, 6);
 		
-		/*
+		
 		//render line components
 		//switch shader program
 		lineShader.use();
@@ -345,7 +382,7 @@ void GraphicsSystem::Update(ecs::Scene& scene, float deltaTime) {
 			RenderLine& comp = scene.GetComponent<RenderLine>(entityGuid);
 			TransformComponent& trans = scene.GetComponent<TransformComponent>(entityGuid);
 			
-			glm::mat4 M = glm::translate(glm::mat4(1), trans.getPosition()) * toMat4(trans.getRotation());
+			glm::mat4 M = glm::translate(glm::mat4(1), trans.getTranslation()) * toMat4(trans.getRotation());
 			glUniformMatrix4fv(modelUniform, 1, GL_FALSE, glm::value_ptr(M));
 
 			glUniform3fv(colorUniform, 1, glm::value_ptr(comp.color));
@@ -376,7 +413,7 @@ void GraphicsSystem::Update(ecs::Scene& scene, float deltaTime) {
 				physxScene->getActors(PxActorTypeFlag::eRIGID_DYNAMIC | PxActorTypeFlag::eRIGID_STATIC, reinterpret_cast<PxActor**>(&actors[0]), nbActors);
 				Snippets::renderActors(&actors[0], static_cast<PxU32>(actors.size()), modelUniform);
 			}
-		}*/
+		}
 	}
 }
 

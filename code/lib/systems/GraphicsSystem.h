@@ -44,7 +44,8 @@ private:
 		std::vector<std::string> names; 
 		std::vector<glm::vec3> positions; 
 		std::vector <glm::vec3> scales;
-		std::vector <glm::quat> rotations;
+		std::vector <glm::vec4> rotations;
+		std::vector <char> read_write; //0 = nothing, 1 = read, 2 = write
 		int count = 0;
 	};
 	renderableInfo entityTransforms;

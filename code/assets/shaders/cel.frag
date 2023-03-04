@@ -62,8 +62,8 @@ void main()
 	depthDiff += abs(tdepth - LinearizeDepth(texture(gNormal, tc + vec2(0, -vstep)).x));
 
 	float outline = (depthDiff + normalDiff);
-	if(outline > 10)
-		color = vec4(vec3(outline), 1.0);
-	else
+	//if(outline > 10)
+		//color = vec4(vec3(outline), 1.0);
+	//else
 		color = vec4(vec3(tcolor),1);
 }
