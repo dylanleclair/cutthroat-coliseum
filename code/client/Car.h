@@ -116,7 +116,7 @@ struct Car {
     void resetModifications();
     bool isGroundedDelay(Car& car);
     void TetherSteer(PxTransform _loc);
-    void TetherJump();
+    bool TetherJump();
 
     PxRigidBody* getVehicleRigidBody();
 

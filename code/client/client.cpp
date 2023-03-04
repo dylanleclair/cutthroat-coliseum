@@ -382,6 +382,11 @@ int main(int argc, char* argv[]) {
 			gs.input(window.event, controlledCamera);
 		}
 
+		// Check for the car grounded state, and if grounded after being in the air
+		// resets the modifications made to the car while in the air
+		// This is because angular dampening is applied while in the air to prevent
+		// the car from flipping, but on the ground it can't turn so it resets
+		// the angular dampening on the ground
 		if (testCar.isGroundedDelay(testCar)) {
 			testCar.resetModifications();
 		}

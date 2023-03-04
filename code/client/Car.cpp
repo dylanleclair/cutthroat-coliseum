@@ -14,6 +14,7 @@ float controller_throttle = 0.f;
 float controller_brake = 0.f;
 
 int time_elapsed = 0;
+bool has_jumped;
 
 PxTransform c_mass_init_v;
 PxReal angular_damp_init_v;
@@ -123,6 +124,8 @@ void Car::resetModifications() {
     m_Vehicle.mPhysXState.physxActor.rigidBody->setAngularDamping(angular_damp_init_v);
 }
 
+// Used to reset the modifications done to the car in the air after a few moments
+// This exists because if I just check the hit state it will reset the modifications instantly
 bool Car::isGroundedDelay(Car &car) {
     if (!car.m_Vehicle.mBaseState.roadGeomStates->hitState) {
         time_elapsed += 1;
@@ -132,6 +135,7 @@ bool Car::isGroundedDelay(Car &car) {
     else if (time_elapsed > 10) {
         if (car.m_Vehicle.mBaseState.roadGeomStates->hitState) {
             time_elapsed = 0;
+            has_jumped = false;
             return true;
         }
     }
@@ -148,7 +152,7 @@ void Car::TetherSteer(PxTransform _loc) {
     //m_Vehicle.mPhysXState.physxActor.rigidBody->addTorque(PxVec3(0.f, -2.f, 0.f), PxForceMode::eVELOCITY_CHANGE, true);
 }
 
-void Car::TetherJump() {
+bool Car::TetherJump() {
     auto v_pos = m_Vehicle.mPhysXState.physxActor.rigidBody->getGlobalPose();
     // For modes
     //eIMPULSE
@@ -167,6 +171,7 @@ void Car::TetherJump() {
         m_Vehicle.mPhysXState.physxActor.rigidBody->setAngularDamping(20.f); 
         //m_Vehicle.mPhysXState.physxActor.rigidBody->addTorque(PxVec3(0.f, 10.f, 0.f), PxForceMode::eVELOCITY_CHANGE, true);
     }
+    return true;
 }
 
 
@@ -199,8 +204,10 @@ void Car::Update(float deltaTime)
 
   // Currently a bit bugged, sends you into space
   // It's because it triggers every time it registers the button is pressed (held down)
-  if (SDL_GameControllerGetButton(ControllerInput::controller, SDL_CONTROLLER_BUTTON_A)) {
-      TetherJump();
+  if (SDL_GameControllerGetButton(ControllerInput::controller, SDL_CONTROLLER_BUTTON_A) && this->m_Vehicle.mBaseState.roadGeomStates->hitState && !has_jumped) {
+      if (TetherJump()) {
+          has_jumped = true;
+      }
   }
 
   // Normalize controller axis
