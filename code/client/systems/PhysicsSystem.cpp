@@ -11,7 +11,7 @@ namespace physics
 		initPhysX();
 		initGroundPlane();
 		initMaterialFrictionTable();
-        initCooking();
+        initCooking(); 
 		// if (!initVehicles())
 		// 	return false;
 		// return true;
@@ -124,7 +124,8 @@ namespace physics
     void PhysicsSystem::initCooking()
     {
         // Level
-        m_Cooking = PxCreateCooking(PX_PHYSICS_VERSION, *m_Foundation, physx::PxCookingParams(m_Physics->getTolerancesScale()));
+        m_CookingParams = &physx::PxCookingParams(m_Physics->getTolerancesScale());
+        m_Cooking = PxCreateCooking(PX_PHYSICS_VERSION, *m_Foundation, *m_CookingParams);
         if (!m_Cooking)
         {
             std::cerr << "PxCreateCooking failed!" << std::endl;

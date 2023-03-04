@@ -37,7 +37,7 @@ struct PhysicsSystem : ecs::ISystem
 	PxPvd* m_Pvd;
 
 	// level collider stuff
-	PxCookingParams *m_CookingParams;
+	PxCookingParams* m_CookingParams;
 	PxCooking *m_Cooking;
 
     // The mapping between PxMaterial and friction.
