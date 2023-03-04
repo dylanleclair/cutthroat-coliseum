@@ -1,4 +1,4 @@
-
+#pragma once
 #include "systems/ecs.h"
 #include "systems/GraphicsSystem.h"
 #include "systems/components.h"
