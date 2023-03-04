@@ -36,6 +36,10 @@ struct PhysicsSystem : ecs::ISystem
 	PxMaterial* m_Material;
 	PxPvd* m_Pvd;
 
+	// level collider stuff
+	PxCookingParams* m_CookingParams;
+	PxCooking *m_Cooking;
+
     // The mapping between PxMaterial and friction.
     PxVehiclePhysXMaterialFriction m_PhysXMaterialFrictions[16];
     PxU32 m_NbPhysXMaterialFrictions;
@@ -61,6 +65,8 @@ private:
 	void cleanupGroundPlane();
 
 	void initMaterialFrictionTable();
+
+	    void PhysicsSystem::initCooking();
 
 };
 

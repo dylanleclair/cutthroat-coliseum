@@ -1,40 +1,16 @@
 #include "PxPhysicsAPI.h"
-#include "Level.h"
+#include "LevelCollider.h"
 #include <vector>
 #include <iostream>
 #include "systems/GraphicsSystem.h"
 #include <string>
 
-void initLevelCooking(
-    physx::PxTolerancesScale *gTolerances,
-    physx::PxCookingParams *gLevelCookingParams,
-    physx::PxCooking *gCooking,
-    physx::PxTriangleMesh *gLevelMesh,
-    physx::PxFoundation *gFoundation)
-{
-    // Level
-    gCooking = PxCreateCooking(PX_PHYSICS_VERSION, *gFoundation, *gLevelCookingParams);
-    if (!gCooking)
+
+    LevelCollider::LevelCollider(std::string modelName, PhysicsSystem& physics) : m_physicsSystem(physics)
     {
-        std::cerr << "PxCreateCooking failed!" << std::endl;
-    }
-    std::vector<physx::PxVec3> levelVertices = std::vector<physx::PxVec3>();
-    std::vector<physx::PxU32> levelIndices = std::vector<physx::PxU32>();
-
-    gLevelCookingParams->meshPreprocessParams |= physx::PxMeshPreprocessingFlag::eDISABLE_CLEAN_MESH;
-    gLevelCookingParams->meshPreprocessParams |= physx::PxMeshPreprocessingFlag::eDISABLE_ACTIVE_EDGES_PRECOMPUTE;
-}
-
-struct Level
-{
-
-    Level(std::string modelName)
-    {
-        CPU_Geometry levelGeom;
+        CPU_Geometry levelGeom{};
         GraphicsSystem::importOBJ(levelGeom, modelName);
         // convert the verts / indices
-        
-        // can probably save memory if we can just directly use CPU_Geometry as is
         for (auto vert : levelGeom.verts)
         {
             levelVertices.push_back(GLMtoPx(vert));
@@ -47,7 +23,7 @@ struct Level
 
     }
 
-    Level(CPU_Geometry& levelGeom)
+    LevelCollider::LevelCollider(CPU_Geometry& levelGeom, PhysicsSystem& physics) : m_physicsSystem(physics)
     {
         // passes the geom
 
@@ -64,8 +40,12 @@ struct Level
     }
 
 
-physx::PxTriangleMesh * cookLevel(std::vector<physx::PxVec3> levelVertices, std::vector<physx::PxU32> levelIndices, physx::PxPhysics* gPhysics, physx::PxCooking *gCooking) 
+physx::PxTriangleMesh * LevelCollider::cookLevel() 
 	{
+    auto gCooking = m_physicsSystem.m_Cooking;
+    auto gPhysics = m_physicsSystem.m_Physics;
+
+
     physx::PxTriangleMeshDesc groundDesc;
 	groundDesc.setToDefault();
 
@@ -91,8 +71,12 @@ physx::PxTriangleMesh * cookLevel(std::vector<physx::PxVec3> levelVertices, std:
 
     }
 
-    void initLevelRigidBody(physx::PxPhysics* gPhysics, physx::PxScene* scene, physx::PxMaterial* material, physx::PxTriangleMesh* levelMesh)
+    void LevelCollider::initLevelRigidBody(physx::PxTriangleMesh* levelMesh)
     {
+        auto gPhysics = m_physicsSystem.m_Physics;
+        auto material = m_physicsSystem.m_Material;
+        auto scene = m_physicsSystem.m_Scene;
+
         physx::PxTriangleMeshGeometry levelGeo = physx::PxTriangleMeshGeometry(levelMesh, physx::PxMeshScale(1));
 	    physx::PxShape* levelShape = gPhysics->createShape(levelGeo, *material, true);
 
@@ -101,11 +85,6 @@ physx::PxTriangleMesh * cookLevel(std::vector<physx::PxVec3> levelVertices, std:
 
         level->attachShape(*levelShape);
         scene->addActor(*level);
-
     }
     
 
-private:
-    std::vector<physx::PxVec3> levelVertices = std::vector<physx::PxVec3>();
-    std::vector<physx::PxU32> levelIndices = std::vector<physx::PxU32>();
-};

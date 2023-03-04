@@ -29,6 +29,8 @@
 
 #include "Car.h"
 
+#include "physics/LevelCollider.h"
+
 glm::vec3 calculateSpherePoint(float s, float t)
 {
 	float z = cos(2 * M_PI * t) * sin(M_PI * s);
@@ -199,6 +201,11 @@ int main(int argc, char* argv[]) {
 	TransformComponent level_t = TransformComponent();
 	level_t.setScale(glm::vec3(3.2f, 1.f, 3.2f));
 	mainScene.AddComponent(ground_e.guid, level_t);
+
+	// actual level mesh & collider for it
+	LevelCollider levelCollider{"large_test_torus.obj", physicsSystem};
+	auto levelTriangleMesh = levelCollider.cookLevel();
+	levelCollider.initLevelRigidBody(levelTriangleMesh);
 
 	RenderModel level_r = RenderModel();
 	GraphicsSystem::importOBJ(level_r, "large_test_torus.obj");
