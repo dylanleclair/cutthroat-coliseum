@@ -24,13 +24,92 @@
 GraphicsSystem::GraphicsSystem(Window& _window) :
 	modelShader("shaders/lighting_simple.vert", "shaders/lighting_simple.frag"),
 	lineShader("shaders/line.vert", "shaders/line.frag"),
-	wireframeShader("shaders/wireframe.vert", "shaders/wireframe.frag")
+	wireframeShader("shaders/wireframe.vert", "shaders/wireframe.frag"),
+	offscreenShader("shaders/gShader.vert", "shaders/gShader.frag"),
+	celShader("shaders/cel.vert", "shaders/cel.frag")
 {
 	windowSize = _window.getSize();
 	follow_cam_x = 0.f;
 	follow_cam_y = 6.f;
 	follow_cam_z = -10.f;
 	follow_correction_strength = 40.f;
+
+	// configure g-buffer framebuffer
+	// ------------------------------
+	glGenFramebuffers(1, &gBuffer);
+	glBindFramebuffer(GL_FRAMEBUFFER, gBuffer);
+	// position color buffer
+	glGenTextures(1, &gPosition);
+	glBindTexture(GL_TEXTURE_2D, gPosition);
+	glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA16F, windowSize.x, windowSize.y, 0, GL_RGBA, GL_FLOAT, NULL);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+	glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, gPosition, 0);
+	// normal color buffer
+	glGenTextures(1, &gNormal);
+	glBindTexture(GL_TEXTURE_2D, gNormal);
+	glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA16F, windowSize.x, windowSize.y, 0, GL_RGBA, GL_FLOAT, NULL);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+	glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT1, GL_TEXTURE_2D, gNormal, 0);
+	// color 
+	glGenTextures(1, &gColor);
+	glBindTexture(GL_TEXTURE_2D, gColor);
+	glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, windowSize.x, windowSize.y, 0, GL_RGBA, GL_UNSIGNED_BYTE, NULL);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+	glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT2, GL_TEXTURE_2D, gColor, 0);
+	// tell OpenGL which color attachments we'll use (of this framebuffer) for rendering 
+	unsigned int attachments[3] = { GL_COLOR_ATTACHMENT0, GL_COLOR_ATTACHMENT1, GL_COLOR_ATTACHMENT2 };
+	glDrawBuffers(3, attachments);
+	// create and attach depth buffer (renderbuffer)
+	glGenTextures(1, &gDepth);
+	glBindTexture(GL_TEXTURE_2D, gDepth);
+	glTexImage2D(GL_TEXTURE_2D, 0, GL_DEPTH_COMPONENT, windowSize.x, windowSize.y, 0, GL_DEPTH_COMPONENT, GL_FLOAT, NULL);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+	glFramebufferTexture2D(GL_FRAMEBUFFER, GL_DEPTH_ATTACHMENT, GL_TEXTURE_2D, gDepth, 0);
+
+	// finally check if framebuffer is complete
+	if (glCheckFramebufferStatus(GL_FRAMEBUFFER) != GL_FRAMEBUFFER_COMPLETE)
+		std::cout << "Framebuffer not complete!" << std::endl;
+	glBindFramebuffer(GL_FRAMEBUFFER, 0);
+
+	glBindFramebuffer(GL_FRAMEBUFFER, 0);
+	glBindTexture(GL_TEXTURE_2D, 0);
+
+	static const GLfloat g_quad_vertex_buffer_data[] = {
+	-1.0f, -1.0f, 0.0f,
+	1.0f, -1.0f, 0.0f,
+	-1.0f,  1.0f, 0.0f,
+	-1.0f,  1.0f, 0.0f,
+	1.0f, -1.0f, 0.0f,
+	1.0f,  1.0f, 0.0f,
+	};
+	glGenBuffers(1, &quad_vertexBuffer);
+	glBindBuffer(GL_ARRAY_BUFFER, quad_vertexBuffer);
+	glBufferData(GL_ARRAY_BUFFER, sizeof(g_quad_vertex_buffer_data), g_quad_vertex_buffer_data, GL_STATIC_DRAW);
+	
+	glGenVertexArrays(1, &quad_vertexArray);
+	glBindVertexArray(quad_vertexArray);
+	glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 3 * sizeof(float), (void*)0);
+	glEnableVertexAttribArray(0);
+
+	celShader.use();
+	glUniform1i(glGetUniformLocation(GLuint(celShader), "gPosition"), 0);
+	glUniform1i(glGetUniformLocation(GLuint(celShader), "gNormal"), 1);
+	glUniform1i(glGetUniformLocation(GLuint(celShader), "gColor"), 2);
+	glUniform1i(glGetUniformLocation(GLuint(celShader), "gDepth"), 3);
+}
+
+GraphicsSystem::~GraphicsSystem() {
+	glDeleteFramebuffers(1, &gBuffer);
+	glDeleteTextures(1, &gColor);
+	glDeleteTextures(1, &gNormal);
+	glDeleteTextures(1, &gDepth);
+	glDeleteTextures(1, &gPosition);
+	glDeleteVertexArrays(1, &quad_vertexArray);
+	glDeleteBuffers(1, &quad_vertexBuffer);
 }
 
 // Panel to controls the cameras
@@ -63,38 +142,53 @@ void GraphicsSystem::ImGuiPanel() {
 	ImGui::Begin("Debug Rendering");
 	//show all renderables in a list
 	static int item_current_idx = 0;
-	if (ImGui::BeginCombo("Transforms", entityTransforms.names[item_current_idx].c_str())) {
-		for (int i = 0; i < entityTransforms.count; i++) {
-			const bool is_selected = (item_current_idx == i);
-			if (ImGui::Selectable(entityTransforms.names[i].c_str(), is_selected))
-				item_current_idx = i;
-			if (is_selected)
-				ImGui::SetItemDefaultFocus();
+	if (entityTransforms.count > 0) {
+		if (ImGui::BeginCombo("Transforms", entityTransforms.names[item_current_idx].c_str())) {
+			for (int i = 0; i < entityTransforms.count; i++) {
+				const bool is_selected = (item_current_idx == i);
+				if (ImGui::Selectable(entityTransforms.names[i].c_str(), is_selected))
+					item_current_idx = i;
+				if (is_selected)
+					ImGui::SetItemDefaultFocus();
+			}
+			ImGui::EndCombo();
 		}
-		ImGui::EndCombo();
+	}
+	
+	static glm::vec3 pos = glm::vec3(0);
+	static glm::vec4 rot = glm::vec4(0); //x, y, z, angle
+	static glm::vec3 sca = glm::vec3(0);
+	ImGui::InputFloat3("position", &(pos.x));
+	ImGui::InputFloat4("rotation", &(rot.x));
+	ImGui::InputFloat3("scale", &(sca.x));
+	
+	static bool reading = false;
+	if (reading) {
+		reading = false;
+		pos = entityTransforms.positions[item_current_idx];
+		rot = glm::vec4(glm::vec3(entityTransforms.rotations[item_current_idx]), glm::degrees(entityTransforms.rotations[item_current_idx][3]));
+		sca = entityTransforms.scales[item_current_idx];
+	}
+	if (ImGui::Button("Read")) {
+		reading = true;
+		entityTransforms.read_write[item_current_idx] = 1;
 	}
 
-	ImGui::InputFloat3("position", &(entityTransforms.positions[item_current_idx].x));
-	ImGui::InputFloat4("rotation", &(entityTransforms.rotations[item_current_idx].x));
-	ImGui::InputFloat3("scale", &(entityTransforms.scales[item_current_idx].x));
-	
-	
+	if (ImGui::Button("Write")) {
+		//save to the vector
+		entityTransforms.positions[item_current_idx] = glm::vec3(pos);
+		entityTransforms.rotations[item_current_idx] = glm::vec4(glm::vec3(rot), glm::radians(rot[3]));
+		entityTransforms.scales[item_current_idx] = glm::vec3(sca);	
+		entityTransforms.read_write[item_current_idx] = 2;
+	}
+
 	ImGui::End();
 }
 
 void GraphicsSystem::Update(ecs::Scene& scene, float deltaTime) {
-	glEnable(GL_LINE_SMOOTH);
-	glEnable(GL_FRAMEBUFFER_SRGB);
-	glClearColor(0.50f, 0.80f, 0.97f, 0.0f);
-	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-	glEnable(GL_CULL_FACE);
-	glCullFace(GL_BACK);
-	glEnable(GL_DEPTH_TEST);
-	glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
-
 	for (int i = 0; i < numCamerasActive; i++) {
 		//matricies that need only be set once per camera
-		glm::mat4 P = glm::perspective(glm::radians(45.0f), (float)windowSize.x / windowSize.y, 0.01f, 1000.f);
+		glm::mat4 P = glm::perspective(glm::radians(45.0f), (float)windowSize.x / windowSize.y, 2.f, 100.f);
 		glm::mat4 V = cameras[i].getView();
 		
 
@@ -118,18 +212,18 @@ void GraphicsSystem::Update(ecs::Scene& scene, float deltaTime) {
 			static glm::vec3 previousCarPosition = glm::vec3(0);
 			TransformComponent& trans = scene.GetComponent<TransformComponent>(0);
 			//calculate where the camera should aim to be positioned
-			glm::vec3 cameraTargetLocation = glm::translate(glm::mat4(1), trans.getPosition()) * toMat4(trans.getRotation()) * glm::vec4(follow_cam_x, follow_cam_y, follow_cam_z, 1);
+			glm::vec3 cameraTargetLocation = glm::translate(glm::mat4(1), trans.getTranslation()) * toMat4(trans.getRotation()) * glm::vec4(follow_cam_x, follow_cam_y, follow_cam_z, 1);
 			//calculate the speed of the car
-			float speed = glm::distance(previousCarPosition, trans.getPosition());
+			float speed = glm::distance(previousCarPosition, trans.getTranslation());
 			//calculate how far the camera is from the target position
 			float cameraOffset = glm::distance(cameraTargetLocation, cameras[0].getPos());
 			//use a sigmoid function to determine how much to move the camera to the target position (can't go higher than 1)
 			float correctionAmount = cameraOffset / (follow_correction_strength + cameraOffset);
 			//lerp between the 2 positions according to the correction amount
-			previousCarPosition = trans.getPosition();
+			previousCarPosition = trans.getTranslation();
 			//lerp the camera to a good location based on the correction amount
 			cameras[0].setPos(cameras[0].getPos() * (1-correctionAmount) + correctionAmount * cameraTargetLocation);
-			V = glm::lookAt(cameras[0].getPos(), trans.getPosition(), glm::vec3(0.0f, 1.0f, 0.0f));
+			V = glm::lookAt(cameras[0].getPos(), trans.getTranslation(), glm::vec3(0.0f, 1.0f, 0.0f));
 		}
 
 		//set the viewport
@@ -150,39 +244,32 @@ void GraphicsSystem::Update(ecs::Scene& scene, float deltaTime) {
 				glViewport(0, 0, windowSize.x / 2, windowSize.y / 2);
 			}
 		}
-		
-		//render model components without textures
-		//switch the shader program
-		modelShader.use();
-		//get uniform locations
-		GLuint modelUniform = glGetUniformLocation(GLuint(modelShader), "M");
-		GLuint viewUniform = glGetUniformLocation(GLuint(modelShader), "V");
-		GLuint perspectiveUniform = glGetUniformLocation(GLuint(modelShader), "P");
-		GLuint normalMatUniform = glGetUniformLocation(GLuint(modelShader), "normalMat");
-		GLuint lightUniform = glGetUniformLocation(GLuint(modelShader), "light");
-		GLuint viewPosUniform = glGetUniformLocation(GLuint(modelShader), "viewPos");
-		GLuint ambiantStrengthUniform = glGetUniformLocation(GLuint(modelShader), "ambiantStr");
-		GLuint specularStrengthUniform = glGetUniformLocation(GLuint(modelShader), "specularStrength");
-		GLuint shaderStateUniform = glGetUniformLocation(GLuint(modelShader), "shaderState");
-		GLuint userColorUniform = glGetUniformLocation(GLuint(modelShader), "userColor");
-		//set the camera uniforms
-		glUniformMatrix4fv(perspectiveUniform, 1, GL_FALSE, glm::value_ptr(P));
-		glUniformMatrix4fv(viewUniform, 1, GL_FALSE, glm::value_ptr(V));
-		glUniform3fv(viewPosUniform, 1, glm::value_ptr(cameras[i].getPos()));
 
 		/*
 		* UPDATE THE TRANSFORM COMPONENTS
 		*/
+		
 		for (Guid entityGuid : ecs::EntitiesInScene<RenderModel, TransformComponent>(scene)) {
 			RenderModel& comp = scene.GetComponent<RenderModel>(entityGuid);
 			TransformComponent& trans = scene.GetComponent<TransformComponent>(entityGuid);
 			bool cont = false;
 			//search if it is already in the debug list, and if it is update it
 			for (int i = 0; i < entityTransforms.count; i++) {
-				if (entityTransforms.ids[i] == entityGuid) {
-					trans.setPosition(entityTransforms.positions[i]);
-					trans.setRotation(entityTransforms.rotations[i]);
-					trans.setScale(entityTransforms.scales[i]);
+				if (entityTransforms.ids[i] == entityGuid && entityTransforms.read_write[i] != 0) {
+					//read
+					if (entityTransforms.read_write[i] == 1) {
+						entityTransforms.positions[i] = trans.position;
+						entityTransforms.rotations[i] = glm::vec4(trans.rotationAxis, trans.rotationAngle);
+						entityTransforms.scales[i] = trans.scale;
+					}
+					//write
+					else {
+						trans.position = entityTransforms.positions[i];
+						trans.setRotation(glm::vec3(entityTransforms.rotations[i]), entityTransforms.rotations[i][3]);
+						trans.scale = entityTransforms.scales[i];
+					}
+					entityTransforms.read_write[i] = 0;
+
 					cont = true;
 					break;
 				}
@@ -193,27 +280,46 @@ void GraphicsSystem::Update(ecs::Scene& scene, float deltaTime) {
 			entityTransforms.ids.push_back(entityGuid);
 			entityTransforms.names.push_back(comp.name);
 			entityTransforms.positions.push_back(trans.position);
-			entityTransforms.rotations.push_back(trans.rotation);
+			entityTransforms.rotations.push_back(glm::vec4(trans.rotationAxis, trans.rotationAngle));
 			entityTransforms.scales.push_back(trans.scale);
+			entityTransforms.read_write.push_back(0);
 			entityTransforms.count++;
 		}
 
+		glBindFramebuffer(GL_FRAMEBUFFER, gBuffer);
+		glViewport(0, 0, windowSize.x, windowSize.y);
+		glEnable(GL_LINE_SMOOTH);
+		glEnable(GL_FRAMEBUFFER_SRGB);
+		glClearColor(0.50f, 0.80f, 0.97f, 0.0f);
+		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+		glEnable(GL_CULL_FACE);
+		glCullFace(GL_BACK);
+		glEnable(GL_DEPTH_TEST);
+		glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
 		/*
-		* RENDER THE DEPTH BUFFER AND THE SCENE BUFFER
+		* RENDER THE DEPTH, COLOR AND NORMAL TEXTURES
 		*/
+		offscreenShader.use();
+		//get uniform locations
+		GLuint modelUniform = glGetUniformLocation(GLuint(offscreenShader), "M");
+		GLuint viewUniform = glGetUniformLocation(GLuint(offscreenShader), "V");
+		GLuint perspectiveUniform = glGetUniformLocation(GLuint(offscreenShader), "P");
+		GLuint normalMatUniform = glGetUniformLocation(GLuint(offscreenShader), "normalMat");
+		GLuint shaderStateUniform = glGetUniformLocation(GLuint(offscreenShader), "shaderState");
+		GLuint userColorUniform = glGetUniformLocation(GLuint(offscreenShader), "userColor");
+		//set the camera uniforms
+		glUniformMatrix4fv(perspectiveUniform, 1, GL_FALSE, glm::value_ptr(P));
+		glUniformMatrix4fv(viewUniform, 1, GL_FALSE, glm::value_ptr(V));
+
 		for (Guid entityGuid : ecs::EntitiesInScene<RenderModel,TransformComponent>(scene)) {
 			RenderModel& comp = scene.GetComponent<RenderModel>(entityGuid);
 			TransformComponent& trans = scene.GetComponent<TransformComponent>(entityGuid);
 
 			//properties the geometry is ALWAYS going to have
-			glm::mat4 M = glm::translate(glm::mat4(1), trans.getPosition()) * toMat4(trans.getRotation()) * glm::scale(glm::mat4(1), trans.getScale());
+			glm::mat4 M = glm::translate(glm::mat4(1), trans.getTranslation()) * toMat4(trans.getRotation()) * glm::scale(glm::mat4(1), trans.getScale());
 			glUniformMatrix4fv(modelUniform, 1, GL_FALSE, glm::value_ptr(M));
 			glm::mat3 normalsMatrix = glm::mat3(glm::transpose(glm::inverse(M)));
 			glUniformMatrix3fv(normalMatUniform, 1, GL_FALSE, glm::value_ptr(normalsMatrix));
-			//uniforms that don't change, however I put them here just in case we want to change them
-			glUniform3fv(lightUniform, 1, glm::value_ptr(glm::vec3(0, 20, 0)));
-			glUniform1f(ambiantStrengthUniform, 0.50f);
-			glUniform1f(specularStrengthUniform, 1.5f);
 
 			//loop through each mesh in the renderComponent
 			for each (Mesh mesh in comp.meshes) {
@@ -229,16 +335,38 @@ void GraphicsSystem::Update(ecs::Scene& scene, float deltaTime) {
 				glDrawElements(GL_TRIANGLES, mesh.numberOfIndicies, GL_UNSIGNED_INT, 0);
 			}
 		}
-
-		/*
-		* RENDER THE NORMAL BUFFER
-		*/
-		//glDisable(GL_DEPTH_BUFFER); //don't render to the depth buffer
-
+		glBindFramebuffer(GL_FRAMEBUFFER, 0);
+		glViewport(0, 0, windowSize.x, windowSize.y);
 		/*
 		* RENDER THE OUTLINES AND DRAW TO SCREEN
 		*/
+		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+		glDisable(GL_DEPTH_TEST);
+		celShader.use();
+		glBindVertexArray(quad_vertexArray);
+		glBindBuffer(GL_ARRAY_BUFFER, quad_vertexBuffer);
+		glBindVertexArray(quad_vertexArray);
+		glDisable(GL_DEPTH_TEST);
 
+		//GLuint normID = glGetUniformLocation(celShader, "normalTexture");
+		//Luint colID = glGetUniformLocation(celShader, "colorTexture");
+		
+		//GLuint lightUniform = glGetUniformLocation(GLuint(celShader), "light");
+		//GLuint ambiantUniform = glGetUniformLocation(GLuint(celShader), "ambiantStr");
+		//glUniform3fv(lightUniform, 1, glm::value_ptr(glm::vec3(10,0,0)));
+		//bind the textures
+		glActiveTexture(GL_TEXTURE0);
+		glBindTexture(GL_TEXTURE_2D, gPosition);
+		glActiveTexture(GL_TEXTURE1);
+		glBindTexture(GL_TEXTURE_2D, gNormal);
+		glActiveTexture(GL_TEXTURE2);
+		glBindTexture(GL_TEXTURE_2D, gColor);
+		glActiveTexture(GL_TEXTURE3);
+		glBindTexture(GL_TEXTURE_2D, gDepth);
+		
+		glDrawArrays(GL_TRIANGLES, 0, 6);
+		
+		
 		//render line components
 		//switch shader program
 		lineShader.use();
@@ -254,7 +382,7 @@ void GraphicsSystem::Update(ecs::Scene& scene, float deltaTime) {
 			RenderLine& comp = scene.GetComponent<RenderLine>(entityGuid);
 			TransformComponent& trans = scene.GetComponent<TransformComponent>(entityGuid);
 			
-			glm::mat4 M = glm::translate(glm::mat4(1), trans.getPosition()) * toMat4(trans.getRotation());
+			glm::mat4 M = glm::translate(glm::mat4(1), trans.getTranslation()) * toMat4(trans.getRotation());
 			glUniformMatrix4fv(modelUniform, 1, GL_FALSE, glm::value_ptr(M));
 
 			glUniform3fv(colorUniform, 1, glm::value_ptr(comp.color));

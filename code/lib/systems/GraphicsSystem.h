@@ -22,6 +22,7 @@
 struct GraphicsSystem : ecs::ISystem {
 public:
 	GraphicsSystem(Window& _window);
+	~GraphicsSystem();
 	void GraphicsSystem::ImGuiPanel();
 	void Update(ecs::Scene& scene, float deltaTime);
 	void input(SDL_Event&, int _cameraID);
@@ -43,7 +44,8 @@ private:
 		std::vector<std::string> names; 
 		std::vector<glm::vec3> positions; 
 		std::vector <glm::vec3> scales;
-		std::vector <glm::quat> rotations;
+		std::vector <glm::vec4> rotations;
+		std::vector <char> read_write; //0 = nothing, 1 = read, 2 = write
 		int count = 0;
 	};
 	renderableInfo entityTransforms;
@@ -51,6 +53,18 @@ private:
 	ShaderProgram modelShader;
 	ShaderProgram lineShader;
 	ShaderProgram wireframeShader;
+	ShaderProgram offscreenShader;
+	ShaderProgram celShader;
+	//buffer for offscreen rendering
+	GLuint gBuffer;
+	GLuint gDepth;
+	GLuint gColor;
+	GLuint gNormal;
+	GLuint gPosition;
+
+	GLuint quad_vertexArray;
+	GLuint quad_vertexBuffer;
+
 	glm::ivec2 windowSize;
 	static void processNode(aiNode* node, const aiScene* scene, RenderModel& _component);
 	static void processNode(aiNode* node, const aiScene* scene, CPU_Geometry& _geometry);
