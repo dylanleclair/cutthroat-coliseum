@@ -6,18 +6,25 @@ uniform sampler2D gNormal;
 uniform sampler2D gColor;
 uniform sampler2D gDepth;
 
-//uniform vec3 light;
-//uniform float ambiantStr;
+//variable uniforms
+uniform float normalDiffWeight;
+uniform float depthDiffWeight;
+
+uniform vec3 lightDir;
+uniform float ambiantStr;
+uniform float diffuseWeight;
+uniform int numQuantizedSplits;
 
 in vec2 tc;
 
 float near = 2.0; 
-float far  = 100.0; 
+float far  = 1000.0; 
 float hstep = 1.0/1200.0;
 float vstep = 1.0/800.0;
   
 float LinearizeDepth(float depth) 
 {
+	return depth;
     float z = depth * 2.0 - 1.0; // back to NDC 
     return (2.0 * near * far) / (far + near - z * (far - near));	
 }
@@ -29,26 +36,14 @@ void main()
 	vec3 tcolor = texture(gColor, tc).xyz;
 	float tdepth = LinearizeDepth(texture(gDepth, tc).x);
 
-    //determine the fragment color
-	//vec3 sampleCol = vec3(1);
-	//if(shaderState == 1) {
-	//	sampleCol = vec3(texture(tex, tc));
-	//} else {
-	//	sampleCol = userColor;
-	//}
-
 	//determine the lighting
-	//vec3 lightDir = normalize(light - fragPos);
-	//vec3 normal = normalize(n);
-	//vec3 diff = max(dot(lightDir, normal),0.0) * vec3(1);
+	vec3 diff = max(dot(lightDir, tnormal), 0.0) * vec3(1,0.97,0.94) * diffuseWeight;
 	
 	//calculate ambiant
-	//vec3 ambiant = sampleCol * ambiantStr;
+	vec3 ambiant = tcolor * ambiantStr;
 
-	//calculate final color
-	//color = vec4((diff + ambiant) * sampleCol, 1.0f);
-	//color = vec4(tdepth, 0, 0, 1);
-
+	
+	//calculate edges
 	float depthDiff = 0.0;
 	depthDiff += abs(tdepth - LinearizeDepth(texture(gDepth, tc + vec2(hstep, 0)).x));
 	depthDiff += abs(tdepth - LinearizeDepth(texture(gDepth, tc + vec2(-hstep, 0)).x));
@@ -56,14 +51,18 @@ void main()
 	depthDiff += abs(tdepth - LinearizeDepth(texture(gDepth, tc + vec2(0, vstep)).x));
 
 	float normalDiff = 0.0;
-	depthDiff += abs(tdepth - LinearizeDepth(texture(gNormal, tc + vec2(hstep, 0)).x));
-	depthDiff += abs(tdepth - LinearizeDepth(texture(gNormal, tc + vec2(-hstep, 0)).x));
-	depthDiff += abs(tdepth - LinearizeDepth(texture(gNormal, tc + vec2(0, vstep)).x));
-	depthDiff += abs(tdepth - LinearizeDepth(texture(gNormal, tc + vec2(0, -vstep)).x));
+	normalDiff += distance(tnormal, texture(gNormal, tc + vec2(hstep, 0)).xyz);
+	normalDiff += distance(tnormal, texture(gNormal, tc + vec2(-hstep, 0)).xyz);
+	normalDiff += distance(tnormal, texture(gNormal, tc + vec2(0, vstep)).xyz);
+	normalDiff += distance(tnormal, texture(gNormal, tc + vec2(0, -vstep)).xyz);
 
-	float outline = (depthDiff + normalDiff);
-	//if(outline > 10)
-		//color = vec4(vec3(outline), 1.0);
-	//else
-		color = vec4(vec3(tcolor),1);
+	float outline = (depthDiff * depthDiffWeight + normalDiff * normalDiffWeight);
+
+	//quantize the color
+	vec3 calculatedCol = (diff + ambiant) * tcolor;
+	vec3 quantized = (ceil(calculatedCol * numQuantizedSplits) - 1)/(numQuantizedSplits - 1);     
+	
+	//calculate final color
+	color = mix(vec4(quantized, 1),vec4(0,0,0,1),outline);
+	//color = mix(vec4(tcolor, 1), vec4(0,0,0,1), outline);
 }

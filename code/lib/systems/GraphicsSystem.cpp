@@ -25,7 +25,7 @@ GraphicsSystem::GraphicsSystem(Window& _window) :
 	modelShader("shaders/lighting_simple.vert", "shaders/lighting_simple.frag"),
 	lineShader("shaders/line.vert", "shaders/line.frag"),
 	wireframeShader("shaders/wireframe.vert", "shaders/wireframe.frag"),
-	offscreenShader("shaders/gShader.vert", "shaders/gShader.frag"),
+	gShader("shaders/gShader.vert", "shaders/gShader.frag"),
 	celShader("shaders/cel.vert", "shaders/cel.frag")
 {
 	windowSize = _window.getSize();
@@ -136,50 +136,59 @@ void GraphicsSystem::ImGuiPanel() {
 	ImGui::End();
 
 	ImGui::Begin("Debug Rendering");
-	ImGui::Checkbox("Collider Meshes", &showColliders);
-	ImGui::End();
+	if (ImGui::CollapsingHeader("Visuals")) {
+		ImGui::Checkbox("Collider Meshes", &showColliders);
+		ImGui::SliderFloat3("Light Direction", &(lightDirection.x), -50, 50);
+		ImGui::SliderFloat("diffuse strength", &diffuseWeight, 0, 1);
+		ImGui::SliderFloat("ambiant strength", &ambiantStrength, 0, 1);
+		ImGui::SliderFloat("normalWeightDiff", &normalDiffWeight, 0, 1);
+		ImGui::SliderFloat("depthWeightDiff", &depthDiffWeight, 0, 1);
+		ImGui::SliderInt("number of color zones", &numQuantizedSplits, 0, 40);
+	}
 
-	ImGui::Begin("Debug Rendering");
-	//show all renderables in a list
-	static int item_current_idx = 0;
-	if (entityTransforms.count > 0) {
-		if (ImGui::BeginCombo("Transforms", entityTransforms.names[item_current_idx].c_str())) {
-			for (int i = 0; i < entityTransforms.count; i++) {
-				const bool is_selected = (item_current_idx == i);
-				if (ImGui::Selectable(entityTransforms.names[i].c_str(), is_selected))
-					item_current_idx = i;
-				if (is_selected)
-					ImGui::SetItemDefaultFocus();
+	if (ImGui::CollapsingHeader("Transforms")) {
+		//show all renderables in a list
+		static int item_current_idx = 0;
+		if (entityTransforms.count > 0) {
+			if (ImGui::BeginCombo("Transforms", entityTransforms.names[item_current_idx].c_str())) {
+				for (int i = 0; i < entityTransforms.count; i++) {
+					const bool is_selected = (item_current_idx == i);
+					if (ImGui::Selectable(entityTransforms.names[i].c_str(), is_selected))
+						item_current_idx = i;
+					if (is_selected)
+						ImGui::SetItemDefaultFocus();
+				}
+				ImGui::EndCombo();
 			}
-			ImGui::EndCombo();
 		}
-	}
-	
-	static glm::vec3 pos = glm::vec3(0);
-	static glm::vec4 rot = glm::vec4(0); //x, y, z, angle
-	static glm::vec3 sca = glm::vec3(0);
-	ImGui::InputFloat3("position", &(pos.x));
-	ImGui::InputFloat4("rotation", &(rot.x));
-	ImGui::InputFloat3("scale", &(sca.x));
-	
-	static bool reading = false;
-	if (reading) {
-		reading = false;
-		pos = entityTransforms.positions[item_current_idx];
-		rot = glm::vec4(glm::vec3(entityTransforms.rotations[item_current_idx]), glm::degrees(entityTransforms.rotations[item_current_idx][3]));
-		sca = entityTransforms.scales[item_current_idx];
-	}
-	if (ImGui::Button("Read")) {
-		reading = true;
-		entityTransforms.read_write[item_current_idx] = 1;
-	}
 
-	if (ImGui::Button("Write")) {
-		//save to the vector
-		entityTransforms.positions[item_current_idx] = glm::vec3(pos);
-		entityTransforms.rotations[item_current_idx] = glm::vec4(glm::vec3(rot), glm::radians(rot[3]));
-		entityTransforms.scales[item_current_idx] = glm::vec3(sca);	
-		entityTransforms.read_write[item_current_idx] = 2;
+
+		static glm::vec3 pos = glm::vec3(0);
+		static glm::vec4 rot = glm::vec4(0); //x, y, z, angle
+		static glm::vec3 sca = glm::vec3(0);
+		ImGui::InputFloat3("position", &(pos.x));
+		ImGui::InputFloat4("rotation", &(rot.x));
+		ImGui::InputFloat3("scale", &(sca.x));
+
+		static bool reading = false;
+		if (reading) {
+			reading = false;
+			pos = entityTransforms.positions[item_current_idx];
+			rot = glm::vec4(glm::vec3(entityTransforms.rotations[item_current_idx]), glm::degrees(entityTransforms.rotations[item_current_idx][3]));
+			sca = entityTransforms.scales[item_current_idx];
+		}
+		if (ImGui::Button("Read")) {
+			reading = true;
+			entityTransforms.read_write[item_current_idx] = 1;
+		}
+
+		if (ImGui::Button("Write")) {
+			//save to the vector
+			entityTransforms.positions[item_current_idx] = glm::vec3(pos);
+			entityTransforms.rotations[item_current_idx] = glm::vec4(glm::vec3(rot), glm::radians(rot[3]));
+			entityTransforms.scales[item_current_idx] = glm::vec3(sca);
+			entityTransforms.read_write[item_current_idx] = 2;
+		}
 	}
 
 	ImGui::End();
@@ -188,7 +197,7 @@ void GraphicsSystem::ImGuiPanel() {
 void GraphicsSystem::Update(ecs::Scene& scene, float deltaTime) {
 	for (int i = 0; i < numCamerasActive; i++) {
 		//matricies that need only be set once per camera
-		glm::mat4 P = glm::perspective(glm::radians(45.0f), (float)windowSize.x / windowSize.y, 2.f, 100.f);
+		glm::mat4 P = glm::perspective(glm::radians(45.0f), (float)windowSize.x / windowSize.y, 2.f, 1000.f);
 		glm::mat4 V = cameras[i].getView();
 		
 
@@ -299,14 +308,14 @@ void GraphicsSystem::Update(ecs::Scene& scene, float deltaTime) {
 		/*
 		* RENDER THE DEPTH, COLOR AND NORMAL TEXTURES
 		*/
-		offscreenShader.use();
+		gShader.use();
 		//get uniform locations
-		GLuint modelUniform = glGetUniformLocation(GLuint(offscreenShader), "M");
-		GLuint viewUniform = glGetUniformLocation(GLuint(offscreenShader), "V");
-		GLuint perspectiveUniform = glGetUniformLocation(GLuint(offscreenShader), "P");
-		GLuint normalMatUniform = glGetUniformLocation(GLuint(offscreenShader), "normalMat");
-		GLuint shaderStateUniform = glGetUniformLocation(GLuint(offscreenShader), "shaderState");
-		GLuint userColorUniform = glGetUniformLocation(GLuint(offscreenShader), "userColor");
+		GLuint modelUniform = glGetUniformLocation(GLuint(gShader), "M");
+		GLuint viewUniform = glGetUniformLocation(GLuint(gShader), "V");
+		GLuint perspectiveUniform = glGetUniformLocation(GLuint(gShader), "P");
+		GLuint normalMatUniform = glGetUniformLocation(GLuint(gShader), "normalMat");
+		GLuint shaderStateUniform = glGetUniformLocation(GLuint(gShader), "shaderState");
+		GLuint userColorUniform = glGetUniformLocation(GLuint(gShader), "userColor");
 		//set the camera uniforms
 		glUniformMatrix4fv(perspectiveUniform, 1, GL_FALSE, glm::value_ptr(P));
 		glUniformMatrix4fv(viewUniform, 1, GL_FALSE, glm::value_ptr(V));
@@ -348,12 +357,24 @@ void GraphicsSystem::Update(ecs::Scene& scene, float deltaTime) {
 		glBindVertexArray(quad_vertexArray);
 		glDisable(GL_DEPTH_TEST);
 
+		GLuint normWeightUniform = glGetUniformLocation(GLuint(celShader), "normalDiffWeight");
+		GLuint depthWeightUniform = glGetUniformLocation(GLuint(celShader), "depthDiffWeight");
+
+		glUniform1f(normWeightUniform, normalDiffWeight);
+		glUniform1f(depthWeightUniform, depthDiffWeight);
+
 		//GLuint normID = glGetUniformLocation(celShader, "normalTexture");
 		//Luint colID = glGetUniformLocation(celShader, "colorTexture");
 		
-		//GLuint lightUniform = glGetUniformLocation(GLuint(celShader), "light");
-		//GLuint ambiantUniform = glGetUniformLocation(GLuint(celShader), "ambiantStr");
-		//glUniform3fv(lightUniform, 1, glm::value_ptr(glm::vec3(10,0,0)));
+		GLuint lightUniform = glGetUniformLocation(GLuint(celShader), "lightDir");
+		GLuint ambiantUniform = glGetUniformLocation(GLuint(celShader), "ambiantStr");
+		GLuint diffuseWeightUniform = glGetUniformLocation(GLuint(celShader), "diffuseWeight");
+		GLuint quantizedSplitsUniform = glGetUniformLocation(GLuint(celShader), "numQuantizedSplits");
+		glUniform3fv(lightUniform, 1, glm::value_ptr(lightDirection));
+		glUniform1f(ambiantUniform, ambiantStrength);
+		glUniform1f(diffuseWeightUniform, diffuseWeight);
+		glUniform1i(quantizedSplitsUniform, numQuantizedSplits);
+		
 		//bind the textures
 		glActiveTexture(GL_TEXTURE0);
 		glBindTexture(GL_TEXTURE_2D, gPosition);

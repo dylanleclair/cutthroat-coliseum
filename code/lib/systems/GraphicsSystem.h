@@ -50,10 +50,18 @@ private:
 	};
 	renderableInfo entityTransforms;
 
+	float depthDiffWeight = 1;
+	float normalDiffWeight = 1;
+	glm::vec3 lightDirection = glm::vec3(1, -3, 7);
+	float ambiantStrength = 1;
+	float diffuseWeight = 0.3;
+	int numQuantizedSplits = 10; //CAN'T BE 1!!!
+
+	//shader variables
 	ShaderProgram modelShader;
 	ShaderProgram lineShader;
 	ShaderProgram wireframeShader;
-	ShaderProgram offscreenShader;
+	ShaderProgram gShader;
 	ShaderProgram celShader;
 	//buffer for offscreen rendering
 	GLuint gBuffer;
