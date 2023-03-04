@@ -114,7 +114,7 @@ PxRigidBody* Car::getVehicleRigidBody()
 
 void Car::resetModifications() {
     // ORIGINALLY MEANT TO RESET THE CENTER OF GRAVITY, BUT WORKS BETTER WITHOUT CHANGING ?
-    //m_Vehicle.mPhysXParams.physxActorCMassLocalPose.p = c_mass_init_v.p;
+    m_Vehicle.mPhysXParams.physxActorCMassLocalPose.p = c_mass_init_v.p;
     m_Vehicle.mPhysXState.physxActor.rigidBody->setAngularDamping(angular_damp_init_v);
 }
 

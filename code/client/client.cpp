@@ -133,14 +133,8 @@ int main(int argc, char* argv[]) {
 	GraphicsSystem::importOBJ(sphere_r, "sphere.obj");
 	sphere_r.setModelColor(glm::vec3(0.5f, 0.0f, 0.5f));
 	mainScene.AddComponent(sphere_e.guid, sphere_r);
-	TransformComponent sphere_t = TransformComponent();
-	//sphere_t.setPosition(glm::vec3(testCar.m_Vehicle.mPhysXParams.physxActorCMassLocalPose.p.x,
-	//	testCar.m_Vehicle.mPhysXParams.physxActorCMassLocalPose.p.y,
-	////	testCar.m_Vehicle.mPhysXParams.physxActorCMassLocalPose.p.z));
-	//sphere_t.setPosition(glm::vec3(testCar.m_Vehicle.mPhysXState.physxActor.rigidBody->getCMassLocalPose().p.x,
-	//	testCar.m_Vehicle.mPhysXState.physxActor.rigidBody->getCMassLocalPose().p.y,
-	//	testCar.m_Vehicle.mPhysXState.physxActor.rigidBody->getCMassLocalPose().p.z));
-	sphere_t.setPosition(glm::vec3(car_t.getTranslation().x, car_t.getTranslation().y, car_t.getTranslation().z));
+	//TransformComponent sphere_t = TransformComponent();
+	TransformComponent sphere_t = TransformComponent(testCar.getVehicleRigidBody());
 	sphere_t.setScale(glm::vec3(0.5f, 0.5f, 0.5f));
 	mainScene.AddComponent(sphere_e.guid, sphere_t);
 
@@ -243,11 +237,11 @@ int main(int argc, char* argv[]) {
 	wallTrans.setPosition(glm::vec3(0, 0, 0));
 	*/
 	
-	auto finish_trans = mainScene.GetComponent<TransformComponent>(finish_e.guid);
-	TransformComponent car_trans = mainScene.GetComponent<TransformComponent>(car_e.guid);
-	
-
-
+	// Fetching ecs components for system call debugs and other
+	// debug functionality
+	auto &finish_trans = mainScene.GetComponent<TransformComponent>(finish_e.guid);
+	TransformComponent &car_trans = mainScene.GetComponent<TransformComponent>(car_e.guid);
+	TransformComponent &sphere_transform = mainScene.GetComponent<TransformComponent>(sphere_e.guid);
 	FramerateCounter framerate;
 
 	bool quit = false;
@@ -376,13 +370,10 @@ int main(int argc, char* argv[]) {
 				time_elapsed = 0;
 			}
 		}
-
+		
+		auto& center_of_mass = testCar.m_Vehicle.mPhysXParams.physxActorCMassLocalPose;
 		// Supposed to update the visual location of the sphere
-		//sphere_t.setPosition(glm::vec3(testCar.m_Vehicle.mPhysXState.physxActor.rigidBody->getCMassLocalPose().p.x + car_trans.getPosition().x,
-		//	testCar.m_Vehicle.mPhysXState.physxActor.rigidBody->getCMassLocalPose().p.y + car_trans.getPosition().y,
-		//	testCar.m_Vehicle.mPhysXState.physxActor.rigidBody->getCMassLocalPose().p.z + car_trans.getPosition().z));
-
-		sphere_t.setPosition(glm::vec3(car_t.getTranslation().x, car_t.getTranslation().y, car_t.getTranslation().z));
+		sphere_transform.setPosition(glm::vec3(center_of_mass.p.x, center_of_mass.p.y, center_of_mass.p.z));
 
 		// Finish line code
 		if (car_trans.getTranslation().x >= -1.5f && car_trans.getTranslation().x <= 4.8f &&
