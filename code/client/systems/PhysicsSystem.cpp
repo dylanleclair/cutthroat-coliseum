@@ -9,7 +9,7 @@ namespace physics
     void PhysicsSystem::Initialize()
     {
 		initPhysX();
-		initGroundPlane();
+		// initGroundPlane();
 		initMaterialFrictionTable();
         initCooking(); 
 		// if (!initVehicles())
@@ -39,7 +39,7 @@ namespace physics
 
     void PhysicsSystem::Cleanup()
     {
-        cleanupGroundPlane();
+        // cleanupGroundPlane();
         cleanupPhysX();
     }
 
@@ -134,6 +134,8 @@ namespace physics
         m_CookingParams->meshPreprocessParams |= physx::PxMeshPreprocessingFlag::eDISABLE_CLEAN_MESH;
         m_CookingParams->meshPreprocessParams |= physx::PxMeshPreprocessingFlag::eDISABLE_ACTIVE_EDGES_PRECOMPUTE;
     }
+
+    // TODO(dylan): cleanup functions for level collider
 
     void PhysicsSystem::cleanupGroundPlane()
     {
