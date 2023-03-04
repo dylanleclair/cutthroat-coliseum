@@ -13,6 +13,8 @@ float carAxisScale = 1.f;
 float controller_throttle = 0.f;
 float controller_brake = 0.f;
 
+int time_elapsed = 0;
+
 PxTransform c_mass_init_v;
 PxReal angular_damp_init_v;
 
@@ -119,6 +121,23 @@ void Car::resetModifications() {
     // ORIGINALLY MEANT TO RESET THE CENTER OF GRAVITY, BUT WORKS BETTER WITHOUT CHANGING ?
     m_Vehicle.mPhysXParams.physxActorCMassLocalPose.p = c_mass_init_v.p;
     m_Vehicle.mPhysXState.physxActor.rigidBody->setAngularDamping(angular_damp_init_v);
+}
+
+bool Car::isGroundedDelay(Car &car) {
+    if (!car.m_Vehicle.mBaseState.roadGeomStates->hitState) {
+        time_elapsed += 1;
+        return false;
+    }
+
+    else if (time_elapsed > 10) {
+        if (car.m_Vehicle.mBaseState.roadGeomStates->hitState) {
+            time_elapsed = 0;
+            return true;
+        }
+    }
+    else {
+        return false;
+    }
 }
 
 // Very jank right now as you can spam it

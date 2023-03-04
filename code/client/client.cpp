@@ -44,7 +44,6 @@ CarPhysicsSerde carConfig(carPhysics);
 
 int lapCount = 0;
 bool isFinished = false;
-int time_elapsed;
 
 uint32_t lastTime_millisecs;
 
@@ -383,17 +382,8 @@ int main(int argc, char* argv[]) {
 			gs.input(window.event, controlledCamera);
 		}
 
-		// NOTE: There is probably a better way to do this
-		// If the car is grounded reset to default values
-		// The time elapsed is a hack as the modifications were reset as soon as it left the ground
-		if (!testCar.m_Vehicle.mBaseState.roadGeomStates->hitState) {
-			time_elapsed += 1;
-		// This makes it so that it waits a bit of air time before checking the ground state
-		} else if (time_elapsed > 10) {
-			if (testCar.m_Vehicle.mBaseState.roadGeomStates->hitState) {
-				testCar.resetModifications();
-				time_elapsed = 0;
-			}
+		if (testCar.isGroundedDelay(testCar)) {
+			testCar.resetModifications();
 		}
 		
 		auto& center_of_mass = testCar.m_Vehicle.mPhysXParams.physxActorCMassLocalPose;

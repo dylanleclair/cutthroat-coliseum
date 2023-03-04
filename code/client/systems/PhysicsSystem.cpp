@@ -9,7 +9,7 @@ namespace physics
     void PhysicsSystem::Initialize()
     {
 		initPhysX();
-		// initGroundPlane();
+		initGroundPlane();
 		initMaterialFrictionTable();
         initCooking(); 
 		// if (!initVehicles())
