@@ -354,6 +354,13 @@ enc_temp_folder/
 
 # overrides for third party resources 
 
-# !code/thirdparty/physx/**/
 **/*.lib
 **/*.dll
+
+!code/thirdparty/fmod/lib/shared/fmod.dll
+!code/thirdparty/fmod/lib/shared/fmodL.dll
+
+
+!code/thirdparty/fmod/lib/fmod_vc.lib
+!code/thirdparty/fmod/lib/fmodL_vc.lib
+

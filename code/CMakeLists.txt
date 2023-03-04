@@ -35,6 +35,7 @@ include_directories(${STB_INCLUDE_DIRS})
 include_directories(${SDL2_INCLUDE_DIRS})
 include_directories(lib)
 include_directories(SYSTEM thirdparty/physx/include)
+include_directories(SYSTEM thirdparty/fmod/inc)
 
 enable_testing()
 
