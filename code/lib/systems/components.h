@@ -25,20 +25,26 @@ public:
 	/*
 	* This constructor will make the transform component using glm transforms to initalize it and set its position
 	*/
-	TransformComponent(glm::vec3 _position, glm::quat _rotation) : position(_position), rotation(_rotation) {};
+	TransformComponent(glm::vec3 _position, glm::quat _rotation) : position(_position)
+	{
+		setRotation(_rotation);
+	};
 
 	//functions to maniplate the transform
-	glm::vec3 getPosition() {
+	//when getting the transform if it is attached to a physx body we need to make sure it is relative to that
+	glm::vec3 getTranslation() {
 		if (actor == nullptr)
 			return glm::vec3(position);
-		else
-			return PxtoGLM(actor->getGlobalPose().p) + glm::vec3(toMat4(getRotation()) * glm::vec4(position,1));
+		else 
+			return PxtoGLM(actor->getGlobalPose().p) + glm::rotate(PxtoGLM(actor->getGlobalPose().q), position);
 	}
+
 	glm::quat getRotation() {
+		glm::quat local = glm::angleAxis(rotationAngle, rotationAxis);
 		if (actor == nullptr)
-			return glm::quat(rotation);
+			return glm::quat(local);
 		else
-			return PxtoGLM(actor->getGlobalPose().q) * rotation;
+			return PxtoGLM(actor->getGlobalPose().q) * local;
 	}
 	glm::vec3 getScale() {
 		return scale;
@@ -47,8 +53,16 @@ public:
 	void setPosition(glm::vec3 _position) {
 		position = _position;
 	}
+	void setRotation(glm::vec3 _rotationAxis, float _angle) {
+		//rotationQ = glm::angleAxis(glm::radians(_angle), _rotationAxis);
+		rotationAngle = _angle;
+		rotationAxis = _rotationAxis;
+	}
+
 	void setRotation(glm::quat _rotation) {
-		rotation = _rotation;
+		//rotationQ = _rotation;
+		rotationAxis = glm::axis(_rotation);
+		rotationAngle = glm::angle(_rotation);
 	}
 
 	void setScale(glm::vec3 _scale) {
@@ -57,7 +71,9 @@ public:
 private:
 	friend class GraphicsSystem;
 	glm::vec3 position = glm::vec3(0);
-	glm::quat rotation = glm::quat(1, 0, 0, 0);
+	//glm::quat rotationQ = glm::quat(1, 0, 0, 0);
+	glm::vec3 rotationAxis = glm::vec3(1, 0, 0);
+	float rotationAngle = 0;
 	glm::vec3 scale = glm::vec3(1);
 	physx::PxRigidActor* actor = nullptr;
 

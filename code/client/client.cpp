@@ -385,8 +385,8 @@ int main(int argc, char* argv[]) {
 		sphere_t.setPosition(glm::vec3(car_t.getPosition().x, car_t.getPosition().y, car_t.getPosition().z));
 
 		// Finish line code
-		if (car_trans.getPosition().x >= -1.5f && car_trans.getPosition().x <= 4.8f &&
-			car_trans.getPosition().z >= -3.0f && car_trans.getPosition().z <= -0.6f)
+		if (car_trans.getTranslation().x >= -1.5f && car_trans.getTranslation().x <= 4.8f &&
+			car_trans.getTranslation().z >= -3.0f && car_trans.getTranslation().z <= -0.6f)
 		{
 			if (isFinished == false) {
 				isFinished = true;
