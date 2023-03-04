@@ -54,6 +54,11 @@ void finishLinePrint() {
 	}
 }
 
+void renderCMassSphere(Car &testCar, TransformComponent &sphere_transform) {
+	auto& center_of_mass = testCar.m_Vehicle.mPhysXParams.physxActorCMassLocalPose;
+	// Supposed to update the visual location of the sphere
+	sphere_transform.setPosition(glm::vec3(center_of_mass.p.x, center_of_mass.p.y, center_of_mass.p.z));
+}
 
 int main(int argc, char* argv[]) {
 	//RUN_GRAPHICS_TEST_BENCH();
@@ -242,6 +247,9 @@ int main(int argc, char* argv[]) {
 	auto &finish_trans = mainScene.GetComponent<TransformComponent>(finish_e.guid);
 	TransformComponent &car_trans = mainScene.GetComponent<TransformComponent>(car_e.guid);
 	TransformComponent &sphere_transform = mainScene.GetComponent<TransformComponent>(sphere_e.guid);
+	TransformComponent &tetherPole1_transform = mainScene.GetComponent<TransformComponent>(tetherPole1_e.guid);
+
+
 	FramerateCounter framerate;
 
 	bool quit = false;
@@ -371,9 +379,7 @@ int main(int argc, char* argv[]) {
 			}
 		}
 		
-		auto& center_of_mass = testCar.m_Vehicle.mPhysXParams.physxActorCMassLocalPose;
-		// Supposed to update the visual location of the sphere
-		sphere_transform.setPosition(glm::vec3(center_of_mass.p.x, center_of_mass.p.y, center_of_mass.p.z));
+		renderCMassSphere(testCar, sphere_transform);
 
 		// Finish line code
 		if (car_trans.getTranslation().x >= -1.5f && car_trans.getTranslation().x <= 4.8f &&
