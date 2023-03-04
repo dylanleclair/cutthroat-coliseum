@@ -82,4 +82,6 @@ private:
 	float follow_cam_z;
 	float follow_correction_strength;
 	bool faceCulling;
+	bool front_face;
+	bool back_face;
 };

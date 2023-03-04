@@ -124,7 +124,7 @@ int main(int argc, char* argv[]) {
 	mainScene.AddComponent(car_e.guid, car_r);
 	TransformComponent car_t = TransformComponent(testCar.getVehicleRigidBody());
 	car_t.setPosition(glm::vec3(0, 0, 0.5f));
-	car_t.setRotation(glm::quat(0, 0, 0, 1));
+	//car_t.setRotation(glm::quat(0, 0, 0, 0));
 	car_t.setScale(glm::vec3(3.2f, 3.2f, 3.2f));
 	mainScene.AddComponent(car_e.guid, car_t);
 	
@@ -140,8 +140,7 @@ int main(int argc, char* argv[]) {
 	//sphere_t.setPosition(glm::vec3(testCar.m_Vehicle.mPhysXState.physxActor.rigidBody->getCMassLocalPose().p.x,
 	//	testCar.m_Vehicle.mPhysXState.physxActor.rigidBody->getCMassLocalPose().p.y,
 	//	testCar.m_Vehicle.mPhysXState.physxActor.rigidBody->getCMassLocalPose().p.z));
-	sphere_t.setPosition(glm::vec3(car_t.getPosition().x, car_t.getPosition().y, car_t.getPosition().z));
-	
+	sphere_t.setPosition(glm::vec3(car_t.getTranslation().x, car_t.getTranslation().y, car_t.getTranslation().z));
 	sphere_t.setScale(glm::vec3(0.5f, 0.5f, 0.5f));
 	mainScene.AddComponent(sphere_e.guid, sphere_t);
 
@@ -334,19 +333,20 @@ int main(int argc, char* argv[]) {
 					std::cout << gs.getCameraView()[3][0] << ", " << gs.getCameraView()[3][1] << ", " << gs.getCameraView()[3][2] << ", " << gs.getCameraView()[3][3] << std::endl;
 					std::cout << std::endl;
 
-					std::cout << "finish line: " << finish_trans.getPosition().x << ", " << finish_trans.getPosition().y << ", " << finish_trans.getPosition().z << std::endl;
+					std::cout << "finish line: " << finish_trans.getTranslation().x << ", " << finish_trans.getTranslation().y << ", " << finish_trans.getTranslation().z << std::endl;
 					std::cout << std::endl;
 
-					std::cout << "tether pole 1" << tetherPole1_t.getPosition().x << ", " << tetherPole1_t.getPosition().y << "," << tetherPole1_t.getPosition().z << std::endl;
+					std::cout << "tether pole 1" << tetherPole1_t.getTranslation().x << ", " << tetherPole1_t.getTranslation().y << "," << tetherPole1_t.getTranslation().z << std::endl;
 					std::cout << std::endl;
 
 					std::cout << "Car Transform: " << std::endl;
 
-					std::cout << car_trans.getPosition().x << ", " << car_trans.getPosition().y << ", " << car_trans.getPosition().z << std::endl;
+					std::cout << car_trans.getTranslation().x << ", " << car_trans.getTranslation().y << ", " << car_trans.getTranslation().z << std::endl;
 
-					std::cout << mainScene.GetComponent<TransformComponent>(car_e.guid).getPosition().x << ","
-						<< mainScene.GetComponent<TransformComponent>(car_e.guid).getPosition().y << ","
-						<< mainScene.GetComponent<TransformComponent>(car_e.guid).getPosition().z << std::endl;
+
+					std::cout << mainScene.GetComponent<TransformComponent>(car_e.guid).getTranslation().x << ","
+						<< mainScene.GetComponent<TransformComponent>(car_e.guid).getTranslation().y << ","
+						<< mainScene.GetComponent<TransformComponent>(car_e.guid).getTranslation().z << std::endl;
 
 					std::cout << testCar.getVehicleRigidBody()->getGlobalPose().p.x << ", "
 							  << testCar.getVehicleRigidBody()->getGlobalPose().p.y << ", "
@@ -382,7 +382,7 @@ int main(int argc, char* argv[]) {
 		//	testCar.m_Vehicle.mPhysXState.physxActor.rigidBody->getCMassLocalPose().p.y + car_trans.getPosition().y,
 		//	testCar.m_Vehicle.mPhysXState.physxActor.rigidBody->getCMassLocalPose().p.z + car_trans.getPosition().z));
 
-		sphere_t.setPosition(glm::vec3(car_t.getPosition().x, car_t.getPosition().y, car_t.getPosition().z));
+		sphere_t.setPosition(glm::vec3(car_t.getTranslation().x, car_t.getTranslation().y, car_t.getTranslation().z));
 
 		// Finish line code
 		if (car_trans.getTranslation().x >= -1.5f && car_trans.getTranslation().x <= 4.8f &&

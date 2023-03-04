@@ -34,6 +34,8 @@ GraphicsSystem::GraphicsSystem(Window& _window) :
 	follow_cam_z = -10.f;
 	follow_correction_strength = 40.f;
 	faceCulling = true;
+	front_face = false;
+	back_face = true;
 
 	// configure g-buffer framebuffer
 	// ------------------------------
@@ -117,6 +119,10 @@ GraphicsSystem::~GraphicsSystem() {
 void GraphicsSystem::ImGuiPanel() {
 	ImGui::Begin("Camera States");
 	ImGui::Checkbox("Face Culling", &faceCulling);
+	ImGui::SameLine;
+	ImGui::Checkbox("Front Face", &front_face);
+	ImGui::SameLine;
+	ImGui::Checkbox("Back Face", &back_face);
 
 	if (ImGui::Button("Free Camera")) {
 		cam_mode = 1;
@@ -138,8 +144,7 @@ void GraphicsSystem::ImGuiPanel() {
 	ImGui::End();
 
 	ImGui::Begin("Debug Rendering");
-	if (ImGui::CollapsingHeader("Visuals")) {
-		ImGui::Checkbox("Collider Meshes", &showColliders);
+	if (ImGui::CollapsingHeader("Visuals")) {		
 		ImGui::SliderFloat3("Light Direction", &(lightDirection.x), -50, 50);
 		ImGui::SliderFloat("diffuse strength", &diffuseWeight, 0, 1);
 		ImGui::SliderFloat("ambiant strength", &ambiantStrength, 0, 1);
@@ -149,6 +154,7 @@ void GraphicsSystem::ImGuiPanel() {
 	}
 
 	if (ImGui::CollapsingHeader("Transforms")) {
+		ImGui::Checkbox("Collider Meshes", &showColliders);
 		//show all renderables in a list
 		static int item_current_idx = 0;
 		if (entityTransforms.count > 0) {
@@ -197,20 +203,6 @@ void GraphicsSystem::ImGuiPanel() {
 }
 
 void GraphicsSystem::Update(ecs::Scene& scene, float deltaTime) {
-	glEnable(GL_LINE_SMOOTH);
-	glEnable(GL_FRAMEBUFFER_SRGB);
-	glClearColor(0.50f, 0.80f, 0.97f, 0.0f);
-	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-	if (faceCulling) {
-		glEnable(GL_CULL_FACE);
-		glCullFace(GL_BACK);
-	}
-	else {
-		glDisable(GL_CULL_FACE);
-	}
-	glEnable(GL_DEPTH_TEST);
-	glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
-
 	for (int i = 0; i < numCamerasActive; i++) {
 		//matricies that need only be set once per camera
 		glm::mat4 P = glm::perspective(glm::radians(45.0f), (float)windowSize.x / windowSize.y, 2.f, 1000.f);
@@ -317,8 +309,23 @@ void GraphicsSystem::Update(ecs::Scene& scene, float deltaTime) {
 		glEnable(GL_FRAMEBUFFER_SRGB);
 		glClearColor(0.50f, 0.80f, 0.97f, 0.0f);
 		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-		glEnable(GL_CULL_FACE);
-		glCullFace(GL_BACK);
+		if (faceCulling) {
+			glEnable(GL_CULL_FACE);
+			if (front_face) {
+				glCullFace(GL_FRONT);
+			}
+			else if (back_face) {
+				glCullFace(GL_BACK);
+			}
+			else if (back_face && front_face) {
+				glCullFace(GL_FRONT_AND_BACK);
+			}			
+		}
+		else {
+			glDisable(GL_CULL_FACE);
+		}
+		
+		
 		glEnable(GL_DEPTH_TEST);
 		glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
 		/*
