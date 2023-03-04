@@ -11,6 +11,7 @@ namespace physics
 		initPhysX();
 		initGroundPlane();
 		initMaterialFrictionTable();
+        initCooking();
 		// if (!initVehicles())
 		// 	return false;
 		// return true;
@@ -117,6 +118,20 @@ namespace physics
             shape->setFlag(PxShapeFlag::eTRIGGER_SHAPE, false);
         }
         m_Scene->addActor(*gGroundPlane);
+    }
+
+
+    void PhysicsSystem::initCooking()
+    {
+        // Level
+        m_Cooking = PxCreateCooking(PX_PHYSICS_VERSION, *m_Foundation, physx::PxCookingParams(m_Physics->getTolerancesScale()));
+        if (!m_Cooking)
+        {
+            std::cerr << "PxCreateCooking failed!" << std::endl;
+        }
+
+        m_CookingParams->meshPreprocessParams |= physx::PxMeshPreprocessingFlag::eDISABLE_CLEAN_MESH;
+        m_CookingParams->meshPreprocessParams |= physx::PxMeshPreprocessingFlag::eDISABLE_ACTIVE_EDGES_PRECOMPUTE;
     }
 
     void PhysicsSystem::cleanupGroundPlane()
