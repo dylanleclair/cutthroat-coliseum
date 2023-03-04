@@ -1,3 +1,4 @@
+#pragma once
 #include "PxPhysicsAPI.h"
 #include <vector>
 #include <iostream>

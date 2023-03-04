@@ -183,13 +183,10 @@ int main(int argc, char* argv[]) {
 	level_t.setScale(glm::vec3(3.2f, 1.f, 3.2f));
 	mainScene.AddComponent(ground_e.guid, level_t);
 
-	CPU_Geometry test_level_geom{};
-	GraphicsSystem::importOBJ(test_level_geom, "testtrack.obj");
-
-
-	LevelCollider levelCollider{"testtrack.obj", physicsSystem};
-	levelCollider.cookLevel();
-
+	// actual level mesh & collider for it
+	LevelCollider levelCollider{"large_test_torus.obj", physicsSystem};
+	auto levelTriangleMesh = levelCollider.cookLevel();
+	levelCollider.initLevelRigidBody(levelTriangleMesh);
 
 	RenderModel level_r = RenderModel();
 	GraphicsSystem::importOBJ(level_r, "large_test_torus.obj");
