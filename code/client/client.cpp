@@ -228,7 +228,7 @@ int main(int argc, char* argv[]) {
 	tetherPole1_r.setModelColor(glm::vec3(205.f / 255.f, 133.f / 255.f, 63.f / 255.f));
 	mainScene.AddComponent(tetherPole1_e.guid, tetherPole1_r);
 	TransformComponent tetherPole1_t = TransformComponent();
-	tetherPole1_t.setPosition(glm::vec3(0.f, 0.f, 0.f));
+	tetherPole1_t.setPosition(glm::vec3(-27.f, 0.f, 50.f));
 	tetherPole1_t.setScale(glm::vec3(3.2f, 3.2f, 3.2f));
 	mainScene.AddComponent(tetherPole1_e.guid, tetherPole1_t);
 
@@ -237,7 +237,7 @@ int main(int argc, char* argv[]) {
 	tetherPole2_r.setModelColor(glm::vec3(205.f / 255.f, 133.f / 255.f, 63.f / 255.f));
 	mainScene.AddComponent(tetherPole2_e.guid, tetherPole2_r);
 	TransformComponent tetherPole2_t = TransformComponent();
-	tetherPole2_t.setPosition(glm::vec3(0.f, 0.f, -100.f));
+	tetherPole2_t.setPosition(glm::vec3(-27.f, 0.f, -50.f));
 	tetherPole2_t.setScale(glm::vec3(3.2f, 3.2f, 3.2f));
 	mainScene.AddComponent(tetherPole2_e.guid, tetherPole2_t);
 
@@ -253,7 +253,8 @@ int main(int argc, char* argv[]) {
 	TransformComponent &car_trans = mainScene.GetComponent<TransformComponent>(car_e.guid);
 	TransformComponent &sphere_transform = mainScene.GetComponent<TransformComponent>(sphere_e.guid);
 	TransformComponent &tetherPole1_transform = mainScene.GetComponent<TransformComponent>(tetherPole1_e.guid);
-
+	// Used for testing location of stuff, DO NOT PUBLISH
+	PxTransform loc;
 
 	FramerateCounter framerate;
 
@@ -329,8 +330,12 @@ int main(int argc, char* argv[]) {
 						testCar.TetherJump();
 						break;
 					case SDLK_m:
-						testCar.TetherSteer();
+						loc.p.x = tetherPole1_transform.getTranslation().x;
+						loc.p.y = tetherPole1_transform.getTranslation().y;
+						loc.p.z = tetherPole1_transform.getTranslation().z;
+						testCar.TetherSteer(loc);
 						break;
+
 
 					// Prinout of camera matrix
 				case SDLK_c:
@@ -343,7 +348,7 @@ int main(int argc, char* argv[]) {
 					std::cout << "finish line: " << finish_trans.getTranslation().x << ", " << finish_trans.getTranslation().y << ", " << finish_trans.getTranslation().z << std::endl;
 					std::cout << std::endl;
 
-					std::cout << "tether pole 1" << tetherPole1_t.getTranslation().x << ", " << tetherPole1_t.getTranslation().y << "," << tetherPole1_t.getTranslation().z << std::endl;
+					std::cout << "tether pole 1: " << tetherPole1_t.getTranslation().x << ", " << tetherPole1_t.getTranslation().y << "," << tetherPole1_t.getTranslation().z << std::endl;
 					std::cout << std::endl;
 
 					std::cout << "Car Transform: " << std::endl;
@@ -452,12 +457,14 @@ int main(int argc, char* argv[]) {
 		// END JOYSTICK THING
 
 		// HACK(beau): pull these out of CarSample.cpp
-		extern float carThrottle;
-		extern float carBrake;
+		extern float controller_throttle;
+		extern float controller_brake;
 		extern float carAxis;
 		extern float carAxisScale;
 		ImGui::Begin("Car commands tuner", nullptr);
 		ImGui::Text("left stick horizontal tilt: %f", carAxis);
+		ImGui::Text("Car Throttle: %f", controller_throttle);
+		ImGui::Text("Car Brake: %f", controller_brake);
 		ImGui::Text("Current Gear: %d", testCar.m_Vehicle.mEngineDriveState.gearboxState.currentGear);
 		ImGui::Text("Current engine rotational speed: %f", testCar.m_Vehicle.mEngineDriveState.engineState.rotationSpeed);
 		ImGui::Text("Center of Gravity: %f, %f, %f", testCar.m_Vehicle.mPhysXParams.physxActorCMassLocalPose.p.x, 
