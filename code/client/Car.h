@@ -114,7 +114,7 @@ struct Car {
     void cleanupVehicle();
 
     void resetModifications();
-    void TetherSteer();
+    void TetherSteer(PxTransform _loc);
     void TetherJump();
 
     PxRigidBody* getVehicleRigidBody();

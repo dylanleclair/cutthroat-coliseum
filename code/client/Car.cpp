@@ -10,6 +10,9 @@ float carBrake = 1.f;
 float carAxis = 0.f;
 float carAxisScale = 1.f;
 
+float controller_throttle = 0.f;
+float controller_brake = 0.f;
+
 PxTransform c_mass_init_v;
 PxReal angular_damp_init_v;
 
@@ -119,12 +122,13 @@ void Car::resetModifications() {
 }
 
 // Very jank right now as you can spam it
-void Car::TetherSteer() {
+void Car::TetherSteer(PxTransform _loc) {
+    m_Vehicle.mPhysXParams.physxActorCMassLocalPose = _loc;
+
     //m_Vehicle.mPhysXState.physxActor.rigidBody->addForce(PxVec3(0.f, 0.f, 10.f), PxForceMode::eVELOCITY_CHANGE, true);
     //m_Vehicle.mPhysXState.physxActor.rigidBody->addTorque(PxVec3(0.f, -2.f, 0.f), PxForceMode::eVELOCITY_CHANGE, true);
 }
 
-// Having issues with bouncing
 void Car::TetherJump() {
     auto v_pos = m_Vehicle.mPhysXState.physxActor.rigidBody->getGlobalPose();
     // For modes
@@ -165,23 +169,36 @@ void Car::Update(float deltaTime)
   Command command = {0.f, 0.f, 0.f, m_TargetGearCommand};
   // command.duration = timestep;
 
-  // Throttle to 2.f will cause weird behaviour
-  if (SDL_GameControllerGetButton(ControllerInput::controller, SDL_CONTROLLER_BUTTON_A) || w_key)
-  {
-      command.throttle = carThrottle;
-      // goto end; // so we don't attempt to throttle and break
+  if (SDL_GameControllerGetAxis(ControllerInput::controller, SDL_CONTROLLER_AXIS_TRIGGERRIGHT)) {
+      controller_throttle = (float)SDL_GameControllerGetAxis(ControllerInput::controller, SDL_CONTROLLER_AXIS_TRIGGERRIGHT) / SHRT_MAX;
+      command.throttle = controller_throttle;      
   }
-  else if (SDL_GameControllerGetButton(ControllerInput::controller, SDL_CONTROLLER_BUTTON_B) || s_key)
-  {
-      command.brake = carBrake;
-      // goto end;????
+  if (SDL_GameControllerGetAxis(ControllerInput::controller, SDL_CONTROLLER_AXIS_TRIGGERLEFT)) {
+      controller_brake = (float)SDL_GameControllerGetAxis(ControllerInput::controller, SDL_CONTROLLER_AXIS_TRIGGERLEFT) / SHRT_MAX;
+      command.brake = controller_brake;      
   }
-  // end:
+
+  // Currently a bit bugged, sends you into space
+  // It's because it triggers every time it registers the button is pressed (held down)
+  if (SDL_GameControllerGetButton(ControllerInput::controller, SDL_CONTROLLER_BUTTON_A)) {
+      TetherJump();
+  }
 
   // Normalize controller axis
   // BUG: max positive is 1 less in magnitude than max min meaning full negative will be slightly above 1
   carAxis = (float)-SDL_GameControllerGetAxis(ControllerInput::controller, SDL_CONTROLLER_AXIS_LEFTX) / SHRT_MAX;
-  // std::cout << axis << std::endl;
+   
+
+  // Keyboard Controls
+  // Throttle to 2.f will cause weird behaviour
+  if (w_key)
+  {
+      command.throttle = carThrottle;
+  }
+  else if (s_key)
+  {
+      command.brake = carBrake;
+  }
   if (a_key)
   {
       command.steer = 1.f;
@@ -193,7 +210,7 @@ void Car::Update(float deltaTime)
   else
   {
       command.steer = carAxis * carAxisScale;
-  }  
+  }
 
   m_Vehicle.mCommandState.brakes[0] = command.brake;
   m_Vehicle.mCommandState.nbBrakes = 1;
