@@ -54,10 +54,15 @@ void finishLinePrint() {
 	}
 }
 
-void renderCMassSphere(Car &testCar, TransformComponent &sphere_transform) {
-	auto& center_of_mass = testCar.m_Vehicle.mPhysXParams.physxActorCMassLocalPose;
-	// Supposed to update the visual location of the sphere
-	sphere_transform.setPosition(glm::vec3(center_of_mass.p.x, center_of_mass.p.y, center_of_mass.p.z));
+// Provides a target (ideally the center of mass of a moving object)
+// Renders the sphere where the transform for that object is
+// This is the transform component version
+void renderCMassSphere(TransformComponent &_target, TransformComponent& sphere_transform) {
+	sphere_transform.setPosition(glm::vec3(_target.getTranslation().x, _target.getTranslation().y, _target.getTranslation().z));
+}
+// This is the PxTransform version as vehicle PhysX models use PxTransforms for their center of mass
+void renderCMassSphere(PxTransform & _target, TransformComponent& sphere_transform) {
+	sphere_transform.setPosition(glm::vec3(_target.p.x, _target.p.y, _target.p.z));
 }
 
 int main(int argc, char* argv[]) {
@@ -379,7 +384,8 @@ int main(int argc, char* argv[]) {
 			}
 		}
 		
-		renderCMassSphere(testCar, sphere_transform);
+		auto& center_of_mass = testCar.m_Vehicle.mPhysXParams.physxActorCMassLocalPose;
+		renderCMassSphere(center_of_mass, sphere_transform);
 
 		// Finish line code
 		if (car_trans.getTranslation().x >= -1.5f && car_trans.getTranslation().x <= 4.8f &&
