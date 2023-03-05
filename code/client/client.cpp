@@ -194,33 +194,10 @@ int main(int argc, char* argv[]) {
 	sphere_t.setScale(glm::vec3(0.5f, 0.5f, 0.5f));
 	mainScene.AddComponent(sphere_e.guid, sphere_t);
 
-
-
-	//finish box
-	ecs::Entity finish_e = mainScene.CreateEntity();
-	CPU_Geometry finish_geom;
-
-	glm::vec3 rectangle[] = {
-		{-10.f, 0.5f, 0.0f},
-		{-10.f, -1.f, 0.0f},
-		{-5.f, -1.f, 0.0f},
-
-		{-5.f, 0.5f, 0.0f},
-		{-5.f, -1.f, 0.0f},
-		{-10.f, 0.5f, 0.0f},
-	};
-	for (int i = 0; i < 6; i++) {
-		finish_geom.verts.push_back(rectangle[i]);
-	}
-	for (int i = 0; i < 6; i++) {
-		finish_geom.verts.push_back(rectangle[5 - i]);
-	}
-
 	
 	// Finish line components
 	RenderModel finish = RenderModel();
 	GraphicsSystem::importOBJ(finish, "basic_finish.obj");
-	//finish.attachMesh(finish_geom);
 	finish.setModelColor(glm::vec3(1.f, 0.f, 0.f));
 	mainScene.AddComponent(finish_e.guid, finish);
 
@@ -255,7 +232,7 @@ int main(int argc, char* argv[]) {
 	for (auto& e : levelCollider_raw.verts)
 		e *= 3;
 	LevelCollider levelCollider{ levelCollider_raw, physicsSystem};
-	auto levelTriangleMesh = levelCollider.cookLevel();
+	auto levelTriangleMesh = levelCollider.cookLevel(glm::mat4(1));
 	levelCollider.initLevelRigidBody(levelTriangleMesh);
 
 	RenderModel level_r = RenderModel();
@@ -263,30 +240,6 @@ int main(int argc, char* argv[]) {
 	GraphicsSystem::importOBJ(level_r, "Stadium_MINIMAL.obj"); //for faster loading times
 	mainScene.AddComponent(level_e.guid, level_r);
 	mainScene.AddComponent(level_e.guid, level_t);
-
-	/*
-	RenderModel level_r = RenderModel();
-	GraphicsSystem::importOBJ(level_r, "large_test_torus.obj");
-	level_r.setModelColor(glm::vec3(0, 0, 1));
-	mainScene.AddComponent(level_e.guid, level_r);
-	mainScene.AddComponent(level_e.guid, level_t);
-
-	TransformComponent wall_t = TransformComponent();
-	wall_t.setPosition(glm::vec3(0, 0, 0));
-	wall_t.setScale(glm::vec3(3.2f, 3.2f, 3.2f));
-
-	RenderModel outWall = RenderModel();
-	GraphicsSystem::importOBJ(outWall, "large_test_torus_inwall.obj");
-	outWall.setModelColor(glm::vec3(0.2f, 0.2f, 0.6f));
-	mainScene.AddComponent(outWall_e.guid, outWall);
-	mainScene.AddComponent(outWall_e.guid, wall_t);
-
-	RenderModel inWall = RenderModel();
-	GraphicsSystem::importOBJ(inWall, "large_test_torus_outwall.obj");
-	inWall.setModelColor(glm::vec3(0.2f, 0.2f, 0.6f));
-	mainScene.AddComponent(inWall_e.guid, inWall);
-	mainScene.AddComponent(inWall_e.guid, wall_t);
-	
 
 	// Tether poles
 	RenderModel tetherPole1_r = RenderModel();
@@ -297,7 +250,7 @@ int main(int argc, char* argv[]) {
 	tetherPole1_t.setPosition(glm::vec3(-27.f, 0.f, 50.f));
 	tetherPole1_t.setScale(glm::vec3(3.2f, 3.2f, 3.2f));
 	mainScene.AddComponent(tetherPole1_e.guid, tetherPole1_t);
-
+	/*
 	RenderModel tetherPole2_r = RenderModel();
 	GraphicsSystem::importOBJ(tetherPole2_r, "alpha_tether_pole.obj");
 	tetherPole2_r.setModelColor(glm::vec3(205.f / 255.f, 133.f / 255.f, 63.f / 255.f));
