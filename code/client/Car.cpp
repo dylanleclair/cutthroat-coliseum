@@ -190,7 +190,4 @@ void Car::Update(Guid carGuid, ecs::Scene& scene, float deltaTime)
   m_Vehicle.mComponentSequence.setSubsteps(m_Vehicle.mComponentSequenceSubstepGroupHandle, nbSubsteps);
   m_Vehicle.step(delta_seconds, m_VehicleSimulationContext);
 
-  // Forward integrate the phsyx scene by a single timestep.
-  physicsSystem->m_Scene->simulate(delta_seconds);
-  physicsSystem->m_Scene->fetchResults(true);
 }

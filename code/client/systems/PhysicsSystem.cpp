@@ -37,6 +37,10 @@ namespace physics
             aicar.Update(entityGuid,scene,deltaTime);
         }
 
+        // Forward integrate the phsyx scene by a single timestep.
+        m_Scene->simulate(deltaTime);
+        m_Scene->fetchResults(true);
+
 
     }
 
@@ -80,7 +84,7 @@ namespace physics
         m_Material = m_Physics->createMaterial(0.5f, 0.5f, 0.5f);
 
         PxInitVehicleExtension(*m_Foundation);
-        
+
     }
 
     void PhysicsSystem::cleanupPhysX()
