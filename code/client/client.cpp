@@ -89,8 +89,10 @@ int main(int argc, char* argv[]) {
 	physicsSystem.Initialize();
 
 
-
-
+	//load fonts into ImGui
+	io.Fonts->AddFontDefault();
+	ImFont* niceFont = io.Fonts->AddFontFromFileTTF("fonts/Debrosee-ALPnL.ttf", 18.5f);
+	IM_ASSERT(niceFont != NULL);
 
 
 	// init ecs 
@@ -196,8 +198,8 @@ int main(int argc, char* argv[]) {
 	levelCollider.initLevelRigidBody(levelTriangleMesh);
 
 	RenderModel level_r = RenderModel();
-	GraphicsSystem::importOBJ(level_r, "Stadium.obj");
-	//GraphicsSystem::importOBJ(level_r, "Stadium_MINIMAL.obj"); //for faster loading times
+	//GraphicsSystem::importOBJ(level_r, "Stadium.obj");
+	GraphicsSystem::importOBJ(level_r, "Stadium_MINIMAL.obj"); //for faster loading times
 	mainScene.AddComponent(level_e.guid, level_r);
 	mainScene.AddComponent(level_e.guid, level_t);
 
@@ -433,7 +435,29 @@ int main(int argc, char* argv[]) {
 
 		// NOTE: the imgui bible - beau
 		//ImGui::ShowDemoWindow();
+		/*
+		* Render the UI. I am doing this here for now but I might move it.
+		*/
+		//render the UI
+		// Setting flags
+		ImGuiWindowFlags textWindowFlags =
+			ImGuiWindowFlags_NoBringToFrontOnFocus |
+			ImGuiWindowFlags_NoMove |				// text "window" should not move
+			ImGuiWindowFlags_NoResize |				// should not resize
+			ImGuiWindowFlags_NoCollapse |			// should not collapse
+			ImGuiWindowFlags_NoSavedSettings |		// don't want saved settings mucking things up
+			ImGuiWindowFlags_AlwaysAutoResize |		// window should auto-resize to fit the text
+			ImGuiWindowFlags_NoBackground |			// window should be transparent; only the text should be visible
+			ImGuiWindowFlags_NoDecoration |			// no decoration; only the text should be visible
+			ImGuiWindowFlags_NoTitleBar;			// no title; only the text should be visible
+		ImGui::Begin("UI", (bool*)0, textWindowFlags);
+		//ImGui::SetWindowFontScale(24.f);
+		ImGui::PushFont(niceFont);
+		ImGui::Text("FUCK");
+		ImGui::PopFont();
+		ImGui::End();
 
+		//gs.renderUI();
 		gs.ImGuiPanel();
 		// Loads the imgui panel that lets you reload vehicle JSONs
 

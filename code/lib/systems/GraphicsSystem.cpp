@@ -112,6 +112,10 @@ GraphicsSystem::~GraphicsSystem() {
 	glDeleteBuffers(1, &quad_vertexBuffer);
 }
 
+void GraphicsSystem::renderUI() {
+
+}
+
 // Panel to controls the cameras
 void GraphicsSystem::ImGuiPanel() {
 	ImGui::Begin("Camera States");
@@ -149,8 +153,8 @@ void GraphicsSystem::ImGuiPanel() {
 	if (ImGui::CollapsingHeader("Transforms")) {
 		//show all renderables in a list
 		static int item_current_idx = 0;
-		if (entityTransforms.count > 0) {
-			if (ImGui::BeginCombo("Transforms", entityTransforms.names[item_current_idx].c_str())) {
+		if (entityTransforms.count > 0) { //make sure there is at least one entity. Issues might otherwise arise
+			if (ImGui::BeginCombo("Entities", entityTransforms.names[item_current_idx].c_str())) {
 				for (int i = 0; i < entityTransforms.count; i++) {
 					const bool is_selected = (item_current_idx == i);
 					if (ImGui::Selectable(entityTransforms.names[i].c_str(), is_selected))
@@ -196,10 +200,9 @@ void GraphicsSystem::ImGuiPanel() {
 
 void GraphicsSystem::Update(ecs::Scene& scene, float deltaTime) {
 	for (int i = 0; i < numCamerasActive; i++) {
-		//matricies that need only be set once per camera
-		glm::mat4 P = glm::perspective(glm::radians(45.0f), (float)windowSize.x / windowSize.y, 2.f, 1000.f);
+		//default camera matricies
+		glm::mat4 P = glm::perspective(glm::radians(45.f), (float)windowSize.x / windowSize.y, 2.f, 1000.f);
 		glm::mat4 V = cameras[i].getView();
-		
 
 		// If camera mode is 1 - use freecam
 		if (cam_mode == 1) {
@@ -220,6 +223,9 @@ void GraphicsSystem::Update(ecs::Scene& scene, float deltaTime) {
 			//Main goal rn: Implement the logic...
 			static glm::vec3 previousCarPosition = glm::vec3(0);
 			TransformComponent& trans = scene.GetComponent<TransformComponent>(0);
+			/*
+			* calculate the camera position
+			*/
 			//calculate where the camera should aim to be positioned
 			glm::vec3 cameraTargetLocation = glm::translate(glm::mat4(1), trans.getTranslation()) * toMat4(trans.getRotation()) * glm::vec4(follow_cam_x, follow_cam_y, follow_cam_z, 1);
 			//calculate the speed of the car
@@ -228,12 +234,16 @@ void GraphicsSystem::Update(ecs::Scene& scene, float deltaTime) {
 			float cameraOffset = glm::distance(cameraTargetLocation, cameras[0].getPos());
 			//use a sigmoid function to determine how much to move the camera to the target position (can't go higher than 1)
 			float correctionAmount = cameraOffset / (follow_correction_strength + cameraOffset);
-			//lerp between the 2 positions according to the correction amount
-			previousCarPosition = trans.getTranslation();
 			//lerp the camera to a good location based on the correction amount
 			cameras[0].setPos(cameras[0].getPos() * (1-correctionAmount) + correctionAmount * cameraTargetLocation);
+
+			//set the camera variables
+			previousCarPosition = trans.getTranslation();
 			V = glm::lookAt(cameras[0].getPos(), trans.getTranslation(), glm::vec3(0.0f, 1.0f, 0.0f));
+			P = glm::perspective(glm::radians(45.f), (float)windowSize.x / windowSize.y, 2.f, 1000.f);
 		}
+
+
 
 		//set the viewport
 		if (numCamerasActive <= 1) { //there can't be 0 cameras, assume always 1 minimum
@@ -264,7 +274,7 @@ void GraphicsSystem::Update(ecs::Scene& scene, float deltaTime) {
 			bool cont = false;
 			//search if it is already in the debug list, and if it is update it
 			for (int i = 0; i < entityTransforms.count; i++) {
-				if (entityTransforms.ids[i] == entityGuid && entityTransforms.read_write[i] != 0) {
+				if (entityTransforms.ids[i] == entityGuid) {
 					//read
 					if (entityTransforms.read_write[i] == 1) {
 						entityTransforms.positions[i] = trans.position;
@@ -272,7 +282,7 @@ void GraphicsSystem::Update(ecs::Scene& scene, float deltaTime) {
 						entityTransforms.scales[i] = trans.scale;
 					}
 					//write
-					else {
+					else if(entityTransforms.read_write[i] == 2) {
 						trans.position = entityTransforms.positions[i];
 						trans.setRotation(glm::vec3(entityTransforms.rotations[i]), entityTransforms.rotations[i][3]);
 						trans.scale = entityTransforms.scales[i];

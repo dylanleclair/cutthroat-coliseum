@@ -23,7 +23,8 @@ struct GraphicsSystem : ecs::ISystem {
 public:
 	GraphicsSystem(Window& _window);
 	~GraphicsSystem();
-	void GraphicsSystem::ImGuiPanel();
+	void ImGuiPanel();
+	void renderUI();
 	void Update(ecs::Scene& scene, float deltaTime);
 	void input(SDL_Event&, int _cameraID);
 	glm::mat4 getCameraView();
@@ -69,7 +70,7 @@ private:
 	GLuint gColor;
 	GLuint gNormal;
 	GLuint gPosition;
-
+	//variables for rendering whole screen quad
 	GLuint quad_vertexArray;
 	GLuint quad_vertexBuffer;
 
@@ -77,6 +78,7 @@ private:
 	static void processNode(aiNode* node, const aiScene* scene, RenderModel& _component);
 	static void processNode(aiNode* node, const aiScene* scene, CPU_Geometry& _geometry);
 
+	//follo camera variables
 	float follow_cam_x;
 	float follow_cam_y;
 	float follow_cam_z;
