@@ -135,6 +135,7 @@ void Car::Update(float deltaTime)
   auto s_key = keys_arr[SDL_SCANCODE_S];
   auto a_key = keys_arr[SDL_SCANCODE_A];
   auto d_key = keys_arr[SDL_SCANCODE_D];
+  auto b_key = keys_arr[SDL_SCANCODE_B];
   auto space_bar = keys_arr[SDL_SCANCODE_SPACE];
 
   float delta_seconds = deltaTime;
@@ -149,12 +150,18 @@ void Car::Update(float deltaTime)
   if (SDL_GameControllerGetButton(ControllerInput::controller, SDL_CONTROLLER_BUTTON_A) || w_key)
   {
       command.throttle = carThrottle;
+      command.gear = physx::vehicle2::PxVehicleDirectDriveTransmissionCommandState::eFORWARD;
+
       // goto end; // so we don't attempt to throttle and break
   }
   else if (SDL_GameControllerGetButton(ControllerInput::controller, SDL_CONTROLLER_BUTTON_B) || s_key)
   {
       command.brake = carBrake;
       // goto end;????
+  } else if (b_key)
+  {
+      command.gear = physx::vehicle2::PxVehicleDirectDriveTransmissionCommandState::eREVERSE;
+      command.throttle = 1.f;
   }
   // end:
 
