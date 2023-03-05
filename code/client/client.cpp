@@ -126,21 +126,19 @@ int main(int argc, char* argv[]) {
 	mainScene.AddComponent(aiDriver_e.guid, AICar());
 	AICar& aiCar = mainScene.GetComponent<AICar>(aiDriver_e.guid);
 	aiCar.physicsSystem = &physicsSystem;
-	if (!aiCar.initVehicle(PxVec3(0.000000000f, -0.0500000119f, -1.59399998f) + PxVec3(3.0f,0.f,0.f)))
+	if (!aiCar.initVehicle(PxVec3(3.0f,0.f,1.f)))
 	{
 		std::cout << "ERROR: could not initialize ai-driven vehicle";
 	}
 
-	std::cout << "do we get past this?\n";
 
-	std::cout << "yes!\n";
 	// AI car entity setup
 	RenderModel aiDriver_r = RenderModel();
 	GraphicsSystem::importOBJ(aiDriver_r, "test_car.obj");
 	aiDriver_r.setModelColor(glm::vec3(1.0f, 0.0f, 1.f));
 	mainScene.AddComponent(aiDriver_e.guid, aiDriver_r);
 	TransformComponent aiDriver_t = TransformComponent(aiCar.getVehicleRigidBody());
-	aiDriver_t.setPosition(glm::vec3(3, 0, 1));
+	aiDriver_t.setPosition(glm::vec3(0, 0, 1));
 	//car_t.setRotation(glm::quat(0, 0, 0, 1));
 	aiDriver_t.setScale(glm::vec3(3.2f, 3.2f, 3.2f));
 	mainScene.AddComponent(aiDriver_e.guid, aiDriver_t);

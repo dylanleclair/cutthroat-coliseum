@@ -67,6 +67,7 @@ void AICar::Update(Guid carGuid,ecs::Scene& scene, float deltaTime)
                 pathGeom.verts.push_back(glm::vec3{ pos });
             }
             // TODO: attempt to smooth the path with chaikin
+            // -> this only makes sense for large graphs so chill for now
         
         // hook into a renderer so we can see if it's correct...
 
@@ -78,34 +79,29 @@ void AICar::Update(Guid carGuid,ecs::Scene& scene, float deltaTime)
         // find the direction vector of the vehicle
         glm::quat vehicleQuat = PxtoGLM(carPose.q);
         glm::mat4 vehicleRotM = glm::toMat4(vehicleQuat);
-        glm::vec3 heading = glm::vec3{vehicleRotM * glm::vec4{0.f, 0.f, -1.f, 1.f}};
-        // need to somehow find the rotation of the vehicle?
+        glm::vec3 headingDir = glm::vec3{vehicleRotM * glm::vec4{0.f, 0.f, -1.f, 1.f}};
         
-        // we have the forward vector of vehicle now
-        // target position
+        // target direction vector
         PxVec3 targetDir = GLMtoPx(targetPosition.getTranslation()) - carPose.p;
         
+        // only drive to the target if it's far enough away (for now)
         if (targetDir.magnitude() < 8.f)
         {
             command.throttle = 0.f;
         } else {
             command.throttle = 1.f;
         }
-        
-        // targetDir = glm::normalize(targetDir);
+
         targetDir.normalize();
-        // float angleBetween = glm::dot(targetDir,heading);
 
-        float angleBetween = targetDir.dot(GLMtoPx(heading));
-
-        std::cout << "angle between heading and target dir: " << abs(angleBetween) << "\n";
+        float angleBetween = targetDir.dot(GLMtoPx(headingDir));
 
         // if almost parallel, don't worry about steering
         if (abs(angleBetween) > 0.95f)
         {
             command.steer = 0.0f;
         } else {
-            PxVec3 cross = GLMtoPx(heading).cross(targetDir);
+            PxVec3 cross = GLMtoPx(headingDir).cross(targetDir);
             if (cross.y < 0)
             {
              command.steer = 1.0f;
@@ -114,10 +110,11 @@ void AICar::Update(Guid carGuid,ecs::Scene& scene, float deltaTime)
             }
         }
 
-    
-
         }
 
+        // use the waypoint approach to set goal for ai to move through the level
+        // update waypoint when they pass / approach one!
+        // we will get the waypoint from blender
 
         // draw this later -> have to use global renderer
         // if (scene.HasComponent<RenderLine>(carGuid))
@@ -125,9 +122,6 @@ void AICar::Update(Guid carGuid,ecs::Scene& scene, float deltaTime)
         //     RenderLine& line = scene.GetComponent<RenderLine>(carGuid);
         //     line.setGeometry(pathGeom);
         // }    
-
-
-
 
     }
 
