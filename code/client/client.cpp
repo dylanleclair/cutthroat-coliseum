@@ -28,8 +28,9 @@
 #include "systems/PhysicsSystem.h"
 
 #include "Car.h"
-#include "TetherGraphics.h"
 #include "AICar.h"
+
+#include "TetherGraphics.h"
 
 #include "physics/LevelCollider.h"
 
