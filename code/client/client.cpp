@@ -47,7 +47,6 @@ CarPhysicsSerde carConfig(carPhysics);
 
 int lapCount = 0;
 bool isFinished = false;
-bool tethered = false;
 
 uint32_t lastTime_millisecs;
 
@@ -388,15 +387,13 @@ int main(int argc, char* argv[]) {
 						testCar.TetherJump();
 						break;
 					case SDLK_m:
-						if (!tethered) {
-							tethered = true;
+						if (!testCar.getCTethered()) {
 							loc.p.x = tetherPole1_transform.getTranslation().x;
 							loc.p.y = tetherPole1_transform.getTranslation().y;
 							loc.p.z = tetherPole1_transform.getTranslation().z;
 							testCar.TetherSteer(loc);
 						}
-						else if (tethered) {
-							tethered = false;
+						else if (testCar.getCTethered()) {
 							testCar.resetModifications();
 						}
 
@@ -465,7 +462,8 @@ int main(int argc, char* argv[]) {
 		auto& center_of_mass = testCar.m_Vehicle.mPhysXParams.physxActorCMassLocalPose;
 		renderCMassSphere(center_of_mass, sphere_transform);
 
-		if (tethered) {
+		// Tether check to render the tether graphic properly
+		if (testCar.getCTethered()) {
 			updateTetherGraphic(car_trans, c_tether_points, testCar, tether_transform);
 		}
 		else {

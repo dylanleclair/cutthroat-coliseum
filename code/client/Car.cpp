@@ -22,6 +22,10 @@ PxTransform closest_tether_point;
 PxTransform c_mass_init_v;
 PxReal angular_damp_init_v;
 
+bool Car::getCTethered() {
+    return c_tethered;
+}
+
 bool Car::initVehicle(PxVec3 initialPosition)
 
 {

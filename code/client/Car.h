@@ -115,7 +115,7 @@ struct Car {
 
     bool initVehicle(PxVec3 initialPosition);
     void cleanupVehicle();
-
+    bool getCTethered();
     void setClosestTetherPoint(PxTransform _loc);
     void setClosestTetherPoint(glm::vec3 _loc);
     void resetModifications();
