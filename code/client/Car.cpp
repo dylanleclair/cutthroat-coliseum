@@ -232,11 +232,9 @@ void Car::Update(float deltaTime)
       carAxis = (float)-SDL_GameControllerGetAxis(ControllerInput::controller, SDL_CONTROLLER_AXIS_LEFTX) / SHRT_MAX;
   }
   
-  
   // Code for going in reverse
   // If the brake key is pressed, while the engine is idle, and the current gear is first gear, switch to reverse
-  if (s_key || SDL_GameControllerGetAxis(ControllerInput::controller, SDL_CONTROLLER_AXIS_TRIGGERLEFT)
-      && this->m_Vehicle.mEngineDriveState.gearboxState.currentGear == 2 &&
+  if (s_key && this->m_Vehicle.mEngineDriveState.gearboxState.currentGear == 2 &&
       this->m_Vehicle.mEngineDriveState.engineState.rotationSpeed == 0) {
       this->m_TargetGearCommand = 0;
   }
@@ -245,19 +243,12 @@ void Car::Update(float deltaTime)
       if (s_key) {
           command.throttle = carThrottle;
       }
-      else if (SDL_GameControllerGetAxis(ControllerInput::controller, SDL_CONTROLLER_AXIS_TRIGGERLEFT)) {
-          command.throttle = (float)SDL_GameControllerGetAxis(ControllerInput::controller, SDL_CONTROLLER_AXIS_TRIGGERLEFT) / SHRT_MAX;
-      }
       // If the engine is idle and the w key is pressed switch to normal driving
-      else if (w_key || SDL_GameControllerGetAxis(ControllerInput::controller, SDL_CONTROLLER_AXIS_TRIGGERRIGHT)  
-               && this->m_Vehicle.mEngineDriveState.engineState.rotationSpeed == 0) {
+      else if (w_key && this->m_Vehicle.mEngineDriveState.engineState.rotationSpeed == 0) {
            this->m_TargetGearCommand = 2;
       }
       else if (w_key) {
           command.brake = carBrake;
-      }
-      else if (SDL_GameControllerGetAxis(ControllerInput::controller, SDL_CONTROLLER_AXIS_TRIGGERRIGHT)) {
-          command.brake = (float)SDL_GameControllerGetAxis(ControllerInput::controller, SDL_CONTROLLER_AXIS_TRIGGERRIGHT) / SHRT_MAX;
       }
   }
   // If the engine in neutral or above, drive normally
@@ -270,12 +261,38 @@ void Car::Update(float deltaTime)
        else if (s_key) {
            command.brake = carBrake;
        }
-       else if (SDL_GameControllerGetAxis(ControllerInput::controller, SDL_CONTROLLER_AXIS_TRIGGERRIGHT)) {
-           command.throttle = (float)SDL_GameControllerGetAxis(ControllerInput::controller, SDL_CONTROLLER_AXIS_TRIGGERRIGHT) / SHRT_MAX;
-       }
-       else if (SDL_GameControllerGetAxis(ControllerInput::controller, SDL_CONTROLLER_AXIS_TRIGGERLEFT)) {
-           command.brake = (float)SDL_GameControllerGetAxis(ControllerInput::controller, SDL_CONTROLLER_AXIS_TRIGGERLEFT) / SHRT_MAX;
-       }
+  }
+
+  // Same reverse code as above but for controllers - bundling them in with the keyboard
+  // doing keyboard or controller input do x - did not work great
+  // So I separated them, there may be a cleaner way to do this
+  if (SDL_GameControllerGetAxis(ControllerInput::controller, SDL_CONTROLLER_AXIS_TRIGGERLEFT)
+      && this->m_Vehicle.mEngineDriveState.gearboxState.currentGear == 2 &&
+      this->m_Vehicle.mEngineDriveState.engineState.rotationSpeed == 0) {
+      this->m_TargetGearCommand = 0;
+  }
+  else if (this->m_Vehicle.mEngineDriveState.gearboxState.currentGear == 0) {
+      if (SDL_GameControllerGetAxis(ControllerInput::controller, SDL_CONTROLLER_AXIS_TRIGGERLEFT)) {
+          command.throttle = (float)SDL_GameControllerGetAxis(ControllerInput::controller, SDL_CONTROLLER_AXIS_TRIGGERLEFT) / SHRT_MAX;
+      }
+      // If the engine is idle and the w key is pressed switch to normal driving
+      else if (SDL_GameControllerGetAxis(ControllerInput::controller, SDL_CONTROLLER_AXIS_TRIGGERRIGHT)
+          && this->m_Vehicle.mEngineDriveState.engineState.rotationSpeed == 0) {
+          this->m_TargetGearCommand = 2;
+      }
+      else if (SDL_GameControllerGetAxis(ControllerInput::controller, SDL_CONTROLLER_AXIS_TRIGGERRIGHT)) {
+          command.brake = (float)SDL_GameControllerGetAxis(ControllerInput::controller, SDL_CONTROLLER_AXIS_TRIGGERRIGHT) / SHRT_MAX;
+      }
+  }
+  else if (this->m_Vehicle.mEngineDriveState.gearboxState.currentGear >= 1 &&
+      this->m_Vehicle.mEngineDriveState.engineState.rotationSpeed >= 0) {
+
+      if (SDL_GameControllerGetAxis(ControllerInput::controller, SDL_CONTROLLER_AXIS_TRIGGERRIGHT)) {
+          command.throttle = (float)SDL_GameControllerGetAxis(ControllerInput::controller, SDL_CONTROLLER_AXIS_TRIGGERRIGHT) / SHRT_MAX;
+      }
+      else if (SDL_GameControllerGetAxis(ControllerInput::controller, SDL_CONTROLLER_AXIS_TRIGGERLEFT)) {
+          command.brake = (float)SDL_GameControllerGetAxis(ControllerInput::controller, SDL_CONTROLLER_AXIS_TRIGGERLEFT) / SHRT_MAX;
+      }
   }
 
 
