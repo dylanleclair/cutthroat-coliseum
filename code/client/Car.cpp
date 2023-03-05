@@ -16,6 +16,8 @@ float controller_brake = 0.f;
 int time_elapsed = 0;
 bool has_jumped = false;
 bool c_tethered = false;
+bool previous_b_press = false;
+PxTransform closest_tether_point;
 
 PxTransform c_mass_init_v;
 PxReal angular_damp_init_v;
@@ -119,6 +121,10 @@ PxRigidBody* Car::getVehicleRigidBody()
   return m_Vehicle.mPhysXState.physxActor.rigidBody;
 }
 
+void Car::setClosestTetherPoint(PxTransform _loc) {
+    closest_tether_point = _loc;
+}
+
 void Car::resetModifications() {
     // ORIGINALLY MEANT TO RESET THE CENTER OF GRAVITY, BUT WORKS BETTER WITHOUT CHANGING ?
     m_Vehicle.mPhysXParams.physxActorCMassLocalPose.p = c_mass_init_v.p;
@@ -188,6 +194,7 @@ void Car::Update(float deltaTime)
   auto a_key = keys_arr[SDL_SCANCODE_A];
   auto d_key = keys_arr[SDL_SCANCODE_D];
   auto space_bar = keys_arr[SDL_SCANCODE_SPACE];
+  auto m_key = keys_arr[SDL_SCANCODE_M];
 
   float delta_seconds = deltaTime;
   assert(delta_seconds > 0.f && delta_seconds < 0.2000001f);
@@ -212,6 +219,20 @@ void Car::Update(float deltaTime)
       if (TetherJump()) {
           has_jumped = true;
       }
+  }
+
+  // The behaviour of this is - when you hold down the button it will steer you around corners
+  // Until you release the button to reset and give control back to you
+  if (SDL_GameControllerGetButton(ControllerInput::controller, SDL_CONTROLLER_BUTTON_B) && !previous_b_press) {
+      if (!c_tethered) {
+          c_tethered = true;
+          previous_b_press = true;
+          TetherSteer(closest_tether_point);
+      }
+  }
+  else if (!SDL_GameControllerGetButton(ControllerInput::controller, SDL_CONTROLLER_BUTTON_B) && previous_b_press) {
+      resetModifications();
+      previous_b_press = false;
   }
 
   // Normalize controller axis
@@ -244,6 +265,23 @@ void Car::Update(float deltaTime)
   {
       command.steer = carAxis * carAxisScale;
   }
+
+  // An attempt at replicating the b face button function
+  // of being able to hold down to active once, and let to go deactive
+  // but for the keyboard it triggers every single frame it's being held down
+  // 
+  //if (m_key && !previous_b_press) {
+  //    if (!c_tethered) {
+  //        c_tethered = true;
+  //        previous_b_press = true;
+  //        TetherSteer(closest_tether_point);
+  //    }
+  //}
+  //else if (!m_key && previous_b_press) {
+  //    resetModifications();
+  //   previous_b_press = false;
+  //}
+  
 
   m_Vehicle.mCommandState.brakes[0] = command.brake;
   m_Vehicle.mCommandState.nbBrakes = 1;

@@ -113,6 +113,7 @@ struct Car {
     bool initVehicle();
     void cleanupVehicle();
 
+    void setClosestTetherPoint(PxTransform _loc);
     void resetModifications();
     bool isGroundedDelay(Car& car);
     void TetherSteer(PxTransform _loc);

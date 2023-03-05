@@ -407,6 +407,7 @@ int main(int argc, char* argv[]) {
 		//c_mass_f.p.y = tetherPole1_t.getTranslation().y;
 		//c_mass_f.p.z = tetherPole1_t.getTranslation().z;
 		//testCar.m_Vehicle.mPhysXParams.physxActorCMassLocalPose = c_mass_f;
+		testCar.setClosestTetherPoint(loc);
 
 		auto& center_of_mass = testCar.m_Vehicle.mPhysXParams.physxActorCMassLocalPose;
 		renderCMassSphere(center_of_mass, sphere_transform);
