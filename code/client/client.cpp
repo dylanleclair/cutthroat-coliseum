@@ -460,7 +460,7 @@ int main(int argc, char* argv[]) {
 		auto& center_of_mass = testCar.m_Vehicle.mPhysXParams.physxActorCMassLocalPose;
 		renderCMassSphere(center_of_mass, sphere_transform);
 
-		//if (tethered) {
+		if (tethered) {
 			std::vector<float> p1_distances = distFromTarget(car_trans, tetherPole1_transform);
 			std::vector<float> p2_distances = distFromTarget(car_trans, tetherPole2_transform);
 			std::vector<float> p_distances;
@@ -485,8 +485,10 @@ int main(int argc, char* argv[]) {
 			else {
 				tether_transform.setRotation(glm::vec3(0, 1, 0), tether_angle + (3 * M_PI / 2.f));
 			}
-			
-		//}
+		}
+		else {
+			tether_transform.setScale(glm::vec3(0.f, 0.f, 0.f));
+		}
 
 		// Finish line code
 		if (car_trans.getTranslation().x >= -1.5f && car_trans.getTranslation().x <= 4.8f &&
@@ -571,7 +573,6 @@ int main(int argc, char* argv[]) {
 		ImGui::Text("Suspension force y: %f", testCar.m_Vehicle.mBaseState.suspensionForces->force.y);
 		ImGui::Text("Suspension force z: %f", testCar.m_Vehicle.mBaseState.suspensionForces->force.z);
 		ImGui::Text("On the ground ?: %s", testCar.m_Vehicle.mBaseState.roadGeomStates->hitState ? "true" : "false");
-		ImGui::Text("Tether Angle: %f", tether_angle);
 		ImGui::Text("Laps: %d", lapCount);
 		ImGui::End();
 		// END CAR PHYSICS PANEL
