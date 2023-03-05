@@ -431,7 +431,13 @@ int main(int argc, char* argv[]) {
 			float z_diff = car_trans.getTranslation().z - tetherPole1_transform.getTranslation().z;
 			float tether_angle = atan(x_diff / z_diff);
 			tether_transform.setPosition(glm::vec3(tetherPole1_transform.getTranslation().x, 2.f, tetherPole1_transform.getTranslation().z));
-			tether_transform.setRotation(glm::vec3(0,1,0), tether_angle);
+			if (z_diff < 0) {
+				tether_transform.setRotation(glm::vec3(0, 1, 0), tether_angle + (M_PI / 2.f));
+			}
+			else {
+				tether_transform.setRotation(glm::vec3(0, 1, 0), tether_angle + (3 * M_PI / 2.f));
+			}
+			
 		//}
 
 		// Finish line code
@@ -464,7 +470,7 @@ int main(int argc, char* argv[]) {
 		// BEGIN FRAMERATE COUNTER
 		framerate.update(timestep);
 		ImGui::SetNextWindowSize(ImVec2(500, 100)); 
-		ImGui::Begin("Milestone 2");
+		ImGui::Begin("Milestone 3");
 		ImGui::Text("framerate: %d", (int) framerate.framerate());
         ImGui::PlotLines("Frametime plot (ms)", framerate.m_time_queue_ms.data(), framerate.m_time_queue_ms.size());
         ImGui::PlotLines("Framerate plot (hz)", framerate.m_rate_queue.data(), framerate.m_rate_queue.size());
@@ -505,8 +511,9 @@ int main(int argc, char* argv[]) {
 		extern float carAxisScale;
 		ImGui::Begin("Car commands tuner", nullptr);
 		ImGui::Text("left stick horizontal tilt: %f", carAxis);
-		ImGui::Text("Car Throttle: %f", controller_throttle);
-		ImGui::Text("Car Brake: %f", controller_brake);
+		//ImGui::Text("Car Throttle: %f", controller_throttle);
+		//ImGui::Text("Car Brake: %f", controller_brake);
+
 		ImGui::Text("Current Gear: %d", testCar.m_Vehicle.mEngineDriveState.gearboxState.currentGear);
 		ImGui::Text("Current engine rotational speed: %f", testCar.m_Vehicle.mEngineDriveState.engineState.rotationSpeed);
 		ImGui::Text("Center of Gravity: %f, %f, %f", testCar.m_Vehicle.mPhysXParams.physxActorCMassLocalPose.p.x, 
@@ -516,6 +523,9 @@ int main(int argc, char* argv[]) {
 		ImGui::Text("Suspension force y: %f", testCar.m_Vehicle.mBaseState.suspensionForces->force.y);
 		ImGui::Text("Suspension force z: %f", testCar.m_Vehicle.mBaseState.suspensionForces->force.z);
 		ImGui::Text("On the ground ?: %s", testCar.m_Vehicle.mBaseState.roadGeomStates->hitState ? "true" : "false");
+
+		ImGui::Text("x diff: %f", x_diff);
+		ImGui::Text("z diff: %f", z_diff);
 		ImGui::Text("Tether Angle: %f", tether_angle);
 		ImGui::Text("Laps: %d", lapCount);
 		ImGui::End();
