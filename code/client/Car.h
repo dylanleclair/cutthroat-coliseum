@@ -11,6 +11,8 @@
 
 #include "physx/snippetcommon/SnippetPVD.h"
 
+#include <glm/glm.hpp>
+
 #include "Time.h"
 #include "SDL.h"
 #include <limits>
@@ -20,6 +22,7 @@
 using namespace physx;
 using namespace physx::vehicle2;
 using namespace snippetvehicle2;
+using namespace glm;
 
 
 // HACK(beau): make these visible to tuning imgui panel
@@ -97,28 +100,33 @@ struct Car {
 
     PxU32 m_NbCommands = sizeof(m_Commands) / sizeof(Command);
 
-    // all the physics stuff lives in the physics system
-    Car(physics::PhysicsSystem* physicsSystem) : physicsSystem(physicsSystem)
-    {
-        // The vehicle with engine 
-        bool success = initVehicle();
-        if (!success)
-        {
-            std::cerr << "error initializing vehicle!" << std::endl;
-        }
-    }
+    // // all the physics stuff lives in the physics system
+    // Car(physics::PhysicsSystem* physicsSystem) : physicsSystem(physicsSystem)
+    // {
+    //     // The vehicle with engine 
+    //     bool success = initVehicle();
+    //     if (!success)
+    //     {
+    //         std::cerr << "error initializing vehicle!" << std::endl;
+    //     }
+    // }
 
     Car() : physicsSystem(nullptr) {};
 
-    bool initVehicle();
+    bool initVehicle(PxVec3 initialPosition);
     void cleanupVehicle();
 
-    void TetherSteer();
-    void TetherJump();
+    void setClosestTetherPoint(PxTransform _loc);
+    void setClosestTetherPoint(glm::vec3 _loc);
+    void resetModifications();
+    bool isGroundedDelay(Car& car);
+    void TetherSteer(PxTransform _loc);
+    bool TetherJump();
 
     PxRigidBody* getVehicleRigidBody();
 
-    virtual void Update(float deltaTime);
+    virtual void Update(Guid carGuid, ecs::Scene& scene, float deltaTime);
+
 
 };
 

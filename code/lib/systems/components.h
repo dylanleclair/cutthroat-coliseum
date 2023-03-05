@@ -68,6 +68,16 @@ public:
 	void setScale(glm::vec3 _scale) {
 		scale = _scale;
 	}
+
+	glm::mat4 getTransformationMatrix()
+	{	
+		glm::mat4 rotationM = glm::toMat4(this->getRotation());
+		glm::mat4 scalingM = glm::scale(rotationM,this->getScale());
+		glm::mat4 translationM = glm::translate(scalingM,this->getTranslation());
+
+		return translationM;
+	}	
+
 private:
 	friend class GraphicsSystem;
 	glm::vec3 position = glm::vec3(0);

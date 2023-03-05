@@ -21,34 +21,33 @@ float euclideanXZ(glm::vec3 a, glm::vec3 b)
 
 void AISystem::Update(ecs::Scene& scene, float deltaTime) {
 
-    // foil out the nodes !
-    CPU_Geometry pathGeom;
+    // // foil out the nodes !
+    // CPU_Geometry pathGeom;
 
-    for (auto entityGuid : ecs::EntitiesInScene<PathfindingComponent>(scene))
-    {
-        // get the pathfinding component
-        PathfindingComponent& p = scene.GetComponent<PathfindingComponent>(entityGuid);
-        TransformComponent& position = scene.GetComponent<TransformComponent>(entityGuid);
-        // find the target
-        Guid targetEntity = p.targetEntity;
+    // for (auto entityGuid : ecs::EntitiesInScene<PathfindingComponent>(scene))
+    // {
+    //     // get the pathfinding component
+    //     PathfindingComponent& p = scene.GetComponent<PathfindingComponent>(entityGuid);
+    //     TransformComponent& position = scene.GetComponent<TransformComponent>(entityGuid);
+    //     // find the target
+    //     Guid targetEntity = p.targetEntity;
 
-        if (scene.HasComponent<TransformComponent>(targetEntity))
-        {
-            TransformComponent targetPosition = scene.GetComponent<TransformComponent>(targetEntity);
-            std::vector<glm::vec3> path = pathfinding::AStar<glm::vec3>(roundPosition(position.getTranslation()), roundPosition(targetPosition.getTranslation()), euclideanXZ, AISystem::generateNearby);
+    //     if (scene.HasComponent<TransformComponent>(targetEntity))
+    //     {
+    //         TransformComponent targetPosition = scene.GetComponent<TransformComponent>(targetEntity);
+    //         std::vector<glm::vec3> path = pathfinding::AStar<glm::vec3>(roundPosition(position.getTranslation()), roundPosition(targetPosition.getTranslation()), euclideanXZ, AISystem::generateNearby);
 
-            // std::vector<glm::vec3> path = {glm::vec3{0.f},glm::vec3{0.5f}, glm::vec3{0.6f}};
-            for (auto& pos : path)
-            {
-                pathGeom.verts.push_back(glm::vec3{ pos });
-                //pathGeom.cols.push_back(glm::vec3(1.0f, 0.f, 1.0f));
-            }
-        }
-    }
+    //         // std::vector<glm::vec3> path = {glm::vec3{0.f},glm::vec3{0.5f}, glm::vec3{0.6f}};
+    //         for (auto& pos : path)
+    //         {
+    //             pathGeom.verts.push_back(glm::vec3{ pos });
+    //         }
+    //     } 
+    // }
 
-    // want some way to render the path!
-    scene.GetComponent<RenderLine>(this->m_rendererGuid).setGeometry(pathGeom);
-    scene.GetComponent<RenderLine>(this->m_rendererGuid).setColor(glm::vec3(1,0,0));
+    // // want some way to render the path!
+    // scene.GetComponent<RenderLine>(this->m_rendererGuid).setGeometry(pathGeom);
+    // scene.GetComponent<RenderLine>(this->m_rendererGuid).setColor(glm::vec3(1,0,0));
 }
 
 std::vector<std::pair<glm::vec3, float>> AISystem::generateNearby(glm::vec3 initial)
