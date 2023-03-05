@@ -120,6 +120,7 @@ int main(int argc, char* argv[]) {
 	ecs::Entity tetherPole1_e = mainScene.CreateEntity();
 	ecs::Entity tetherPole2_e = mainScene.CreateEntity();
 	ecs::Entity sphere_e = mainScene.CreateEntity();
+	ecs::Entity tether_e = mainScene.CreateEntity();
 
 	mainScene.AddComponent(car_e.guid, Car{});
 	Car& testCar = mainScene.GetComponent<Car>(car_e.guid);
@@ -247,6 +248,16 @@ int main(int argc, char* argv[]) {
 	tetherPole2_t.setPosition(glm::vec3(-27.f, 0.f, -50.f));
 	tetherPole2_t.setScale(glm::vec3(3.2f, 3.2f, 3.2f));
 	mainScene.AddComponent(tetherPole2_e.guid, tetherPole2_t);
+	
+	// Tether
+	RenderModel tether_r = RenderModel();
+	GraphicsSystem::importOBJ(tether_r, "alpha_tether.obj");
+	tether_r.setModelColor(glm::vec3(83.f / 255.f, 54.f / 255.f, 33.f / 255.f));
+	mainScene.AddComponent(tether_e.guid, tether_r);
+	TransformComponent tether_t = TransformComponent();
+	tether_t.setPosition(glm::vec3(- 27.f, 2.f, 45.f));
+	tether_t.setScale(glm::vec3(10.f, 1.f, 1.f));
+	mainScene.AddComponent(tether_e.guid, tether_t);
 
 	// This is how to change the position of the object after it has been passed to the ECS
 	/*
@@ -260,6 +271,7 @@ int main(int argc, char* argv[]) {
 	TransformComponent &car_trans = mainScene.GetComponent<TransformComponent>(car_e.guid);
 	TransformComponent &sphere_transform = mainScene.GetComponent<TransformComponent>(sphere_e.guid);
 	TransformComponent &tetherPole1_transform = mainScene.GetComponent<TransformComponent>(tetherPole1_e.guid);
+	TransformComponent &tether_transform = mainScene.GetComponent<TransformComponent>(tether_e.guid);
 	// Used for testing location of stuff, DO NOT PUBLISH
 	PxTransform loc;
 
@@ -412,6 +424,16 @@ int main(int argc, char* argv[]) {
 		auto& center_of_mass = testCar.m_Vehicle.mPhysXParams.physxActorCMassLocalPose;
 		renderCMassSphere(center_of_mass, sphere_transform);
 
+		//if (tethered) {
+			//float x_diff = tetherPole1_transform.getTranslation().x - car_trans.getTranslation().x;
+			//float z_diff = tetherPole1_transform.getTranslation().z - car_trans.getTranslation().z;
+			float x_diff = car_trans.getTranslation().x - tetherPole1_transform.getTranslation().x;
+			float z_diff = car_trans.getTranslation().z - tetherPole1_transform.getTranslation().z;
+			float tether_angle = atan(x_diff / z_diff);
+			tether_transform.setPosition(glm::vec3(tetherPole1_transform.getTranslation().x, 2.f, tetherPole1_transform.getTranslation().z));
+			tether_transform.setRotation(glm::vec3(0,1,0), tether_angle);
+		//}
+
 		// Finish line code
 		if (car_trans.getTranslation().x >= -1.5f && car_trans.getTranslation().x <= 4.8f &&
 			car_trans.getTranslation().z >= -3.0f && car_trans.getTranslation().z <= -0.6f)
@@ -494,6 +516,7 @@ int main(int argc, char* argv[]) {
 		ImGui::Text("Suspension force y: %f", testCar.m_Vehicle.mBaseState.suspensionForces->force.y);
 		ImGui::Text("Suspension force z: %f", testCar.m_Vehicle.mBaseState.suspensionForces->force.z);
 		ImGui::Text("On the ground ?: %s", testCar.m_Vehicle.mBaseState.roadGeomStates->hitState ? "true" : "false");
+		ImGui::Text("Tether Angle: %f", tether_angle);
 		ImGui::Text("Laps: %d", lapCount);
 		ImGui::End();
 		// END CAR PHYSICS PANEL
