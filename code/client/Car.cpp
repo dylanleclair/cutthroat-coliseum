@@ -14,7 +14,8 @@ float controller_throttle = 0.f;
 float controller_brake = 0.f;
 
 int time_elapsed = 0;
-bool has_jumped;
+bool has_jumped = false;
+bool c_tethered = false;
 
 PxTransform c_mass_init_v;
 PxReal angular_damp_init_v;
@@ -122,6 +123,7 @@ void Car::resetModifications() {
     // ORIGINALLY MEANT TO RESET THE CENTER OF GRAVITY, BUT WORKS BETTER WITHOUT CHANGING ?
     m_Vehicle.mPhysXParams.physxActorCMassLocalPose.p = c_mass_init_v.p;
     m_Vehicle.mPhysXState.physxActor.rigidBody->setAngularDamping(angular_damp_init_v);
+    c_tethered = false;
 }
 
 // Used to reset the modifications done to the car in the air after a few moments
@@ -146,6 +148,8 @@ bool Car::isGroundedDelay(Car &car) {
 
 // Very jank right now as you can spam it
 void Car::TetherSteer(PxTransform _loc) {
+    c_tethered = true;
+    carAxis = 0.f;
     m_Vehicle.mPhysXParams.physxActorCMassLocalPose = _loc;
 
     //m_Vehicle.mPhysXState.physxActor.rigidBody->addForce(PxVec3(0.f, 0.f, 10.f), PxForceMode::eVELOCITY_CHANGE, true);
@@ -193,17 +197,17 @@ void Car::Update(float deltaTime)
   Command command = {0.f, 0.f, 0.f, m_TargetGearCommand};
   // command.duration = timestep;
 
-  if (SDL_GameControllerGetAxis(ControllerInput::controller, SDL_CONTROLLER_AXIS_TRIGGERRIGHT)) {
-      controller_throttle = (float)SDL_GameControllerGetAxis(ControllerInput::controller, SDL_CONTROLLER_AXIS_TRIGGERRIGHT) / SHRT_MAX;
-      command.throttle = controller_throttle;      
-  }
-  if (SDL_GameControllerGetAxis(ControllerInput::controller, SDL_CONTROLLER_AXIS_TRIGGERLEFT)) {
-      controller_brake = (float)SDL_GameControllerGetAxis(ControllerInput::controller, SDL_CONTROLLER_AXIS_TRIGGERLEFT) / SHRT_MAX;
-      command.brake = controller_brake;      
-  }
 
-  // Currently a bit bugged, sends you into space
-  // It's because it triggers every time it registers the button is pressed (held down)
+  // Controller triggers for throttle and brake
+  controller_throttle = (float)SDL_GameControllerGetAxis(ControllerInput::controller, SDL_CONTROLLER_AXIS_TRIGGERRIGHT) / SHRT_MAX;
+  command.throttle = controller_throttle;      
+
+  controller_brake = (float)SDL_GameControllerGetAxis(ControllerInput::controller, SDL_CONTROLLER_AXIS_TRIGGERLEFT) / SHRT_MAX;
+  command.brake = controller_brake;      
+
+
+  // Jump tether
+  // Checks if the previous frame was a jump, so that it does not cumulatively add impulse
   if (SDL_GameControllerGetButton(ControllerInput::controller, SDL_CONTROLLER_BUTTON_A) && this->m_Vehicle.mBaseState.roadGeomStates->hitState && !has_jumped) {
       if (TetherJump()) {
           has_jumped = true;
@@ -212,7 +216,9 @@ void Car::Update(float deltaTime)
 
   // Normalize controller axis
   // BUG: max positive is 1 less in magnitude than max min meaning full negative will be slightly above 1
-  carAxis = (float)-SDL_GameControllerGetAxis(ControllerInput::controller, SDL_CONTROLLER_AXIS_LEFTX) / SHRT_MAX;
+  if (!c_tethered) {
+      carAxis = (float)-SDL_GameControllerGetAxis(ControllerInput::controller, SDL_CONTROLLER_AXIS_LEFTX) / SHRT_MAX;
+  }
    
 
   // Keyboard Controls
@@ -225,14 +231,15 @@ void Car::Update(float deltaTime)
   {
       command.brake = carBrake;
   }
-  if (a_key)
+  if (a_key && !c_tethered)
   {
       command.steer = 1.f;
   }
-  else if (d_key)
+  else if (d_key && !c_tethered)
   {
       command.steer = -1.f;
   }
+  // Controller axis
   else
   {
       command.steer = carAxis * carAxisScale;
