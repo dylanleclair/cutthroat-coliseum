@@ -255,8 +255,8 @@ int main(int argc, char* argv[]) {
 	tether_r.setModelColor(glm::vec3(83.f / 255.f, 54.f / 255.f, 33.f / 255.f));
 	mainScene.AddComponent(tether_e.guid, tether_r);
 	TransformComponent tether_t = TransformComponent();
-	tether_t.setPosition(glm::vec3(- 27.f, 2.f, 45.f));
-	tether_t.setScale(glm::vec3(10.f, 1.f, 1.f));
+	tether_t.setPosition(glm::vec3(- 27.f, 1.f, 45.f));
+	tether_t.setScale(glm::vec3(1.f, 2.f, 2.f));
 	mainScene.AddComponent(tether_e.guid, tether_t);
 
 	// This is how to change the position of the object after it has been passed to the ECS
@@ -425,12 +425,14 @@ int main(int argc, char* argv[]) {
 		renderCMassSphere(center_of_mass, sphere_transform);
 
 		//if (tethered) {
-			//float x_diff = tetherPole1_transform.getTranslation().x - car_trans.getTranslation().x;
-			//float z_diff = tetherPole1_transform.getTranslation().z - car_trans.getTranslation().z;
 			float x_diff = car_trans.getTranslation().x - tetherPole1_transform.getTranslation().x;
 			float z_diff = car_trans.getTranslation().z - tetherPole1_transform.getTranslation().z;
 			float tether_angle = atan(x_diff / z_diff);
-			tether_transform.setPosition(glm::vec3(tetherPole1_transform.getTranslation().x, 2.f, tetherPole1_transform.getTranslation().z));
+			// Puts the tether's origin at the tether point
+			tether_transform.setPosition(glm::vec3(tetherPole1_transform.getTranslation().x, 1.5f, tetherPole1_transform.getTranslation().z));
+			// Sets the scale of the tether on the x axis in accordance to the distance of the car to the tether point
+			tether_transform.setScale(glm::vec3(sqrt(pow(abs(x_diff),2)+pow(abs(z_diff),2)), 1.f, 1.f));
+			// Rotates the tether to track the car
 			if (z_diff < 0) {
 				tether_transform.setRotation(glm::vec3(0, 1, 0), tether_angle + (M_PI / 2.f));
 			}
