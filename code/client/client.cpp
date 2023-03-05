@@ -29,6 +29,7 @@
 
 #include "Car.h"
 #include "TetherGraphics.h"
+#include "AICar.h"
 
 #include "physics/LevelCollider.h"
 
@@ -117,13 +118,51 @@ int main(int argc, char* argv[]) {
 	ecs::Entity sphere_e = mainScene.CreateEntity();
 	ecs::Entity tether_e = mainScene.CreateEntity();
 
+	ecs::Entity aiDriver_e = mainScene.CreateEntity();
+
 	mainScene.AddComponent(car_e.guid, Car{});
 	Car& testCar = mainScene.GetComponent<Car>(car_e.guid);
 	testCar.physicsSystem = &physicsSystem;
-	if (!testCar.initVehicle())
+	if (!testCar.initVehicle(PxVec3(0.000000000f, -0.0500000119f, -1.59399998f)))
 	{
 		std::cout << "ERROR: could not initialize vehicle";
 	}
+
+	
+
+
+	mainScene.AddComponent(aiDriver_e.guid, AICar());
+	AICar& aiCar = mainScene.GetComponent<AICar>(aiDriver_e.guid);
+	aiCar.physicsSystem = &physicsSystem;
+	if (!aiCar.initVehicle(PxVec3(3.0f,0.f,1.f)))
+	{
+		std::cout << "ERROR: could not initialize ai-driven vehicle";
+	}
+
+
+	// AI car entity setup
+	RenderModel aiDriver_r = RenderModel();
+	GraphicsSystem::importOBJ(aiDriver_r, "test_car.obj");
+	aiDriver_r.setModelColor(glm::vec3(1.0f, 0.0f, 1.f));
+	mainScene.AddComponent(aiDriver_e.guid, aiDriver_r);
+	TransformComponent aiDriver_t = TransformComponent(aiCar.getVehicleRigidBody());
+	aiDriver_t.setPosition(glm::vec3(0, 0, 1));
+	//car_t.setRotation(glm::quat(0, 0, 0, 1));
+	aiDriver_t.setScale(glm::vec3(3.2f, 3.2f, 3.2f));
+	mainScene.AddComponent(aiDriver_e.guid, aiDriver_t);
+	CPU_Geometry testline = CPU_Geometry();
+	testline.verts.push_back({0.f, 0.f, 0.f});
+	testline.verts.push_back({0.f, 10.f, 0.f});
+	CPU_Geometry forward = CPU_Geometry();
+	forward.verts.push_back({0.f, 0.f, 0.f});
+	forward.verts.push_back({0.f, 0.f, 5.f});
+	RenderLine aiVehicleDirection = RenderLine(forward);
+	aiVehicleDirection.setColor({0.0f,1.f,0.f});
+	mainScene.AddComponent(aiDriver_e.guid, aiVehicleDirection);
+	ecs::Entity aiDirRenderer = mainScene.CreateEntity();
+	mainScene.AddComponent(aiDirRenderer.guid, aiVehicleDirection);
+	mainScene.AddComponent(aiDirRenderer.guid, TransformComponent{});
+	mainScene.AddComponent(aiDriver_e.guid, PathfindingComponent{car_e.guid});
 
 	// Car Entity
 	RenderModel car_r = RenderModel();
@@ -181,8 +220,8 @@ int main(int argc, char* argv[]) {
 	mainScene.AddComponent(finish_e.guid, finish_t);
 
 	// Pathfinding
-	PathfindingComponent car_pathfinder{ finish_e.guid };
-	mainScene.AddComponent(car_e.guid, car_pathfinder);
+	// PathfindingComponent car_pathfinder{ finish_e.guid };
+	// mainScene.AddComponent(car_e.guid, car_pathfinder);
 	
 
 	// Path renderer
@@ -200,7 +239,7 @@ int main(int argc, char* argv[]) {
 
 	// actual level mesh & collider for it
 	LevelCollider levelCollider{"large_test_torus.obj", physicsSystem};
-	auto levelTriangleMesh = levelCollider.cookLevel();
+	auto levelTriangleMesh = levelCollider.cookLevel(level_t.getTransformationMatrix());
 	levelCollider.initLevelRigidBody(levelTriangleMesh);
 
 	RenderModel level_r = RenderModel();

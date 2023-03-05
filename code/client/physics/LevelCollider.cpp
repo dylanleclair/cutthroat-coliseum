@@ -40,11 +40,16 @@
     }
 
 
-physx::PxTriangleMesh * LevelCollider::cookLevel() 
+physx::PxTriangleMesh * LevelCollider::cookLevel(glm::mat4 transform) 
 	{
     auto gCooking = m_physicsSystem.m_Cooking;
     auto gPhysics = m_physicsSystem.m_Physics;
 
+
+    for (auto& vert : levelVertices)
+    {
+        vert = GLMtoPx(glm::vec4{PxtoGLM(vert),1.f} * transform); 
+    }
 
     physx::PxTriangleMeshDesc groundDesc;
 	groundDesc.setToDefault();
