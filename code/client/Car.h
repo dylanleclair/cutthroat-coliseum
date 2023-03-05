@@ -11,6 +11,8 @@
 
 #include "physx/snippetcommon/SnippetPVD.h"
 
+#include <glm/glm.hpp>
+
 #include "Time.h"
 #include "SDL.h"
 #include <limits>
@@ -20,6 +22,7 @@
 using namespace physx;
 using namespace physx::vehicle2;
 using namespace snippetvehicle2;
+using namespace glm;
 
 
 // HACK(beau): make these visible to tuning imgui panel
@@ -114,6 +117,7 @@ struct Car {
     void cleanupVehicle();
 
     void setClosestTetherPoint(PxTransform _loc);
+    void setClosestTetherPoint(glm::vec3 _loc);
     void resetModifications();
     bool isGroundedDelay(Car& car);
     void TetherSteer(PxTransform _loc);

@@ -67,6 +67,38 @@ void renderCMassSphere(PxTransform & _target, TransformComponent& sphere_transfo
 	sphere_transform.setPosition(glm::vec3(_target.p.x, _target.p.y, _target.p.z));
 }
 
+// Returns the x and y components of distances from the target object
+// returns the magnitude / distance from to origin to target
+std::vector<float> distFromTarget(TransformComponent _origin_object, TransformComponent _target_object) {
+	std::vector<float> values;
+
+	float x_diff = _origin_object.getTranslation().x - _target_object.getTranslation().x;
+	float z_diff = _origin_object.getTranslation().z - _target_object.getTranslation().z;
+
+	values.push_back(x_diff);
+	values.push_back(z_diff);
+
+	values.push_back(sqrt(pow(abs(x_diff), 2) + pow(abs(z_diff), 2)));
+
+	return values;
+}
+
+// Is given an array, and returns the index of the smallest element in the array
+// THE ARRAY SHOULD NOT BE SORTED
+int findSmallestDistanceIndex(std::vector<float> _array) {
+	float value = _array[0];
+	int index = 0;
+	for (int i = 0; i < _array.size(); i++) {
+		float val_compare = _array[i];
+
+		if (val_compare < value) {
+			index = i;
+		}
+	}
+
+	return index;
+}
+
 int main(int argc, char* argv[]) {
 	//RUN_GRAPHICS_TEST_BENCH();
 	printf("Starting main");
@@ -271,9 +303,13 @@ int main(int argc, char* argv[]) {
 	TransformComponent &car_trans = mainScene.GetComponent<TransformComponent>(car_e.guid);
 	TransformComponent &sphere_transform = mainScene.GetComponent<TransformComponent>(sphere_e.guid);
 	TransformComponent &tetherPole1_transform = mainScene.GetComponent<TransformComponent>(tetherPole1_e.guid);
+	TransformComponent &tetherPole2_transform = mainScene.GetComponent<TransformComponent>(tetherPole2_e.guid);
 	TransformComponent &tether_transform = mainScene.GetComponent<TransformComponent>(tether_e.guid);
-	// Used for testing location of stuff, DO NOT PUBLISH
 	PxTransform loc;
+
+	std::vector<TransformComponent> tethers;
+	tethers.push_back(tetherPole1_transform);
+	tethers.push_back(tetherPole2_transform);
 
 	FramerateCounter framerate;
 
@@ -419,21 +455,31 @@ int main(int argc, char* argv[]) {
 		//c_mass_f.p.y = tetherPole1_t.getTranslation().y;
 		//c_mass_f.p.z = tetherPole1_t.getTranslation().z;
 		//testCar.m_Vehicle.mPhysXParams.physxActorCMassLocalPose = c_mass_f;
-		testCar.setClosestTetherPoint(loc);
+		
 
 		auto& center_of_mass = testCar.m_Vehicle.mPhysXParams.physxActorCMassLocalPose;
 		renderCMassSphere(center_of_mass, sphere_transform);
 
 		//if (tethered) {
-			float x_diff = car_trans.getTranslation().x - tetherPole1_transform.getTranslation().x;
-			float z_diff = car_trans.getTranslation().z - tetherPole1_transform.getTranslation().z;
-			float tether_angle = atan(x_diff / z_diff);
+			std::vector<float> p1_distances = distFromTarget(car_trans, tetherPole1_transform);
+			std::vector<float> p2_distances = distFromTarget(car_trans, tetherPole2_transform);
+			std::vector<float> p_distances;
+			p_distances.clear();
+			p_distances.push_back(p1_distances[2]);
+			p_distances.push_back(p2_distances[2]);
+
+			testCar.setClosestTetherPoint(tethers[findSmallestDistanceIndex(p_distances)].getTranslation());
+
+			std::vector<float> distances = distFromTarget(car_trans, tethers[findSmallestDistanceIndex(p_distances)]);
+			//float x_diff = car_trans.getTranslation().x - tetherPole1_transform.getTranslation().x;
+			//float z_diff = car_trans.getTranslation().z - tetherPole1_transform.getTranslation().z;
+			float tether_angle = atan(distances[0] / distances[1]);
 			// Puts the tether's origin at the tether point
-			tether_transform.setPosition(glm::vec3(tetherPole1_transform.getTranslation().x, 1.5f, tetherPole1_transform.getTranslation().z));
+			tether_transform.setPosition(glm::vec3(tethers[findSmallestDistanceIndex(p_distances)].getTranslation().x, 1.5f, tethers[findSmallestDistanceIndex(p_distances)].getTranslation().z));
 			// Sets the scale of the tether on the x axis in accordance to the distance of the car to the tether point
-			tether_transform.setScale(glm::vec3(sqrt(pow(abs(x_diff),2)+pow(abs(z_diff),2)), 1.f, 1.f));
+			tether_transform.setScale(glm::vec3(distances[2], 1.f, 1.f));
 			// Rotates the tether to track the car
-			if (z_diff < 0) {
+			if (distances[1] < 0) {
 				tether_transform.setRotation(glm::vec3(0, 1, 0), tether_angle + (M_PI / 2.f));
 			}
 			else {
@@ -525,9 +571,6 @@ int main(int argc, char* argv[]) {
 		ImGui::Text("Suspension force y: %f", testCar.m_Vehicle.mBaseState.suspensionForces->force.y);
 		ImGui::Text("Suspension force z: %f", testCar.m_Vehicle.mBaseState.suspensionForces->force.z);
 		ImGui::Text("On the ground ?: %s", testCar.m_Vehicle.mBaseState.roadGeomStates->hitState ? "true" : "false");
-
-		ImGui::Text("x diff: %f", x_diff);
-		ImGui::Text("z diff: %f", z_diff);
 		ImGui::Text("Tether Angle: %f", tether_angle);
 		ImGui::Text("Laps: %d", lapCount);
 		ImGui::End();

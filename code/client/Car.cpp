@@ -124,6 +124,11 @@ PxRigidBody* Car::getVehicleRigidBody()
 void Car::setClosestTetherPoint(PxTransform _loc) {
     closest_tether_point = _loc;
 }
+void Car::setClosestTetherPoint(glm::vec3 _loc) {
+    closest_tether_point.p.x = _loc.x;
+    closest_tether_point.p.y = _loc.y;
+    closest_tether_point.p.z = _loc.z;
+}
 
 void Car::resetModifications() {
     // ORIGINALLY MEANT TO RESET THE CENTER OF GRAVITY, BUT WORKS BETTER WITHOUT CHANGING ?
