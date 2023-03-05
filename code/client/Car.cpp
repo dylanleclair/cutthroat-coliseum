@@ -10,7 +10,7 @@ float carBrake = 1.f;
 float carAxis = 0.f;
 float carAxisScale = 1.f;
 
-bool Car::initVehicle()
+bool Car::initVehicle(PxVec3 initialPosition)
 {
 
   if (!physicsSystem)
@@ -55,7 +55,7 @@ bool Car::initVehicle()
   }
 
   // Apply a start pose to the physx actor and add it to the physx scene.
-  PxTransform pose(PxVec3(0.000000000f, -0.0500000119f, -1.59399998f), PxQuat(PxIdentity));
+  PxTransform pose(initialPosition, PxQuat(PxIdentity));
   m_Vehicle.setUpActor(*physicsSystem->m_Scene, pose, m_vehicleName);
 
   // Set the vehicle in 1st gear.
@@ -127,7 +127,7 @@ void Car::TetherJump() {
 }
 
 
-void Car::Update(float deltaTime)
+void Car::Update(Guid carGuid, ecs::Scene& scene, float deltaTime)
 {
 
   auto keys_arr = SDL_GetKeyboardState(nullptr);

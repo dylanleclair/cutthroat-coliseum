@@ -2,6 +2,7 @@
 #include "PhysicsSystem.h"
 #include "utils/Time.h"
 #include "../Car.h"
+#include "../AICar.h"
 
 namespace physics
 {
@@ -9,7 +10,7 @@ namespace physics
     void PhysicsSystem::Initialize()
     {
 		initPhysX();
-		// initGroundPlane();
+		initGroundPlane();
 		initMaterialFrictionTable();
         initCooking(); 
 		// if (!initVehicles())
@@ -21,11 +22,19 @@ namespace physics
 	void PhysicsSystem::Update(ecs::Scene& scene, float deltaTime) {
         // get all physics components that need updates & process them in here
     
+        // first, update any player controlled vehicles
         for (auto entityGuid : ecs::EntitiesInScene<Car>(scene))
         {
             // get the car, and update it.
             Car& car = scene.GetComponent<Car>(entityGuid);
-            car.Update(deltaTime);
+            car.Update(entityGuid,scene,deltaTime);
+        }
+
+        // then, update all ai controlled vehicles
+        for (auto entityGuid : ecs::EntitiesInScene<AICar>(scene))
+        {
+            AICar& aicar = scene.GetComponent<AICar>(entityGuid);
+            aicar.Update(entityGuid,scene,deltaTime);
         }
 
 
@@ -39,7 +48,7 @@ namespace physics
 
     void PhysicsSystem::Cleanup()
     {
-        // cleanupGroundPlane();
+        cleanupGroundPlane();
         cleanupPhysX();
     }
 

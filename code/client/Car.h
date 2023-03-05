@@ -97,20 +97,20 @@ struct Car {
 
     PxU32 m_NbCommands = sizeof(m_Commands) / sizeof(Command);
 
-    // all the physics stuff lives in the physics system
-    Car(physics::PhysicsSystem* physicsSystem) : physicsSystem(physicsSystem)
-    {
-        // The vehicle with engine 
-        bool success = initVehicle();
-        if (!success)
-        {
-            std::cerr << "error initializing vehicle!" << std::endl;
-        }
-    }
+    // // all the physics stuff lives in the physics system
+    // Car(physics::PhysicsSystem* physicsSystem) : physicsSystem(physicsSystem)
+    // {
+    //     // The vehicle with engine 
+    //     bool success = initVehicle();
+    //     if (!success)
+    //     {
+    //         std::cerr << "error initializing vehicle!" << std::endl;
+    //     }
+    // }
 
     Car() : physicsSystem(nullptr) {};
 
-    bool initVehicle();
+    bool initVehicle(PxVec3 initialPosition);
     void cleanupVehicle();
 
     void TetherSteer();
@@ -118,7 +118,8 @@ struct Car {
 
     PxRigidBody* getVehicleRigidBody();
 
-    virtual void Update(float deltaTime);
+    virtual void Update(Guid carGuid, ecs::Scene& scene, float deltaTime);
+
 
 };
 
