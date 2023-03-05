@@ -44,6 +44,7 @@ CarPhysicsSerde carConfig(carPhysics);
 
 int lapCount = 0;
 bool isFinished = false;
+bool tethered = false;
 
 uint32_t lastTime_millisecs;
 
@@ -336,10 +337,18 @@ int main(int argc, char* argv[]) {
 						testCar.TetherJump();
 						break;
 					case SDLK_m:
-						loc.p.x = tetherPole1_transform.getTranslation().x;
-						loc.p.y = tetherPole1_transform.getTranslation().y;
-						loc.p.z = tetherPole1_transform.getTranslation().z;
-						testCar.TetherSteer(loc);
+						if (!tethered) {
+							tethered = true;
+							loc.p.x = tetherPole1_transform.getTranslation().x;
+							loc.p.y = tetherPole1_transform.getTranslation().y;
+							loc.p.z = tetherPole1_transform.getTranslation().z;
+							testCar.TetherSteer(loc);
+						}
+						else if (tethered) {
+							tethered = false;
+							testCar.resetModifications();
+						}
+
 						break;
 
 
@@ -390,7 +399,15 @@ int main(int argc, char* argv[]) {
 		if (testCar.isGroundedDelay(testCar)) {
 			testCar.resetModifications();
 		}
-		
+		PxTransform c_mass_f;
+		//c_mass_f.p.x = car_trans.getTranslation().x - tetherPole1_t.getTranslation().x;
+		//c_mass_f.p.y = car_trans.getTranslation().y - tetherPole1_t.getTranslation().y;
+		//c_mass_f.p.z = car_trans.getTranslation().z - tetherPole1_t.getTranslation().z;
+		//c_mass_f.p.x = tetherPole1_t.getTranslation().x;
+		//c_mass_f.p.y = tetherPole1_t.getTranslation().y;
+		//c_mass_f.p.z = tetherPole1_t.getTranslation().z;
+		//testCar.m_Vehicle.mPhysXParams.physxActorCMassLocalPose = c_mass_f;
+
 		auto& center_of_mass = testCar.m_Vehicle.mPhysXParams.physxActorCMassLocalPose;
 		renderCMassSphere(center_of_mass, sphere_transform);
 
