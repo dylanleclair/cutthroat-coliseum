@@ -80,6 +80,7 @@ namespace physics
         m_Material = m_Physics->createMaterial(0.5f, 0.5f, 0.5f);
 
         PxInitVehicleExtension(*m_Foundation);
+        
     }
 
     void PhysicsSystem::cleanupPhysX()
