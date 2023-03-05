@@ -240,18 +240,46 @@ void Car::Update(float deltaTime)
   if (!c_tethered) {
       carAxis = (float)-SDL_GameControllerGetAxis(ControllerInput::controller, SDL_CONTROLLER_AXIS_LEFTX) / SHRT_MAX;
   }
-   
+  
+  
+  // Code for going in reverse
+  // If the brake key is pressed, while the engine is idle, and the current gear is first gear, switch to reverse
+  if (s_key && this->m_Vehicle.mEngineDriveState.gearboxState.currentGear == 2 &&
+      this->m_Vehicle.mEngineDriveState.engineState.rotationSpeed == 0) {
+      this->m_TargetGearCommand = 0;
+  }
+  // While the gearbox is in reverse holding s goes backwards, hold w brakes
+  else if (this->m_Vehicle.mEngineDriveState.gearboxState.currentGear == 0) {
+      if (s_key)
+      {
+          command.throttle = carThrottle;
+      }
+      // If the engine is idle and the w key is pressed switch to normal driving
+      else if (w_key && this->m_Vehicle.mEngineDriveState.engineState.rotationSpeed == 0) {
+          this->m_TargetGearCommand = 2;
+      }
+      else if (w_key)
+      {
+          command.brake = carBrake;
+      }
+  }
+  // If the engine in neutral or above, drive normally
+  else if (this->m_Vehicle.mEngineDriveState.gearboxState.currentGear >= 1 && 
+      this->m_Vehicle.mEngineDriveState.engineState.rotationSpeed >= 0) {
+
+      if (w_key)
+      {
+          command.throttle = carThrottle;
+      }
+      else if (s_key)
+      {
+          command.brake = carBrake;
+      }
+  }
+
+
 
   // Keyboard Controls
-  // Throttle to 2.f will cause weird behaviour
-  if (w_key)
-  {
-      command.throttle = carThrottle;
-  }
-  else if (s_key)
-  {
-      command.brake = carBrake;
-  }
   if (a_key && !c_tethered)
   {
       command.steer = 1.f;
