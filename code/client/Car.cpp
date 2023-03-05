@@ -204,15 +204,6 @@ void Car::Update(float deltaTime)
   Command command = {0.f, 0.f, 0.f, m_TargetGearCommand};
   // command.duration = timestep;
 
-
-  // Controller triggers for throttle and brake
-  controller_throttle = (float)SDL_GameControllerGetAxis(ControllerInput::controller, SDL_CONTROLLER_AXIS_TRIGGERRIGHT) / SHRT_MAX;
-  command.throttle = controller_throttle;      
-
-  controller_brake = (float)SDL_GameControllerGetAxis(ControllerInput::controller, SDL_CONTROLLER_AXIS_TRIGGERLEFT) / SHRT_MAX;
-  command.brake = controller_brake;      
-
-
   // Jump tether
   // Checks if the previous frame was a jump, so that it does not cumulatively add impulse
   if (SDL_GameControllerGetButton(ControllerInput::controller, SDL_CONTROLLER_BUTTON_A) && this->m_Vehicle.mBaseState.roadGeomStates->hitState && !has_jumped) {
@@ -244,37 +235,47 @@ void Car::Update(float deltaTime)
   
   // Code for going in reverse
   // If the brake key is pressed, while the engine is idle, and the current gear is first gear, switch to reverse
-  if (s_key && this->m_Vehicle.mEngineDriveState.gearboxState.currentGear == 2 &&
+  if (s_key || SDL_GameControllerGetAxis(ControllerInput::controller, SDL_CONTROLLER_AXIS_TRIGGERLEFT)
+      && this->m_Vehicle.mEngineDriveState.gearboxState.currentGear == 2 &&
       this->m_Vehicle.mEngineDriveState.engineState.rotationSpeed == 0) {
       this->m_TargetGearCommand = 0;
   }
   // While the gearbox is in reverse holding s goes backwards, hold w brakes
   else if (this->m_Vehicle.mEngineDriveState.gearboxState.currentGear == 0) {
-      if (s_key)
-      {
+      if (s_key) {
           command.throttle = carThrottle;
       }
-      // If the engine is idle and the w key is pressed switch to normal driving
-      else if (w_key && this->m_Vehicle.mEngineDriveState.engineState.rotationSpeed == 0) {
-          this->m_TargetGearCommand = 2;
+      else if (SDL_GameControllerGetAxis(ControllerInput::controller, SDL_CONTROLLER_AXIS_TRIGGERLEFT)) {
+          command.throttle = (float)SDL_GameControllerGetAxis(ControllerInput::controller, SDL_CONTROLLER_AXIS_TRIGGERLEFT) / SHRT_MAX;
       }
-      else if (w_key)
-      {
+      // If the engine is idle and the w key is pressed switch to normal driving
+      else if (w_key || SDL_GameControllerGetAxis(ControllerInput::controller, SDL_CONTROLLER_AXIS_TRIGGERRIGHT)  
+               && this->m_Vehicle.mEngineDriveState.engineState.rotationSpeed == 0) {
+           this->m_TargetGearCommand = 2;
+      }
+      else if (w_key) {
           command.brake = carBrake;
+      }
+      else if (SDL_GameControllerGetAxis(ControllerInput::controller, SDL_CONTROLLER_AXIS_TRIGGERRIGHT)) {
+          command.brake = (float)SDL_GameControllerGetAxis(ControllerInput::controller, SDL_CONTROLLER_AXIS_TRIGGERRIGHT) / SHRT_MAX;
       }
   }
   // If the engine in neutral or above, drive normally
   else if (this->m_Vehicle.mEngineDriveState.gearboxState.currentGear >= 1 && 
       this->m_Vehicle.mEngineDriveState.engineState.rotationSpeed >= 0) {
 
-      if (w_key)
-      {
+       if (w_key) {
           command.throttle = carThrottle;
-      }
-      else if (s_key)
-      {
-          command.brake = carBrake;
-      }
+       }
+       else if (s_key) {
+           command.brake = carBrake;
+       }
+       else if (SDL_GameControllerGetAxis(ControllerInput::controller, SDL_CONTROLLER_AXIS_TRIGGERRIGHT)) {
+           command.throttle = (float)SDL_GameControllerGetAxis(ControllerInput::controller, SDL_CONTROLLER_AXIS_TRIGGERRIGHT) / SHRT_MAX;
+       }
+       else if (SDL_GameControllerGetAxis(ControllerInput::controller, SDL_CONTROLLER_AXIS_TRIGGERLEFT)) {
+           command.brake = (float)SDL_GameControllerGetAxis(ControllerInput::controller, SDL_CONTROLLER_AXIS_TRIGGERLEFT) / SHRT_MAX;
+       }
   }
 
 
