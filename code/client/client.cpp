@@ -186,7 +186,8 @@ int main(int argc, char* argv[]) {
 
 	// actual level mesh & collider for it
 	CPU_Geometry levelCollider_raw = CPU_Geometry();
-	GraphicsSystem::importOBJ(levelCollider_raw, "STADIUM_COLLIDER_WALLONLY.obj");
+	GraphicsSystem::importOBJ(levelCollider_raw, "STADIUM_COLLIDER.obj");
+	std::cout << "HEEEEEEEEEEEE " << levelCollider_raw.verts.size() << '\n';
 	//GraphicsSystem::importOBJ(levelCollider_raw, "STADIUM_COLLIDER.obj"); //the collider importer does not like this rn
 	for (auto& e : levelCollider_raw.verts)
 		e *= 3;

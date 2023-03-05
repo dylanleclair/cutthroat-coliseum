@@ -454,7 +454,8 @@ void GraphicsSystem::importOBJ(RenderModel& _component, const std::string _fileN
 	std::cout << "Beginning to load model " << _fileName << "\n";
 	_component.name = std::string(_fileName);
 	Assimp::Importer importer;
-	const aiScene* scene = importer.ReadFile("models/" + _fileName, aiProcess_Triangulate);
+	//importer.SetPropertyInteger(AI_CONFIG_PP_SBP_REMOVE, aiPrimitiveType_POINT | aiPrimitiveType_LINE);
+	const aiScene* scene = importer.ReadFile("models/" + _fileName, aiProcess_Triangulate); // | aiProcess_FindInvalidData | aiProcess_FindDegenerates | aiProcess_SortByPType
 	if (!scene || scene->mFlags & AI_SCENE_FLAGS_INCOMPLETE || !scene->mRootNode)
 	{
 		std::cout << "Error importing " << _fileName << " into scene\n";
