@@ -28,6 +28,7 @@
 #include "systems/PhysicsSystem.h"
 
 #include "Car.h"
+#include "TetherGraphics.h"
 
 #include "physics/LevelCollider.h"
 
@@ -67,43 +68,9 @@ void renderCMassSphere(PxTransform & _target, TransformComponent& sphere_transfo
 	sphere_transform.setPosition(glm::vec3(_target.p.x, _target.p.y, _target.p.z));
 }
 
-// Returns the x and y components of distances from the target object
-// returns the magnitude / distance from to origin to target
-std::vector<float> distFromTarget(TransformComponent _origin_object, TransformComponent _target_object) {
-	std::vector<float> values;
-
-	float x_diff = _origin_object.getTranslation().x - _target_object.getTranslation().x;
-	float z_diff = _origin_object.getTranslation().z - _target_object.getTranslation().z;
-
-	values.push_back(x_diff);
-	values.push_back(z_diff);
-
-	values.push_back(sqrt(pow(abs(x_diff), 2) + pow(abs(z_diff), 2)));
-
-	return values;
-}
-
-// Is given an array, and returns the index of the smallest element in the array
-// THE ARRAY SHOULD NOT BE SORTED
-int findSmallestDistanceIndex(std::vector<float> _array) {
-	float value = _array[0];
-	int index = 0;
-	for (int i = 0; i < _array.size(); i++) {
-		float val_compare = _array[i];
-
-		if (val_compare < value) {
-			index = i;
-		}
-	}
-
-	return index;
-}
-
 int main(int argc, char* argv[]) {
 	//RUN_GRAPHICS_TEST_BENCH();
 	printf("Starting main");
-
-
 
 
 	SDL_Init(SDL_INIT_EVERYTHING); // initialize all sdl systems
@@ -130,10 +97,6 @@ int main(int argc, char* argv[]) {
 
 	physics::PhysicsSystem physicsSystem{};
 	physicsSystem.Initialize();
-
-
-
-
 
 
 	// init ecs 
@@ -307,9 +270,9 @@ int main(int argc, char* argv[]) {
 	TransformComponent &tether_transform = mainScene.GetComponent<TransformComponent>(tether_e.guid);
 	PxTransform loc;
 
-	std::vector<TransformComponent> tethers;
-	tethers.push_back(tetherPole1_transform);
-	tethers.push_back(tetherPole2_transform);
+	std::vector<TransformComponent> c_tether_points;
+	c_tether_points.push_back(tetherPole1_transform);
+	c_tether_points.push_back(tetherPole2_transform);
 
 	FramerateCounter framerate;
 
@@ -448,6 +411,8 @@ int main(int argc, char* argv[]) {
 			testCar.resetModifications();
 		}
 		PxTransform c_mass_f;
+
+		// Debug stuff for centre of mass - not working properly
 		//c_mass_f.p.x = car_trans.getTranslation().x - tetherPole1_t.getTranslation().x;
 		//c_mass_f.p.y = car_trans.getTranslation().y - tetherPole1_t.getTranslation().y;
 		//c_mass_f.p.z = car_trans.getTranslation().z - tetherPole1_t.getTranslation().z;
@@ -461,30 +426,7 @@ int main(int argc, char* argv[]) {
 		renderCMassSphere(center_of_mass, sphere_transform);
 
 		if (tethered) {
-			std::vector<float> p1_distances = distFromTarget(car_trans, tetherPole1_transform);
-			std::vector<float> p2_distances = distFromTarget(car_trans, tetherPole2_transform);
-			std::vector<float> p_distances;
-			p_distances.clear();
-			p_distances.push_back(p1_distances[2]);
-			p_distances.push_back(p2_distances[2]);
-
-			testCar.setClosestTetherPoint(tethers[findSmallestDistanceIndex(p_distances)].getTranslation());
-
-			std::vector<float> distances = distFromTarget(car_trans, tethers[findSmallestDistanceIndex(p_distances)]);
-			//float x_diff = car_trans.getTranslation().x - tetherPole1_transform.getTranslation().x;
-			//float z_diff = car_trans.getTranslation().z - tetherPole1_transform.getTranslation().z;
-			float tether_angle = atan(distances[0] / distances[1]);
-			// Puts the tether's origin at the tether point
-			tether_transform.setPosition(glm::vec3(tethers[findSmallestDistanceIndex(p_distances)].getTranslation().x, 1.5f, tethers[findSmallestDistanceIndex(p_distances)].getTranslation().z));
-			// Sets the scale of the tether on the x axis in accordance to the distance of the car to the tether point
-			tether_transform.setScale(glm::vec3(distances[2], 1.f, 1.f));
-			// Rotates the tether to track the car
-			if (distances[1] < 0) {
-				tether_transform.setRotation(glm::vec3(0, 1, 0), tether_angle + (M_PI / 2.f));
-			}
-			else {
-				tether_transform.setRotation(glm::vec3(0, 1, 0), tether_angle + (3 * M_PI / 2.f));
-			}
+			updateTetherGraphic(car_trans, c_tether_points, testCar, tether_transform);
 		}
 		else {
 			tether_transform.setScale(glm::vec3(0.f, 0.f, 0.f));
