@@ -117,6 +117,8 @@ int main(int argc, char* argv[]) {
 		std::cout << "ERROR: could not initialize vehicle";
 	}
 
+	testCar.getVehicleRigidBody()->setGlobalPose(PxTransform(PxVec3(35, 0, 0)));
+
 	// Car Entity
 	RenderModel car_r = RenderModel();
 	GraphicsSystem::importOBJ(car_r, "test_car.obj");
@@ -124,7 +126,6 @@ int main(int argc, char* argv[]) {
 	mainScene.AddComponent(car_e.guid, car_r);
 	TransformComponent car_t = TransformComponent(testCar.getVehicleRigidBody());
 	car_t.setPosition(glm::vec3(0, 0, 1));
-	//car_t.setRotation(glm::quat(0, 0, 0, 1));
 	car_t.setScale(glm::vec3(3.2f, 3.2f, 3.2f));
 	mainScene.AddComponent(car_e.guid, car_t);
 	
@@ -161,7 +162,7 @@ int main(int argc, char* argv[]) {
 	mainScene.AddComponent(finish_line.guid, finish);
 
 	TransformComponent finish_t = TransformComponent();
-	finish_t.setPosition(glm::vec3(0, 0, 0));
+	finish_t.setPosition(glm::vec3(30, 0, 0));
 	finish_t.setScale(glm::vec3(3.2f, 3.2f, 3.2f));
 	mainScene.AddComponent(finish_line.guid, finish_t);
 
@@ -180,17 +181,22 @@ int main(int argc, char* argv[]) {
 	
 	// Level
 	TransformComponent level_t = TransformComponent();
-	level_t.setScale(glm::vec3(3.2f, 1.f, 3.2f));
-	mainScene.AddComponent(ground_e.guid, level_t);
+	level_t.setScale(glm::vec3(3.f, 3.f, 3.f));
+	//mainScene.AddComponent(ground_e.guid, level_t);
 
 	// actual level mesh & collider for it
-	LevelCollider levelCollider{"large_test_torus.obj", physicsSystem};
+	CPU_Geometry levelCollider_raw = CPU_Geometry();
+	GraphicsSystem::importOBJ(levelCollider_raw, "STADIUM_COLLIDER_WALLONLY.obj");
+	//GraphicsSystem::importOBJ(levelCollider_raw, "STADIUM_COLLIDER.obj"); //the collider importer does not like this rn
+	for (auto& e : levelCollider_raw.verts)
+		e *= 3;
+	LevelCollider levelCollider{ levelCollider_raw, physicsSystem};
 	auto levelTriangleMesh = levelCollider.cookLevel();
 	levelCollider.initLevelRigidBody(levelTriangleMesh);
 
 	RenderModel level_r = RenderModel();
 	GraphicsSystem::importOBJ(level_r, "Stadium.obj");
-	level_r.setModelColor(glm::vec3(0, 0, 1));
+	//GraphicsSystem::importOBJ(level_r, "Stadium_MINIMAL.obj"); //for faster loading times
 	mainScene.AddComponent(level_e.guid, level_r);
 	mainScene.AddComponent(level_e.guid, level_t);
 
@@ -216,7 +222,7 @@ int main(int argc, char* argv[]) {
 	inWall.setModelColor(glm::vec3(0.2f, 0.2f, 0.6f));
 	mainScene.AddComponent(inWall_e.guid, inWall);
 	mainScene.AddComponent(inWall_e.guid, wall_t);
-	*/
+	
 
 	// Tether poles
 	RenderModel tetherPole1_r = RenderModel();
@@ -236,7 +242,7 @@ int main(int argc, char* argv[]) {
 	tetherPole2_t.setPosition(glm::vec3(0.f, 0.f, -100.f));
 	tetherPole2_t.setScale(glm::vec3(3.2f, 3.2f, 3.2f));
 	mainScene.AddComponent(tetherPole2_e.guid, tetherPole2_t);
-
+	*/
 	// This is how to change the position of the object after it has been passed to the ECS
 	/*
 	auto &wallTrans = mainScene.GetComponent<TransformComponent>(outWall_e.guid);

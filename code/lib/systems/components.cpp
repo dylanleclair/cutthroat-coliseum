@@ -4,20 +4,20 @@
 
 int RenderModel::attachMesh(CPU_Geometry& _geometry)
 {
-	std::cout << "attaching mesh...\n";
+	std::cout << "\tattaching mesh...\n";
 	Mesh mesh = Mesh();
 	//assign an ID to the mesh that is local to the model
 	mesh.ID = currentMeshID;
 	currentMeshID++;
 	
 	numberOfVerts = _geometry.verts.size();
-	std::cout << "\tverticies: " << _geometry.verts.size() << '\n';
+	std::cout << "\t\tverticies: " << _geometry.verts.size() << '\n';
 	mesh.geometry->setVerts(_geometry.verts);
-	std::cout << "\tindicies: " << _geometry.indicies.size() << '\n';
+	std::cout << "\t\tindicies: " << _geometry.indicies.size() << '\n';
 	mesh.geometry->setIndexBuff(_geometry.indicies);
 	//load the normals
 	if (_geometry.norms.size() == numberOfVerts) {
-		std::cout << "\tnormals: " << _geometry.norms.size() << '\n';
+		std::cout << "\t\tnormals: " << _geometry.norms.size() << '\n';
 		mesh.geometry->setNorms(_geometry.norms);
 		mesh.properties |= 0x1;
 	}
@@ -26,7 +26,7 @@ int RenderModel::attachMesh(CPU_Geometry& _geometry)
 	}
 	//load the texture coordinates
 	if (_geometry.texs.size() == numberOfVerts) {
-		std::cout << "\ttextCoords: " << _geometry.texs.size() << '\n';
+		std::cout << "\t\ttextCoords: " << _geometry.texs.size() << '\n';
 		mesh.geometry->setTexCoords(_geometry.texs);
 		mesh.properties |= 0x2;
 	}
@@ -40,7 +40,7 @@ int RenderModel::attachMesh(CPU_Geometry& _geometry)
 	meshes.push_back(mesh);
 	//sorting the meshes lets us batch draws without having to rebind the same texture multiple times
 	//std::sort(meshes.begin(), meshes.end(), [](const Mesh a, const Mesh b) -> bool {return a.textureIndex < b.textureIndex; });
-	std::cout << "mesh attached with id " << mesh.ID << "\n";
+	std::cout << "\tmesh attached with id " << mesh.ID << "\n";
 	return mesh.ID;
 }
 

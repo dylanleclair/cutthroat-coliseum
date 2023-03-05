@@ -412,6 +412,7 @@ void GraphicsSystem::Update(ecs::Scene& scene, float deltaTime) {
 			glDrawArrays(GL_LINE_STRIP, 0, comp.numberOfVerticies);
 		}
 
+		
 		if (showColliders) {
 			//Render debug wireframes of physx colliders
 			wireframeShader.use();
@@ -453,7 +454,7 @@ void GraphicsSystem::importOBJ(RenderModel& _component, const std::string _fileN
 	std::cout << "Beginning to load model " << _fileName << "\n";
 	_component.name = std::string(_fileName);
 	Assimp::Importer importer;
-	const aiScene* scene = importer.ReadFile("models/" + _fileName, aiProcess_Triangulate | aiProcess_GenSmoothNormals );
+	const aiScene* scene = importer.ReadFile("models/" + _fileName, aiProcess_Triangulate);
 	if (!scene || scene->mFlags & AI_SCENE_FLAGS_INCOMPLETE || !scene->mRootNode)
 	{
 		std::cout << "Error importing " << _fileName << " into scene\n";
@@ -465,15 +466,17 @@ void GraphicsSystem::importOBJ(RenderModel& _component, const std::string _fileN
 
 
 void GraphicsSystem::processNode(aiNode* node, const aiScene* scene, RenderModel& _component) {
-	std::cout << "processing node...\n";
-	std::cout << "\tmeshes: " << node->mNumMeshes << '\n';
+	std::cout << "\tprocessing node...\n";
+	std::cout << "\t\tnode contains " << node->mNumMeshes << " meshes\n";
 	//process all the meshes contained in the node
 	for (int m = 0; m < node->mNumMeshes; m++) {
 		const aiMesh* mesh = scene->mMeshes[node->mMeshes[m]];
 		CPU_Geometry geometry;
 
+		std::cout << "\t\tProcessing mesh " << mesh->mName.C_Str() << '\n';
+
 		//process the aiMess into a CPU_Geometry to pass to the render component to create a new mesh
-		std::cout << "\t\tverticies: " << mesh->mNumVertices << '\n';
+		std::cout << "\t\t\tverticies: " << mesh->mNumVertices << '\n';
 		for (unsigned int i = 0; i < mesh->mNumVertices; i++)
 		{
 			geometry.verts.push_back(glm::vec3(mesh->mVertices[i].x, mesh->mVertices[i].y, mesh->mVertices[i].z));
@@ -482,7 +485,7 @@ void GraphicsSystem::processNode(aiNode* node, const aiScene* scene, RenderModel
 				geometry.texs.push_back(glm::vec2(mesh->mTextureCoords[0][i].x, mesh->mTextureCoords[0][i].y));
 		}
 		// process indices
-		std::cout << "\t\tfaces: " << mesh->mNumFaces << '\n';
+		std::cout << "\t\t\tfaces: " << mesh->mNumFaces << '\n';
 		for (unsigned int i = 0; i < mesh->mNumFaces; i++)
 		{
 			aiFace face = mesh->mFaces[i];
@@ -490,20 +493,24 @@ void GraphicsSystem::processNode(aiNode* node, const aiScene* scene, RenderModel
 			geometry.indicies.push_back(face.mIndices[1]);
 			geometry.indicies.push_back(face.mIndices[2]);
 		}
-		std::cout << "\t\tindicies: " << geometry.indicies.size() << '\n';
-		std::cout << "finished processing node\n";
+		std::cout << "\t\t\tindicies: " << geometry.indicies.size() << '\n';
+		std::cout << "\tfinished processing node\n";
 		int ID = _component.attachMesh(geometry);
 		// process material
 		//SAM TODO. Quite frankly this breaks my mind rn with the fact a material can have MULTIPLE textures SOMEHOW
-		if (mesh->mMaterialIndex >= 0)
+
+		if (mesh->mMaterialIndex >= 0) //if the mesh has a material attached
 		{
 			aiMaterial* material = scene->mMaterials[mesh->mMaterialIndex];
-			//std::cout << "HELLO           " << material->GetTextureCount(aiTextureType_DIFFUSE) << '\n';
+			aiColor3D color(0.f, 0.f, 0.f);
+			material->Get(AI_MATKEY_COLOR_DIFFUSE, color);
+			_component.meshes[_component.getMeshIndex(ID)].meshColor = glm::vec3(color.r, color.g, color.b);
+
 			if (material->GetTextureCount(aiTextureType_DIFFUSE) > 0) {
 				//get the textures name(?)
 				aiString str;
 				material->GetTexture(aiTextureType_DIFFUSE, 0, &str);
-				std::cout << "Material has a texture " << str.C_Str() << '\n';
+				std::cout << "\tMaterial has a texture " << str.C_Str() << '\n';
 				std::string temp = std::string(str.C_Str());
 				std::string temp2;
 				for (int i = temp.size()-1; i >= 0; i--) {
@@ -530,7 +537,9 @@ void GraphicsSystem::processNode(aiNode* node, const aiScene* scene, RenderModel
 	}
 }
 
-
+/*
+* importing an object geometry only
+*/
 void GraphicsSystem::importOBJ(CPU_Geometry& _geometry, const std::string _fileName) {
 	std::cout << "Beginning to load model " << _fileName << "\n";
 	Assimp::Importer importer;
