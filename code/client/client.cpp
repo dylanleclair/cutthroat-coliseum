@@ -189,6 +189,13 @@ int main(int argc, char* argv[]) {
 	levelCollider.initLevelRigidBody(levelTriangleMesh);
 
 	RenderModel level_r = RenderModel();
+	GraphicsSystem::importOBJ(level_r, "Stadium.obj");
+	level_r.setModelColor(glm::vec3(0, 0, 1));
+	mainScene.AddComponent(level_e.guid, level_r);
+	mainScene.AddComponent(level_e.guid, level_t);
+
+	/*
+	RenderModel level_r = RenderModel();
 	GraphicsSystem::importOBJ(level_r, "large_test_torus.obj");
 	level_r.setModelColor(glm::vec3(0, 0, 1));
 	mainScene.AddComponent(level_e.guid, level_r);
@@ -209,6 +216,7 @@ int main(int argc, char* argv[]) {
 	inWall.setModelColor(glm::vec3(0.2f, 0.2f, 0.6f));
 	mainScene.AddComponent(inWall_e.guid, inWall);
 	mainScene.AddComponent(inWall_e.guid, wall_t);
+	*/
 
 	// Tether poles
 	RenderModel tetherPole1_r = RenderModel();
