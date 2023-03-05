@@ -209,8 +209,8 @@ int main(int argc, char* argv[]) {
 	mainScene.AddComponent(finish_line.guid, finish_t);
 
 	// Pathfinding
-	PathfindingComponent car_pathfinder{ finish_e.guid };
-	mainScene.AddComponent(car_e.guid, car_pathfinder);
+	// PathfindingComponent car_pathfinder{ finish_e.guid };
+	// mainScene.AddComponent(car_e.guid, car_pathfinder);
 	
 
 	// Path renderer
@@ -228,7 +228,7 @@ int main(int argc, char* argv[]) {
 
 	// actual level mesh & collider for it
 	LevelCollider levelCollider{"large_test_torus.obj", physicsSystem};
-	auto levelTriangleMesh = levelCollider.cookLevel();
+	auto levelTriangleMesh = levelCollider.cookLevel(level_t.getTransformationMatrix());
 	levelCollider.initLevelRigidBody(levelTriangleMesh);
 
 	RenderModel level_r = RenderModel();

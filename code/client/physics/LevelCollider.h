@@ -10,10 +10,11 @@ using namespace physics;
 
 struct LevelCollider
 { 
-    LevelCollider(std::string modelName, PhysicsSystem& physics);
     LevelCollider(CPU_Geometry& levelGeom, PhysicsSystem& physics);
+    LevelCollider(std::string modelName, PhysicsSystem& physics);
 
-    physx::PxTriangleMesh * LevelCollider::cookLevel(); 
+
+    physx::PxTriangleMesh * LevelCollider::cookLevel(glm::mat4 transform); 
     void LevelCollider::initLevelRigidBody(physx::PxTriangleMesh* levelMesh);
 
 
