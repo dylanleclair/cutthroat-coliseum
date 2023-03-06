@@ -361,7 +361,7 @@ int main(int argc, char* argv[]) {
 						testCar.m_Vehicle.mPhysXState.physxActor.rigidBody->clearTorque();
 						lapCount = 1;
 						aiCarInstance.m_lapCount = 1;
-						
+						aiCarInstance.m_Vehicle.mPhysXState.physxActor.rigidBody->setGlobalPose(PxTransform(10.f, 2.f, 10.f));
 						break;
 						
 					// TODO: change the file that is serializes (Want to do base.json and enginedrive.json)
