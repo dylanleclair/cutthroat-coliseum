@@ -242,16 +242,16 @@ int main(int argc, char* argv[]) {
 	tetherPole1_r.setModelColor(glm::vec3(205.f / 255.f, 133.f / 255.f, 63.f / 255.f));
 	mainScene.AddComponent(tetherPole1_e.guid, tetherPole1_r);
 	TransformComponent tetherPole1_t = TransformComponent();
-	tetherPole1_t.setPosition(glm::vec3(-27.f, 0.f, 50.f));
+	tetherPole1_t.setPosition(glm::vec3(0.f, 0.f, 162.f));
 	tetherPole1_t.setScale(glm::vec3(3.2f, 3.2f, 3.2f));
 	mainScene.AddComponent(tetherPole1_e.guid, tetherPole1_t);
-	/*
+	
 	RenderModel tetherPole2_r = RenderModel();
 	GraphicsSystem::importOBJ(tetherPole2_r, "alpha_tether_pole.obj");
 	tetherPole2_r.setModelColor(glm::vec3(205.f / 255.f, 133.f / 255.f, 63.f / 255.f));
 	mainScene.AddComponent(tetherPole2_e.guid, tetherPole2_r);
 	TransformComponent tetherPole2_t = TransformComponent();
-	tetherPole2_t.setPosition(glm::vec3(-27.f, 0.f, -50.f));
+	tetherPole2_t.setPosition(glm::vec3(0.f, 0.f, -162.f));
 	tetherPole2_t.setScale(glm::vec3(3.2f, 3.2f, 3.2f));
 	mainScene.AddComponent(tetherPole2_e.guid, tetherPole2_t);
 	
@@ -261,7 +261,7 @@ int main(int argc, char* argv[]) {
 	tether_r.setModelColor(glm::vec3(83.f / 255.f, 54.f / 255.f, 33.f / 255.f));
 	mainScene.AddComponent(tether_e.guid, tether_r);
 	TransformComponent tether_t = TransformComponent();
-	tether_t.setPosition(glm::vec3(- 27.f, 1.f, 45.f));
+	tether_t.setPosition(glm::vec3(0.f, 1.f, 0.f));
 	tether_t.setScale(glm::vec3(1.f, 2.f, 2.f));
 	mainScene.AddComponent(tether_e.guid, tether_t);
 
