@@ -48,7 +48,7 @@
     ]
   },
   "SteerCommandResponseParams": {
-    "MaxResponse": 0.7435990285873413,
+    "MaxResponse": 0.5435990285873413,
     "WheelResponseMultipliers": [
       1.0,
       1.0,

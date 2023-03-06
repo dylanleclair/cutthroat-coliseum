@@ -33,6 +33,7 @@
 
 
 #include "TetherGraphics.h"
+#include "Obstacles.h"
 
 #include "physics/LevelCollider.h"
 
@@ -276,6 +277,10 @@ int main(int argc, char* argv[]) {
 	tether_t.setPosition(glm::vec3(0.f, 1.f, 0.f));
 	tether_t.setScale(glm::vec3(1.f, 2.f, 2.f));
 	mainScene.AddComponent(tether_e.guid, tether_t);
+	
+	// Setting up log obstacles (currently boxes)
+	setUpLogs(mainScene);
+	addRigidBody(physicsSystem);
 
 	// This is how to change the position of the object after it has been passed to the ECS
 	/*
@@ -305,7 +310,7 @@ int main(int argc, char* argv[]) {
 	// Initalizes variables for the vehicle tuning Imgui
 	baseVariablesInit(testCar.m_Vehicle);
 	engineVariablesInit(testCar.m_Vehicle);
-  
+
 	// GAME LOOP
 	while (!quit) {
 		Timestep timestep; // Time since last frame
@@ -342,6 +347,7 @@ int main(int argc, char* argv[]) {
 					case SDLK_r:
 						//TODO recompile the shader
 						// Rudementary car reset (will keep using the velocity and rotation of the car through the rest)
+						// Even while using clear force and clear torque it still spins ....
 						testCar.m_Vehicle.mPhysXState.physxActor.rigidBody->setGlobalPose(PxTransform(35.f, 0.f, 0.f));
 						testCar.m_Vehicle.mPhysXState.physxActor.rigidBody->clearForce();
 						testCar.m_Vehicle.mPhysXState.physxActor.rigidBody->clearTorque();
