@@ -374,6 +374,7 @@ void GraphicsSystem::Update(ecs::Scene& scene, float deltaTime) {
 					glUniform1ui(shaderStateUniform, 0);
 				}
 				mesh.geometry->bind();
+
 				glDrawElements(GL_TRIANGLES, mesh.numberOfIndicies, GL_UNSIGNED_INT, 0);
 			}
 		}
@@ -483,8 +484,9 @@ void GraphicsSystem::input(SDL_Event& _event, int _cameraID)
 	cameras[_cameraID].input(_event);
 }
 
+
 void GraphicsSystem::importOBJ(RenderModel& _component, const std::string _fileName) {
-	std::cout << "Beginning to load model " << _fileName << "\n";
+	std::cout << "importing " << _fileName << '\n';
 	_component.name = std::string(_fileName);
 	Assimp::Importer importer;
 	//importer.SetPropertyInteger(AI_CONFIG_PP_SBP_REMOVE, aiPrimitiveType_POINT | aiPrimitiveType_LINE);
@@ -500,26 +502,22 @@ void GraphicsSystem::importOBJ(RenderModel& _component, const std::string _fileN
 
 
 void GraphicsSystem::processNode(aiNode* node, const aiScene* scene, RenderModel& _component) {
-	std::cout << "\tprocessing node...\n";
-	std::cout << "\t\tnode contains " << node->mNumMeshes << " meshes\n";
 	//process all the meshes contained in the node
 	for (int m = 0; m < node->mNumMeshes; m++) {
 		const aiMesh* mesh = scene->mMeshes[node->mMeshes[m]];
 		CPU_Geometry geometry;
 
-		std::cout << "\t\tProcessing mesh " << mesh->mName.C_Str() << '\n';
-
 		//process the aiMess into a CPU_Geometry to pass to the render component to create a new mesh
-		std::cout << "\t\t\tverticies: " << mesh->mNumVertices << '\n';
 		for (unsigned int i = 0; i < mesh->mNumVertices; i++)
 		{
 			geometry.verts.push_back(glm::vec3(mesh->mVertices[i].x, mesh->mVertices[i].y, mesh->mVertices[i].z));
 			geometry.norms.push_back(glm::vec3(mesh->mNormals[i].x, mesh->mNormals[i].y, mesh->mNormals[i].z));
 			if (mesh->mTextureCoords[0]) // does the mesh contain texture coordinates?
 				geometry.texs.push_back(glm::vec2(mesh->mTextureCoords[0][i].x, mesh->mTextureCoords[0][i].y));
+			else
+				geometry.texs.push_back(glm::vec2(0));
 		}
 		// process indices
-		std::cout << "\t\t\tfaces: " << mesh->mNumFaces << '\n';
 		for (unsigned int i = 0; i < mesh->mNumFaces; i++)
 		{
 			aiFace face = mesh->mFaces[i];
@@ -527,8 +525,7 @@ void GraphicsSystem::processNode(aiNode* node, const aiScene* scene, RenderModel
 			geometry.indicies.push_back(face.mIndices[1]);
 			geometry.indicies.push_back(face.mIndices[2]);
 		}
-		std::cout << "\t\t\tindicies: " << geometry.indicies.size() << '\n';
-		std::cout << "\tfinished processing node\n";
+		
 		int ID = _component.attachMesh(geometry);
 		// process material
 		//SAM TODO. Quite frankly this breaks my mind rn with the fact a material can have MULTIPLE textures SOMEHOW
@@ -544,7 +541,6 @@ void GraphicsSystem::processNode(aiNode* node, const aiScene* scene, RenderModel
 				//get the textures name(?)
 				aiString str;
 				material->GetTexture(aiTextureType_DIFFUSE, 0, &str);
-				std::cout << "\tMaterial has a texture " << str.C_Str() << '\n';
 				std::string temp = std::string(str.C_Str());
 				std::string temp2;
 				for (int i = temp.size()-1; i >= 0; i--) {
@@ -575,7 +571,6 @@ void GraphicsSystem::processNode(aiNode* node, const aiScene* scene, RenderModel
 * importing an object geometry only
 */
 void GraphicsSystem::importOBJ(CPU_Geometry& _geometry, const std::string _fileName) {
-	std::cout << "Beginning to load model " << _fileName << "\n";
 	Assimp::Importer importer;
 	const aiScene* scene = importer.ReadFile("models/" + _fileName, aiProcess_Triangulate);
 	if (!scene || scene->mFlags & AI_SCENE_FLAGS_INCOMPLETE || !scene->mRootNode)

@@ -132,7 +132,7 @@ int main(int argc, char* argv[]) {
 	mainScene.AddComponent(car_e.guid, Car{});
 	Car& testCar = mainScene.GetComponent<Car>(car_e.guid);
 	testCar.physicsSystem = &physicsSystem;
-	if (!testCar.initVehicle(PxVec3(0.000000000f, -0.0500000119f, -1.59399998f)))
+	if (!testCar.initVehicle(PxVec3(35.000000000f, -0.0500000119f, -1.59399998f)))
 	{
 		std::cout << "ERROR: could not initialize vehicle";
 	}
@@ -156,7 +156,6 @@ int main(int argc, char* argv[]) {
 	mainScene.AddComponent(aiDriver_e.guid, aiDriver_r);
 	TransformComponent aiDriver_t = TransformComponent(aiCar.getVehicleRigidBody());
 	aiDriver_t.setPosition(glm::vec3(0, 0, 1));
-	//car_t.setRotation(glm::quat(0, 0, 0, 1));
 	aiDriver_t.setScale(glm::vec3(3.2f, 3.2f, 3.2f));
 	mainScene.AddComponent(aiDriver_e.guid, aiDriver_t);
 	CPU_Geometry testline = CPU_Geometry();
@@ -171,7 +170,7 @@ int main(int argc, char* argv[]) {
 	ecs::Entity aiDirRenderer = mainScene.CreateEntity();
 	mainScene.AddComponent(aiDirRenderer.guid, aiVehicleDirection);
 	mainScene.AddComponent(aiDirRenderer.guid, TransformComponent{});
-	mainScene.AddComponent(aiDriver_e.guid, PathfindingComponent{car_e.guid});
+	//mainScene.AddComponent(aiDriver_e.guid, PathfindingComponent{car_e.guid});
 
 	// Car Entity
 	RenderModel car_r = RenderModel();
@@ -180,7 +179,6 @@ int main(int argc, char* argv[]) {
 	mainScene.AddComponent(car_e.guid, car_r);
 	TransformComponent car_t = TransformComponent(testCar.getVehicleRigidBody());
 	car_t.setPosition(glm::vec3(0, 0, 0.5f));
-	//car_t.setRotation(glm::quat(0, 0, 0, 0));
 	car_t.setScale(glm::vec3(3.2f, 3.2f, 3.2f));
 	mainScene.AddComponent(car_e.guid, car_t);
 	
@@ -189,7 +187,6 @@ int main(int argc, char* argv[]) {
 	GraphicsSystem::importOBJ(sphere_r, "sphere.obj");
 	sphere_r.setModelColor(glm::vec3(0.5f, 0.0f, 0.5f));
 	mainScene.AddComponent(sphere_e.guid, sphere_r);
-	//TransformComponent sphere_t = TransformComponent();
 	TransformComponent sphere_t = TransformComponent(testCar.getVehicleRigidBody());
 	sphere_t.setScale(glm::vec3(0.5f, 0.5f, 0.5f));
 	mainScene.AddComponent(sphere_e.guid, sphere_t);
@@ -227,8 +224,6 @@ int main(int argc, char* argv[]) {
 	// actual level mesh & collider for it
 	CPU_Geometry levelCollider_raw = CPU_Geometry();
 	GraphicsSystem::importOBJ(levelCollider_raw, "STADIUM_COLLIDER.obj");
-	std::cout << "HEEEEEEEEEEEE " << levelCollider_raw.verts.size() << '\n';
-	//GraphicsSystem::importOBJ(levelCollider_raw, "STADIUM_COLLIDER.obj"); //the collider importer does not like this rn
 	for (auto& e : levelCollider_raw.verts)
 		e *= 3;
 	LevelCollider levelCollider{ levelCollider_raw, physicsSystem};

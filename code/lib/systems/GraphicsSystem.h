@@ -31,6 +31,7 @@ public:
 	static void importOBJ(CPU_Geometry& _geometry, const std::string _fileName);
 	static void importOBJ(RenderModel& _component, const std::string _fileName);
 private:
+
 	Camera cameras[4];
 	//uniforms
 	int numCamerasActive = 1;
