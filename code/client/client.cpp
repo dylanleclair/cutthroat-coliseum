@@ -232,7 +232,7 @@ int main(int argc, char* argv[]) {
 
 	RenderModel level_r = RenderModel();
 	//GraphicsSystem::importOBJ(level_r, "Stadium.obj");
-	GraphicsSystem::importOBJ(level_r, "Stadium_MINIMAL.obj"); //for faster loading times
+	GraphicsSystem::importOBJ(level_r, "Stadium_MAXIMAL.obj"); //for faster loading times
 	mainScene.AddComponent(level_e.guid, level_r);
 	mainScene.AddComponent(level_e.guid, level_t);
 
