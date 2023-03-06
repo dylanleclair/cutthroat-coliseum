@@ -1,20 +1,241 @@
 #include "Obstacles.h"
 
 void addRigidBody(physics::PhysicsSystem physicsSystem) {
+	//PxBoxGeometry boxGeom(PxVec3(15.0f, 2.0f, 1.0f));
+
+	//// create a rigid body with the box geometry
+	//PxTransform transform(PxVec3(56.0f, 0.0f, 0.0f));
+	//PxRigidDynamic* actor = PxCreateDynamic(
+	//	*physicsSystem.m_Physics,
+	//	transform,
+	//	boxGeom,
+	//	*physicsSystem.m_Material,
+	//	100000.0f // This is the density value
+	//);
+
+	//// add the actor to the scene
+	//physicsSystem.m_Scene->addActor(*actor);
+
+	//PxBoxGeometry boxGeom2(PxVec3(15.0f, 2.0f, 1.0f));
+
+	//// create a rigid body with the box geometry
+	//PxTransform transform2(PxVec3(12.0f, 0.0f, 0.0f));
+	//PxRigidDynamic* actor2 = PxCreateDynamic(
+	//	*physicsSystem.m_Physics,
+	//	transform2,
+	//	boxGeom2,
+	//	*physicsSystem.m_Material,
+	//	100000.0f // This is the density value
+	//);
+
+	//// add the actor to the scene
+	//physicsSystem.m_Scene->addActor(*actor2);
+
+
+	// I'm having to do this multiple times with each a new instance
+	//of the PxBoxGeometry and so on or else it will cause a memory address
+	// Unable to be read issue
+
 	PxBoxGeometry boxGeom(PxVec3(15.0f, 2.0f, 1.0f));
 
 	// create a rigid body with the box geometry
 	PxTransform transform(PxVec3(56.0f, 0.0f, 0.0f));
-	PxRigidDynamic* actor = PxCreateDynamic(
+	PxRigidStatic* actor = PxCreateStatic(
 		*physicsSystem.m_Physics,
 		transform,
 		boxGeom,
-		*physicsSystem.m_Material,
-		100000.0f // This is the density value
+		*physicsSystem.m_Material
 	);
 
 	// add the actor to the scene
 	physicsSystem.m_Scene->addActor(*actor);
+
+
+	PxBoxGeometry boxGeom2(PxVec3(15.0f, 2.0f, 1.0f));
+
+	// create a rigid body with the box geometry
+	PxTransform transform2(PxVec3(12.0f, 0.0f, 0.0f));
+	PxRigidStatic* actor2 = PxCreateStatic(
+		*physicsSystem.m_Physics,
+		transform2,
+		boxGeom2,
+		*physicsSystem.m_Material
+	);
+
+	// add the actor to the scene
+	physicsSystem.m_Scene->addActor(*actor2);
+
+	PxBoxGeometry boxGeom3(PxVec3(15.0f, 2.0f, 1.0f));
+
+	// create a rigid body with the box geometry
+	PxTransform transform3(PxVec3(35.0f, 0.0f, 60.0f));
+	PxRigidStatic* actor3 = PxCreateStatic(
+		*physicsSystem.m_Physics,
+		transform3,
+		boxGeom3,
+		*physicsSystem.m_Material
+	);
+
+	// add the actor to the scene
+	physicsSystem.m_Scene->addActor(*actor3);
+
+
+	PxBoxGeometry boxGeom4(PxVec3(15.0f, 2.0f, 1.0f));
+
+	// create a rigid body with the box geometry
+	PxTransform transform4(PxVec3(25.0f, 0.0f, 120.0f));
+	PxRigidStatic* actor4 = PxCreateStatic(
+		*physicsSystem.m_Physics,
+		transform4,
+		boxGeom4,
+		*physicsSystem.m_Material
+	);
+
+	// add the actor to the scene
+	physicsSystem.m_Scene->addActor(*actor4);
+
+
+	PxBoxGeometry boxGeom5(PxVec3(15.0f, 2.0f, 1.0f));
+
+	// create a rigid body with the box geometry
+	PxTransform transform5(PxVec3(45.0f, 0.0f, 160.0f));
+	PxRigidStatic* actor5 = PxCreateStatic(
+		*physicsSystem.m_Physics,
+		transform5,
+		boxGeom5,
+		*physicsSystem.m_Material
+	);
+
+	// add the actor to the scene
+	physicsSystem.m_Scene->addActor(*actor5);
+
+
+	PxBoxGeometry boxGeom6(PxVec3(15.0f, 2.0f, 1.0f));
+
+	// create a rigid body with the box geometry
+	PxTransform transform6(PxVec3(35.0f, 0.0f, -60.0f));
+	PxRigidStatic* actor6 = PxCreateStatic(
+		*physicsSystem.m_Physics,
+		transform6,
+		boxGeom6,
+		*physicsSystem.m_Material
+	);
+
+	// add the actor to the scene
+	physicsSystem.m_Scene->addActor(*actor6);
+
+	PxBoxGeometry boxGeom7(PxVec3(15.0f, 2.0f, 1.0f));
+
+	// create a rigid body with the box geometry
+	PxTransform transform7(PxVec3(25.0f, 0.0f, -120.0f));
+	PxRigidStatic* actor7 = PxCreateStatic(
+		*physicsSystem.m_Physics,
+		transform7,
+		boxGeom7,
+		*physicsSystem.m_Material
+	);
+
+	// add the actor to the scene
+	physicsSystem.m_Scene->addActor(*actor7);
+
+	PxBoxGeometry boxGeom8(PxVec3(15.0f, 2.0f, 1.0f));
+
+	// create a rigid body with the box geometry
+	PxTransform transform8(PxVec3(45.0f, 0.0f, -160.0f));
+	PxRigidStatic* actor8 = PxCreateStatic(
+		*physicsSystem.m_Physics,
+		transform8,
+		boxGeom8,
+		*physicsSystem.m_Material
+	);
+
+	// add the actor to the scene
+	physicsSystem.m_Scene->addActor(*actor8);
+
+
+	PxBoxGeometry boxGeom9(PxVec3(15.0f, 2.0f, 1.0f));
+
+	// create a rigid body with the box geometry
+	PxTransform transform9(PxVec3(-35.0f, 0.0f, -60.0f));
+	PxRigidStatic* actor9 = PxCreateStatic(
+		*physicsSystem.m_Physics,
+		transform9,
+		boxGeom9,
+		*physicsSystem.m_Material
+	);
+
+	// add the actor to the scene
+	physicsSystem.m_Scene->addActor(*actor9);
+
+	PxBoxGeometry boxGeom10(PxVec3(15.0f, 2.0f, 1.0f));
+
+	// create a rigid body with the box geometry
+	PxTransform transform10(PxVec3(-25.0f, 0.0f, -120.0f));
+	PxRigidStatic* actor10 = PxCreateStatic(
+		*physicsSystem.m_Physics,
+		transform10,
+		boxGeom10,
+		*physicsSystem.m_Material
+	);
+
+	// add the actor to the scene
+	physicsSystem.m_Scene->addActor(*actor10);
+
+	PxBoxGeometry boxGeom11(PxVec3(15.0f, 2.0f, 1.0f));
+
+	// create a rigid body with the box geometry
+	PxTransform transform11(PxVec3(-45.0f, 0.0f, -160.0f));
+	PxRigidStatic* actor11 = PxCreateStatic(
+		*physicsSystem.m_Physics,
+		transform11,
+		boxGeom11,
+		*physicsSystem.m_Material
+	);
+
+	// add the actor to the scene
+	physicsSystem.m_Scene->addActor(*actor11);
+
+	PxBoxGeometry boxGeom12(PxVec3(15.0f, 2.0f, 1.0f));
+
+	// create a rigid body with the box geometry
+	PxTransform transform12(PxVec3(-35.0f, 0.0f, 60.0f));
+	PxRigidStatic* actor12 = PxCreateStatic(
+		*physicsSystem.m_Physics,
+		transform12,
+		boxGeom12,
+		*physicsSystem.m_Material
+	);
+
+	// add the actor to the scene
+	physicsSystem.m_Scene->addActor(*actor12);
+
+	PxBoxGeometry boxGeom13(PxVec3(15.0f, 2.0f, 1.0f));
+
+	// create a rigid body with the box geometry
+	PxTransform transform13(PxVec3(-25.0f, 0.0f, 120.0f));
+	PxRigidStatic* actor13 = PxCreateStatic(
+		*physicsSystem.m_Physics,
+		transform13,
+		boxGeom13,
+		*physicsSystem.m_Material
+	);
+
+	// add the actor to the scene
+	physicsSystem.m_Scene->addActor(*actor13);
+
+	PxBoxGeometry boxGeom14(PxVec3(15.0f, 2.0f, 1.0f));
+
+	// create a rigid body with the box geometry
+	PxTransform transform14(PxVec3(-45.0f, 0.0f, 160.0f));
+	PxRigidStatic* actor14 = PxCreateStatic(
+		*physicsSystem.m_Physics,
+		transform14,
+		boxGeom14,
+		*physicsSystem.m_Material
+	);
+
+	// add the actor to the scene
+	physicsSystem.m_Scene->addActor(*actor14);
 }
 
 void setUpLogs(ecs::Scene &mainScene) {
