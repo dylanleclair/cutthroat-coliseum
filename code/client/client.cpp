@@ -330,7 +330,9 @@ int main(int argc, char* argv[]) {
 					case SDLK_r:
 						//TODO recompile the shader
 						// Rudementary car reset (will keep using the velocity and rotation of the car through the rest)
-						testCar.m_Vehicle.mPhysXState.physxActor.rigidBody->setGlobalPose(PxTransform(0.f, 0.f, 0.f));
+						testCar.m_Vehicle.mPhysXState.physxActor.rigidBody->setGlobalPose(PxTransform(35.f, 0.f, 0.f));
+						testCar.m_Vehicle.mPhysXState.physxActor.rigidBody->clearForce();
+						testCar.m_Vehicle.mPhysXState.physxActor.rigidBody->clearTorque();
 						break;
 						
 					// TODO: change the file that is serializes (Want to do base.json and enginedrive.json)
@@ -443,8 +445,8 @@ int main(int argc, char* argv[]) {
 		}
 
 		// Finish line code
-		if (car_trans.getTranslation().x >= -1.5f && car_trans.getTranslation().x <= 4.8f &&
-			car_trans.getTranslation().z >= -3.0f && car_trans.getTranslation().z <= -0.6f)
+		if (car_trans.getTranslation().x >= 28.f && car_trans.getTranslation().x <= 40.f &&
+			car_trans.getTranslation().z >= -2.f && car_trans.getTranslation().z <= 0.f)
 		{
 			if (isFinished == false) {
 				isFinished = true;
@@ -515,7 +517,7 @@ int main(int argc, char* argv[]) {
 		ImGui::Text("left stick horizontal tilt: %f", carAxis);
 		//ImGui::Text("Car Throttle: %f", controller_throttle);
 		//ImGui::Text("Car Brake: %f", controller_brake);
-
+		ImGui::Text("Car Location: %f, %f", car_trans.getTranslation().x, car_trans.getTranslation().z);
 		ImGui::Text("Current Gear: %d", testCar.m_Vehicle.mEngineDriveState.gearboxState.currentGear);
 		ImGui::Text("Current engine rotational speed: %f", testCar.m_Vehicle.mEngineDriveState.engineState.rotationSpeed);
 		ImGui::Text("Center of Gravity: %f, %f, %f", testCar.m_Vehicle.mPhysXParams.physxActorCMassLocalPose.p.x, 
