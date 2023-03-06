@@ -54,7 +54,7 @@ private:
 
 	float depthDiffWeight = 1;
 	float normalDiffWeight = 1;
-	glm::vec3 lightDirection = glm::vec3(1, -3, 7);
+	glm::vec3 lightDirection = glm::vec3(1, -3, 1);
 	float ambiantStrength = 1;
 	float diffuseWeight = 0.3;
 	int numQuantizedSplits = 10; //CAN'T BE 1!!!
