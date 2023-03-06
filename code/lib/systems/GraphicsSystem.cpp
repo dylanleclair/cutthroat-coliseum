@@ -30,7 +30,7 @@ GraphicsSystem::GraphicsSystem(Window& _window) :
 {
 	windowSize = _window.getSize();
 	follow_cam_x = 0.f;
-	follow_cam_y = 6.f;
+	follow_cam_y = 4.f;
 	follow_cam_z = -10.f;
 	follow_correction_strength = 40.f;
 	faceCulling = true;
