@@ -599,7 +599,7 @@ int main(int argc, char* argv[]) {
 		static int counter = 0;
 		const float delayInSeconds = 0.5;
 		static bool display = true;
-		if (lapCount >= 0) {
+		if (lapCount >= 3) {
 			counter += timestep.getMilliseconds();
 			if (counter >= delayInSeconds * 1000) {
 				counter = 0;
