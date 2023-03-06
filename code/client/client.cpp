@@ -320,6 +320,7 @@ int main(int argc, char* argv[]) {
 	baseVariablesInit(testCar.m_Vehicle);
 	engineVariablesInit(testCar.m_Vehicle);
 
+
 	// GAME LOOP
 	while (!quit) {
 		Timestep timestep; // Time since last frame
@@ -594,11 +595,11 @@ int main(int argc, char* argv[]) {
 			ImGuiWindowFlags_NoTitleBar;			// no title; only the text should be visible
 
 		//Lap counter
-		ImGui::SetNextWindowPos(ImVec2(800, 10));
+		ImGui::SetNextWindowPos(ImVec2(10, 10));
 		ImGui::Begin("UI", (bool*)0, textWindowFlags);
-		ImGui::SetWindowFontScale(5.f);
+		ImGui::SetWindowFontScale(2.f);
 		ImGui::PushFont(CabalBold);
-		ImGui::TextColored(ImVec4(0.0f, 0.0f, 0.0f, 1.0f), "%d/3", lapCount);
+		ImGui::TextColored(ImVec4(1.0f, 1.0f, 1.0f, 1.0f), "Lap: %d/3", lapCount);
 		ImGui::PopFont();
 		ImGui::End();
 
@@ -613,11 +614,11 @@ int main(int argc, char* argv[]) {
 				display = !display;
 			}
 			if (display) {
-				ImGui::SetNextWindowPos(ImVec2(150, 200));
+				ImGui::SetNextWindowPos(ImVec2(200, 200));
 				ImGui::Begin("UI2", (bool*)0, textWindowFlags);
-				ImGui::SetWindowFontScale(7.f);
+				ImGui::SetWindowFontScale(5.f);
 				ImGui::PushFont(CabalBold);
-				ImGui::TextColored(ImVec4(0.0f, 0.0f, 0.0f, 1.0f), "VICTORY");
+				ImGui::TextColored(ImVec4(1.0f, 1.0f, 1.0f, 1.0f), "VICTORY");
 				ImGui::PopFont();
 				ImGui::End();
 			}
