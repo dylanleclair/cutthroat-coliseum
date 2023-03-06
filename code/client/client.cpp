@@ -37,6 +37,8 @@
 
 #include "physics/LevelCollider.h"
 
+#include "systems/SoundSystem.h"
+
 glm::vec3 calculateSpherePoint(float s, float t)
 {
 	float z = cos(2 * M_PI * t) * sin(M_PI * s);
@@ -79,6 +81,8 @@ int main(int argc, char* argv[]) {
 	printf("Starting main");
 
 
+
+	init_sound_system();
 
 
 	SDL_Init(SDL_INIT_EVERYTHING); // initialize all sdl systems
@@ -315,6 +319,8 @@ int main(int argc, char* argv[]) {
 	engineVariablesInit(testCar.m_Vehicle);
 
 
+	bool playSounds = true;
+
 	// GAME LOOP
 	while (!quit) {
 		Timestep timestep; // Time since last frame
@@ -357,7 +363,7 @@ int main(int argc, char* argv[]) {
 						testCar.m_Vehicle.mPhysXState.physxActor.rigidBody->clearTorque();
 						lapCount = 1;
 						aiCarInstance.m_lapCount = 1;
-						
+						aiCarInstance.m_Vehicle.mPhysXState.physxActor.rigidBody->setGlobalPose(PxTransform(10.f, 2.f, 10.f));
 						break;
 						
 					// TODO: change the file that is serializes (Want to do base.json and enginedrive.json)
@@ -435,6 +441,10 @@ int main(int argc, char* argv[]) {
 				case SDLK_ESCAPE:	// (Pressing escape closes the window, useful for fullscreen);
 					quit = true;
 					break;
+				case SDLK_5: {
+					playSounds = !playSounds;
+					break;
+				}
 				default:
 					break;
 				};
@@ -493,6 +503,7 @@ int main(int argc, char* argv[]) {
 		aiSystem.Update(mainScene, 0.f);
 		physicsSystem.Update(mainScene,timestep);
 
+		update_sounds(testCar, aiCarInstance, playSounds);
 
 		// END__ ECS SYSTEMS UPDATES
 
