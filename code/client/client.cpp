@@ -37,6 +37,8 @@
 
 #include "physics/LevelCollider.h"
 
+#include "systems/SoundSystem.h"
+
 glm::vec3 calculateSpherePoint(float s, float t)
 {
 	float z = cos(2 * M_PI * t) * sin(M_PI * s);
@@ -79,6 +81,8 @@ int main(int argc, char* argv[]) {
 	printf("Starting main");
 
 
+
+	init_sound_system();
 
 
 	SDL_Init(SDL_INIT_EVERYTHING); // initialize all sdl systems
@@ -493,6 +497,7 @@ int main(int argc, char* argv[]) {
 		aiSystem.Update(mainScene, 0.f);
 		physicsSystem.Update(mainScene,timestep);
 
+		update_sounds(testCar, aiCarInstance);
 
 		// END__ ECS SYSTEMS UPDATES
 
