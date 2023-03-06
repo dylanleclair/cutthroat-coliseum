@@ -148,8 +148,28 @@ int main(int argc, char* argv[]) {
 
 	NavPath circlePath = generateCirclePath(30);
 
+	CPU_Geometry aiPathGeom;
+	// import the obj for the path
+	GraphicsSystem::importOBJ(aiPathGeom, "ai_path.obj");
+	// transform verts same way level will be???
+
+
+	auto scaling =  glm::scale(glm::mat4{1.f},glm::vec3(3.2f, 3.2f, 3.2f));
+	for (auto& vert : aiPathGeom.verts)
+	{
+			vert = scaling * glm::vec4{vert,1.f}; 
+	}
+
+	NavPath aiPath{aiPathGeom.verts};
+
+	ecs::Entity navRenderer_e = mainScene.CreateEntity();
+	mainScene.AddComponent(navRenderer_e.guid,TransformComponent{});
+	auto navPathRender = RenderLine{aiPathGeom};
+	navPathRender.setColor(glm::vec3{1.0f,0.f,1.0f});
+	mainScene.AddComponent(navRenderer_e.guid,navPathRender);
+
 	// only spawn one for now!! consider this ur final warning.
-	spawnAIEntity(mainScene,&physicsSystem, car_e.guid,{10.f, 10.f,10.f}, &circlePath);
+	spawnAIEntity(mainScene,&physicsSystem, car_e.guid,{10.f, 10.f,10.f}, &aiPath);
 	// spawnAIEntity(mainScene,&physicsSystem, car_e.guid,{0.f, 0.f,5.f}, &circlePath);
 	
 
