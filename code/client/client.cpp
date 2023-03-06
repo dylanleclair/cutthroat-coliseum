@@ -45,6 +45,8 @@ glm::vec3 calculateSpherePoint(float s, float t)
 CarPhysics carPhysics;
 CarPhysicsSerde carConfig(carPhysics);
 
+bool showImgui = true;
+
 int lapCount = 0;
 bool isFinished = false;
 
@@ -355,7 +357,13 @@ int main(int argc, char* argv[]) {
 					case SDLK_3:
 						controlledCamera = 3;
 						break;
-					case SDLK_w:
+					case SDLK_p:
+						if (!showImgui) {
+							showImgui = true;
+						}
+						else if (showImgui) {
+							showImgui = false;
+						}
 						break;
 					case SDLK_SPACE:
 						testCar.TetherJump();
@@ -467,106 +475,108 @@ int main(int argc, char* argv[]) {
 
 		glDisable(GL_FRAMEBUFFER_SRGB); // disable sRGB for things like imgui
 
-		ImGui_ImplOpenGL3_NewFrame();
-		ImGui_ImplSDL2_NewFrame();
-		ImGui::NewFrame();
+		if (showImgui) {
+			ImGui_ImplOpenGL3_NewFrame();
+			ImGui_ImplSDL2_NewFrame();
+			ImGui::NewFrame();
 
-		// BEGIN FRAMERATE COUNTER
-		framerate.update(timestep);
-		ImGui::SetNextWindowSize(ImVec2(500, 100)); 
-		ImGui::Begin("Milestone 3");
-		ImGui::Text("framerate: %d", (int) framerate.framerate());
-        ImGui::PlotLines("Frametime plot (ms)", framerate.m_time_queue_ms.data(), framerate.m_time_queue_ms.size());
-        ImGui::PlotLines("Framerate plot (hz)", framerate.m_rate_queue.data(), framerate.m_rate_queue.size());
-		// TODO(milestone 1): display physx value as proof that physx is initialized
-		ImGui::End();
-		// END FRAMERATE COUNTER
+			// BEGIN FRAMERATE COUNTER
+			framerate.update(timestep);
+			ImGui::SetNextWindowSize(ImVec2(500, 100));
+			ImGui::Begin("Milestone 3");
+			ImGui::Text("framerate: %d", (int)framerate.framerate());
+			ImGui::PlotLines("Frametime plot (ms)", framerate.m_time_queue_ms.data(), framerate.m_time_queue_ms.size());
+			ImGui::PlotLines("Framerate plot (hz)", framerate.m_rate_queue.data(), framerate.m_rate_queue.size());
+			// TODO(milestone 1): display physx value as proof that physx is initialized
+			ImGui::End();
+			// END FRAMERATE COUNTER
 
-		// PHYSX DRIVER UPDATE
-		// TODO(milestone 1): strip all non-milestone related imgui windows out
-		// BEGIN CAR PHYSICS PANEL
-		// ImGui::Begin("Car Physics", nullptr);
-		// ImGui::SliderFloat("acceleration", &carPhysics.m_acceleration, 0.f, 1000.f);
-		// ImGui::SliderFloat("suspension", &carPhysics.m_suspension_force, 0.f, 1000.f);
-		// if (ImGui::Button("Serialize")) carConfig.serialize();
-		// ImGui::End();
-
-
-		// BEGIN A BUTTON THING
-		/*bool cbutton = false;
-		cbutton = SDL_GameControllerGetButton(controller, SDL_CONTROLLER_BUTTON_A);
-		ImGui::Begin("Buttons", nullptr);
-		ImGui::Checkbox("a button", &cbutton);
-		ImGui::End();*/
-		// END A BUTTON THING
-
-		// BEGIN JOYSTICK THING
-		//float axis = 0;
-		//axis = SDL_GameControllerGetAxis(controller, SDL_CONTROLLER_AXIS_TRIGGERRIGHT);
-		//ImGui::Begin("Axes aka Joysticks and triggers");
-		//ImGui::Text("Right trigger: %hd", axis);
-		//ImGui::End();
-		// END JOYSTICK THING
-
-		// HACK(beau): pull these out of CarSample.cpp
-		extern float controller_throttle;
-		extern float controller_brake;
-		extern float carAxis;
-		extern float carAxisScale;
-		ImGui::Begin("Car commands tuner", nullptr);
-		ImGui::Text("left stick horizontal tilt: %f", carAxis);
-		//ImGui::Text("Car Throttle: %f", controller_throttle);
-		//ImGui::Text("Car Brake: %f", controller_brake);
-		ImGui::Text("Car Location: %f, %f", car_trans.getTranslation().x, car_trans.getTranslation().z);
-		ImGui::Text("Current Gear: %d", testCar.m_Vehicle.mEngineDriveState.gearboxState.currentGear);
-		ImGui::Text("Current engine rotational speed: %f", testCar.m_Vehicle.mEngineDriveState.engineState.rotationSpeed);
-		ImGui::Text("Center of Gravity: %f, %f, %f", testCar.m_Vehicle.mPhysXParams.physxActorCMassLocalPose.p.x, 
-													testCar.m_Vehicle.mPhysXParams.physxActorCMassLocalPose.p.y, 
-													testCar.m_Vehicle.mPhysXParams.physxActorCMassLocalPose.p.z);
-		ImGui::Text("Suspension force x: %f", testCar.m_Vehicle.mBaseState.suspensionForces->force.x);
-		ImGui::Text("Suspension force y: %f", testCar.m_Vehicle.mBaseState.suspensionForces->force.y);
-		ImGui::Text("Suspension force z: %f", testCar.m_Vehicle.mBaseState.suspensionForces->force.z);
-		ImGui::Text("On the ground ?: %s", testCar.m_Vehicle.mBaseState.roadGeomStates->hitState ? "true" : "false");
-		ImGui::Text("Laps: %d", lapCount);
-		ImGui::End();
-		// END CAR PHYSICS PANEL
-
-		// NOTE: the imgui bible - beau
-		//ImGui::ShowDemoWindow();
-		/*
-		* Render the UI. I am doing this here for now but I might move it.
-		*/
-		//render the UI
-		// Setting flags
-		ImGuiWindowFlags textWindowFlags =
-			ImGuiWindowFlags_NoBringToFrontOnFocus |
-			ImGuiWindowFlags_NoMove |				// text "window" should not move
-			ImGuiWindowFlags_NoResize |				// should not resize
-			ImGuiWindowFlags_NoCollapse |			// should not collapse
-			ImGuiWindowFlags_NoSavedSettings |		// don't want saved settings mucking things up
-			ImGuiWindowFlags_AlwaysAutoResize |		// window should auto-resize to fit the text
-			ImGuiWindowFlags_NoBackground |			// window should be transparent; only the text should be visible
-			ImGuiWindowFlags_NoDecoration |			// no decoration; only the text should be visible
-			ImGuiWindowFlags_NoTitleBar;			// no title; only the text should be visible
-		ImGui::Begin("UI", (bool*)0, textWindowFlags);
-		//ImGui::SetWindowFontScale(24.f);
-		ImGui::PushFont(niceFont);
-		ImGui::Text("FUCK");
-		ImGui::PopFont();
-		ImGui::End();
-
-		// Graphics imgui panel for graphics tuneables
-		gs.ImGuiPanel();
-	
-		//ImGui Panels for tuning
-		//reloadVehicleJSON();
-		vehicleTuning(testCar.m_Vehicle);
-		engineTuning(testCar.m_Vehicle);
+			// PHYSX DRIVER UPDATE
+			// TODO(milestone 1): strip all non-milestone related imgui windows out
+			// BEGIN CAR PHYSICS PANEL
+			// ImGui::Begin("Car Physics", nullptr);
+			// ImGui::SliderFloat("acceleration", &carPhysics.m_acceleration, 0.f, 1000.f);
+			// ImGui::SliderFloat("suspension", &carPhysics.m_suspension_force, 0.f, 1000.f);
+			// if (ImGui::Button("Serialize")) carConfig.serialize();
+			// ImGui::End();
 
 
-		ImGui::Render();
-		glViewport(0, 0, (int)io.DisplaySize.x, (int)io.DisplaySize.y);
-		ImGui_ImplOpenGL3_RenderDrawData(ImGui::GetDrawData());
+			// BEGIN A BUTTON THING
+			/*bool cbutton = false;
+			cbutton = SDL_GameControllerGetButton(controller, SDL_CONTROLLER_BUTTON_A);
+			ImGui::Begin("Buttons", nullptr);
+			ImGui::Checkbox("a button", &cbutton);
+			ImGui::End();*/
+			// END A BUTTON THING
+
+			// BEGIN JOYSTICK THING
+			//float axis = 0;
+			//axis = SDL_GameControllerGetAxis(controller, SDL_CONTROLLER_AXIS_TRIGGERRIGHT);
+			//ImGui::Begin("Axes aka Joysticks and triggers");
+			//ImGui::Text("Right trigger: %hd", axis);
+			//ImGui::End();
+			// END JOYSTICK THING
+
+			// HACK(beau): pull these out of CarSample.cpp
+			extern float controller_throttle;
+			extern float controller_brake;
+			extern float carAxis;
+			extern float carAxisScale;
+			ImGui::Begin("Car commands tuner", nullptr);
+			ImGui::Text("left stick horizontal tilt: %f", carAxis);
+			//ImGui::Text("Car Throttle: %f", controller_throttle);
+			//ImGui::Text("Car Brake: %f", controller_brake);
+			ImGui::Text("Car Location: %f, %f", car_trans.getTranslation().x, car_trans.getTranslation().z);
+			ImGui::Text("Current Gear: %d", testCar.m_Vehicle.mEngineDriveState.gearboxState.currentGear);
+			ImGui::Text("Current engine rotational speed: %f", testCar.m_Vehicle.mEngineDriveState.engineState.rotationSpeed);
+			ImGui::Text("Center of Gravity: %f, %f, %f", testCar.m_Vehicle.mPhysXParams.physxActorCMassLocalPose.p.x,
+				testCar.m_Vehicle.mPhysXParams.physxActorCMassLocalPose.p.y,
+				testCar.m_Vehicle.mPhysXParams.physxActorCMassLocalPose.p.z);
+			ImGui::Text("Suspension force x: %f", testCar.m_Vehicle.mBaseState.suspensionForces->force.x);
+			ImGui::Text("Suspension force y: %f", testCar.m_Vehicle.mBaseState.suspensionForces->force.y);
+			ImGui::Text("Suspension force z: %f", testCar.m_Vehicle.mBaseState.suspensionForces->force.z);
+			ImGui::Text("On the ground ?: %s", testCar.m_Vehicle.mBaseState.roadGeomStates->hitState ? "true" : "false");
+			ImGui::Text("Laps: %d", lapCount);
+			ImGui::End();
+			// END CAR PHYSICS PANEL
+
+			// NOTE: the imgui bible - beau
+			//ImGui::ShowDemoWindow();
+			/*
+			* Render the UI. I am doing this here for now but I might move it.
+			*/
+			//render the UI
+			// Setting flags
+			ImGuiWindowFlags textWindowFlags =
+				ImGuiWindowFlags_NoBringToFrontOnFocus |
+				ImGuiWindowFlags_NoMove |				// text "window" should not move
+				ImGuiWindowFlags_NoResize |				// should not resize
+				ImGuiWindowFlags_NoCollapse |			// should not collapse
+				ImGuiWindowFlags_NoSavedSettings |		// don't want saved settings mucking things up
+				ImGuiWindowFlags_AlwaysAutoResize |		// window should auto-resize to fit the text
+				ImGuiWindowFlags_NoBackground |			// window should be transparent; only the text should be visible
+				ImGuiWindowFlags_NoDecoration |			// no decoration; only the text should be visible
+				ImGuiWindowFlags_NoTitleBar;			// no title; only the text should be visible
+			ImGui::Begin("UI", (bool*)0, textWindowFlags);
+			//ImGui::SetWindowFontScale(24.f);
+			ImGui::PushFont(niceFont);
+			ImGui::Text("FUCK");
+			ImGui::PopFont();
+			ImGui::End();
+
+			// Graphics imgui panel for graphics tuneables
+			gs.ImGuiPanel();
+
+			//ImGui Panels for tuning
+			//reloadVehicleJSON();
+			vehicleTuning(testCar.m_Vehicle);
+			engineTuning(testCar.m_Vehicle);
+
+
+			ImGui::Render();
+			glViewport(0, 0, (int)io.DisplaySize.x, (int)io.DisplaySize.y);
+			ImGui_ImplOpenGL3_RenderDrawData(ImGui::GetDrawData());
+		}
 
 		window.swapBuffers();
 	}
