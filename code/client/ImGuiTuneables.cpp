@@ -2,7 +2,7 @@
 #include <iostream>
 
 // Initializes variables
-void baseVariablesInit(EngineDriveVehicle m_Vehicle) {
+void baseVariablesInit(EngineDriveVehicle &m_Vehicle) {
 	all_wheels = true; // sets the boolean flag to affect all wheels
 
 	rigid_mass = m_Vehicle.mBaseParams.rigidBodyParams.mass;
@@ -56,7 +56,7 @@ void baseVariablesInit(EngineDriveVehicle m_Vehicle) {
 }
 
 // Initalizes variables for the engine drive model
-void engineVariablesInit(EngineDriveVehicle m_Vehicle) {
+void engineVariablesInit(EngineDriveVehicle &m_Vehicle) {
 	// Engine
 	eng_moi = m_Vehicle.mEngineDriveParams.engineParams.moi;
 	eng_torque = m_Vehicle.mEngineDriveParams.engineParams.peakTorque;
@@ -113,7 +113,7 @@ void dampeningRatioPrint(int i) {
 	}
 }
 
-void vehicleTuning(EngineDriveVehicle m_Vehicle) {
+void vehicleTuning(EngineDriveVehicle &m_Vehicle) {
 	ImGui::Begin("Vehicle Tuning");
 
 	// Rigid Body params
@@ -485,7 +485,7 @@ void vehicleTuning(EngineDriveVehicle m_Vehicle) {
 	ImGui::End();
 }
 
-void engineTuning(EngineDriveVehicle m_Vehicle) {
+void engineTuning(EngineDriveVehicle &m_Vehicle) {
 	ImGui::Begin("Engine Tuning");
 
 	if (ImGui::TreeNode("Engine Params:")) {
@@ -696,7 +696,7 @@ void engineTuning(EngineDriveVehicle m_Vehicle) {
 	ImGui::End();
 }
 
-void reloadVehicleJSON(EngineDriveVehicle m_Vehicle) {
+void reloadVehicleJSON(EngineDriveVehicle &m_Vehicle) {
 	ImGui::Begin("Vehicle Serialization");
 
 
