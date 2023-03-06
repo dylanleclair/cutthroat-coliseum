@@ -44,8 +44,6 @@ float euclideanBasic(glm::vec3 a, glm::vec3 b)
     return sqrt(dist);
 }
 
-
-
 Command AICar::pathfind(glm::vec3 currentPosition)
 {
 
@@ -93,6 +91,8 @@ Command AICar::pathfind(glm::vec3 currentPosition)
             command.steer = -1.0f;
         }
     }
+
+    checkFlipped(carPose);
 
     return command;
 }

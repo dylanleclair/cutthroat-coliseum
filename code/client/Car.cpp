@@ -1,5 +1,7 @@
 #include "Car.h"
 #include "Input.h"
+#include "glm/glm.hpp"
+#include "utils/PxConversionUtils.h"
 
 
 const char* gVehicleDataPath = "vehicledata";
@@ -190,4 +192,28 @@ void Car::Update(Guid carGuid, ecs::Scene& scene, float deltaTime)
   m_Vehicle.mComponentSequence.setSubsteps(m_Vehicle.mComponentSequenceSubstepGroupHandle, nbSubsteps);
   m_Vehicle.step(delta_seconds, m_VehicleSimulationContext);
 
+}
+
+
+void Car::checkFlipped(PxTransform carPose)
+{
+
+      // find the direction vector of the vehicle
+    glm::quat vehicleQuat = PxtoGLM(carPose.q);
+    glm::mat4 vehicleRotM = glm::toMat4(vehicleQuat);
+
+    glm::vec3 upDir = glm::vec3{0.f,1.f,0.f};
+    // add y components ???
+    glm::vec3 carNormal = glm::vec3{vehicleRotM * glm::vec4{upDir, 1.f}};
+    
+    // std::cout << "ai car y direction: " <<  carNormal.y << std::endl;
+
+    // TODO: incorporate a timer/ground check into this so that it's not wonky in midair?
+    if (carNormal.y < 0.f) // if car's up vector is negative, it's flipped.
+    {
+        // flip the car!!
+        carPose.q = PxQuat(physx::PxIDENTITY::PxIdentity);
+        // need to subtract y components
+        m_Vehicle.mPhysXState.physxActor.rigidBody->setGlobalPose(carPose);
+    }
 }
