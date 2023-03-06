@@ -319,6 +319,8 @@ int main(int argc, char* argv[]) {
 	engineVariablesInit(testCar.m_Vehicle);
 
 
+	bool playSounds = true;
+
 	// GAME LOOP
 	while (!quit) {
 		Timestep timestep; // Time since last frame
@@ -439,6 +441,10 @@ int main(int argc, char* argv[]) {
 				case SDLK_ESCAPE:	// (Pressing escape closes the window, useful for fullscreen);
 					quit = true;
 					break;
+				case SDLK_5: {
+					playSounds = !playSounds;
+					break;
+				}
 				default:
 					break;
 				};
@@ -497,7 +503,7 @@ int main(int argc, char* argv[]) {
 		aiSystem.Update(mainScene, 0.f);
 		physicsSystem.Update(mainScene,timestep);
 
-		update_sounds(testCar, aiCarInstance);
+		update_sounds(testCar, aiCarInstance, playSounds);
 
 		// END__ ECS SYSTEMS UPDATES
 

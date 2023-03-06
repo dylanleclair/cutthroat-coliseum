@@ -81,7 +81,7 @@ bool is_car_braking(const Car& car) {
 	return commands.brakes[0] > MIN_SOUND_THRESHHOLD;
 }
 
-void update_sounds(Car& player, AICar& opponent) {
+void update_sounds(Car& player, AICar& opponent, bool playSounds) {
 	// PLAYER: play engine sound if we're throttling and not already playing on the channel
 	bool isPlaying = false;
 	soundsystem.playerenginechannel->isPlaying(&isPlaying);
@@ -161,6 +161,15 @@ void update_sounds(Car& player, AICar& opponent) {
 		soundsystem.opponentcollisionchannel->set3DAttributes(&opponentposition, &opponentveloc);
 	}
 
+	if (!playSounds) {
+		soundsystem.playerbrakechannel->stop();
+		soundsystem.playerenginechannel->stop();
+		soundsystem.playercollisionchannel->stop();
+
+		soundsystem.opponentbrakechannel->stop();
+		soundsystem.opponentenginechannel->stop();
+		soundsystem.opponentcollisionchannel->stop();
+	}
 
 	result = soundsystem.system->update();
 	handle_fmod_error();
