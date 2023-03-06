@@ -67,12 +67,9 @@ Command AICar::pathfind(glm::vec3 currentPosition)
     PxVec3 targetDir = GLMtoPx(targetPos) - carPose.p;
     
     // only drive to the target if it's far enough away (for now)
-    if (targetDir.magnitude() < 8.f)
-    {
-        command.throttle = 0.f;
-    } else {
-        command.throttle = 1.f;
-    }
+
+    command.throttle = .7f;
+
 
     targetDir.normalize();
 
@@ -93,6 +90,7 @@ Command AICar::pathfind(glm::vec3 currentPosition)
     }
 
     checkFlipped(carPose);
+
 
     return command;
 }

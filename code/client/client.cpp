@@ -159,6 +159,7 @@ int main(int argc, char* argv[]) {
 	for (auto& vert : aiPathGeom.verts)
 	{
 			vert = scaling * glm::vec4{vert,1.f}; 
+			vert.y = 0.f;
 	}
 
 	NavPath aiPath{aiPathGeom.verts};

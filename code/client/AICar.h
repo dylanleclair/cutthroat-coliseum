@@ -32,13 +32,18 @@ struct NavPath {
         float distanceToCurrent = glm::distance(currentCheckpoint.position, currentPos);
         float distanceToNext = glm::distance(nextCP.position, currentPos);
 
+
+
         if (std::min(distanceToCurrent, distanceToNext) == distanceToNext)
         {
             // if the smaller distance is to the next checkpoint, move to next checkpoint!
             currentCheckpoint = nextCP;
             nextIndex = (currentCheckpoint.index == checkpoints.size() -1 ) ? 0 : currentCheckpoint.index + 1;
             nextCP = CheckPoint{nextIndex, checkpoints[nextIndex]};
-
+            distanceToCurrent = glm::distance(currentCheckpoint.position, currentPos);
+            distanceToNext = glm::distance(nextCP.position, currentPos);
+            std::cout << "dist to next: " << distanceToNext << std::endl;
+            std::cout << "dist to current: " << distanceToNext << std::endl;
         }
         return nextCP.position;
     }
