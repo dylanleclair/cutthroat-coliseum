@@ -95,5 +95,6 @@ glm::vec3 Camera::getPos()
 
 void Camera::setPos(glm::vec3 _position)
 {
+	velocity = _position - cameraPos;
 	cameraPos = _position;
 }

@@ -28,6 +28,8 @@ public:
 	void Update(ecs::Scene& scene, float deltaTime);
 	void input(SDL_Event&, int _cameraID);
 	glm::mat4 getCameraView();
+	glm::vec3 GraphicsSystem::g_cameraPosition();
+	glm::vec3 GraphicsSystem::g_cameraVelocity();
 	static void importOBJ(CPU_Geometry& _geometry, const std::string _fileName);
 	static void importOBJ(RenderModel& _component, const std::string _fileName);
 private:

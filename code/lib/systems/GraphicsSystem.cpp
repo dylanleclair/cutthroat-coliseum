@@ -479,6 +479,14 @@ glm::mat4 GraphicsSystem::getCameraView() {
 	return cameras[0].getView();
 }
 
+glm::vec3 GraphicsSystem::g_cameraPosition() {
+	return cameras[0].cameraPos;
+}
+
+glm::vec3 GraphicsSystem::g_cameraVelocity() {
+	return cameras[0].velocity;
+}
+
 void GraphicsSystem::input(SDL_Event& _event, int _cameraID)
 {
 	cameras[_cameraID].input(_event);
