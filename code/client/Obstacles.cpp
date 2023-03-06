@@ -236,6 +236,37 @@ void addRigidBody(physics::PhysicsSystem physicsSystem) {
 
 	// add the actor to the scene
 	physicsSystem.m_Scene->addActor(*actor14);
+
+
+	// Tether Point
+	PxBoxGeometry boxGeom15(PxVec3(1.0f, 2.0f, 1.0f));
+
+	// create a rigid body with the box geometry
+	PxTransform transform15(PxVec3(0.0f, 1.0f, 162.0f));
+	PxRigidStatic* actor15 = PxCreateStatic(
+		*physicsSystem.m_Physics,
+		transform15,
+		boxGeom15,
+		*physicsSystem.m_Material
+	);
+
+	// add the actor to the scene
+	physicsSystem.m_Scene->addActor(*actor15);
+
+	// Tether Point
+	PxBoxGeometry boxGeom16(PxVec3(1.0f, 2.0f, 1.0f));
+
+	// create a rigid body with the box geometry
+	PxTransform transform16(PxVec3(0.0f, 1.0f, -162.0f));
+	PxRigidStatic* actor16 = PxCreateStatic(
+		*physicsSystem.m_Physics,
+		transform16,
+		boxGeom16,
+		*physicsSystem.m_Material
+	);
+
+	// add the actor to the scene
+	physicsSystem.m_Scene->addActor(*actor16);
 }
 
 void setUpLogs(ecs::Scene &mainScene) {
