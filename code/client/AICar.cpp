@@ -51,7 +51,21 @@ Command AICar::pathfind(glm::vec3 currentPosition)
 
     Command command = {0.f, 0.f, 0.f, m_TargetGearCommand};
 
-    glm::vec3 targetPos = m_navPath->getNextPoint(currentPosition);
+    bool didLap{false};
+
+    glm::vec3 targetPos = m_navPath->getNextPoint(currentPosition,didLap);
+
+    if (didLap)
+    {
+        m_lapCount++;
+        std::cout << "AI completed a lap!" << std::endl;
+        std::cout << "AI starting lap: " << m_lapCount << std::endl;
+    }
+
+    if (m_lapCount == 3)
+    {
+        std::cout << "AI wins!" << std::endl;
+    }
 
     std::vector<glm::vec3> path = pathfinding::AStar<glm::vec3>(roundPositionToGraph(currentPosition), roundPositionToGraph(targetPos), euclideanBasic, AISystem::generateNearby);
 
