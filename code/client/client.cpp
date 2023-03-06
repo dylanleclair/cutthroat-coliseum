@@ -107,8 +107,14 @@ int main(int argc, char* argv[]) {
 
 	//load fonts into ImGui
 	io.Fonts->AddFontDefault();
-	ImFont* niceFont = io.Fonts->AddFontFromFileTTF("fonts/Debrosee-ALPnL.ttf", 18.5f);
-	IM_ASSERT(niceFont != NULL);
+	ImFont* Debrosee = io.Fonts->AddFontFromFileTTF("fonts/Debrosee-ALPnL.ttf", 18.5f);
+	IM_ASSERT(Debrosee != NULL);
+	ImFont* Cabal = io.Fonts->AddFontFromFileTTF("fonts/Cabal-w5j3.ttf", 18.5f);
+	IM_ASSERT(Cabal != NULL);
+	ImFont* CabalBold = io.Fonts->AddFontFromFileTTF("fonts/CabalBold-78yP.ttf", 32.f);
+	IM_ASSERT(CabalBold != NULL);
+	ImFont* ExtraLarge = io.Fonts->AddFontFromFileTTF("fonts/EXTRA LARGE.ttf", 18.5f);
+	IM_ASSERT(ExtraLarge != NULL);
 
 
 	// init ecs 
@@ -494,11 +500,10 @@ int main(int argc, char* argv[]) {
 
 		glDisable(GL_FRAMEBUFFER_SRGB); // disable sRGB for things like imgui
 
+		ImGui_ImplOpenGL3_NewFrame();
+		ImGui_ImplSDL2_NewFrame();
+		ImGui::NewFrame();
 		if (showImgui) {
-			ImGui_ImplOpenGL3_NewFrame();
-			ImGui_ImplSDL2_NewFrame();
-			ImGui::NewFrame();
-
 			// BEGIN FRAMERATE COUNTER
 			framerate.update(timestep);
 			ImGui::SetNextWindowSize(ImVec2(500, 100));
@@ -561,27 +566,6 @@ int main(int argc, char* argv[]) {
 
 			// NOTE: the imgui bible - beau
 			//ImGui::ShowDemoWindow();
-			/*
-			* Render the UI. I am doing this here for now but I might move it.
-			*/
-			//render the UI
-			// Setting flags
-			ImGuiWindowFlags textWindowFlags =
-				ImGuiWindowFlags_NoBringToFrontOnFocus |
-				ImGuiWindowFlags_NoMove |				// text "window" should not move
-				ImGuiWindowFlags_NoResize |				// should not resize
-				ImGuiWindowFlags_NoCollapse |			// should not collapse
-				ImGuiWindowFlags_NoSavedSettings |		// don't want saved settings mucking things up
-				ImGuiWindowFlags_AlwaysAutoResize |		// window should auto-resize to fit the text
-				ImGuiWindowFlags_NoBackground |			// window should be transparent; only the text should be visible
-				ImGuiWindowFlags_NoDecoration |			// no decoration; only the text should be visible
-				ImGuiWindowFlags_NoTitleBar;			// no title; only the text should be visible
-			ImGui::Begin("UI", (bool*)0, textWindowFlags);
-			//ImGui::SetWindowFontScale(24.f);
-			ImGui::PushFont(niceFont);
-			ImGui::Text("FUCK");
-			ImGui::PopFont();
-			ImGui::End();
 
 			// Graphics imgui panel for graphics tuneables
 			gs.ImGuiPanel();
@@ -590,13 +574,57 @@ int main(int argc, char* argv[]) {
 			//reloadVehicleJSON();
 			vehicleTuning(testCar.m_Vehicle);
 			engineTuning(testCar.m_Vehicle);
+		}
+		/*
+		* Render the UI. I am doing this here for now but I might move it.
+		* ImGui uses coordinates in screen space (0-screen dimension) and is anchored on the top left corner
+		*/
+		//render the UI
+		// Setting flags
+		ImGuiWindowFlags textWindowFlags =
+			ImGuiWindowFlags_NoBringToFrontOnFocus |
+			ImGuiWindowFlags_NoMove |				// text "window" should not move
+			ImGuiWindowFlags_NoResize |				// should not resize
+			ImGuiWindowFlags_NoCollapse |			// should not collapse
+			ImGuiWindowFlags_NoSavedSettings |		// don't want saved settings mucking things up
+			ImGuiWindowFlags_AlwaysAutoResize |		// window should auto-resize to fit the text
+			ImGuiWindowFlags_NoBackground |			// window should be transparent; only the text should be visible
+			ImGuiWindowFlags_NoDecoration |			// no decoration; only the text should be visible
+			ImGuiWindowFlags_NoTitleBar;			// no title; only the text should be visible
 
+		//Lap counter
+		ImGui::SetNextWindowPos(ImVec2(800, 10));
+		ImGui::Begin("UI", (bool*)0, textWindowFlags);
+		ImGui::SetWindowFontScale(5.f);
+		ImGui::PushFont(CabalBold);
+		ImGui::TextColored(ImVec4(0.0f, 0.0f, 0.0f, 1.0f), "%d/3", lapCount);
+		ImGui::PopFont();
+		ImGui::End();
 
-			ImGui::Render();
-			glViewport(0, 0, (int)io.DisplaySize.x, (int)io.DisplaySize.y);
-			ImGui_ImplOpenGL3_RenderDrawData(ImGui::GetDrawData());
+		//you win message
+		static int counter = 0;
+		const float delayInSeconds = 0.5;
+		static bool display = true;
+		if (lapCount >= 3) {
+			counter += timestep.getMilliseconds();
+			if (counter >= delayInSeconds * 1000) {
+				counter = 0;
+				display = !display;
+			}
+			if (display) {
+				ImGui::SetNextWindowPos(ImVec2(150, 200));
+				ImGui::Begin("UI2", (bool*)0, textWindowFlags);
+				ImGui::SetWindowFontScale(7.f);
+				ImGui::PushFont(CabalBold);
+				ImGui::TextColored(ImVec4(0.0f, 0.0f, 0.0f, 1.0f), "VICTORY");
+				ImGui::PopFont();
+				ImGui::End();
+			}
 		}
 
+		ImGui::Render();
+		glViewport(0, 0, (int)io.DisplaySize.x, (int)io.DisplaySize.y);
+		ImGui_ImplOpenGL3_RenderDrawData(ImGui::GetDrawData());
 		window.swapBuffers();
 	}
 
