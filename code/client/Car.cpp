@@ -169,7 +169,7 @@ void Car::TetherSteer(PxTransform _loc) {
     m_Vehicle.mPhysXParams.physxActorCMassLocalPose = _loc;
 
     //m_Vehicle.mPhysXState.physxActor.rigidBody->addForce(PxVec3(0.f, 0.f, 10.f), PxForceMode::eVELOCITY_CHANGE, true);
-    m_Vehicle.mPhysXState.physxActor.rigidBody->addTorque(PxVec3(0.f, -2.f, 0.f), PxForceMode::eVELOCITY_CHANGE, true);
+    m_Vehicle.mPhysXState.physxActor.rigidBody->addTorque(PxVec3(0.f, -1.5f, 0.f), PxForceMode::eVELOCITY_CHANGE, true);
 }
 
 bool Car::TetherJump() {

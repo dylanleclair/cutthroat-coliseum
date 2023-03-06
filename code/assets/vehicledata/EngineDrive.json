@@ -16,7 +16,7 @@
 		"MOI": 1.0,
 		"PeakTorque": 500.0,
 		"IdleOmega": 0.0,
-		"MaxOmega": 600.0,
+		"MaxOmega": 2000.0,
 		"DampingRateFullThrottle": 0.15,
 		"DampingRateZeroThrottleClutchEngaged": 2.0,
 		"DampingRateZeroThrottleClutchDisengaged": 0.35
