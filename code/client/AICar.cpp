@@ -6,6 +6,30 @@
 #include "utils/PxConversionUtils.h"
 #include "glm/glm.hpp"
 
+
+NavPath generateCirclePath(int radius) {
+
+    // generate a circle
+    std::vector<glm::vec3> circle;
+
+    float step{1.f};
+    for (float i =0; i < 2 * 3.14; i += step)
+    {
+        float x = std::cos(i);
+        float z = std::sin(i);
+        circle.push_back({radius * x, 0.f, radius * z});
+    }
+
+    return NavPath{circle};
+
+}
+
+
+void AICar::Initialize(NavPath* pathToFollow)
+{
+    m_navPath = pathToFollow;
+}
+
 glm::vec3 roundPositionToGraph(glm::vec3 pos)
 {
     return glm::vec3(floor(pos.x), 0.f, floor(pos.z));
@@ -20,40 +44,76 @@ float euclideanBasic(glm::vec3 a, glm::vec3 b)
     return sqrt(dist);
 }
 
-void AICar::Update(Guid carGuid,ecs::Scene& scene, float deltaTime) 
+
+
+Command AICar::pathfind(glm::vec3 currentPosition)
 {
 
+    assert(m_navPath != nullptr);
 
-  Command command = {0.f, 0.f, 0.f, m_TargetGearCommand};
+    Command command = {0.f, 0.f, 0.f, m_TargetGearCommand};
 
-    // need to get access to the pathfinding system....
+    glm::vec3 targetPos = m_navPath->getNextPoint(currentPosition);
 
-    // so the job of the pathfinding system is to:
-    //  - calculate the path to the opponent
-    //  - after that, the physics system will update the car (by calling this function)
-    //      - this should make the car follow the path
+    std::vector<glm::vec3> path = pathfinding::AStar<glm::vec3>(roundPositionToGraph(currentPosition), roundPositionToGraph(targetPos), euclideanBasic, AISystem::generateNearby);
 
-    if (scene.HasComponent<PathfindingComponent>(carGuid))
+    // find rotation matrix of car
+    PxTransform carPose = this->m_Vehicle.mPhysXState.physxActor.rigidBody->getGlobalPose();
+
+    // find the direction vector of the vehicle
+    glm::quat vehicleQuat = PxtoGLM(carPose.q);
+    glm::mat4 vehicleRotM = glm::toMat4(vehicleQuat);
+    glm::vec3 headingDir = glm::vec3{vehicleRotM * glm::vec4{0.f, 0.f, -1.f, 1.f}};
+    
+    // target direction vector
+    PxVec3 targetDir = GLMtoPx(targetPos) - carPose.p;
+    
+    // only drive to the target if it's far enough away (for now)
+    if (targetDir.magnitude() < 8.f)
+    {
+        command.throttle = 0.f;
+    } else {
+        command.throttle = 1.f;
+    }
+
+    targetDir.normalize();
+
+    float angleBetween = targetDir.dot(GLMtoPx(headingDir));
+
+    // if almost parallel, don't worry about steering
+    if (abs(angleBetween) > 0.95f)
+    {
+        command.steer = 0.0f;
+    } else {
+        PxVec3 cross = GLMtoPx(headingDir).cross(targetDir);
+        if (cross.y < 0)
+        {
+            command.steer = 1.0f;
+        } else {
+            command.steer = -1.0f;
+        }
+    }
+
+    return command;
+}
+
+Command AICar::pathfind(glm::vec3 currentPosition, ecs::Scene& scene, Guid targetEntity)
+{
+    assert(m_navPath != nullptr);
+
+    Command command = {0.f, 0.f, 0.f, m_TargetGearCommand};
+
+    if (scene.HasComponent<PathfindingComponent>(targetEntity))
     {
         // the car has a pathfinder !!
         // must move according to path. 
 
-        // begin by computing the path using the navmesh!
-
-        // psuedocode for desired: 
-        // NavMesh.search(startPosition, endPosition);
-        // the navmesh will:
-        //  - find the appropriate start node from start position
-        //  - find the appropriate end node from finish position
-        //  - find the path of nodes that will lead to destination
-        //  - compute a spline path to follow ??              
-
         // foil out the nodes !
         CPU_Geometry pathGeom;
 
-        PathfindingComponent& p = scene.GetComponent<PathfindingComponent>(carGuid);
+        PathfindingComponent& p = scene.GetComponent<PathfindingComponent>(targetEntity);
         // get the pathfinding component
-        TransformComponent& position = scene.GetComponent<TransformComponent>(carGuid);
+        TransformComponent& position = scene.GetComponent<TransformComponent>(targetEntity);
         // find the target
         Guid targetEntity = p.targetEntity;
 
@@ -112,18 +172,31 @@ void AICar::Update(Guid carGuid,ecs::Scene& scene, float deltaTime)
 
         }
 
-        // use the waypoint approach to set goal for ai to move through the level
-        // update waypoint when they pass / approach one!
-        // we will get the waypoint from blender
-
-        // draw this later -> have to use global renderer
-        // if (scene.HasComponent<RenderLine>(carGuid))
-        // {
-        //     RenderLine& line = scene.GetComponent<RenderLine>(carGuid);
-        //     line.setGeometry(pathGeom);
-        // }    
-
     }
+
+    return command;
+}
+
+
+void AICar::Update(Guid carGuid,ecs::Scene& scene, float deltaTime) 
+{
+
+
+  Command command = {0.f, 0.f, 0.f, m_TargetGearCommand};
+
+    // need to get access to the pathfinding system....
+
+    // so the job of the pathfinding system is to:
+    //  - calculate the path to the opponent
+    //  - after that, the physics system will update the car (by calling this function)
+    //      - this should make the car follow the path
+
+    if (scene.HasComponent<TransformComponent>(carGuid))
+    {
+        TransformComponent& tComponent = scene.GetComponent<TransformComponent>(carGuid);
+        auto currentPos = tComponent.getTranslation();
+        command = pathfind(currentPos);
+    }   
 
   float delta_seconds = deltaTime;
   assert(delta_seconds > 0.f && delta_seconds < 0.2000001f);
@@ -178,8 +251,6 @@ void AICar::Update(Guid carGuid,ecs::Scene& scene, float deltaTime)
   m_Vehicle.mComponentSequence.setSubsteps(m_Vehicle.mComponentSequenceSubstepGroupHandle, nbSubsteps);
   m_Vehicle.step(delta_seconds, m_VehicleSimulationContext);
 
-  // Forward integrate the phsyx scene by a single timestep.
-  physicsSystem->m_Scene->simulate(delta_seconds);
-  physicsSystem->m_Scene->fetchResults(true);
+
 }
 

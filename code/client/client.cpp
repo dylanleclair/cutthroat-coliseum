@@ -128,12 +128,15 @@ int main(int argc, char* argv[]) {
 		std::cout << "ERROR: could not initialize vehicle";
 	}
 
-	
+
+	NavPath circlePath = generateCirclePath(30);
+
 
 
 	mainScene.AddComponent(aiDriver_e.guid, AICar());
 	AICar& aiCar = mainScene.GetComponent<AICar>(aiDriver_e.guid);
 	aiCar.physicsSystem = &physicsSystem;
+	aiCar.Initialize(&circlePath);
 	if (!aiCar.initVehicle(PxVec3(3.0f,0.f,1.f)))
 	{
 		std::cout << "ERROR: could not initialize ai-driven vehicle";
