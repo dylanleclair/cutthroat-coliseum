@@ -127,6 +127,9 @@ struct Car {
 
     virtual void Update(Guid carGuid, ecs::Scene& scene, float deltaTime);
 
+protected: 
+    void Car::checkFlipped(PxTransform carPose);
+
 
 };
 

@@ -12,7 +12,7 @@ NavPath generateCirclePath(int radius) {
     // generate a circle
     std::vector<glm::vec3> circle;
 
-    float step{1.f};
+    float step{0.4f};
     for (float i =0; i < 2 * 3.14; i += step)
     {
         float x = std::cos(i);
@@ -44,8 +44,6 @@ float euclideanBasic(glm::vec3 a, glm::vec3 b)
     return sqrt(dist);
 }
 
-
-
 Command AICar::pathfind(glm::vec3 currentPosition)
 {
 
@@ -69,12 +67,9 @@ Command AICar::pathfind(glm::vec3 currentPosition)
     PxVec3 targetDir = GLMtoPx(targetPos) - carPose.p;
     
     // only drive to the target if it's far enough away (for now)
-    if (targetDir.magnitude() < 8.f)
-    {
-        command.throttle = 0.f;
-    } else {
-        command.throttle = 1.f;
-    }
+
+    command.throttle = .7f;
+
 
     targetDir.normalize();
 
@@ -93,6 +88,9 @@ Command AICar::pathfind(glm::vec3 currentPosition)
             command.steer = -1.0f;
         }
     }
+
+    checkFlipped(carPose);
+
 
     return command;
 }
