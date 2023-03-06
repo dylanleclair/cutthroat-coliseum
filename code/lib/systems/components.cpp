@@ -4,35 +4,26 @@
 
 int RenderModel::attachMesh(CPU_Geometry& _geometry)
 {
-	std::cout << "attaching mesh...\n";
 	Mesh mesh = Mesh();
 	//assign an ID to the mesh that is local to the model
 	mesh.ID = currentMeshID;
 	currentMeshID++;
 	
-	numberOfVerts = _geometry.verts.size();
-	std::cout << "\tverticies: " << _geometry.verts.size() << '\n';
 	mesh.geometry->setVerts(_geometry.verts);
-	std::cout << "\tindicies: " << _geometry.indicies.size() << '\n';
 	mesh.geometry->setIndexBuff(_geometry.indicies);
 	//load the normals
-	if (_geometry.norms.size() == numberOfVerts) {
-		std::cout << "\tnormals: " << _geometry.norms.size() << '\n';
+	if (_geometry.norms.size() == _geometry.verts.size()) {
 		mesh.geometry->setNorms(_geometry.norms);
 		mesh.properties |= 0x1;
 	}
-	else if (_geometry.norms.size() > 0 && _geometry.norms.size() != numberOfVerts) {
-		std::cout << "WARNING: Trying to attach a geometry that has a different number of normals than verticies. Assuming no normals...\n";
-	}
+
 	//load the texture coordinates
-	if (_geometry.texs.size() == numberOfVerts) {
-		std::cout << "\ttextCoords: " << _geometry.texs.size() << '\n';
+	if (_geometry.texs.size() == _geometry.verts.size()) {
 		mesh.geometry->setTexCoords(_geometry.texs);
 		mesh.properties |= 0x2;
 	}
-	else if (_geometry.texs.size() > 0 && _geometry.texs.size() != numberOfVerts) {
-		std::cout << "WARNING: Trying to attach a geometry that has a different number of normals than verticies. Assuming no normals...\n";
-	}
+
+	//update the total vertex count of the component
 	numberOfVerts += _geometry.verts.size();
 	mesh.numberOfVerticies = _geometry.verts.size();
 	mesh.numberOfIndicies = _geometry.indicies.size();
@@ -40,7 +31,6 @@ int RenderModel::attachMesh(CPU_Geometry& _geometry)
 	meshes.push_back(mesh);
 	//sorting the meshes lets us batch draws without having to rebind the same texture multiple times
 	//std::sort(meshes.begin(), meshes.end(), [](const Mesh a, const Mesh b) -> bool {return a.textureIndex < b.textureIndex; });
-	std::cout << "mesh attached with id " << mesh.ID << "\n";
 	return mesh.ID;
 }
 

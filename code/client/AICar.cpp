@@ -12,7 +12,7 @@ NavPath generateCirclePath(int radius) {
     // generate a circle
     std::vector<glm::vec3> circle;
 
-    float step{1.f};
+    float step{0.4f};
     for (float i =0; i < 2 * 3.14; i += step)
     {
         float x = std::cos(i);

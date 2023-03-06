@@ -73,8 +73,9 @@ static PxReal auto_up[7];
 static PxReal auto_down[7];
 static PxReal auto_latency;
 
-void baseVariablesInit(EngineDriveVehicle m_Vehicle);
-void engineVariablesInit(EngineDriveVehicle m_Vehicle);
-void vehicleTuning(EngineDriveVehicle m_Vehicle);
-void engineTuning(EngineDriveVehicle m_Vehicle);
-void reloadVehicleJSON(EngineDriveVehicle m_Vehicle);
+void dampeningRatioPrint(int i);
+void baseVariablesInit(EngineDriveVehicle &m_Vehicle);
+void engineVariablesInit(EngineDriveVehicle &m_Vehicle);
+void vehicleTuning(EngineDriveVehicle &m_Vehicle);
+void engineTuning(EngineDriveVehicle &m_Vehicle);
+void reloadVehicleJSON(EngineDriveVehicle &m_Vehicle);

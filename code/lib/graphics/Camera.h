@@ -17,10 +17,10 @@ public:
 	glm::vec3 getPos();
 	void setPos(glm::vec3 _position);
 private:
-	glm::vec3 cameraPos = glm::vec3(-4.0f, 2.0f, 0.0f);
+	glm::vec3 cameraPos = glm::vec3(35.0f, 6.0f, -15.0f);
 	glm::vec3 cameraUp = glm::vec3(0.0f, 1.0f, 0.0f);
-	glm::vec3 cameraDirection = glm::vec3(0.0f, 0.0f, -1.0f);
-	float fspeed = 0, hspeed = 0, panHorizontal = 0.0f, panVertical = 0.0f, lastX = 0, lastY = 0;
+	glm::vec3 cameraDirection = glm::vec3(0.0f, 0.0f, -1.0f); //DO not set, it is overwritten on construction!
+	float fspeed = 0, hspeed = 0, panHorizontal = 90.0f, panVertical = -10.0f, lastX = 0, lastY = 0;
 	bool leftMouseButtonPressed = false, firstMouse = true;
 	const float cameraSpeed = 0.1;
 };
