@@ -30,10 +30,9 @@ GraphicsSystem::GraphicsSystem(Window& _window) :
 {
 	windowSize = _window.getSize();
 	follow_cam_x = 0.f;
-	follow_cam_y = 4.f;
-	follow_cam_z = -10.f;
+	follow_cam_y = 6.f;
+	follow_cam_z = -16.f;
 	follow_correction_strength = 40.f;
-	faceCulling = true;
 	front_face = false;
 	back_face = true;
 
@@ -122,11 +121,8 @@ void GraphicsSystem::renderUI() {
 // Panel to controls the cameras
 void GraphicsSystem::ImGuiPanel() {
 	ImGui::Begin("Camera States");
-	ImGui::Checkbox("Face Culling", &faceCulling);
-	ImGui::SameLine;
-	ImGui::Checkbox("Front Face", &front_face);
-	ImGui::SameLine;
-	ImGui::Checkbox("Back Face", &back_face);
+	ImGui::Checkbox("Culling: Front Face", &front_face);
+	ImGui::Checkbox("Culling: Back Face", &back_face);
 
 	if (ImGui::Button("Free Camera")) {
 		cam_mode = 1;
@@ -319,7 +315,7 @@ void GraphicsSystem::Update(ecs::Scene& scene, float deltaTime) {
 		glEnable(GL_FRAMEBUFFER_SRGB);
 		glClearColor(0.50f, 0.80f, 0.97f, 0.0f);
 		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-		if (faceCulling) {
+		if (front_face || back_face) {
 			glEnable(GL_CULL_FACE);
 			if (front_face) {
 				glCullFace(GL_FRONT);

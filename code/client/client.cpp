@@ -360,6 +360,7 @@ int main(int argc, char* argv[]) {
 						testCar.m_Vehicle.mPhysXState.physxActor.rigidBody->setGlobalPose(PxTransform(35.f, 0.f, 0.f));
 						testCar.m_Vehicle.mPhysXState.physxActor.rigidBody->clearForce();
 						testCar.m_Vehicle.mPhysXState.physxActor.rigidBody->clearTorque();
+						lapCount = 1;
 						break;
 						
 					// TODO: change the file that is serializes (Want to do base.json and enginedrive.json)
