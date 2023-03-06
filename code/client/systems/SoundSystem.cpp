@@ -93,6 +93,7 @@ void update_sounds(Car& player, AICar& opponent, bool playSounds) {
 		// also turn off brake sound
 		soundsystem.playerbrakechannel->stop();
 	}
+	soundsystem.playerenginechannel->setVolume(0.5f);
 
 	// PLAYER: play brake sound if we're throttling and not already playing on the channel
 	isPlaying = false;
