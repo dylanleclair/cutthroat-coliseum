@@ -224,15 +224,28 @@ int main(int argc, char* argv[]) {
 	mainScene.AddComponent(ground_e.guid, level_t);
 
 	// actual level mesh & collider for it
-	CPU_Geometry levelCollider_raw = CPU_Geometry();
-	GraphicsSystem::importOBJ(levelCollider_raw, "STADIUM_COLLIDER.obj");
-	LevelCollider levelCollider{ levelCollider_raw, physicsSystem};
-	auto levelTriangleMesh = levelCollider.cookLevel(glm::scale(glm::mat4(1), glm::vec3(3.2)));
-	levelCollider.initLevelRigidBody(levelTriangleMesh);
+	CPU_Geometry levelColliderFloor_raw = CPU_Geometry();
+	GraphicsSystem::importOBJ(levelColliderFloor_raw, "STADIUM_COLLIDER_FLOOR.obj");
+	LevelCollider levelCollider1{ levelColliderFloor_raw, physicsSystem};
+	auto levelTriangleMesh1 = levelCollider1.cookLevel(glm::scale(glm::mat4(1), glm::vec3(3.2)));
+	levelCollider1.initLevelRigidBody(levelTriangleMesh1);
 
+	CPU_Geometry levelColliderInner_raw = CPU_Geometry();
+	GraphicsSystem::importOBJ(levelColliderInner_raw, "STADIUM_COLLIDER_INNER.obj");
+	LevelCollider levelCollider2{ levelColliderInner_raw, physicsSystem };
+	auto levelTriangleMesh2 = levelCollider2.cookLevel(glm::scale(glm::mat4(1), glm::vec3(3.2)));
+	levelCollider2.initLevelRigidBody(levelTriangleMesh2);
+
+	CPU_Geometry levelColliderOuter_raw = CPU_Geometry();
+	GraphicsSystem::importOBJ(levelColliderOuter_raw, "STADIUM_COLLIDER_OUTER.obj");
+	LevelCollider levelCollider3{ levelColliderOuter_raw, physicsSystem };
+	auto levelTriangleMesh3 = levelCollider3.cookLevel(glm::scale(glm::mat4(1), glm::vec3(3.2)));
+	levelCollider3.initLevelRigidBody(levelTriangleMesh3);
+
+	//Level
 	RenderModel level_r = RenderModel();
 	//GraphicsSystem::importOBJ(level_r, "Stadium.obj");
-	GraphicsSystem::importOBJ(level_r, "Stadium_MAXIMAL.obj"); //for faster loading times
+	GraphicsSystem::importOBJ(level_r, "Stadium_MINIMAL.obj"); //for faster loading times
 	mainScene.AddComponent(level_e.guid, level_r);
 	mainScene.AddComponent(level_e.guid, level_t);
 
