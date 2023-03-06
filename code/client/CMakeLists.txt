@@ -21,6 +21,10 @@ message( ${PHYSX_LIB_DIR} )
 message( ${PHYSX_LIB_PATH} )
 message( ${PHYSX_LIB_DEBUG_PATH} )
 
+if(MSVC)
+ target_compile_options(${CMAKE_PROJECT_NAME}_client PRIVATE "/MP")
+endif()
+
 # target_link_directories(${BINARY} PUBLIC "${CMAKE_SOURCE_DIR}/thirdparty/physx/debug/")
 
 

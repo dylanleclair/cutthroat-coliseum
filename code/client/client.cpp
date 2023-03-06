@@ -29,6 +29,8 @@
 
 #include "Car.h"
 #include "AICar.h"
+#include "entities/AIEntity.h"
+
 
 #include "TetherGraphics.h"
 #include "Obstacles.h"
@@ -135,7 +137,7 @@ int main(int argc, char* argv[]) {
 	ecs::Entity sphere_e = mainScene.CreateEntity();
 	ecs::Entity tether_e = mainScene.CreateEntity();
 
-	ecs::Entity aiDriver_e = mainScene.CreateEntity();
+	// ecs::Entity aiDriver_e = mainScene.CreateEntity();
 
 	mainScene.AddComponent(car_e.guid, Car{});
 	Car& testCar = mainScene.GetComponent<Car>(car_e.guid);
@@ -145,43 +147,33 @@ int main(int argc, char* argv[]) {
 		std::cout << "ERROR: could not initialize vehicle";
 	}
 
-
 	NavPath circlePath = generateCirclePath(30);
 
+	CPU_Geometry aiPathGeom;
+	// import the obj for the path
+	GraphicsSystem::importOBJ(aiPathGeom, "ai_path.obj");
+	// transform verts same way level will be???
 
 
-	mainScene.AddComponent(aiDriver_e.guid, AICar());
-	AICar& aiCar = mainScene.GetComponent<AICar>(aiDriver_e.guid);
-	aiCar.physicsSystem = &physicsSystem;
-	aiCar.Initialize(&circlePath);
-	if (!aiCar.initVehicle(PxVec3(45.0f,0.f,10.f)))
+	auto scaling =  glm::scale(glm::mat4{1.f},glm::vec3(3.2f, 3.2f, 3.2f));
+	for (auto& vert : aiPathGeom.verts)
 	{
-		std::cout << "ERROR: could not initialize ai-driven vehicle";
+			vert = scaling * glm::vec4{vert,1.f}; 
+			vert.y = 0.f;
 	}
 
+	NavPath aiPath{aiPathGeom.verts};
 
-	// AI car entity setup
-	RenderModel aiDriver_r = RenderModel();
-	GraphicsSystem::importOBJ(aiDriver_r, "test_car.obj");
-	aiDriver_r.setModelColor(glm::vec3(1.0f, 0.0f, 1.f));
-	mainScene.AddComponent(aiDriver_e.guid, aiDriver_r);
-	TransformComponent aiDriver_t = TransformComponent(aiCar.getVehicleRigidBody());
-	aiDriver_t.setPosition(glm::vec3(0, 0, 1));
-	aiDriver_t.setScale(glm::vec3(3.2f, 3.2f, 3.2f));
-	mainScene.AddComponent(aiDriver_e.guid, aiDriver_t);
-	CPU_Geometry testline = CPU_Geometry();
-	testline.verts.push_back({0.f, 0.f, 0.f});
-	testline.verts.push_back({0.f, 10.f, 0.f});
-	CPU_Geometry forward = CPU_Geometry();
-	forward.verts.push_back({0.f, 0.f, 0.f});
-	forward.verts.push_back({0.f, 0.f, 5.f});
-	RenderLine aiVehicleDirection = RenderLine(forward);
-	aiVehicleDirection.setColor({0.0f,1.f,0.f});
-	mainScene.AddComponent(aiDriver_e.guid, aiVehicleDirection);
-	ecs::Entity aiDirRenderer = mainScene.CreateEntity();
-	mainScene.AddComponent(aiDirRenderer.guid, aiVehicleDirection);
-	mainScene.AddComponent(aiDirRenderer.guid, TransformComponent{});
-	mainScene.AddComponent(aiDriver_e.guid, PathfindingComponent{car_e.guid});
+	ecs::Entity navRenderer_e = mainScene.CreateEntity();
+	mainScene.AddComponent(navRenderer_e.guid,TransformComponent{});
+	auto navPathRender = RenderLine{aiPathGeom};
+	navPathRender.setColor(glm::vec3{1.0f,0.f,1.0f});
+	mainScene.AddComponent(navRenderer_e.guid,navPathRender);
+
+	// only spawn one for now!! consider this ur final warning.
+	spawnAIEntity(mainScene,&physicsSystem, car_e.guid,{10.f, 10.f,10.f}, &aiPath);
+	// spawnAIEntity(mainScene,&physicsSystem, car_e.guid,{0.f, 0.f,5.f}, &circlePath);
+	
 
 	// Car Entity
 	RenderModel car_r = RenderModel();
