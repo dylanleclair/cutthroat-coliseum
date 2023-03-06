@@ -74,6 +74,8 @@ int main(int argc, char* argv[]) {
 	printf("Starting main");
 
 
+
+
 	SDL_Init(SDL_INIT_EVERYTHING); // initialize all sdl systems
 	Window window(1200, 800, "Maximus Overdrive");
 
@@ -100,6 +102,12 @@ int main(int argc, char* argv[]) {
 	physicsSystem.Initialize();
 
 
+	//load fonts into ImGui
+	io.Fonts->AddFontDefault();
+	ImFont* niceFont = io.Fonts->AddFontFromFileTTF("fonts/Debrosee-ALPnL.ttf", 18.5f);
+	IM_ASSERT(niceFont != NULL);
+
+
 	// init ecs 
 
 
@@ -123,7 +131,7 @@ int main(int argc, char* argv[]) {
 	mainScene.AddComponent(car_e.guid, Car{});
 	Car& testCar = mainScene.GetComponent<Car>(car_e.guid);
 	testCar.physicsSystem = &physicsSystem;
-	if (!testCar.initVehicle(PxVec3(0.000000000f, -0.0500000119f, -1.59399998f)))
+	if (!testCar.initVehicle(PxVec3(35.000000000f, -0.0500000119f, -1.59399998f)))
 	{
 		std::cout << "ERROR: could not initialize vehicle";
 	}
@@ -150,7 +158,6 @@ int main(int argc, char* argv[]) {
 	mainScene.AddComponent(aiDriver_e.guid, aiDriver_r);
 	TransformComponent aiDriver_t = TransformComponent(aiCar.getVehicleRigidBody());
 	aiDriver_t.setPosition(glm::vec3(0, 0, 1));
-	//car_t.setRotation(glm::quat(0, 0, 0, 1));
 	aiDriver_t.setScale(glm::vec3(3.2f, 3.2f, 3.2f));
 	mainScene.AddComponent(aiDriver_e.guid, aiDriver_t);
 	CPU_Geometry testline = CPU_Geometry();
@@ -165,7 +172,7 @@ int main(int argc, char* argv[]) {
 	ecs::Entity aiDirRenderer = mainScene.CreateEntity();
 	mainScene.AddComponent(aiDirRenderer.guid, aiVehicleDirection);
 	mainScene.AddComponent(aiDirRenderer.guid, TransformComponent{});
-	mainScene.AddComponent(aiDriver_e.guid, PathfindingComponent{car_e.guid});
+	//mainScene.AddComponent(aiDriver_e.guid, PathfindingComponent{car_e.guid});
 
 	// Car Entity
 	RenderModel car_r = RenderModel();
@@ -174,7 +181,6 @@ int main(int argc, char* argv[]) {
 	mainScene.AddComponent(car_e.guid, car_r);
 	TransformComponent car_t = TransformComponent(testCar.getVehicleRigidBody());
 	car_t.setPosition(glm::vec3(0, 0, 0.5f));
-	//car_t.setRotation(glm::quat(0, 0, 0, 0));
 	car_t.setScale(glm::vec3(3.2f, 3.2f, 3.2f));
 	mainScene.AddComponent(car_e.guid, car_t);
 	
@@ -183,37 +189,14 @@ int main(int argc, char* argv[]) {
 	GraphicsSystem::importOBJ(sphere_r, "sphere.obj");
 	sphere_r.setModelColor(glm::vec3(0.5f, 0.0f, 0.5f));
 	mainScene.AddComponent(sphere_e.guid, sphere_r);
-	//TransformComponent sphere_t = TransformComponent();
 	TransformComponent sphere_t = TransformComponent(testCar.getVehicleRigidBody());
 	sphere_t.setScale(glm::vec3(0.5f, 0.5f, 0.5f));
 	mainScene.AddComponent(sphere_e.guid, sphere_t);
-
-
-
-	//finish box
-	CPU_Geometry finish_geom;
-
-	glm::vec3 rectangle[] = {
-		{-10.f, 0.5f, 0.0f},
-		{-10.f, -1.f, 0.0f},
-		{-5.f, -1.f, 0.0f},
-
-		{-5.f, 0.5f, 0.0f},
-		{-5.f, -1.f, 0.0f},
-		{-10.f, 0.5f, 0.0f},
-	};
-	for (int i = 0; i < 6; i++) {
-		finish_geom.verts.push_back(rectangle[i]);
-	}
-	for (int i = 0; i < 6; i++) {
-		finish_geom.verts.push_back(rectangle[5 - i]);
-	}
 
 	
 	// Finish line components
 	RenderModel finish = RenderModel();
 	GraphicsSystem::importOBJ(finish, "basic_finish.obj");
-	//finish.attachMesh(finish_geom);
 	finish.setModelColor(glm::vec3(1.f, 0.f, 0.f));
 	mainScene.AddComponent(finish_e.guid, finish);
 
@@ -241,31 +224,19 @@ int main(int argc, char* argv[]) {
 	mainScene.AddComponent(ground_e.guid, level_t);
 
 	// actual level mesh & collider for it
-	LevelCollider levelCollider{"large_test_torus.obj", physicsSystem};
-	auto levelTriangleMesh = levelCollider.cookLevel(level_t.getTransformationMatrix());
+	CPU_Geometry levelCollider_raw = CPU_Geometry();
+	GraphicsSystem::importOBJ(levelCollider_raw, "STADIUM_COLLIDER.obj");
+	for (auto& e : levelCollider_raw.verts)
+		e *= 3;
+	LevelCollider levelCollider{ levelCollider_raw, physicsSystem};
+	auto levelTriangleMesh = levelCollider.cookLevel(glm::mat4(1));
 	levelCollider.initLevelRigidBody(levelTriangleMesh);
 
 	RenderModel level_r = RenderModel();
-	GraphicsSystem::importOBJ(level_r, "large_test_torus.obj");
-	level_r.setModelColor(glm::vec3(0, 0, 1));
+	//GraphicsSystem::importOBJ(level_r, "Stadium.obj");
+	GraphicsSystem::importOBJ(level_r, "Stadium_MINIMAL.obj"); //for faster loading times
 	mainScene.AddComponent(level_e.guid, level_r);
 	mainScene.AddComponent(level_e.guid, level_t);
-
-	TransformComponent wall_t = TransformComponent();
-	wall_t.setPosition(glm::vec3(0, 0, 0));
-	wall_t.setScale(glm::vec3(3.2f, 3.2f, 3.2f));
-
-	RenderModel outWall = RenderModel();
-	GraphicsSystem::importOBJ(outWall, "large_test_torus_inwall.obj");
-	outWall.setModelColor(glm::vec3(0.2f, 0.2f, 0.6f));
-	mainScene.AddComponent(outWall_e.guid, outWall);
-	mainScene.AddComponent(outWall_e.guid, wall_t);
-
-	RenderModel inWall = RenderModel();
-	GraphicsSystem::importOBJ(inWall, "large_test_torus_outwall.obj");
-	inWall.setModelColor(glm::vec3(0.2f, 0.2f, 0.6f));
-	mainScene.AddComponent(inWall_e.guid, inWall);
-	mainScene.AddComponent(inWall_e.guid, wall_t);
 
 	// Tether poles
 	RenderModel tetherPole1_r = RenderModel();
@@ -276,7 +247,7 @@ int main(int argc, char* argv[]) {
 	tetherPole1_t.setPosition(glm::vec3(-27.f, 0.f, 50.f));
 	tetherPole1_t.setScale(glm::vec3(3.2f, 3.2f, 3.2f));
 	mainScene.AddComponent(tetherPole1_e.guid, tetherPole1_t);
-
+	/*
 	RenderModel tetherPole2_r = RenderModel();
 	GraphicsSystem::importOBJ(tetherPole2_r, "alpha_tether_pole.obj");
 	tetherPole2_r.setModelColor(glm::vec3(205.f / 255.f, 133.f / 255.f, 63.f / 255.f));
@@ -562,6 +533,27 @@ int main(int argc, char* argv[]) {
 
 		// NOTE: the imgui bible - beau
 		//ImGui::ShowDemoWindow();
+		/*
+		* Render the UI. I am doing this here for now but I might move it.
+		*/
+		//render the UI
+		// Setting flags
+		ImGuiWindowFlags textWindowFlags =
+			ImGuiWindowFlags_NoBringToFrontOnFocus |
+			ImGuiWindowFlags_NoMove |				// text "window" should not move
+			ImGuiWindowFlags_NoResize |				// should not resize
+			ImGuiWindowFlags_NoCollapse |			// should not collapse
+			ImGuiWindowFlags_NoSavedSettings |		// don't want saved settings mucking things up
+			ImGuiWindowFlags_AlwaysAutoResize |		// window should auto-resize to fit the text
+			ImGuiWindowFlags_NoBackground |			// window should be transparent; only the text should be visible
+			ImGuiWindowFlags_NoDecoration |			// no decoration; only the text should be visible
+			ImGuiWindowFlags_NoTitleBar;			// no title; only the text should be visible
+		ImGui::Begin("UI", (bool*)0, textWindowFlags);
+		//ImGui::SetWindowFontScale(24.f);
+		ImGui::PushFont(niceFont);
+		ImGui::Text("FUCK");
+		ImGui::PopFont();
+		ImGui::End();
 
 		// Graphics imgui panel for graphics tuneables
 		gs.ImGuiPanel();

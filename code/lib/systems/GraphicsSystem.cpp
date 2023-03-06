@@ -115,6 +115,10 @@ GraphicsSystem::~GraphicsSystem() {
 	glDeleteBuffers(1, &quad_vertexBuffer);
 }
 
+void GraphicsSystem::renderUI() {
+
+}
+
 // Panel to controls the cameras
 void GraphicsSystem::ImGuiPanel() {
 	ImGui::Begin("Camera States");
@@ -157,8 +161,8 @@ void GraphicsSystem::ImGuiPanel() {
 		ImGui::Checkbox("Collider Meshes", &showColliders);
 		//show all renderables in a list
 		static int item_current_idx = 0;
-		if (entityTransforms.count > 0) {
-			if (ImGui::BeginCombo("Transforms", entityTransforms.names[item_current_idx].c_str())) {
+		if (entityTransforms.count > 0) { //make sure there is at least one entity. Issues might otherwise arise
+			if (ImGui::BeginCombo("Entities", entityTransforms.names[item_current_idx].c_str())) {
 				for (int i = 0; i < entityTransforms.count; i++) {
 					const bool is_selected = (item_current_idx == i);
 					if (ImGui::Selectable(entityTransforms.names[i].c_str(), is_selected))
@@ -204,10 +208,9 @@ void GraphicsSystem::ImGuiPanel() {
 
 void GraphicsSystem::Update(ecs::Scene& scene, float deltaTime) {
 	for (int i = 0; i < numCamerasActive; i++) {
-		//matricies that need only be set once per camera
-		glm::mat4 P = glm::perspective(glm::radians(45.0f), (float)windowSize.x / windowSize.y, 2.f, 1000.f);
+		//default camera matricies
+		glm::mat4 P = glm::perspective(glm::radians(45.f), (float)windowSize.x / windowSize.y, 2.f, 1000.f);
 		glm::mat4 V = cameras[i].getView();
-		
 
 		// If camera mode is 1 - use freecam
 		if (cam_mode == 1) {
@@ -228,6 +231,9 @@ void GraphicsSystem::Update(ecs::Scene& scene, float deltaTime) {
 			//Main goal rn: Implement the logic...
 			static glm::vec3 previousCarPosition = glm::vec3(0);
 			TransformComponent& trans = scene.GetComponent<TransformComponent>(0);
+			/*
+			* calculate the camera position
+			*/
 			//calculate where the camera should aim to be positioned
 			glm::vec3 cameraTargetLocation = glm::translate(glm::mat4(1), trans.getTranslation()) * toMat4(trans.getRotation()) * glm::vec4(follow_cam_x, follow_cam_y, follow_cam_z, 1);
 			//calculate the speed of the car
@@ -236,12 +242,16 @@ void GraphicsSystem::Update(ecs::Scene& scene, float deltaTime) {
 			float cameraOffset = glm::distance(cameraTargetLocation, cameras[0].getPos());
 			//use a sigmoid function to determine how much to move the camera to the target position (can't go higher than 1)
 			float correctionAmount = cameraOffset / (follow_correction_strength + cameraOffset);
-			//lerp between the 2 positions according to the correction amount
-			previousCarPosition = trans.getTranslation();
 			//lerp the camera to a good location based on the correction amount
 			cameras[0].setPos(cameras[0].getPos() * (1-correctionAmount) + correctionAmount * cameraTargetLocation);
+
+			//set the camera variables
+			previousCarPosition = trans.getTranslation();
 			V = glm::lookAt(cameras[0].getPos(), trans.getTranslation(), glm::vec3(0.0f, 1.0f, 0.0f));
+			P = glm::perspective(glm::radians(45.f), (float)windowSize.x / windowSize.y, 2.f, 1000.f);
 		}
+
+
 
 		//set the viewport
 		if (numCamerasActive <= 1) { //there can't be 0 cameras, assume always 1 minimum
@@ -272,7 +282,7 @@ void GraphicsSystem::Update(ecs::Scene& scene, float deltaTime) {
 			bool cont = false;
 			//search if it is already in the debug list, and if it is update it
 			for (int i = 0; i < entityTransforms.count; i++) {
-				if (entityTransforms.ids[i] == entityGuid && entityTransforms.read_write[i] != 0) {
+				if (entityTransforms.ids[i] == entityGuid) {
 					//read
 					if (entityTransforms.read_write[i] == 1) {
 						entityTransforms.positions[i] = trans.position;
@@ -280,7 +290,7 @@ void GraphicsSystem::Update(ecs::Scene& scene, float deltaTime) {
 						entityTransforms.scales[i] = trans.scale;
 					}
 					//write
-					else {
+					else if(entityTransforms.read_write[i] == 2) {
 						trans.position = entityTransforms.positions[i];
 						trans.setRotation(glm::vec3(entityTransforms.rotations[i]), entityTransforms.rotations[i][3]);
 						trans.scale = entityTransforms.scales[i];
@@ -364,6 +374,7 @@ void GraphicsSystem::Update(ecs::Scene& scene, float deltaTime) {
 					glUniform1ui(shaderStateUniform, 0);
 				}
 				mesh.geometry->bind();
+
 				glDrawElements(GL_TRIANGLES, mesh.numberOfIndicies, GL_UNSIGNED_INT, 0);
 			}
 		}
@@ -435,6 +446,7 @@ void GraphicsSystem::Update(ecs::Scene& scene, float deltaTime) {
 			glDrawArrays(GL_LINE_STRIP, 0, comp.numberOfVerticies);
 		}
 
+		
 		if (showColliders) {
 			//Render debug wireframes of physx colliders
 			wireframeShader.use();
@@ -472,11 +484,13 @@ void GraphicsSystem::input(SDL_Event& _event, int _cameraID)
 	cameras[_cameraID].input(_event);
 }
 
+
 void GraphicsSystem::importOBJ(RenderModel& _component, const std::string _fileName) {
-	std::cout << "Beginning to load model " << _fileName << "\n";
+	std::cout << "importing " << _fileName << '\n';
 	_component.name = std::string(_fileName);
 	Assimp::Importer importer;
-	const aiScene* scene = importer.ReadFile("models/" + _fileName, aiProcess_Triangulate | aiProcess_GenSmoothNormals );
+	//importer.SetPropertyInteger(AI_CONFIG_PP_SBP_REMOVE, aiPrimitiveType_POINT | aiPrimitiveType_LINE);
+	const aiScene* scene = importer.ReadFile("models/" + _fileName, aiProcess_Triangulate); // | aiProcess_FindInvalidData | aiProcess_FindDegenerates | aiProcess_SortByPType
 	if (!scene || scene->mFlags & AI_SCENE_FLAGS_INCOMPLETE || !scene->mRootNode)
 	{
 		std::cout << "Error importing " << _fileName << " into scene\n";
@@ -488,24 +502,22 @@ void GraphicsSystem::importOBJ(RenderModel& _component, const std::string _fileN
 
 
 void GraphicsSystem::processNode(aiNode* node, const aiScene* scene, RenderModel& _component) {
-	std::cout << "processing node...\n";
-	std::cout << "\tmeshes: " << node->mNumMeshes << '\n';
 	//process all the meshes contained in the node
 	for (int m = 0; m < node->mNumMeshes; m++) {
 		const aiMesh* mesh = scene->mMeshes[node->mMeshes[m]];
 		CPU_Geometry geometry;
 
 		//process the aiMess into a CPU_Geometry to pass to the render component to create a new mesh
-		std::cout << "\t\tverticies: " << mesh->mNumVertices << '\n';
 		for (unsigned int i = 0; i < mesh->mNumVertices; i++)
 		{
 			geometry.verts.push_back(glm::vec3(mesh->mVertices[i].x, mesh->mVertices[i].y, mesh->mVertices[i].z));
 			geometry.norms.push_back(glm::vec3(mesh->mNormals[i].x, mesh->mNormals[i].y, mesh->mNormals[i].z));
 			if (mesh->mTextureCoords[0]) // does the mesh contain texture coordinates?
 				geometry.texs.push_back(glm::vec2(mesh->mTextureCoords[0][i].x, mesh->mTextureCoords[0][i].y));
+			else
+				geometry.texs.push_back(glm::vec2(0));
 		}
 		// process indices
-		std::cout << "\t\tfaces: " << mesh->mNumFaces << '\n';
 		for (unsigned int i = 0; i < mesh->mNumFaces; i++)
 		{
 			aiFace face = mesh->mFaces[i];
@@ -513,20 +525,22 @@ void GraphicsSystem::processNode(aiNode* node, const aiScene* scene, RenderModel
 			geometry.indicies.push_back(face.mIndices[1]);
 			geometry.indicies.push_back(face.mIndices[2]);
 		}
-		std::cout << "\t\tindicies: " << geometry.indicies.size() << '\n';
-		std::cout << "finished processing node\n";
+		
 		int ID = _component.attachMesh(geometry);
 		// process material
 		//SAM TODO. Quite frankly this breaks my mind rn with the fact a material can have MULTIPLE textures SOMEHOW
-		if (mesh->mMaterialIndex >= 0)
+
+		if (mesh->mMaterialIndex >= 0) //if the mesh has a material attached
 		{
 			aiMaterial* material = scene->mMaterials[mesh->mMaterialIndex];
-			//std::cout << "HELLO           " << material->GetTextureCount(aiTextureType_DIFFUSE) << '\n';
+			aiColor3D color(0.f, 0.f, 0.f);
+			material->Get(AI_MATKEY_COLOR_DIFFUSE, color);
+			_component.meshes[_component.getMeshIndex(ID)].meshColor = glm::vec3(color.r, color.g, color.b);
+
 			if (material->GetTextureCount(aiTextureType_DIFFUSE) > 0) {
 				//get the textures name(?)
 				aiString str;
 				material->GetTexture(aiTextureType_DIFFUSE, 0, &str);
-				std::cout << "Material has a texture " << str.C_Str() << '\n';
 				std::string temp = std::string(str.C_Str());
 				std::string temp2;
 				for (int i = temp.size()-1; i >= 0; i--) {
@@ -553,9 +567,10 @@ void GraphicsSystem::processNode(aiNode* node, const aiScene* scene, RenderModel
 	}
 }
 
-
+/*
+* importing an object geometry only
+*/
 void GraphicsSystem::importOBJ(CPU_Geometry& _geometry, const std::string _fileName) {
-	std::cout << "Beginning to load model " << _fileName << "\n";
 	Assimp::Importer importer;
 	const aiScene* scene = importer.ReadFile("models/" + _fileName, aiProcess_Triangulate);
 	if (!scene || scene->mFlags & AI_SCENE_FLAGS_INCOMPLETE || !scene->mRootNode)

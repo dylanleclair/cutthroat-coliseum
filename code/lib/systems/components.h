@@ -58,7 +58,7 @@ public:
 		rotationAngle = _angle;
 		rotationAxis = _rotationAxis;
 	}
-
+	
 	void setRotation(glm::quat _rotation) {
 		//rotationQ = _rotation;
 		rotationAxis = glm::axis(_rotation);
