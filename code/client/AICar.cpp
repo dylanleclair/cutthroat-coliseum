@@ -24,7 +24,6 @@ NavPath generateCirclePath(int radius) {
 
 }
 
-
 void AICar::Initialize(NavPath* pathToFollow)
 {
     m_navPath = pathToFollow;

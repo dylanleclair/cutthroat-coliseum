@@ -57,12 +57,13 @@ struct NavPath {
 
 };
 
+
 struct AICar : Car {
 
     // TODO(dylan): add a renderer to render the path the AI car is following
 
     NavPath* m_navPath;
-    int m_lapCount;
+    int m_lapCount = 1;
 
     AICar() : Car() {}
         // all the physics stuff lives in the physics system
@@ -82,6 +83,4 @@ struct AICar : Car {
     Command pathfind(glm::vec3 currentPosition);
 
     Command pathfind(glm::vec3 currentPosition, ecs::Scene& scene, Guid targetEntity);
-
-
 };

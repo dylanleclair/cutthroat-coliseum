@@ -171,7 +171,9 @@ int main(int argc, char* argv[]) {
 	mainScene.AddComponent(navRenderer_e.guid,navPathRender);
 
 	// only spawn one for now!! consider this ur final warning.
-	spawnAIEntity(mainScene,&physicsSystem, car_e.guid,{10.f, 10.f,10.f}, &aiPath);
+	//spawnAIEntity(mainScene,&physicsSystem, car_e.guid,{10.f, 10.f,10.f}, &aiPath);
+	Guid aiCarGuid = spawnAIEntity(mainScene, &physicsSystem, car_e.guid, { 10.f, 10.f,10.f }, &aiPath);
+	AICar& aiCarInstance = mainScene.GetComponent<AICar>(aiCarGuid);
 	// spawnAIEntity(mainScene,&physicsSystem, car_e.guid,{0.f, 0.f,5.f}, &circlePath);
 	
 
@@ -595,6 +597,17 @@ int main(int argc, char* argv[]) {
 		ImGui::PopFont();
 		ImGui::End();
 
+		//Lap counter
+		ImGui::SetNextWindowPos(ImVec2(10, 20));
+		ImGui::Begin("UI", (bool*)0, textWindowFlags);
+		ImGui::SetWindowFontScale(2.f);
+		ImGui::PushFont(CabalBold);
+		ImGui::TextColored(ImVec4(1.0f, 1.0f, 1.0f, 1.0f), "AI Lap: %d/3", aiCarInstance.m_lapCount);
+		ImGui::PopFont();
+		ImGui::End();
+
+		
+
 		//you win message
 		static int counter = 0;
 		const float delayInSeconds = 0.5;
@@ -611,6 +624,23 @@ int main(int argc, char* argv[]) {
 				ImGui::SetWindowFontScale(5.f);
 				ImGui::PushFont(CabalBold);
 				ImGui::TextColored(ImVec4(1.0f, 1.0f, 1.0f, 1.0f), "VICTORY");
+				ImGui::PopFont();
+				ImGui::End();
+			}
+		}
+
+		else if (aiCarInstance.m_lapCount >= 3) {
+			counter += timestep.getMilliseconds();
+			if (counter >= delayInSeconds * 1000) {
+				counter = 0;
+				display = !display;
+			}
+			if (display) {
+				ImGui::SetNextWindowPos(ImVec2(200, 200));
+				ImGui::Begin("UI2", (bool*)0, textWindowFlags);
+				ImGui::SetWindowFontScale(5.f);
+				ImGui::PushFont(CabalBold);
+				ImGui::TextColored(ImVec4(1.0f, 1.0f, 1.0f, 1.0f), "AI VICTORY");
 				ImGui::PopFont();
 				ImGui::End();
 			}
