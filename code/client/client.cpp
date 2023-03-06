@@ -145,7 +145,7 @@ int main(int argc, char* argv[]) {
 	AICar& aiCar = mainScene.GetComponent<AICar>(aiDriver_e.guid);
 	aiCar.physicsSystem = &physicsSystem;
 	aiCar.Initialize(&circlePath);
-	if (!aiCar.initVehicle(PxVec3(3.0f,0.f,1.f)))
+	if (!aiCar.initVehicle(PxVec3(45.0f,0.f,1.f)))
 	{
 		std::cout << "ERROR: could not initialize ai-driven vehicle";
 	}
@@ -172,7 +172,7 @@ int main(int argc, char* argv[]) {
 	ecs::Entity aiDirRenderer = mainScene.CreateEntity();
 	mainScene.AddComponent(aiDirRenderer.guid, aiVehicleDirection);
 	mainScene.AddComponent(aiDirRenderer.guid, TransformComponent{});
-	//mainScene.AddComponent(aiDriver_e.guid, PathfindingComponent{car_e.guid});
+	mainScene.AddComponent(aiDriver_e.guid, PathfindingComponent{car_e.guid});
 
 	// Car Entity
 	RenderModel car_r = RenderModel();
@@ -201,7 +201,7 @@ int main(int argc, char* argv[]) {
 	mainScene.AddComponent(finish_e.guid, finish);
 
 	TransformComponent finish_t = TransformComponent();
-	finish_t.setPosition(glm::vec3(0, 0, 0));
+	finish_t.setPosition(glm::vec3(30, 0, 0));
 	finish_t.setScale(glm::vec3(3.2f, 3.2f, 3.2f));
 	mainScene.AddComponent(finish_e.guid, finish_t);
 
@@ -220,16 +220,14 @@ int main(int argc, char* argv[]) {
 	
 	// Level
 	TransformComponent level_t = TransformComponent();
-	level_t.setScale(glm::vec3(3.2f, 1.f, 3.2f));
+	level_t.setScale(glm::vec3(3.2f, 3.2f, 3.2f));
 	mainScene.AddComponent(ground_e.guid, level_t);
 
 	// actual level mesh & collider for it
 	CPU_Geometry levelCollider_raw = CPU_Geometry();
 	GraphicsSystem::importOBJ(levelCollider_raw, "STADIUM_COLLIDER.obj");
-	for (auto& e : levelCollider_raw.verts)
-		e *= 3;
 	LevelCollider levelCollider{ levelCollider_raw, physicsSystem};
-	auto levelTriangleMesh = levelCollider.cookLevel(glm::mat4(1));
+	auto levelTriangleMesh = levelCollider.cookLevel(glm::scale(glm::mat4(1), glm::vec3(3.2)));
 	levelCollider.initLevelRigidBody(levelTriangleMesh);
 
 	RenderModel level_r = RenderModel();
