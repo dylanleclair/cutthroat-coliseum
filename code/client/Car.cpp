@@ -248,7 +248,10 @@ void Car::Update(Guid carGuid, ecs::Scene& scene, float deltaTime)
   // If the brake key is pressed, while the engine is idle, and the current gear is first gear, switch to reverse
   if (s_key && this->m_Vehicle.mEngineDriveState.gearboxState.currentGear == 2 &&
       this->m_Vehicle.mEngineDriveState.engineState.rotationSpeed == 0) {
+      //this->m_Vehicle.mTransmissionCommandState.targetGear = 0;
+      //gVehicle.mTransmissionCommandState.targetGear = physx::vehicle2::PxVehicleDirectDriveTransmissionCommandState::eREVERSE;
       this->m_TargetGearCommand = 0;
+      //this->m_Vehicle.mTransmissionCommandState.eAUTOMATIC_GEAR();
   }
   // While the gearbox is in reverse holding s goes backwards, hold w brakes
   else if (this->m_Vehicle.mEngineDriveState.gearboxState.currentGear == 0) {
@@ -257,7 +260,8 @@ void Car::Update(Guid carGuid, ecs::Scene& scene, float deltaTime)
       }
       // If the engine is idle and the w key is pressed switch to normal driving
       else if (w_key && this->m_Vehicle.mEngineDriveState.engineState.rotationSpeed == 0) {
-           this->m_TargetGearCommand = 2;
+          // 255 is eAUTOMATIC_GEAR 
+           this->m_TargetGearCommand = 255;
       }
       else if (w_key) {
           command.brake = carBrake;
