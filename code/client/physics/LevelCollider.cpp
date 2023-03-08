@@ -58,21 +58,18 @@ physx::PxTriangleMesh * LevelCollider::cookLevel(glm::mat4 transform)
 	groundDesc.points.stride = sizeof(physx::PxVec3);
 	groundDesc.points.data = levelVertices.data();
 
-	groundDesc.triangles.count = levelIndices.size();
+	groundDesc.triangles.count = levelIndices.size() / 3;
 	groundDesc.triangles.stride = sizeof(physx::PxU32) * 3;
 	groundDesc.triangles.data = levelIndices.data();
 
 	physx::PxDefaultMemoryOutputStream writeBuffer;
 	physx::PxTriangleMeshCookingResult::Enum result;
 
-    for (int i = 0; i < 10; i++) {
-        gCooking->cookTriangleMesh(groundDesc, writeBuffer, &result);
-        if (result == physx::PxTriangleMeshCookingResult::Enum::eFAILURE)
+        bool status = gCooking->cookTriangleMesh(groundDesc, writeBuffer, &result);
+        if (!status)//result == physx::PxTriangleMeshCookingResult::Enum::eFAILURE)
         {
             std::cerr << "level cooking failed...  who let physx cook?" << std::endl;
-            continue;
         }
-    }
 	physx::PxDefaultMemoryInputData readBuffer(writeBuffer.getData(), writeBuffer.getSize());
 
     return gPhysics->createTriangleMesh(readBuffer);
