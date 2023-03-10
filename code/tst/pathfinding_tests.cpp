@@ -1,5 +1,5 @@
 #include "gtest/gtest.h"
-#include "systems/pathfinding.h"
+#include "core/pathfinding.h"
 #include <math.h>
 #include <iostream>
 

@@ -3,8 +3,8 @@
 #include <ctype.h>
 #include <iostream>
 
-#include "systems/ecs.h"
-#include "utils/Time.h"
+#include "core/ecs.h"
+#include "../utils/Time.h"
 #include "SDL.h"
 #include <limits>
 

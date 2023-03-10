@@ -1,7 +1,7 @@
 #pragma once
 
-#include "../Car.h"
-#include "../AICar.h"
+#include "../entities/car/Car.h"
+#include "../entities/car/AICar.h"
 
 void init_sound_system();
 

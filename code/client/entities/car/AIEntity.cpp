@@ -1,9 +1,9 @@
-#include "systems/ecs.h"
+#include "core/ecs.h"
 #include "glm/glm.hpp"
-#include "systems/GraphicsSystem.h"
-#include "systems/pathfinding.h"
-#include "../systems/PhysicsSystem.h"
-#include "../AICar.h"
+#include "../../systems/GraphicsSystem.h"
+#include "core/pathfinding.h"
+#include "../../systems/PhysicsSystem.h"
+#include "AICar.h"
 
 Guid spawnAIEntity(ecs::Scene& scene, physics::PhysicsSystem* physicsSystem, Guid entityToFollow, glm::vec3 position, NavPath* circlePath)
 {

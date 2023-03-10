@@ -1,4 +1,4 @@
-#include "systems/ecs.h"
+#include "core/ecs.h"
 #include "GraphicsSystem.h"
 
 #include <GL/glew.h>
@@ -19,7 +19,7 @@
 #include <PxPhysicsAPI.h>
 
 //DEBUG IMPORTS
-#include "../lib/graphics/snippetrender/SnippetRender.h"
+#include "graphics/snippetrender/SnippetRender.h"
 
 GraphicsSystem::GraphicsSystem(Window& _window) :
 	modelShader("shaders/lighting_simple.vert", "shaders/lighting_simple.frag"),

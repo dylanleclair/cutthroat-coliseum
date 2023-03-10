@@ -50,7 +50,7 @@
 #include <vector>
 
 #include "../Geometry.h"
-#include "../lib/systems/GraphicsSystem.h"
+#include "../../GraphicsSystem.h"
 #include "glm/gtc/type_ptr.hpp"
 
 #define MAX_NUM_ACTOR_SHAPES	128

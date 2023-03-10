@@ -4,20 +4,20 @@
 
 #include "PxPhysicsAPI.h"
 #include "vehicle2/PxVehicleAPI.h"
-#include "physx/snippetvehicle2common/enginedrivetrain/EngineDrivetrain.h"
-#include "physx/snippetvehicle2common/serialization/BaseSerialization.h"
-#include "physx/snippetvehicle2common/serialization/EngineDrivetrainSerialization.h"
-#include "physx/snippetvehicle2common/SnippetVehicleHelpers.h"
+#include "../../physx/snippetvehicle2common/enginedrivetrain/EngineDrivetrain.h"
+#include "../../physx/snippetvehicle2common/serialization/EngineDrivetrainSerialization.h"
+#include "../../physx/snippetvehicle2common/serialization/BaseSerialization.h"
+#include "../../physx/snippetvehicle2common/SnippetVehicleHelpers.h"
 
-#include "physx/snippetcommon/SnippetPVD.h"
+#include "../../physx/snippetcommon/SnippetPVD.h"
 
 #include <glm/glm.hpp>
 
-#include "Time.h"
+#include "../../utils/Time.h"
 #include "SDL.h"
 #include <limits>
 
-#include "systems/PhysicsSystem.h"
+#include "../../systems/PhysicsSystem.h"
 
 using namespace physx;
 using namespace physx::vehicle2;

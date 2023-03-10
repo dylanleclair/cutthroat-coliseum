@@ -2,9 +2,9 @@
 #include "PxPhysicsAPI.h"
 #include <vector>
 #include <iostream>
-#include "systems/GraphicsSystem.h"
+#include "../../systems/GraphicsSystem.h"
 #include <string>
-#include "../systems/PhysicsSystem.h"
+#include "../../systems/PhysicsSystem.h"
 
 using namespace physics;
 

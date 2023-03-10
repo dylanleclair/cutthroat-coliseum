@@ -1,7 +1,7 @@
 #pragma once
 #include "Car.h"
-#include "systems/ai.h"
-#include "systems/ecs.h"
+#include "../../systems/ai.h"
+#include "core/ecs.h"
 #include <vector>
 #include "glm/glm.hpp"
 
