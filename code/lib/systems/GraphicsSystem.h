@@ -59,7 +59,10 @@ private:
 	glm::vec3 lightDirection = glm::vec3(1, -3, 1);
 	float ambiantStrength = 1;
 	float diffuseWeight = 0.3;
-	int numQuantizedSplits = 10; //CAN'T BE 1!!!
+	int numQuantizedSplits = 10;
+	glm::vec3 goochCool = glm::vec3(125 / 255.f, 249 / 255.f, 255 / 255.f);
+	glm::vec3 goochWarm = glm::vec3(149 / 255.f, 53 / 255.f, 83 / 255.f);
+	float goochStrength = 0.1f;
 
 	//shader variables
 	ShaderProgram modelShader;

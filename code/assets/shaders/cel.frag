@@ -7,8 +7,11 @@ uniform sampler2D gColor;
 uniform sampler2D gDepth;
 
 //variable uniforms
-uniform float normalDiffWeight;
-uniform float depthDiffWeight;
+uniform float normalDiffWeight = 1;
+uniform float depthDiffWeight = 1;
+uniform vec3 goochCool = vec3(125/255.0, 249/255.0, 255/255.0);
+uniform vec3 goochWarm = vec3(149/255.0, 53/255.0, 83/255.0);
+uniform float goochWeight = 0;
 
 uniform vec3 lightDir;
 uniform float ambiantStr;
@@ -35,9 +38,10 @@ void main()
 	vec3 tnormal = texture(gNormal, tc).xyz;
 	vec3 tcolor = texture(gColor, tc).xyz;
 	float tdepth = LinearizeDepth(texture(gDepth, tc).x);
+	vec3 nlightDir = normalize(lightDir);
 
 	//determine the lighting
-	vec3 diff = max(dot(lightDir, tnormal), 0.0) * vec3(1,0.97,0.94) * diffuseWeight;
+	vec3 diff = max(dot(nlightDir, tnormal), 0.0) * vec3(1,0.97,0.94) * diffuseWeight;
 	
 	//calculate ambiant
 	vec3 ambiant = tcolor * ambiantStr;
@@ -58,11 +62,15 @@ void main()
 
 	float outline = (depthDiff * depthDiffWeight + normalDiff * normalDiffWeight);
 
+	//calculate Gooch shading
+	vec3 gooch = mix(goochCool, goochWarm, (1 + dot(nlightDir, tnormal))/2.0);
+
 	//quantize the color
 	vec3 calculatedCol = (diff + ambiant) * tcolor;
-	vec3 quantized = (ceil(calculatedCol * numQuantizedSplits) - 1)/(numQuantizedSplits - 1);     
+	vec3 quantized = (ceil(calculatedCol * numQuantizedSplits) - 1)/(numQuantizedSplits - 1);    
+	
+
 	
 	//calculate final color
-	color = mix(vec4(quantized, 1),vec4(0,0,0,1),outline);
-	//color = mix(vec4(tcolor, 1), vec4(0,0,0,1), outline);
+	color = mix(vec4(mix(quantized, gooch, goochWeight), 1),vec4(0,0,0,1),outline);
 }

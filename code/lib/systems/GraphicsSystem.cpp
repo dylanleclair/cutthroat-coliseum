@@ -151,6 +151,9 @@ void GraphicsSystem::ImGuiPanel() {
 		ImGui::SliderFloat("normalWeightDiff", &normalDiffWeight, 0, 1);
 		ImGui::SliderFloat("depthWeightDiff", &depthDiffWeight, 0, 1);
 		ImGui::SliderInt("number of color zones", &numQuantizedSplits, 0, 40);
+		ImGui::SliderFloat("gooch strength", &goochStrength, 0, 1);
+		ImGui::ColorPicker3("gooch cool", &(goochCool[0]));
+		ImGui::ColorPicker3("gooch warm", &(goochWarm[0]));
 	}
 
 	if (ImGui::CollapsingHeader("Transforms")) {
@@ -400,10 +403,18 @@ void GraphicsSystem::Update(ecs::Scene& scene, float deltaTime) {
 		GLuint ambiantUniform = glGetUniformLocation(GLuint(celShader), "ambiantStr");
 		GLuint diffuseWeightUniform = glGetUniformLocation(GLuint(celShader), "diffuseWeight");
 		GLuint quantizedSplitsUniform = glGetUniformLocation(GLuint(celShader), "numQuantizedSplits");
+		GLuint goochWarmUniform = glGetUniformLocation(GLuint(celShader), "goochWarm");
+		GLuint goochCoolUniform = glGetUniformLocation(GLuint(celShader), "goochCool");
+		GLuint goochStrengthUniform = glGetUniformLocation(GLuint(celShader), "goochWeight");
 		glUniform3fv(lightUniform, 1, glm::value_ptr(lightDirection));
 		glUniform1f(ambiantUniform, ambiantStrength);
 		glUniform1f(diffuseWeightUniform, diffuseWeight);
 		glUniform1i(quantizedSplitsUniform, numQuantizedSplits);
+		glm::vec3 goochWarmPass = goochWarm;
+		glUniform3fv(goochWarmUniform, 1, glm::value_ptr(goochWarmPass));	
+		glm::vec3 goochCoolPass = goochCool;
+		glUniform3fv(goochCoolUniform, 1, glm::value_ptr(goochCoolPass));
+		glUniform1f(goochStrengthUniform, goochStrength);
 		
 		//bind the textures
 		glActiveTexture(GL_TEXTURE0);
