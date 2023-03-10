@@ -1,5 +1,5 @@
 #pragma once
-#include "systems/ecs.h"
+#include "core/ecs.h"
 #include <GL/glew.h>
 #include "graphics/Geometry.h"
 #include "../client/Window.h"

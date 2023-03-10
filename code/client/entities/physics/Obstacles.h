@@ -1,9 +1,9 @@
 #pragma once
-#include "systems/ecs.h"
-#include "systems/GraphicsSystem.h"
-#include "systems/components.h"
+#include "core/ecs.h"
+#include "../../systems/GraphicsSystem.h"
+#include "../../systems/components.h"
+#include "../../systems/PhysicsSystem.h"
 #include "PxPhysicsAPI.h"
-#include "systems/PhysicsSystem.h"
 
 using namespace physx;
 

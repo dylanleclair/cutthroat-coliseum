@@ -5,18 +5,17 @@
 #include "imgui_impl_sdl.h"
 #include "imgui_impl_opengl3.h"
 
-#include "graphics/Geometry.h"
+#include "systems/graphics/Geometry.h"
 #include "PxPhysicsAPI.h"
 
 #include "Window.h"
 
-#include "systems/ecs.h"
+#include "core/ecs.h"
 #include "systems/GraphicsSystem.h"
 #include "systems/components.h"
 
 #include "GRAPHICS_TESTBENCH.h"
 
-#include "CarPhysics.h"
 #include "FrameCounter.h"
 #include "systems/ai.h"
 
@@ -27,15 +26,15 @@
 
 #include "systems/PhysicsSystem.h"
 
-#include "Car.h"
-#include "AICar.h"
-#include "entities/AIEntity.h"
+#include "entities/car/Car.h"
+#include "entities/car/AICar.h"
+#include "entities/car/AIEntity.h"
 
 
 #include "TetherGraphics.h"
-#include "Obstacles.h"
+#include "entities/physics/Obstacles.h"
 
-#include "physics/LevelCollider.h"
+#include "entities/physics/LevelCollider.h"
 
 #include "systems/SoundSystem.h"
 
@@ -47,8 +46,8 @@ glm::vec3 calculateSpherePoint(float s, float t)
 	return(glm::vec3(x, y, z));
 }
 
-CarPhysics carPhysics;
-CarPhysicsSerde carConfig(carPhysics);
+// CarPhysics carPhysics;
+// CarPhysicsSerde carConfig(carPhysics);
 
 bool showImgui = true;
 
@@ -91,9 +90,6 @@ int main(int argc, char* argv[]) {
 	lastTime_millisecs = SDL_GetTicks();
 
 	ImGuiIO& io = ImGui::GetIO(); (void)io;
-
-	carConfig.deserialize();
-
 
 	/**
 	 * Begin initialization of ECS systems, entities, etc.
@@ -378,10 +374,8 @@ int main(int argc, char* argv[]) {
 						
 					// TODO: change the file that is serializes (Want to do base.json and enginedrive.json)
 					case SDLK_i:// i means in
-						carConfig.deserialize();
 						break;
 					case SDLK_o:// o means out
-						carConfig.serialize();
 						break;
 
 					case SDLK_0:

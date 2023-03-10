@@ -1,8 +1,8 @@
 #include "PxPhysicsAPI.h"
 #include "PhysicsSystem.h"
-#include "utils/Time.h"
-#include "../Car.h"
-#include "../AICar.h"
+#include "../utils/Time.h"
+#include "../entities/car/Car.h"
+#include "../entities/car/AICar.h"
 
 namespace physics
 {

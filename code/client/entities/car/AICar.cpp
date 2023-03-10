@@ -1,9 +1,9 @@
 
 #include "AICar.h"
-#include "systems/ai.h"
-#include "systems/pathfinding.h"
-#include "systems/GraphicsSystem.h"
-#include "utils/PxConversionUtils.h"
+#include "../../systems/ai.h"
+#include "core/pathfinding.h"
+#include "../../systems/GraphicsSystem.h"
+#include "../../utils/PxConversionUtils.h"
 #include "glm/glm.hpp"
 
 
@@ -104,6 +104,13 @@ Command AICar::pathfind(glm::vec3 currentPosition)
 
     checkFlipped(carPose);
 
+
+    // CHECK IF GOING TO RUN INTO AN OBSTACLE
+    // SEE IF OBSTACLE UP AHEAD
+
+    // INSTEAD OF CASTING FROM VEHICLE
+    // FOR EACH VERTEX, SEE IF OBSTACLE IN UP DIRECTION
+    // 
 
     return command;
 }

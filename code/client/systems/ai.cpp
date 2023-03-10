@@ -1,8 +1,8 @@
 #include "ai.h"
-#include "systems/pathfinding.h"
-#include "systems/ecs.h"
-#include "systems/GraphicsSystem.h"
-#include "systems/components.h"
+#include "core/pathfinding.h"
+#include "core/ecs.h"
+#include "GraphicsSystem.h"
+#include "components.h"
 
 
 glm::vec3 roundPosition(glm::vec3 pos)

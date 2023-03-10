@@ -1,5 +1,5 @@
 #include "gtest/gtest.h"
-#include "systems/ecs.h"
+#include "core/ecs.h"
 
 struct DummyData
 {

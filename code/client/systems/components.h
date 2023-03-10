@@ -1,9 +1,9 @@
 #pragma once
-#include "../graphics/Geometry.h"
-#include "../graphics/Texture.h"
+#include "graphics/Geometry.h"
+#include "graphics/Texture.h"
 #include "PxPhysicsAPI.h"
 
-#include "utils/PxConversionUtils.h"
+#include "../utils/PxConversionUtils.h"
 
 /*
 * Transform describes the objects position in 3D space.
