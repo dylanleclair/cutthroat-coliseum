@@ -317,6 +317,11 @@ int main(int argc, char* argv[]) {
 
 	bool playSounds = true;
 
+	// Find the default values of movement dampening
+	// This will be used to reset changes to dampening
+	auto default_lin_damp = testCar.m_Vehicle.mPhysXState.physxActor.rigidBody->getLinearDamping();
+	auto default_ang_damp = testCar.m_Vehicle.mPhysXState.physxActor.rigidBody->getAngularDamping();
+
 	// GAME LOOP
 	while (!quit) {
 		Timestep timestep; // Time since last frame
@@ -329,6 +334,10 @@ int main(int argc, char* argv[]) {
 			lastTime_millisecs = now_millisecs;
 		}
 
+		// Reset dampening values if they are changed every frame (used after car is reset) 
+		//TODO:  May need to put in an if check, and factor out ?
+		testCar.m_Vehicle.mPhysXState.physxActor.rigidBody->setLinearDamping(default_lin_damp);
+		testCar.m_Vehicle.mPhysXState.physxActor.rigidBody->setAngularDamping(default_ang_damp);
 
 		//polls all pending input events until there are none left in the queue
 		while (SDL_PollEvent(&window.event)) {
@@ -352,13 +361,14 @@ int main(int argc, char* argv[]) {
 
 					case SDLK_r:
 						//TODO recompile the shader
-						// Rudementary car reset (will keep using the velocity and rotation of the car through the rest)
-						// Even while using clear force and clear torque it still spins ....
+						// Rudementary car reset (will keep using the velocity and rotation of the car through the rest).
 						testCar.m_Vehicle.mPhysXState.physxActor.rigidBody->setGlobalPose(PxTransform(35.f, 0.f, 0.f));
-						testCar.m_Vehicle.mPhysXState.physxActor.rigidBody->clearForce();
-						testCar.m_Vehicle.mPhysXState.physxActor.rigidBody->clearTorque();
+						testCar.m_Vehicle.mPhysXState.physxActor.rigidBody->setLinearDamping(10000.f);
+						testCar.m_Vehicle.mPhysXState.physxActor.rigidBody->setAngularDamping(10000.f);
 						lapCount = 1;
 						aiCarInstance.m_lapCount = 1;
+						// TODO: apply the dampening to ai when resetting the ai
+						// Will need to for loop all ai cars
 						aiCarInstance.m_Vehicle.mPhysXState.physxActor.rigidBody->setGlobalPose(PxTransform(10.f, 2.f, 10.f));
 						break;
 						
