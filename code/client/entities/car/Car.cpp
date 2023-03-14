@@ -142,6 +142,8 @@ void Car::carImGui() {
     ImGui::Text("Suspension force x: %f", m_Vehicle.mBaseState.suspensionForces->force.x);
     ImGui::Text("Suspension force y: %f", m_Vehicle.mBaseState.suspensionForces->force.y);
     ImGui::Text("Suspension force z: %f", m_Vehicle.mBaseState.suspensionForces->force.z);
+    ImGui::Text("Rotation x: %f, y: %f, z: %f", m_Vehicle.mPhysXState.physxActor.rigidBody->getGlobalPose().q.x, m_Vehicle.mPhysXState.physxActor.rigidBody->getGlobalPose().q.y,
+                                                m_Vehicle.mPhysXState.physxActor.rigidBody->getGlobalPose().q.z);
     ImGui::Text("On the ground ?: %s", m_Vehicle.mBaseState.roadGeomStates->hitState ? "true" : "false");
     ImGui::End();
 }
@@ -153,10 +155,6 @@ void Car::setClosestTetherPoint(glm::vec3 _loc) {
     closest_tether_point.p.x = _loc.x;
     closest_tether_point.p.y = _loc.y;
     closest_tether_point.p.z = _loc.z;
-}
-
-void Car::flipCar() {
-    auto carQ = m_Vehicle.mPhysXState.physxActor.rigidBody->getGlobalPose().q;
 }
 
 void Car::resetModifications() {
@@ -228,6 +226,7 @@ void Car::Update(Guid carGuid, ecs::Scene& scene, float deltaTime)
   auto d_key = keys_arr[SDL_SCANCODE_D];
   auto space_bar = keys_arr[SDL_SCANCODE_SPACE];
   auto m_key = keys_arr[SDL_SCANCODE_M];
+  auto f_key = keys_arr[SDL_SCANCODE_F];
 
   float delta_seconds = deltaTime;
   assert(delta_seconds > 0.f && delta_seconds < 0.2000001f);
@@ -349,6 +348,10 @@ void Car::Update(Guid carGuid, ecs::Scene& scene, float deltaTime)
   else
   {
       command.steer = carAxis * carAxisScale;
+  }
+
+  if (f_key || SDL_GameControllerGetButton(ControllerInput::controller, SDL_CONTROLLER_BUTTON_Y)) {
+      checkFlipped(m_Vehicle.mPhysXState.physxActor.rigidBody->getGlobalPose());
   }
 
   // An attempt at replicating the b face button function

@@ -125,7 +125,6 @@ struct Car {
 
     void carImGui();
 
-    void flipCar();
     void resetModifications();
     bool isGroundedDelay(Car& car);
     void TetherSteer(PxTransform _loc);
