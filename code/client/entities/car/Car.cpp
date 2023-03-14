@@ -241,6 +241,12 @@ void Car::Update(Guid carGuid, ecs::Scene& scene, float deltaTime)
   // BUG: max positive is 1 less in magnitude than max min meaning full negative will be slightly above 1
   if (!c_tethered) {
       carAxis = (float)-SDL_GameControllerGetAxis(ControllerInput::controller, SDL_CONTROLLER_AXIS_LEFTX) / SHRT_MAX;
+
+      // Controller deadzone to avoid controller drift when
+      // stick is at rest
+      if (carAxis < 0.1f && carAxis > -0.1f) {
+          carAxis = 0.f;
+      }
   }
   
   // Code for going in reverse
