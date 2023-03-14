@@ -124,8 +124,26 @@ void Car::cleanupVehicle()
 }
 
 PxRigidBody* Car::getVehicleRigidBody()
-{  
+{ 
   return m_Vehicle.mPhysXState.physxActor.rigidBody;
+}
+
+void Car::carImGui() {
+    ImGui::Begin("Car commands tuner", nullptr);
+    ImGui::Text("left stick horizontal tilt: %f", carAxis);
+    //ImGui::Text("Car Throttle: %f", controller_throttle);
+    //ImGui::Text("Car Brake: %f", controller_brake);
+    ImGui::Text("Car Location: %f, %f", m_Vehicle.mPhysXState.physxActor.rigidBody->getGlobalPose().p.x, m_Vehicle.mPhysXState.physxActor.rigidBody->getGlobalPose().p.z);
+    ImGui::Text("Current Gear: %d", m_Vehicle.mEngineDriveState.gearboxState.currentGear);
+    ImGui::Text("Current engine rotational speed: %f", m_Vehicle.mEngineDriveState.engineState.rotationSpeed);
+    ImGui::Text("Center of Gravity: %f, %f, %f", m_Vehicle.mPhysXParams.physxActorCMassLocalPose.p.x,
+        m_Vehicle.mPhysXParams.physxActorCMassLocalPose.p.y,
+        m_Vehicle.mPhysXParams.physxActorCMassLocalPose.p.z);
+    ImGui::Text("Suspension force x: %f", m_Vehicle.mBaseState.suspensionForces->force.x);
+    ImGui::Text("Suspension force y: %f", m_Vehicle.mBaseState.suspensionForces->force.y);
+    ImGui::Text("Suspension force z: %f", m_Vehicle.mBaseState.suspensionForces->force.z);
+    ImGui::Text("On the ground ?: %s", m_Vehicle.mBaseState.roadGeomStates->hitState ? "true" : "false");
+    ImGui::End();
 }
 
 void Car::setClosestTetherPoint(PxTransform _loc) {
@@ -135,6 +153,10 @@ void Car::setClosestTetherPoint(glm::vec3 _loc) {
     closest_tether_point.p.x = _loc.x;
     closest_tether_point.p.y = _loc.y;
     closest_tether_point.p.z = _loc.z;
+}
+
+void Car::flipCar() {
+    auto carQ = m_Vehicle.mPhysXState.physxActor.rigidBody->getGlobalPose().q;
 }
 
 void Car::resetModifications() {

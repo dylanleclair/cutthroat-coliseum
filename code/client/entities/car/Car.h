@@ -19,6 +19,10 @@
 
 #include "../../systems/PhysicsSystem.h"
 
+#include "imgui.h"
+#include "imgui_impl_sdl.h"
+#include "imgui_impl_opengl3.h"
+
 using namespace physx;
 using namespace physx::vehicle2;
 using namespace snippetvehicle2;
@@ -118,6 +122,10 @@ struct Car {
     bool getCTethered();
     void setClosestTetherPoint(PxTransform _loc);
     void setClosestTetherPoint(glm::vec3 _loc);
+
+    void carImGui();
+
+    void flipCar();
     void resetModifications();
     bool isGroundedDelay(Car& car);
     void TetherSteer(PxTransform _loc);
