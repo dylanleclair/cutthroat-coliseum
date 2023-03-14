@@ -251,12 +251,8 @@ void Car::Update(Guid carGuid, ecs::Scene& scene, float deltaTime)
   
   // Code for going in reverse
   // If the brake key is pressed, while the engine is idle, and the current gear is first gear, switch to reverse
-  if (s_key && this->m_Vehicle.mEngineDriveState.gearboxState.currentGear == 2 &&
-      this->m_Vehicle.mEngineDriveState.engineState.rotationSpeed == 0) {
-      //this->m_Vehicle.mTransmissionCommandState.targetGear = 0;
-      //gVehicle.mTransmissionCommandState.targetGear = physx::vehicle2::PxVehicleDirectDriveTransmissionCommandState::eREVERSE;
+  if (s_key && this->m_Vehicle.mEngineDriveState.engineState.rotationSpeed == 0) {
       this->m_TargetGearCommand = 0;
-      //this->m_Vehicle.mTransmissionCommandState.eAUTOMATIC_GEAR();
   }
   // While the gearbox is in reverse holding s goes backwards, hold w brakes
   else if (this->m_Vehicle.mEngineDriveState.gearboxState.currentGear == 0) {
@@ -288,8 +284,7 @@ void Car::Update(Guid carGuid, ecs::Scene& scene, float deltaTime)
   // doing keyboard or controller input do x - did not work great
   // So I separated them, there may be a cleaner way to do this
   if (SDL_GameControllerGetAxis(ControllerInput::controller, SDL_CONTROLLER_AXIS_TRIGGERLEFT)
-      && this->m_Vehicle.mEngineDriveState.gearboxState.currentGear == 2 &&
-      this->m_Vehicle.mEngineDriveState.engineState.rotationSpeed == 0) {
+      && this->m_Vehicle.mEngineDriveState.engineState.rotationSpeed == 0) {
       this->m_TargetGearCommand = 0;
   }
   else if (this->m_Vehicle.mEngineDriveState.gearboxState.currentGear == 0) {
@@ -299,7 +294,8 @@ void Car::Update(Guid carGuid, ecs::Scene& scene, float deltaTime)
       // If the engine is idle and the w key is pressed switch to normal driving
       else if (SDL_GameControllerGetAxis(ControllerInput::controller, SDL_CONTROLLER_AXIS_TRIGGERRIGHT)
           && this->m_Vehicle.mEngineDriveState.engineState.rotationSpeed == 0) {
-          this->m_TargetGearCommand = 2;
+          // 255 is eAUTOMATIC_GEAR 
+          this->m_TargetGearCommand = 255;
       }
       else if (SDL_GameControllerGetAxis(ControllerInput::controller, SDL_CONTROLLER_AXIS_TRIGGERRIGHT)) {
           command.brake = (float)SDL_GameControllerGetAxis(ControllerInput::controller, SDL_CONTROLLER_AXIS_TRIGGERRIGHT) / SHRT_MAX;
