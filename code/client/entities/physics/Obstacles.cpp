@@ -253,6 +253,7 @@ void addRigidBody(physics::PhysicsSystem physicsSystem) {
 	// add the actor to the scene
 	physicsSystem.m_Scene->addActor(*actor15);
 
+
 	// Tether Point
 	PxBoxGeometry boxGeom16(PxVec3(1.0f, 2.0f, 1.0f));
 
@@ -267,6 +268,29 @@ void addRigidBody(physics::PhysicsSystem physicsSystem) {
 
 	// add the actor to the scene
 	physicsSystem.m_Scene->addActor(*actor16);
+
+
+	// If you want to add an object and rotate it - this is how you do it
+	// You need to pass both the rotation and positon to PxTransform at the same time
+
+	//// Ramp	
+	//// Create a transform representing the initial position of the object
+	//PxVec3 rampPosition(20.0f, -0.5f, 40.0f);
+
+	//// Rotation of the object
+	//PxQuat rampRotation(-0.12, PxVec3(1.0f, 0.0f, 0.0f));
+
+	//PxTransform rampTransform(rampPosition, rampRotation);
+
+	//PxBoxGeometry rampGeometry(PxVec3(5.0f, 1.0f, 5.0f));
+	//PxRigidStatic* ramp = PxCreateStatic(*physicsSystem.m_Physics,
+	//	rampTransform,
+	//	rampGeometry,
+	//	*physicsSystem.m_Material
+	//);
+	////*physics->createMaterial(0.5f, 0.5f, 0.1f)
+	//physicsSystem.m_Scene->addActor(*ramp);
+
 }
 
 void setUpLogs(ecs::Scene &mainScene) {
