@@ -29,17 +29,19 @@ public:
 	void bind() { glBindTexture(GL_TEXTURE_2D, textureID); }
 	void unbind() { glBindTexture(GL_TEXTURE_2D, textureID); }
 
+	//the texture contains a NO_TEXTURE singleton that can be used wherever a texture is required but not provided by default
+	static Texture* getNoTextureTexture();
+
 private:
 	TextureHandle textureID;
 	std::string path;
 	GLint interpolation;
+	static Texture* noTexture;
 
 
 	// Although uint might make more sense here, went with int under the assumption
 	// that most students will want to work with ints, not uints, in main.cpp
 	int width;
 	int height;
-
-
-
 };
+

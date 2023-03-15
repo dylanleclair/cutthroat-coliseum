@@ -18,7 +18,6 @@
 #include <glm/gtc/quaternion.hpp> 
 #include <glm/gtx/quaternion.hpp>
 
-
 struct GraphicsSystem : ecs::ISystem {
 public:
 	GraphicsSystem(Window& _window);
@@ -64,18 +63,30 @@ private:
 	glm::vec3 goochWarm = glm::vec3(149 / 255.f, 53 / 255.f, 83 / 255.f);
 	float goochStrength = 0.1f;
 
+	//billboard default quad
+	GLuint billboard_vertexArray;
+	GLuint billboard_vertexBuffer;
+
 	//shader variables
 	ShaderProgram modelShader;
 	ShaderProgram lineShader;
 	ShaderProgram wireframeShader;
 	ShaderProgram gShader;
 	ShaderProgram celShader;
+	ShaderProgram shadowGShader;
+	ShaderProgram VFXshader;
 	//buffer for offscreen rendering
+	//buffers
 	GLuint gBuffer;
+	GLuint gShadowBuffer;
+	//textures used in g buffer
 	GLuint gDepth;
 	GLuint gColor;
 	GLuint gNormal;
 	GLuint gPosition;
+	GLuint gShadow;
+	//texture used in shadow map calculation
+	GLuint gLightDepth;
 	//variables for rendering whole screen quad
 	GLuint quad_vertexArray;
 	GLuint quad_vertexBuffer;

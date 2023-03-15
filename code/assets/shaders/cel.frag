@@ -5,6 +5,7 @@ uniform sampler2D gPosition;
 uniform sampler2D gNormal;
 uniform sampler2D gColor;
 uniform sampler2D gDepth;
+uniform sampler2D gShadow;
 
 //variable uniforms
 uniform float normalDiffWeight = 1;
@@ -37,6 +38,7 @@ void main()
 	vec3 tposition = texture(gPosition, tc).xyz;
 	vec3 tnormal = texture(gNormal, tc).xyz;
 	vec3 tcolor = texture(gColor, tc).xyz;
+	float shadow = texture(gShadow, tc).r; //get the alpha channel which holds the shadow data
 	float tdepth = LinearizeDepth(texture(gDepth, tc).x);
 	vec3 nlightDir = normalize(lightDir);
 
@@ -69,8 +71,10 @@ void main()
 	vec3 calculatedCol = (diff + ambiant) * tcolor;
 	vec3 quantized = (ceil(calculatedCol * numQuantizedSplits) - 1)/(numQuantizedSplits - 1);    
 	
-
-	
 	//calculate final color
-	color = mix(vec4(mix(quantized, gooch, goochWeight), 1),vec4(0,0,0,1),outline);
+	//if shadow = 1 then the pixel is in shadow
+	color = mix(vec4(mix(quantized, gooch, goochWeight), 1),vec4(0,0,0,1),outline) * ((1-shadow) + (shadow * 0.4));
+	//color = vec4(tcolor, 1) * ((1-shadow) + (shadow * 0.8));
+	//color = vec4(shadow, 0, 0, 1);
+
 }
