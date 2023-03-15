@@ -61,10 +61,11 @@ Command AICar::pathfind(glm::vec3 currentPosition)
         std::cout << "AI starting lap: " << m_lapCount << std::endl;
     }
 
-    if (m_lapCount == 3)
-    {
-        std::cout << "AI wins!" << std::endl;
-    }
+    // Commenting this out because we have GUID in the render loop for this
+    //if (m_lapCount == 3)
+    //{
+    //    std::cout << "AI wins!" << std::endl;
+    //}
 
     std::vector<glm::vec3> path = pathfinding::AStar<glm::vec3>(roundPositionToGraph(currentPosition), roundPositionToGraph(targetPos), euclideanBasic, AISystem::generateNearby);
 
