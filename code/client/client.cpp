@@ -177,6 +177,10 @@ int main(int argc, char* argv[]) {
 	// spawnAIEntity(mainScene,&physicsSystem, car_e.guid,{0.f, 0.f,5.f}, &circlePath);
 	
 
+	NavPath aiPath2{aiPathGeom.verts};
+	Guid aiCarGuid2 = spawnAIEntity(mainScene, &physicsSystem, car_e.guid, { 00.f, 10.f,20.f }, &aiPath2);
+	AICar& aiCarInstance2 = mainScene.GetComponent<AICar>(aiCarGuid2);
+
 	// Car Entity
 	RenderModel car_r = RenderModel();
 	GraphicsSystem::importOBJ(car_r, "alpha_cart.obj");
