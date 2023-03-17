@@ -171,9 +171,14 @@ private:
 	GLuint numberOfVerticies = 0;
 };
 
-struct BillboardComponent {
-	BillboardComponent(std::string _textureName);
-	BillboardComponent(std::string _textureName, glm::vec3 _lockingAxis);
+struct VFXComponent {
+	enum VFXtype {
+		VFX_billbaord = 0,
+		VFX_textureStrip = 1
+	};
+	//billboard constructors
+	VFXComponent(VFXtype _type, std::string _textureName);
+	VFXComponent(VFXtype _type, std::string _textureName, glm::vec3 _lockingAxis);
 private:
 	friend class GraphicsSystem;
 	glm::vec3 lockingAxis = glm::vec3(0);
