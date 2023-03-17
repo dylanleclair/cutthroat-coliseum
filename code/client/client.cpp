@@ -142,7 +142,7 @@ int main(int argc, char* argv[]) {
 	mainScene.AddComponent(car_e.guid, Car{});
 	Car& testCar = mainScene.GetComponent<Car>(car_e.guid);
 	testCar.physicsSystem = &physicsSystem;
-	if (!testCar.initVehicle(PxVec3(35.000000000f, -0.0500000119f, -1.59399998f)))
+	if (!testCar.initVehicle(PxVec3(35.000000000f, 0.2f, -1.59399998f)))
 	{
 		std::cout << "ERROR: could not initialize vehicle";
 	}
