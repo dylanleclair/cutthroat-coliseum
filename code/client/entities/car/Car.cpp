@@ -124,8 +124,28 @@ void Car::cleanupVehicle()
 }
 
 PxRigidBody* Car::getVehicleRigidBody()
-{  
+{ 
   return m_Vehicle.mPhysXState.physxActor.rigidBody;
+}
+
+void Car::carImGui() {
+    ImGui::Begin("Car commands tuner", nullptr);
+    ImGui::Text("left stick horizontal tilt: %f", carAxis);
+    //ImGui::Text("Car Throttle: %f", controller_throttle);
+    //ImGui::Text("Car Brake: %f", controller_brake);
+    ImGui::Text("Car Location: %f, %f", m_Vehicle.mPhysXState.physxActor.rigidBody->getGlobalPose().p.x, m_Vehicle.mPhysXState.physxActor.rigidBody->getGlobalPose().p.z);
+    ImGui::Text("Current Gear: %d", m_Vehicle.mEngineDriveState.gearboxState.currentGear);
+    ImGui::Text("Current engine rotational speed: %f", m_Vehicle.mEngineDriveState.engineState.rotationSpeed);
+    ImGui::Text("Center of Gravity: %f, %f, %f", m_Vehicle.mPhysXParams.physxActorCMassLocalPose.p.x,
+        m_Vehicle.mPhysXParams.physxActorCMassLocalPose.p.y,
+        m_Vehicle.mPhysXParams.physxActorCMassLocalPose.p.z);
+    ImGui::Text("Suspension force x: %f", m_Vehicle.mBaseState.suspensionForces->force.x);
+    ImGui::Text("Suspension force y: %f", m_Vehicle.mBaseState.suspensionForces->force.y);
+    ImGui::Text("Suspension force z: %f", m_Vehicle.mBaseState.suspensionForces->force.z);
+    ImGui::Text("Rotation x: %f, y: %f, z: %f", m_Vehicle.mPhysXState.physxActor.rigidBody->getGlobalPose().q.x, m_Vehicle.mPhysXState.physxActor.rigidBody->getGlobalPose().q.y,
+                                                m_Vehicle.mPhysXState.physxActor.rigidBody->getGlobalPose().q.z);
+    ImGui::Text("On the ground ?: %s", m_Vehicle.mBaseState.roadGeomStates->hitState ? "true" : "false");
+    ImGui::End();
 }
 
 void Car::setClosestTetherPoint(PxTransform _loc) {
@@ -206,6 +226,7 @@ void Car::Update(Guid carGuid, ecs::Scene& scene, float deltaTime)
   auto d_key = keys_arr[SDL_SCANCODE_D];
   auto space_bar = keys_arr[SDL_SCANCODE_SPACE];
   auto m_key = keys_arr[SDL_SCANCODE_M];
+  auto f_key = keys_arr[SDL_SCANCODE_F];
 
   float delta_seconds = deltaTime;
   assert(delta_seconds > 0.f && delta_seconds < 0.2000001f);
@@ -241,16 +262,18 @@ void Car::Update(Guid carGuid, ecs::Scene& scene, float deltaTime)
   // BUG: max positive is 1 less in magnitude than max min meaning full negative will be slightly above 1
   if (!c_tethered) {
       carAxis = (float)-SDL_GameControllerGetAxis(ControllerInput::controller, SDL_CONTROLLER_AXIS_LEFTX) / SHRT_MAX;
+
+      // Controller deadzone to avoid controller drift when
+      // stick is at rest
+      if (carAxis < 0.1f && carAxis > -0.1f) {
+          carAxis = 0.f;
+      }
   }
   
   // Code for going in reverse
   // If the brake key is pressed, while the engine is idle, and the current gear is first gear, switch to reverse
-  if (s_key && this->m_Vehicle.mEngineDriveState.gearboxState.currentGear == 2 &&
-      this->m_Vehicle.mEngineDriveState.engineState.rotationSpeed == 0) {
-      //this->m_Vehicle.mTransmissionCommandState.targetGear = 0;
-      //gVehicle.mTransmissionCommandState.targetGear = physx::vehicle2::PxVehicleDirectDriveTransmissionCommandState::eREVERSE;
+  if (s_key && this->m_Vehicle.mEngineDriveState.engineState.rotationSpeed == 0) {
       this->m_TargetGearCommand = 0;
-      //this->m_Vehicle.mTransmissionCommandState.eAUTOMATIC_GEAR();
   }
   // While the gearbox is in reverse holding s goes backwards, hold w brakes
   else if (this->m_Vehicle.mEngineDriveState.gearboxState.currentGear == 0) {
@@ -282,8 +305,7 @@ void Car::Update(Guid carGuid, ecs::Scene& scene, float deltaTime)
   // doing keyboard or controller input do x - did not work great
   // So I separated them, there may be a cleaner way to do this
   if (SDL_GameControllerGetAxis(ControllerInput::controller, SDL_CONTROLLER_AXIS_TRIGGERLEFT)
-      && this->m_Vehicle.mEngineDriveState.gearboxState.currentGear == 2 &&
-      this->m_Vehicle.mEngineDriveState.engineState.rotationSpeed == 0) {
+      && this->m_Vehicle.mEngineDriveState.engineState.rotationSpeed == 0) {
       this->m_TargetGearCommand = 0;
   }
   else if (this->m_Vehicle.mEngineDriveState.gearboxState.currentGear == 0) {
@@ -293,7 +315,8 @@ void Car::Update(Guid carGuid, ecs::Scene& scene, float deltaTime)
       // If the engine is idle and the w key is pressed switch to normal driving
       else if (SDL_GameControllerGetAxis(ControllerInput::controller, SDL_CONTROLLER_AXIS_TRIGGERRIGHT)
           && this->m_Vehicle.mEngineDriveState.engineState.rotationSpeed == 0) {
-          this->m_TargetGearCommand = 2;
+          // 255 is eAUTOMATIC_GEAR 
+          this->m_TargetGearCommand = 255;
       }
       else if (SDL_GameControllerGetAxis(ControllerInput::controller, SDL_CONTROLLER_AXIS_TRIGGERRIGHT)) {
           command.brake = (float)SDL_GameControllerGetAxis(ControllerInput::controller, SDL_CONTROLLER_AXIS_TRIGGERRIGHT) / SHRT_MAX;
@@ -325,6 +348,10 @@ void Car::Update(Guid carGuid, ecs::Scene& scene, float deltaTime)
   else
   {
       command.steer = carAxis * carAxisScale;
+  }
+
+  if (f_key || SDL_GameControllerGetButton(ControllerInput::controller, SDL_CONTROLLER_BUTTON_Y)) {
+      checkFlipped(m_Vehicle.mPhysXState.physxActor.rigidBody->getGlobalPose());
   }
 
   // An attempt at replicating the b face button function

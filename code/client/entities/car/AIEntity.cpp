@@ -27,7 +27,7 @@ Guid spawnAIEntity(ecs::Scene& scene, physics::PhysicsSystem* physicsSystem, Gui
 
 	// AI car entity setup
 	RenderModel aiDriver_r = RenderModel();
-	GraphicsSystem::importOBJ(aiDriver_r, "test_car.obj");
+	GraphicsSystem::importOBJ(aiDriver_r, "alpha_cart.obj");
 	aiDriver_r.setModelColor(glm::vec3(1.0f, 0.0f, 1.f));
 	scene.AddComponent(aiDriver_e.guid, aiDriver_r);
 	TransformComponent aiDriver_t = TransformComponent(aiCar.getVehicleRigidBody());
