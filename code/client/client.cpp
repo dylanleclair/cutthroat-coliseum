@@ -287,7 +287,7 @@ int main(int argc, char* argv[]) {
 	* The Billboard will always try to face the camera
 	*/
 	ecs::Entity billboard = mainScene.CreateEntity();
-	BillboardComponent bill_r = BillboardComponent("textures/CFHX3384.JPG", glm::vec3(0,1,0));
+	VFXComponent bill_r = VFXComponent("textures/CFHX3384.JPG", glm::vec3(0,1,0));
 	TransformComponent bill_t = TransformComponent();
 	bill_t.setPosition(glm::vec3(0, 20, 0));
 	bill_t.setScale(glm::vec3(10, 5, 0));

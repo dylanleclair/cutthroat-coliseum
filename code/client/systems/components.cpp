@@ -99,12 +99,12 @@ void RenderLine::setGeometry(const CPU_Geometry _geometry)
 	numberOfVerticies = _geometry.verts.size();
 }
 
-BillboardComponent::BillboardComponent(std::string _textureName)
+VFXComponent::VFXComponent(std::string _textureName)
 {
 	texture = new Texture(_textureName, GL_LINEAR);
 }
 
-BillboardComponent::BillboardComponent(std::string _textureName, glm::vec3 _lockingAxis)
+VFXComponent::VFXComponent(std::string _textureName, glm::vec3 _lockingAxis)
 {
 	texture = new Texture(_textureName, GL_LINEAR);
 	lockingAxis = _lockingAxis;

@@ -568,8 +568,8 @@ void GraphicsSystem::Update(ecs::Scene& scene, float deltaTime) {
 		GLuint centrePosUniform = glGetUniformLocation(GLuint(VFXshader), "centrePos");
 		GLuint cameraPositionUniform = glGetUniformLocation(GLuint(VFXshader), "cameraPos");
 		GLuint lockingAxisUniform = glGetUniformLocation(GLuint(VFXshader), "lockingAxis");
-		for (Guid entityGuid : ecs::EntitiesInScene<BillboardComponent, TransformComponent>(scene)) {
-			BillboardComponent& comp = scene.GetComponent<BillboardComponent>(entityGuid);
+		for (Guid entityGuid : ecs::EntitiesInScene<VFXComponent, TransformComponent>(scene)) {
+			VFXComponent& comp = scene.GetComponent<VFXComponent>(entityGuid);
 			TransformComponent& trans = scene.GetComponent<TransformComponent>(entityGuid);
 
 			glUniform3fv(cameraPositionUniform, 1, glm::value_ptr(cameras[0].cameraPos));
