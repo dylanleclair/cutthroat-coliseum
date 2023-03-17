@@ -57,3 +57,14 @@ Texture::Texture(std::string path, GLint interpolation)
 		throw std::runtime_error("Failed to read texture data from file!");
 	}
 }
+
+Texture* Texture::getNoTextureTexture()
+{
+	if (noTexture == nullptr) {
+		noTexture = new Texture("textures/NO_TEXTURE.png", GL_NEAREST);
+	}
+		
+	return noTexture;
+}
+
+Texture* Texture::noTexture = nullptr;

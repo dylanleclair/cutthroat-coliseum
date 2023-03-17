@@ -69,6 +69,19 @@ void RenderModel::setModelColor(const glm::vec3 _color)
 	}
 }
 
+void RenderModel::isShadowed(bool isShadowed)
+{
+	if (isShadowed) {
+		for (Mesh& mesh : meshes)
+			mesh.properties |= 2;
+	}
+	else
+	{
+		for (Mesh& mesh : meshes)
+			mesh.properties &= ~(2);
+	}
+}
+
 RenderLine::RenderLine(const CPU_Geometry _geometry)
 {
 	geometry->setVerts(_geometry.verts);
@@ -84,4 +97,15 @@ void RenderLine::setGeometry(const CPU_Geometry _geometry)
 {
 	geometry->setVerts(_geometry.verts);
 	numberOfVerticies = _geometry.verts.size();
+}
+
+BillboardComponent::BillboardComponent(std::string _textureName)
+{
+	texture = new Texture(_textureName, GL_LINEAR);
+}
+
+BillboardComponent::BillboardComponent(std::string _textureName, glm::vec3 _lockingAxis)
+{
+	texture = new Texture(_textureName, GL_LINEAR);
+	lockingAxis = _lockingAxis;
 }

@@ -26,7 +26,9 @@ GraphicsSystem::GraphicsSystem(Window& _window) :
 	lineShader("shaders/line.vert", "shaders/line.frag"),
 	wireframeShader("shaders/wireframe.vert", "shaders/wireframe.frag"),
 	gShader("shaders/gShader.vert", "shaders/gShader.frag"),
-	celShader("shaders/cel.vert", "shaders/cel.frag")
+	celShader("shaders/cel.vert", "shaders/cel.frag"),
+	shadowGShader("shaders/shadowMap.vert", "shaders/shadowMap.frag"),
+	VFXshader("shaders/VFX.vert", "shaders/VFX.frag")
 {
 	windowSize = _window.getSize();
 	follow_cam_x = 0.f;
@@ -36,50 +38,111 @@ GraphicsSystem::GraphicsSystem(Window& _window) :
 	front_face = false;
 	back_face = true;
 
-	// configure g-buffer framebuffer
-	// ------------------------------
-	glGenFramebuffers(1, &gBuffer);
-	glBindFramebuffer(GL_FRAMEBUFFER, gBuffer);
-	// position color buffer
+	/*
+	* create all textures
+	*/
+	// gposition buffer
 	glGenTextures(1, &gPosition);
 	glBindTexture(GL_TEXTURE_2D, gPosition);
 	glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA16F, windowSize.x, windowSize.y, 0, GL_RGBA, GL_FLOAT, NULL);
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
-	glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, gPosition, 0);
-	// normal color buffer
+	// gnormal buffer
 	glGenTextures(1, &gNormal);
 	glBindTexture(GL_TEXTURE_2D, gNormal);
 	glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA16F, windowSize.x, windowSize.y, 0, GL_RGBA, GL_FLOAT, NULL);
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
-	glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT1, GL_TEXTURE_2D, gNormal, 0);
-	// color 
+	
+	// gcolor buffer
 	glGenTextures(1, &gColor);
 	glBindTexture(GL_TEXTURE_2D, gColor);
 	glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, windowSize.x, windowSize.y, 0, GL_RGBA, GL_UNSIGNED_BYTE, NULL);
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
-	glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT2, GL_TEXTURE_2D, gColor, 0);
-	// tell OpenGL which color attachments we'll use (of this framebuffer) for rendering 
-	unsigned int attachments[3] = { GL_COLOR_ATTACHMENT0, GL_COLOR_ATTACHMENT1, GL_COLOR_ATTACHMENT2 };
-	glDrawBuffers(3, attachments);
-	// create and attach depth buffer (renderbuffer)
+	
+	// gshadow buffer
+	glGenTextures(1, &gShadow);
+	glBindTexture(GL_TEXTURE_2D, gShadow);
+	glTexImage2D(GL_TEXTURE_2D, 0, GL_RED, windowSize.x, windowSize.y, 0, GL_RED, GL_UNSIGNED_BYTE, NULL);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+	
+	// gdepth buffer
 	glGenTextures(1, &gDepth);
 	glBindTexture(GL_TEXTURE_2D, gDepth);
 	glTexImage2D(GL_TEXTURE_2D, 0, GL_DEPTH_COMPONENT, windowSize.x, windowSize.y, 0, GL_DEPTH_COMPONENT, GL_FLOAT, NULL);
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+	 
+	// light depth buffer
+	glGenTextures(1, &gLightDepth);
+	glBindTexture(GL_TEXTURE_2D, gLightDepth);
+	glTexImage2D(GL_TEXTURE_2D, 0, GL_DEPTH_COMPONENT, 1024, 1024, 0, GL_DEPTH_COMPONENT, GL_FLOAT, NULL);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_BORDER);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_BORDER);
+	float borderColor[] = { 1, 1, 1, 1 };
+	glTexParameterfv(GL_TEXTURE_2D, GL_TEXTURE_BORDER_COLOR, borderColor);
+
+	glBindTexture(GL_TEXTURE_2D, 0);
+
+	/*
+	* create and configure g-buffer framebuffer
+	*/
+	//configure the g-buffers outputs
+	glGenFramebuffers(1, &gBuffer);
+	glBindFramebuffer(GL_FRAMEBUFFER, gBuffer);
+	glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, gPosition, 0);
+	glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT1, GL_TEXTURE_2D, gNormal, 0);
+	glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT2, GL_TEXTURE_2D, gColor, 0);
+	glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT3, GL_TEXTURE_2D, gShadow, 0);
 	glFramebufferTexture2D(GL_FRAMEBUFFER, GL_DEPTH_ATTACHMENT, GL_TEXTURE_2D, gDepth, 0);
+
+	// tell OpenGL which color attachments we'll use (of this framebuffer) for rendering 
+	unsigned int attachments[4] = { GL_COLOR_ATTACHMENT0, GL_COLOR_ATTACHMENT1, GL_COLOR_ATTACHMENT2, GL_COLOR_ATTACHMENT3 };
+	glDrawBuffers(4, attachments);
 
 	// finally check if framebuffer is complete
 	if (glCheckFramebufferStatus(GL_FRAMEBUFFER) != GL_FRAMEBUFFER_COMPLETE)
-		std::cout << "Framebuffer not complete!" << std::endl;
+		std::cout << "generative framebuffer not complete!" << std::endl;
 	glBindFramebuffer(GL_FRAMEBUFFER, 0);
 
-	glBindFramebuffer(GL_FRAMEBUFFER, 0);
-	glBindTexture(GL_TEXTURE_2D, 0);
+	/*
+	* create and configure the light framebuffer
+	*/
+	glGenFramebuffers(1, &gShadowBuffer);
+	glBindFramebuffer(GL_FRAMEBUFFER, gShadowBuffer);
 
+	//configure light framebuffer outputs
+	glFramebufferTexture2D(GL_FRAMEBUFFER, GL_DEPTH_ATTACHMENT, GL_TEXTURE_2D, gLightDepth, 0);
+	//tell openGL that we are generating no color data
+	glDrawBuffer(GL_NONE);
+	glReadBuffer(GL_NONE);
+
+	// finally check if framebuffer is complete
+	if (glCheckFramebufferStatus(GL_FRAMEBUFFER) != GL_FRAMEBUFFER_COMPLETE)
+		std::cout << "light framebuffer not complete!" << std::endl;
+	glBindFramebuffer(GL_FRAMEBUFFER, 0);
+	
+	/*
+	* configure the shader input textures
+	*/
+	celShader.use();
+	glUniform1i(glGetUniformLocation(GLuint(celShader), "gPosition"), 0);
+	glUniform1i(glGetUniformLocation(GLuint(celShader), "gNormal"), 1);
+	glUniform1i(glGetUniformLocation(GLuint(celShader), "gColor"), 2);
+	glUniform1i(glGetUniformLocation(GLuint(celShader), "gDepth"), 3);
+	glUniform1i(glGetUniformLocation(GLuint(celShader), "gShadow"), 4);
+
+	gShader.use();
+	glUniform1i(glGetUniformLocation(GLuint(gShader), "gShadowDepth"), 0);
+
+	//VFXshader.use();
+	//glUniform1i(glGetUniformLocation(GLuint(VFXshader), ))
+
+	//generate the data for the full screen render quad
 	static const GLfloat g_quad_vertex_buffer_data[] = {
 	-1.0f, -1.0f, 0.0f,
 	1.0f, -1.0f, 0.0f,
@@ -97,11 +160,26 @@ GraphicsSystem::GraphicsSystem(Window& _window) :
 	glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 3 * sizeof(float), (void*)0);
 	glEnableVertexAttribArray(0);
 
-	celShader.use();
-	glUniform1i(glGetUniformLocation(GLuint(celShader), "gPosition"), 0);
-	glUniform1i(glGetUniformLocation(GLuint(celShader), "gNormal"), 1);
-	glUniform1i(glGetUniformLocation(GLuint(celShader), "gColor"), 2);
-	glUniform1i(glGetUniformLocation(GLuint(celShader), "gDepth"), 3);
+	//generate the data for the billboard effect
+	static const GLfloat billboard_vertex_buffer_data[] = {
+		//x, y, u, v
+	-.5f, -.5f, 0.0f, 0.0f,
+	.5f, -.5f, 1.0f, 0.0f,
+	-.5f,  .5f, 0.0f, 1.0f,
+	-.5f,  .5f, 0.0f, 1.0f,
+	.5f, -.5f, 1.0f, 0.0f,
+	.5f,  .5f, 1.0f, 1.0f
+	};
+	glGenBuffers(1, &billboard_vertexBuffer);
+	glBindBuffer(GL_ARRAY_BUFFER, billboard_vertexBuffer);
+	glBufferData(GL_ARRAY_BUFFER, sizeof(billboard_vertex_buffer_data), billboard_vertex_buffer_data, GL_STATIC_DRAW);
+
+	glGenVertexArrays(1, &billboard_vertexArray);
+	glBindVertexArray(billboard_vertexArray);
+	glVertexAttribPointer(0, 2, GL_FLOAT, GL_FALSE, 4 * sizeof(float), (void*)0);
+	glEnableVertexAttribArray(0);
+	glVertexAttribPointer(1, 2, GL_FLOAT, GL_FALSE, 4 * sizeof(float), (void*)(2 * sizeof(float)));
+	glEnableVertexAttribArray(1);
 }
 
 GraphicsSystem::~GraphicsSystem() {
@@ -112,10 +190,6 @@ GraphicsSystem::~GraphicsSystem() {
 	glDeleteTextures(1, &gPosition);
 	glDeleteVertexArrays(1, &quad_vertexArray);
 	glDeleteBuffers(1, &quad_vertexBuffer);
-}
-
-void GraphicsSystem::renderUI() {
-
 }
 
 // Panel to controls the cameras
@@ -205,6 +279,30 @@ void GraphicsSystem::ImGuiPanel() {
 	ImGui::End();
 }
 
+glm::mat4 getViewMatrix(const glm::vec3& position, const glm::vec3& direction, const glm::vec3& up) {
+	// Calculate the right vector
+	glm::vec3 right = glm::normalize(glm::cross(up, direction));
+	// Recalculate the up vector
+	glm::vec3 newUp = glm::cross(direction, right);
+
+	// Create a 4x4 view matrix
+	glm::mat4 view = glm::mat4(1.0f);
+	view[0][0] = right.x;
+	view[1][0] = right.y;
+	view[2][0] = right.z;
+	view[0][1] = newUp.x;
+	view[1][1] = newUp.y;
+	view[2][1] = newUp.z;
+	view[0][2] = -direction.x;
+	view[1][2] = -direction.y;
+	view[2][2] = -direction.z;
+	view[3][0] = -glm::dot(right, position);
+	view[3][1] = -glm::dot(newUp, position);
+	view[3][2] = glm::dot(direction, position);
+
+	return view;
+}
+
 void GraphicsSystem::Update(ecs::Scene& scene, float deltaTime) {
 	for (int i = 0; i < numCamerasActive; i++) {
 		//default camera matricies
@@ -253,10 +351,10 @@ void GraphicsSystem::Update(ecs::Scene& scene, float deltaTime) {
 
 
 		//set the viewport
-		if (numCamerasActive <= 1) { //there can't be 0 cameras, assume always 1 minimum
+		//if (numCamerasActive <= 1) { //there can't be 0 cameras, assume always 1 minimum
 			glViewport(0, 0, windowSize.x, windowSize.y);
-		}
-		else {
+		//}
+		/*else {
 			if (i == 0) {
 				glViewport(0, windowSize.y / 2, windowSize.x / 2, windowSize.y / 2);
 			}
@@ -269,12 +367,11 @@ void GraphicsSystem::Update(ecs::Scene& scene, float deltaTime) {
 			else if (i == 3) {
 				glViewport(0, 0, windowSize.x / 2, windowSize.y / 2);
 			}
-		}
+		}*/
 
 		/*
 		* UPDATE THE TRANSFORM COMPONENTS
 		*/
-		
 		for (Guid entityGuid : ecs::EntitiesInScene<RenderModel, TransformComponent>(scene)) {
 			RenderModel& comp = scene.GetComponent<RenderModel>(entityGuid);
 			TransformComponent& trans = scene.GetComponent<TransformComponent>(entityGuid);
@@ -312,6 +409,45 @@ void GraphicsSystem::Update(ecs::Scene& scene, float deltaTime) {
 			entityTransforms.count++;
 		}
 
+		//light space 'camera'
+		glm::vec3 position = scene.GetComponent<TransformComponent>(0).getTranslation() + glm::vec3(0,30,0);
+		glm::mat4 shadowP = glm::ortho(-40.f, 40.f, -40.f, 40.f, 1.f, 40.0f);
+		glm::mat4 shadowV = glm::lookAt(position, position + lightDirection, glm::vec3(1, 0, 0));//glm::lookAt(-lightDirection, glm::vec3(0.0f, 0.0f, 0.0f), glm::vec3(0.0f, 1.0f, 0.0f));
+
+		/*
+		* Generate the shadow map
+		*/
+		glBindFramebuffer(GL_FRAMEBUFFER, gShadowBuffer);
+		shadowGShader.use();
+		glClear(GL_DEPTH_BUFFER_BIT);
+		glEnable(GL_DEPTH_TEST);
+		glEnable(GL_CULL_FACE);
+		glCullFace(GL_BACK);
+		glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
+		glViewport(0, 0, 1024, 1024);
+		GLuint modelUniform = glGetUniformLocation(GLuint(shadowGShader), "M");
+		GLuint viewUniform = glGetUniformLocation(GLuint(shadowGShader), "V");
+		GLuint perspectiveUniform = glGetUniformLocation(GLuint(shadowGShader), "P");
+		//set the camera uniforms
+		glUniformMatrix4fv(perspectiveUniform, 1, GL_FALSE, glm::value_ptr(shadowP));
+		glUniformMatrix4fv(viewUniform, 1, GL_FALSE, glm::value_ptr(shadowV));
+		for (Guid entityGuid : ecs::EntitiesInScene<RenderModel, TransformComponent>(scene)) {
+			RenderModel& comp = scene.GetComponent<RenderModel>(entityGuid);
+			TransformComponent& trans = scene.GetComponent<TransformComponent>(entityGuid);
+
+			glm::mat4 M = glm::translate(glm::mat4(1), trans.getTranslation()) * toMat4(trans.getRotation()) * glm::scale(glm::mat4(1), trans.getScale());
+			glUniformMatrix4fv(modelUniform, 1, GL_FALSE, glm::value_ptr(M));
+
+			//loop through each mesh in the renderComponent
+			for each (Mesh mesh in comp.meshes) {
+				mesh.geometry->bind();
+				glDrawElements(GL_TRIANGLES, mesh.numberOfIndicies, GL_UNSIGNED_INT, 0);
+			}
+		}
+
+		/*
+		* RENDER THE DEPTH, COLOR, NORMAL AND SHADOW TEXTURES 
+		*/
 		glBindFramebuffer(GL_FRAMEBUFFER, gBuffer);
 		glViewport(0, 0, windowSize.x, windowSize.y);
 		glEnable(GL_LINE_SMOOTH);
@@ -337,20 +473,23 @@ void GraphicsSystem::Update(ecs::Scene& scene, float deltaTime) {
 		
 		glEnable(GL_DEPTH_TEST);
 		glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
-		/*
-		* RENDER THE DEPTH, COLOR AND NORMAL TEXTURES
-		*/
 		gShader.use();
 		//get uniform locations
-		GLuint modelUniform = glGetUniformLocation(GLuint(gShader), "M");
-		GLuint viewUniform = glGetUniformLocation(GLuint(gShader), "V");
-		GLuint perspectiveUniform = glGetUniformLocation(GLuint(gShader), "P");
+		modelUniform = glGetUniformLocation(GLuint(gShader), "M");
+		viewUniform = glGetUniformLocation(GLuint(gShader), "V");
+		perspectiveUniform = glGetUniformLocation(GLuint(gShader), "P");
 		GLuint normalMatUniform = glGetUniformLocation(GLuint(gShader), "normalMat");
 		GLuint shaderStateUniform = glGetUniformLocation(GLuint(gShader), "shaderState");
 		GLuint userColorUniform = glGetUniformLocation(GLuint(gShader), "userColor");
+		GLuint lightSpaceMatixUniform = glGetUniformLocation(GLuint(gShader), "lightSpaceMatrix");
 		//set the camera uniforms
 		glUniformMatrix4fv(perspectiveUniform, 1, GL_FALSE, glm::value_ptr(P));
 		glUniformMatrix4fv(viewUniform, 1, GL_FALSE, glm::value_ptr(V));
+		glUniformMatrix4fv(lightSpaceMatixUniform, 1, GL_FALSE, glm::value_ptr(shadowP * shadowV));
+
+		//bind the light depth texture
+		glActiveTexture(GL_TEXTURE0);
+		glBindTexture(GL_TEXTURE_2D, gLightDepth);
 
 		for (Guid entityGuid : ecs::EntitiesInScene<RenderModel,TransformComponent>(scene)) {
 			RenderModel& comp = scene.GetComponent<RenderModel>(entityGuid);
@@ -364,30 +503,64 @@ void GraphicsSystem::Update(ecs::Scene& scene, float deltaTime) {
 
 			//loop through each mesh in the renderComponent
 			for each (Mesh mesh in comp.meshes) {
-				if ((mesh.properties & 2) != 0 && mesh.textureIndex != -1) {
-					comp.textures[mesh.textureIndex]->bind();
-					glUniform1ui(shaderStateUniform, 1);
-				}
-				else {
-					glUniform3fv(userColorUniform, 1, glm::value_ptr(mesh.meshColor));
-					glUniform1ui(shaderStateUniform, 0);
-				}
 				mesh.geometry->bind();
-
+				//I've disabled textures for now since they aren't being used
+				//if ((mesh.properties & Mesh::meshProperties::m_hasTexture) != 0 && mesh.textureIndex != -1) {
+					//comp.textures[mesh.textureIndex]->bind();
+					//glUniform1ui(shaderStateUniform, 1);
+				//}
+				//else {
+					glUniform3fv(userColorUniform, 1, glm::value_ptr(mesh.meshColor));
+					glDisableVertexAttribArray(2);
+					glUniform1ui(shaderStateUniform, 0);
+				//}
+				
 				glDrawElements(GL_TRIANGLES, mesh.numberOfIndicies, GL_UNSIGNED_INT, 0);
 			}
 		}
+
+		/*
+		* render VFX that don't affect the shading. Things like billboards and particle effects
+		* This uses the gFrameBuffer still as its render target
+		*/
+		VFXshader.use();
+		glBindVertexArray(billboard_vertexArray);
+		glBindBuffer(GL_ARRAY_BUFFER, billboard_vertexBuffer);
+		//disable writing to the depth buffer, but still use it for culling
+		glDepthMask(false);
+		glDisable(GL_CULL_FACE);
+		viewUniform = glGetUniformLocation(GLuint(VFXshader), "V");
+		perspectiveUniform = glGetUniformLocation(GLuint(VFXshader), "P");
+		glUniformMatrix4fv(perspectiveUniform, 1, GL_FALSE, glm::value_ptr(P));
+		glUniformMatrix4fv(viewUniform, 1, GL_FALSE, glm::value_ptr(V));
+
+		GLuint scaleUniform = glGetUniformLocation(GLuint(VFXshader), "scale");
+		GLuint centrePosUniform = glGetUniformLocation(GLuint(VFXshader), "centrePos");
+		GLuint cameraPositionUniform = glGetUniformLocation(GLuint(VFXshader), "cameraPos");
+		GLuint lockingAxisUniform = glGetUniformLocation(GLuint(VFXshader), "lockingAxis");
+		for (Guid entityGuid : ecs::EntitiesInScene<BillboardComponent, TransformComponent>(scene)) {
+			BillboardComponent& comp = scene.GetComponent<BillboardComponent>(entityGuid);
+			TransformComponent& trans = scene.GetComponent<TransformComponent>(entityGuid);
+
+			glUniform3fv(cameraPositionUniform, 1, glm::value_ptr(cameras[0].cameraPos));
+			glUniform3fv(centrePosUniform, 1, glm::value_ptr(trans.getTranslation()));
+			glUniform3fv(lockingAxisUniform, 1, glm::value_ptr(glm::vec3(0,1,0)));
+			glUniform2fv(scaleUniform, 1, glm::value_ptr(glm::vec2(trans.getScale().x, trans.getScale().y)));
+			comp.texture->bind();
+			glDrawArrays(GL_TRIANGLES, 0, 6);
+		}
+
+		/*
+		* APPLY SHADING EFFECTS AND DRAW TO SCREEN
+		*/
 		glBindFramebuffer(GL_FRAMEBUFFER, 0);
 		glViewport(0, 0, windowSize.x, windowSize.y);
-		/*
-		* RENDER THE OUTLINES AND DRAW TO SCREEN
-		*/
 		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 		glDisable(GL_DEPTH_TEST);
+		glDepthMask(true);
 		celShader.use();
 		glBindVertexArray(quad_vertexArray);
 		glBindBuffer(GL_ARRAY_BUFFER, quad_vertexBuffer);
-		glBindVertexArray(quad_vertexArray);
 		glDisable(GL_DEPTH_TEST);
 
 		GLuint normWeightUniform = glGetUniformLocation(GLuint(celShader), "normalDiffWeight");
@@ -395,9 +568,6 @@ void GraphicsSystem::Update(ecs::Scene& scene, float deltaTime) {
 
 		glUniform1f(normWeightUniform, normalDiffWeight);
 		glUniform1f(depthWeightUniform, depthDiffWeight);
-
-		//GLuint normID = glGetUniformLocation(celShader, "normalTexture");
-		//Luint colID = glGetUniformLocation(celShader, "colorTexture");
 		
 		GLuint lightUniform = glGetUniformLocation(GLuint(celShader), "lightDir");
 		GLuint ambiantUniform = glGetUniformLocation(GLuint(celShader), "ambiantStr");
@@ -425,10 +595,12 @@ void GraphicsSystem::Update(ecs::Scene& scene, float deltaTime) {
 		glBindTexture(GL_TEXTURE_2D, gColor);
 		glActiveTexture(GL_TEXTURE3);
 		glBindTexture(GL_TEXTURE_2D, gDepth);
+		glActiveTexture(GL_TEXTURE4);
+		glBindTexture(GL_TEXTURE_2D, gShadow);
 		
 		glDrawArrays(GL_TRIANGLES, 0, 6);
 		
-		
+
 		//render line components
 		//switch shader program
 		lineShader.use();
@@ -529,8 +701,9 @@ void GraphicsSystem::processNode(aiNode* node, const aiScene* scene, RenderModel
 			geometry.norms.push_back(glm::vec3(mesh->mNormals[i].x, mesh->mNormals[i].y, mesh->mNormals[i].z));
 			if (mesh->mTextureCoords[0]) // does the mesh contain texture coordinates?
 				geometry.texs.push_back(glm::vec2(mesh->mTextureCoords[0][i].x, mesh->mTextureCoords[0][i].y));
-			else
-				geometry.texs.push_back(glm::vec2(0));
+			//TODO If disabling layouts isn't possible then uncomment this code!!!
+			//else
+				//geometry.texs.push_back(glm::vec2(0));
 		}
 		// process indices
 		for (unsigned int i = 0; i < mesh->mNumFaces; i++)

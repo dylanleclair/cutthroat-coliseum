@@ -97,6 +97,12 @@ struct Mesh {
 	GPU_Geometry* geometry = new GPU_Geometry;
 	int textureIndex = -1;
 	glm::vec3 meshColor = glm::vec3(1);
+	
+	//using GLuint HAS_TEX = 1;
+	enum meshProperties {
+		m_hasTexture = 1,
+		m_useShadow = 2
+	};
 	GLuint properties = 0; //texCoords | normals
 };
 
@@ -129,6 +135,7 @@ public:
 	* Updates the color of all meshes in the model
 	*/
 	void setModelColor(const glm::vec3 _color);
+	void isShadowed(bool);
 //private functions
 private:
 	int getMeshIndex(int _meshID) {
@@ -162,4 +169,13 @@ private:
 	GPU_Geometry* geometry = new GPU_Geometry();
 	glm::vec3(color) = glm::vec3(1);
 	GLuint numberOfVerticies = 0;
+};
+
+struct BillboardComponent {
+	BillboardComponent(std::string _textureName);
+	BillboardComponent(std::string _textureName, glm::vec3 _lockingAxis);
+private:
+	friend class GraphicsSystem;
+	glm::vec3 lockingAxis = glm::vec3(0);
+	Texture* texture = Texture::getNoTextureTexture();
 };

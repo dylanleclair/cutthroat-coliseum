@@ -181,6 +181,7 @@ int main(int argc, char* argv[]) {
 	RenderModel car_r = RenderModel();
 	GraphicsSystem::importOBJ(car_r, "alpha_cart.obj");
 	car_r.setModelColor(glm::vec3(0.5f, 0.5f, 0.f));
+	car_r.isShadowed(true);
 	mainScene.AddComponent(car_e.guid, car_r);
 	TransformComponent car_t = TransformComponent(testCar.getVehicleRigidBody());
 	car_t.setPosition(glm::vec3(0, 0, 0.5f));
@@ -280,7 +281,20 @@ int main(int argc, char* argv[]) {
 	tether_t.setPosition(glm::vec3(0.f, 1.f, 0.f));
 	tether_t.setScale(glm::vec3(1.f, 2.f, 2.f));
 	mainScene.AddComponent(tether_e.guid, tether_t);
-	
+
+	/*
+	* Demonstration of the Billboard Component. It always expects a texture to be used and an optinal locking axis can be used
+	* The Billboard will always try to face the camera
+	*/
+	ecs::Entity billboard = mainScene.CreateEntity();
+	BillboardComponent bill_r = BillboardComponent("textures/CFHX3384.JPG", glm::vec3(0,1,0));
+	TransformComponent bill_t = TransformComponent();
+	bill_t.setPosition(glm::vec3(0, 20, 0));
+	bill_t.setScale(glm::vec3(10, 5, 0));
+	mainScene.AddComponent(billboard.guid, bill_r);
+	mainScene.AddComponent(billboard.guid, bill_t);
+
+
 	// Setting up log obstacles (currently boxes)
 	setUpLogs(mainScene);
 	addRigidBody(physicsSystem);
