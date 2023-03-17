@@ -21,7 +21,7 @@ using ComponentFlags = u64;
 namespace ecs
 {
 
-    const u32 MAX_ENTITIES = 50000;
+    const u32 MAX_ENTITIES = 1000;
 
     template <typename... ComponentTypes>
     struct EntitiesInScene;
@@ -53,7 +53,15 @@ namespace ecs
         class ComponentPool : public IComponentPool
         {
 
+
+
         public:
+
+            ComponentPool()
+            {
+                m_components.reserve(MAX_ENTITIES);
+            }
+
             void push_back(Guid entityGuid, T component)
             {
                 size_t componentIndex = m_size;
