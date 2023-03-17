@@ -179,8 +179,11 @@ struct VFXComponent {
 	//billboard constructors
 	VFXComponent(VFXtype _type, std::string _textureName);
 	VFXComponent(VFXtype _type, std::string _textureName, glm::vec3 _lockingAxis);
+	VFXComponent(VFXtype _type, std::string _textureName, const CPU_Geometry& _line);
 private:
 	friend class GraphicsSystem;
+	VFXtype type = VFX_billbaord;
+	CPU_Geometry line;
 	glm::vec3 lockingAxis = glm::vec3(0);
 	Texture* texture = Texture::getNoTextureTexture();
 };

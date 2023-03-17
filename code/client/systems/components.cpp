@@ -99,13 +99,26 @@ void RenderLine::setGeometry(const CPU_Geometry _geometry)
 	numberOfVerticies = _geometry.verts.size();
 }
 
-VFXComponent::VFXComponent(std::string _textureName)
+VFXComponent::VFXComponent(VFXtype _type, std::string _textureName)
 {
 	texture = new Texture(_textureName, GL_LINEAR);
+
 }
 
-VFXComponent::VFXComponent(std::string _textureName, glm::vec3 _lockingAxis)
+VFXComponent::VFXComponent(VFXtype _type, std::string _textureName, glm::vec3 _lockingAxis)
 {
 	texture = new Texture(_textureName, GL_LINEAR);
 	lockingAxis = _lockingAxis;
+}
+
+VFXComponent::VFXComponent(VFXtype _type, std::string _textureName, const CPU_Geometry& _line)
+{
+	texture = new Texture(_textureName, GL_LINEAR);
+	line = CPU_Geometry();
+	if (_line.verts.size() < 2)
+		return;
+	for (int i = 1; i < _line.verts.size(); i++) {
+		glm::vec3 right = glm::cross(_line.norms[i], _line.verts[i] - _line.verts[i - 1]);
+		//line.verts.push_back(glm::vec3(_line.verts));
+	}
 }
