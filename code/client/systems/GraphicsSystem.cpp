@@ -47,6 +47,7 @@ GraphicsSystem::GraphicsSystem(Window& _window) :
 	glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA16F, windowSize.x, windowSize.y, 0, GL_RGBA, GL_FLOAT, NULL);
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+
 	// gnormal buffer
 	glGenTextures(1, &gNormal);
 	glBindTexture(GL_TEXTURE_2D, gNormal);
@@ -74,6 +75,20 @@ GraphicsSystem::GraphicsSystem(Window& _window) :
 	glTexImage2D(GL_TEXTURE_2D, 0, GL_DEPTH_COMPONENT, windowSize.x, windowSize.y, 0, GL_DEPTH_COMPONENT, GL_FLOAT, NULL);
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+
+	// gVFXcolor buffer
+	glGenTextures(1, &gVFXColor);
+	glBindTexture(GL_TEXTURE_2D, gVFXColor);
+	glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, windowSize.x, windowSize.y, 0, GL_RGBA, GL_UNSIGNED_BYTE, NULL);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+
+	//gVFXdepth buffer
+	glGenTextures(1, &gVFXDepth);
+	glBindTexture(GL_TEXTURE_2D, gVFXDepth);
+	glTexImage2D(GL_TEXTURE_2D, 0, GL_DEPTH_COMPONENT, windowSize.x, windowSize.y, 0, GL_DEPTH_COMPONENT, GL_FLOAT, NULL);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
 	 
 	// light depth buffer
 	glGenTextures(1, &gLightDepth);
@@ -91,43 +106,56 @@ GraphicsSystem::GraphicsSystem(Window& _window) :
 	/*
 	* create and configure g-buffer framebuffer
 	*/
-	//configure the g-buffers outputs
 	glGenFramebuffers(1, &gBuffer);
 	glBindFramebuffer(GL_FRAMEBUFFER, gBuffer);
+	//configure the g-buffers outputs
 	glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, gPosition, 0);
 	glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT1, GL_TEXTURE_2D, gNormal, 0);
 	glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT2, GL_TEXTURE_2D, gColor, 0);
 	glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT3, GL_TEXTURE_2D, gShadow, 0);
 	glFramebufferTexture2D(GL_FRAMEBUFFER, GL_DEPTH_ATTACHMENT, GL_TEXTURE_2D, gDepth, 0);
-
 	// tell OpenGL which color attachments we'll use (of this framebuffer) for rendering 
 	unsigned int attachments[4] = { GL_COLOR_ATTACHMENT0, GL_COLOR_ATTACHMENT1, GL_COLOR_ATTACHMENT2, GL_COLOR_ATTACHMENT3 };
 	glDrawBuffers(4, attachments);
-
 	// finally check if framebuffer is complete
 	if (glCheckFramebufferStatus(GL_FRAMEBUFFER) != GL_FRAMEBUFFER_COMPLETE)
 		std::cout << "generative framebuffer not complete!" << std::endl;
 	glBindFramebuffer(GL_FRAMEBUFFER, 0);
 
 	/*
-	* create and configure the light framebuffer
+	* create and configure the VFX framebuffer
+	*/
+	glGenFramebuffers(1, &gVFXBuffer);
+	glBindFramebuffer(GL_FRAMEBUFFER, gVFXBuffer);
+	//configure buffer outputs
+	glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, gVFXColor, 0);
+	glFramebufferTexture2D(GL_FRAMEBUFFER, GL_DEPTH_ATTACHMENT, GL_TEXTURE_2D, gVFXDepth, 0);
+	// tell OpenGL which color attachments we'll use (of this framebuffer) for rendering 
+	unsigned int attachments2[1] = { GL_COLOR_ATTACHMENT0 };
+	glDrawBuffers(1, attachments2);
+	// finally check if framebuffer is complete
+	if (glCheckFramebufferStatus(GL_FRAMEBUFFER) != GL_FRAMEBUFFER_COMPLETE)
+		std::cout << "generative framebuffer not complete!" << std::endl;
+	glBindFramebuffer(GL_FRAMEBUFFER, 0);
+
+
+	/*
+	* create and configure the light depth framebuffer
 	*/
 	glGenFramebuffers(1, &gShadowBuffer);
 	glBindFramebuffer(GL_FRAMEBUFFER, gShadowBuffer);
-
 	//configure light framebuffer outputs
 	glFramebufferTexture2D(GL_FRAMEBUFFER, GL_DEPTH_ATTACHMENT, GL_TEXTURE_2D, gLightDepth, 0);
 	//tell openGL that we are generating no color data
 	glDrawBuffer(GL_NONE);
 	glReadBuffer(GL_NONE);
-
 	// finally check if framebuffer is complete
 	if (glCheckFramebufferStatus(GL_FRAMEBUFFER) != GL_FRAMEBUFFER_COMPLETE)
 		std::cout << "light framebuffer not complete!" << std::endl;
 	glBindFramebuffer(GL_FRAMEBUFFER, 0);
 	
 	/*
-	* configure the shader input textures
+	* configure the cel shader input textures
 	*/
 	celShader.use();
 	glUniform1i(glGetUniformLocation(GLuint(celShader), "gPosition"), 0);
@@ -135,12 +163,11 @@ GraphicsSystem::GraphicsSystem(Window& _window) :
 	glUniform1i(glGetUniformLocation(GLuint(celShader), "gColor"), 2);
 	glUniform1i(glGetUniformLocation(GLuint(celShader), "gDepth"), 3);
 	glUniform1i(glGetUniformLocation(GLuint(celShader), "gShadow"), 4);
-
+	glUniform1i(glGetUniformLocation(GLuint(celShader), "gVFXColor"), 5);
+	glUniform1i(glGetUniformLocation(GLuint(celShader), "gVFXDepth"), 6);
+	
 	gShader.use();
 	glUniform1i(glGetUniformLocation(GLuint(gShader), "gShadowDepth"), 0);
-
-	//VFXshader.use();
-	//glUniform1i(glGetUniformLocation(GLuint(VFXshader), ))
 
 	//generate the data for the full screen render quad
 	static const GLfloat g_quad_vertex_buffer_data[] = {
@@ -162,13 +189,13 @@ GraphicsSystem::GraphicsSystem(Window& _window) :
 
 	//generate the data for the billboard effect
 	static const GLfloat billboard_vertex_buffer_data[] = {
-		//x, y, u, v
-	-.5f, -.5f, 0.0f, 0.0f,
-	.5f, -.5f, 1.0f, 0.0f,
-	-.5f,  .5f, 0.0f, 1.0f,
-	-.5f,  .5f, 0.0f, 1.0f,
-	.5f, -.5f, 1.0f, 0.0f,
-	.5f,  .5f, 1.0f, 1.0f
+		//x, y
+	-.5f, -.5f, 
+	.5f, -.5f, 
+	-.5f,  .5f, 
+	-.5f,  .5f, 
+	.5f, -.5f, 
+	.5f,  .5f, 
 	};
 	glGenBuffers(1, &billboard_vertexBuffer);
 	glBindBuffer(GL_ARRAY_BUFFER, billboard_vertexBuffer);
@@ -176,10 +203,8 @@ GraphicsSystem::GraphicsSystem(Window& _window) :
 
 	glGenVertexArrays(1, &billboard_vertexArray);
 	glBindVertexArray(billboard_vertexArray);
-	glVertexAttribPointer(0, 2, GL_FLOAT, GL_FALSE, 4 * sizeof(float), (void*)0);
+	glVertexAttribPointer(0, 2, GL_FLOAT, GL_FALSE, 2 * sizeof(float), (void*)0);
 	glEnableVertexAttribArray(0);
-	glVertexAttribPointer(1, 2, GL_FLOAT, GL_FALSE, 4 * sizeof(float), (void*)(2 * sizeof(float)));
-	glEnableVertexAttribArray(1);
 }
 
 GraphicsSystem::~GraphicsSystem() {
@@ -519,16 +544,21 @@ void GraphicsSystem::Update(ecs::Scene& scene, float deltaTime) {
 			}
 		}
 
+
 		/*
 		* render VFX that don't affect the shading. Things like billboards and particle effects
 		* This uses the gFrameBuffer still as its render target
+		* Render this to the screen
 		*/
+		glBindFramebuffer(GL_FRAMEBUFFER, gVFXBuffer);
 		VFXshader.use();
 		glBindVertexArray(billboard_vertexArray);
 		glBindBuffer(GL_ARRAY_BUFFER, billboard_vertexBuffer);
 		//disable writing to the depth buffer, but still use it for culling
-		glDepthMask(false);
+		//glDepthMask(false);
+		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 		glDisable(GL_CULL_FACE);
+		//glDisable(GL_DEPTH_TEST);
 		viewUniform = glGetUniformLocation(GLuint(VFXshader), "V");
 		perspectiveUniform = glGetUniformLocation(GLuint(VFXshader), "P");
 		glUniformMatrix4fv(perspectiveUniform, 1, GL_FALSE, glm::value_ptr(P));
@@ -544,14 +574,15 @@ void GraphicsSystem::Update(ecs::Scene& scene, float deltaTime) {
 
 			glUniform3fv(cameraPositionUniform, 1, glm::value_ptr(cameras[0].cameraPos));
 			glUniform3fv(centrePosUniform, 1, glm::value_ptr(trans.getTranslation()));
-			glUniform3fv(lockingAxisUniform, 1, glm::value_ptr(glm::vec3(0,1,0)));
+			glUniform3fv(lockingAxisUniform, 1, glm::value_ptr(glm::vec3(0, 1, 0)));
 			glUniform2fv(scaleUniform, 1, glm::value_ptr(glm::vec2(trans.getScale().x, trans.getScale().y)));
 			comp.texture->bind();
 			glDrawArrays(GL_TRIANGLES, 0, 6);
 		}
 
+
 		/*
-		* APPLY SHADING EFFECTS AND DRAW TO SCREEN
+		* APPLY SHADING EFFECTS AND DRAW TO gColor buffer
 		*/
 		glBindFramebuffer(GL_FRAMEBUFFER, 0);
 		glViewport(0, 0, windowSize.x, windowSize.y);
@@ -568,7 +599,7 @@ void GraphicsSystem::Update(ecs::Scene& scene, float deltaTime) {
 
 		glUniform1f(normWeightUniform, normalDiffWeight);
 		glUniform1f(depthWeightUniform, depthDiffWeight);
-		
+
 		GLuint lightUniform = glGetUniformLocation(GLuint(celShader), "lightDir");
 		GLuint ambiantUniform = glGetUniformLocation(GLuint(celShader), "ambiantStr");
 		GLuint diffuseWeightUniform = glGetUniformLocation(GLuint(celShader), "diffuseWeight");
@@ -581,11 +612,11 @@ void GraphicsSystem::Update(ecs::Scene& scene, float deltaTime) {
 		glUniform1f(diffuseWeightUniform, diffuseWeight);
 		glUniform1i(quantizedSplitsUniform, numQuantizedSplits);
 		glm::vec3 goochWarmPass = goochWarm;
-		glUniform3fv(goochWarmUniform, 1, glm::value_ptr(goochWarmPass));	
+		glUniform3fv(goochWarmUniform, 1, glm::value_ptr(goochWarmPass));
 		glm::vec3 goochCoolPass = goochCool;
 		glUniform3fv(goochCoolUniform, 1, glm::value_ptr(goochCoolPass));
 		glUniform1f(goochStrengthUniform, goochStrength);
-		
+
 		//bind the textures
 		glActiveTexture(GL_TEXTURE0);
 		glBindTexture(GL_TEXTURE_2D, gPosition);
@@ -597,7 +628,11 @@ void GraphicsSystem::Update(ecs::Scene& scene, float deltaTime) {
 		glBindTexture(GL_TEXTURE_2D, gDepth);
 		glActiveTexture(GL_TEXTURE4);
 		glBindTexture(GL_TEXTURE_2D, gShadow);
-		
+		glActiveTexture(GL_TEXTURE5);
+		glBindTexture(GL_TEXTURE_2D, gVFXColor);
+		glActiveTexture(GL_TEXTURE6);
+		glBindTexture(GL_TEXTURE_2D, gVFXDepth);
+
 		glDrawArrays(GL_TRIANGLES, 0, 6);
 		
 

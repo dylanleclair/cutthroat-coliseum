@@ -79,12 +79,15 @@ private:
 	//buffers
 	GLuint gBuffer;
 	GLuint gShadowBuffer;
+	GLuint gVFXBuffer;
 	//textures used in g buffer
 	GLuint gDepth;
 	GLuint gColor;
 	GLuint gNormal;
 	GLuint gPosition;
 	GLuint gShadow;
+	GLuint gVFXColor;
+	GLuint gVFXDepth;
 	//texture used in shadow map calculation
 	GLuint gLightDepth;
 	//variables for rendering whole screen quad

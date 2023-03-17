@@ -1,9 +1,9 @@
 #version 410 core
 out vec4 color;
 
-in vec2 tc;
-
 uniform sampler2D tex;
+
+in vec2 tc;
 
 void main()
 {             

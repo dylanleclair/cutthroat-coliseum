@@ -6,6 +6,9 @@ uniform sampler2D gNormal;
 uniform sampler2D gColor;
 uniform sampler2D gDepth;
 uniform sampler2D gShadow;
+uniform sampler2D gVFXColor;
+uniform sampler2D gVFXDepth;
+
 
 //variable uniforms
 uniform float normalDiffWeight = 1;
@@ -35,46 +38,53 @@ float LinearizeDepth(float depth)
 
 void main()
 {             
-	vec3 tposition = texture(gPosition, tc).xyz;
-	vec3 tnormal = texture(gNormal, tc).xyz;
-	vec3 tcolor = texture(gColor, tc).xyz;
-	float shadow = texture(gShadow, tc).r; //get the alpha channel which holds the shadow data
 	float tdepth = LinearizeDepth(texture(gDepth, tc).x);
-	vec3 nlightDir = normalize(lightDir);
+	float VFXdepth = LinearizeDepth(texture(gVFXDepth, tc).x);
+	if(tdepth - VFXdepth > 0) {
+		color = vec4(texture(gVFXColor, tc).xyz, 1);
 
-	//determine the lighting
-	vec3 diff = max(dot(nlightDir, tnormal), 0.0) * vec3(1,0.97,0.94) * diffuseWeight;
+	} else {
+		vec3 tposition = texture(gPosition, tc).xyz;
+		vec3 tnormal = texture(gNormal, tc).xyz;
+		vec3 tcolor = texture(gColor, tc).xyz;
+		float shadow = texture(gShadow, tc).r; //get the alpha channel which holds the shadow data
+		vec3 nlightDir = normalize(lightDir);
+
+
+		//determine the lighting
+		vec3 diff = max(dot(nlightDir, tnormal), 0.0) * vec3(1,0.97,0.94) * diffuseWeight;
 	
-	//calculate ambiant
-	vec3 ambiant = tcolor * ambiantStr;
+		//calculate ambiant
+		vec3 ambiant = tcolor * ambiantStr;
 
 	
-	//calculate edges
-	float depthDiff = 0.0;
-	depthDiff += abs(tdepth - LinearizeDepth(texture(gDepth, tc + vec2(hstep, 0)).x));
-	depthDiff += abs(tdepth - LinearizeDepth(texture(gDepth, tc + vec2(-hstep, 0)).x));
-	depthDiff += abs(tdepth - LinearizeDepth(texture(gDepth, tc + vec2(0, vstep)).x));
-	depthDiff += abs(tdepth - LinearizeDepth(texture(gDepth, tc + vec2(0, vstep)).x));
+		//calculate edges
+		float depthDiff = 0.0;
+		depthDiff += abs(tdepth - LinearizeDepth(texture(gDepth, tc + vec2(hstep, 0)).x));
+		depthDiff += abs(tdepth - LinearizeDepth(texture(gDepth, tc + vec2(-hstep, 0)).x));
+		depthDiff += abs(tdepth - LinearizeDepth(texture(gDepth, tc + vec2(0, vstep)).x));
+		depthDiff += abs(tdepth - LinearizeDepth(texture(gDepth, tc + vec2(0, vstep)).x));
 
-	float normalDiff = 0.0;
-	normalDiff += distance(tnormal, texture(gNormal, tc + vec2(hstep, 0)).xyz);
-	normalDiff += distance(tnormal, texture(gNormal, tc + vec2(-hstep, 0)).xyz);
-	normalDiff += distance(tnormal, texture(gNormal, tc + vec2(0, vstep)).xyz);
-	normalDiff += distance(tnormal, texture(gNormal, tc + vec2(0, -vstep)).xyz);
+		float normalDiff = 0.0;
+		normalDiff += distance(tnormal, texture(gNormal, tc + vec2(hstep, 0)).xyz);
+		normalDiff += distance(tnormal, texture(gNormal, tc + vec2(-hstep, 0)).xyz);
+		normalDiff += distance(tnormal, texture(gNormal, tc + vec2(0, vstep)).xyz);
+		normalDiff += distance(tnormal, texture(gNormal, tc + vec2(0, -vstep)).xyz);
 
-	float outline = (depthDiff * depthDiffWeight + normalDiff * normalDiffWeight);
+		float outline = (depthDiff * depthDiffWeight + normalDiff * normalDiffWeight);
 
-	//calculate Gooch shading
-	vec3 gooch = mix(goochCool, goochWarm, (1 + dot(nlightDir, tnormal))/2.0);
+		//calculate Gooch shading
+		vec3 gooch = mix(goochCool, goochWarm, (1 + dot(nlightDir, tnormal))/2.0);
 
-	//quantize the color
-	vec3 calculatedCol = (diff + ambiant) * tcolor;
-	vec3 quantized = (ceil(calculatedCol * numQuantizedSplits) - 1)/(numQuantizedSplits - 1);    
+		//quantize the color
+		vec3 calculatedCol = (diff + ambiant) * tcolor;
+		vec3 quantized = (ceil(calculatedCol * numQuantizedSplits) - 1)/(numQuantizedSplits - 1);    
 	
-	//calculate final color
-	//if shadow = 1 then the pixel is in shadow
-	color = mix(vec4(mix(quantized, gooch, goochWeight), 1),vec4(0,0,0,1),outline) * ((1-shadow) + (shadow * 0.4));
-	//color = vec4(tcolor, 1) * ((1-shadow) + (shadow * 0.8));
-	//color = vec4(shadow, 0, 0, 1);
+		//calculate final color
+		//if shadow = 1 then the pixel is in shadow
+		color = mix(vec4(mix(quantized, gooch, goochWeight), 1),vec4(0,0,0,1),outline) * ((1-shadow) + (shadow * 0.4));
+		//color = vec4(tcolor, 1) * ((1-shadow) + (shadow * 0.8));
+		//color = vec4(shadow, 0, 0, 1);
+	}
 
 }
