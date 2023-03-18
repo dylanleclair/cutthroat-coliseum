@@ -139,10 +139,18 @@ int main(int argc, char* argv[]) {
 
 	// ecs::Entity aiDriver_e = mainScene.CreateEntity();
 
+
+	CPU_Geometry spawns;
+	GraphicsSystem::importOBJ(spawns, "zz-track-spawn.obj");
+	
+
 	mainScene.AddComponent(car_e.guid, Car{});
 	Car& testCar = mainScene.GetComponent<Car>(car_e.guid);
 	testCar.physicsSystem = &physicsSystem;
-	if (!testCar.initVehicle(PxVec3(35.000000000f, -0.0500000119f, -1.59399998f)))
+	// if (!testCar.initVehicle(GLMtoPx(spawns.verts[0])))
+	
+	if (!testCar.initVehicle(PxVec3(-4.108957, 3.397303, -43.794819)))
+	// if (!testCar.initVehicle(PxVec3(35.000000000f, -0.0500000119f, -1.59399998f)))
 	{
 		std::cout << "ERROR: could not initialize vehicle";
 	}
@@ -181,6 +189,9 @@ int main(int argc, char* argv[]) {
 	Guid aiCarGuid2 = spawnAIEntity(mainScene, &physicsSystem, car_e.guid, { 00.f, 10.f,20.f }, &aiPath2);
 	AICar& aiCarInstance2 = mainScene.GetComponent<AICar>(aiCarGuid2);
 
+
+
+
 	// Car Entity
 	RenderModel car_r = RenderModel();
 	GraphicsSystem::importOBJ(car_r, "alpha_cart.obj");
@@ -203,15 +214,15 @@ int main(int argc, char* argv[]) {
 
 	
 	// Finish line components
-	RenderModel finish = RenderModel();
-	GraphicsSystem::importOBJ(finish, "basic_finish.obj");
-	finish.setModelColor(glm::vec3(1.f, 0.f, 0.f));
-	mainScene.AddComponent(finish_e.guid, finish);
+	// RenderModel finish = RenderModel();
+	// GraphicsSystem::importOBJ(finish, "basic_finish.obj");
+	// finish.setModelColor(glm::vec3(1.f, 0.f, 0.f));
+	// mainScene.AddComponent(finish_e.guid, finish);
 
-	TransformComponent finish_t = TransformComponent();
-	finish_t.setPosition(glm::vec3(30, 0, 0));
-	finish_t.setScale(glm::vec3(3.2f, 3.2f, 3.2f));
-	mainScene.AddComponent(finish_e.guid, finish_t);
+	// TransformComponent finish_t = TransformComponent();
+	// finish_t.setPosition(glm::vec3(30, 0, 0));
+	// finish_t.setScale(glm::vec3(3.2f, 3.2f, 3.2f));
+	// mainScene.AddComponent(finish_e.guid, finish_t);
 
 	// Pathfinding
 	// PathfindingComponent car_pathfinder{ finish_e.guid };
@@ -232,30 +243,30 @@ int main(int argc, char* argv[]) {
 	mainScene.AddComponent(ground_e.guid, level_t);
 
 	// actual level mesh & collider for it
-	CPU_Geometry levelColliderFloor_raw = CPU_Geometry();
-	GraphicsSystem::importOBJ(levelColliderFloor_raw, "STADIUM_COLLIDER_FLOOR.obj");
-	LevelCollider levelCollider1{ levelColliderFloor_raw, physicsSystem};
-	auto levelTriangleMesh1 = levelCollider1.cookLevel(glm::scale(glm::mat4(1), glm::vec3(3.2)));
-	levelCollider1.initLevelRigidBody(levelTriangleMesh1);
+	// CPU_Geometry levelColliderFloor_raw = CPU_Geometry();
+	// GraphicsSystem::importOBJ(levelColliderFloor_raw, "STADIUM_COLLIDER_FLOOR.obj");
+	// LevelCollider levelCollider1{ levelColliderFloor_raw, physicsSystem};
+	// auto levelTriangleMesh1 = levelCollider1.cookLevel(glm::scale(glm::mat4(1), glm::vec3(3.2)));
+	// levelCollider1.initLevelRigidBody(levelTriangleMesh1);
 
-	CPU_Geometry levelColliderInner_raw = CPU_Geometry();
-	GraphicsSystem::importOBJ(levelColliderInner_raw, "STADIUM_COLLIDER_INNER.obj");
-	LevelCollider levelCollider2{ levelColliderInner_raw, physicsSystem };
-	auto levelTriangleMesh2 = levelCollider2.cookLevel(glm::scale(glm::mat4(1), glm::vec3(3.2)));
-	levelCollider2.initLevelRigidBody(levelTriangleMesh2);
+	// CPU_Geometry levelColliderInner_raw = CPU_Geometry();
+	// GraphicsSystem::importOBJ(levelColliderInner_raw, "STADIUM_COLLIDER_INNER.obj");
+	// LevelCollider levelCollider2{ levelColliderInner_raw, physicsSystem };
+	// auto levelTriangleMesh2 = levelCollider2.cookLevel(glm::scale(glm::mat4(1), glm::vec3(3.2)));
+	// levelCollider2.initLevelRigidBody(levelTriangleMesh2);
 
-	CPU_Geometry levelColliderOuter_raw = CPU_Geometry();
-	GraphicsSystem::importOBJ(levelColliderOuter_raw, "STADIUM_COLLIDER_OUTER.obj");
-	LevelCollider levelCollider3{ levelColliderOuter_raw, physicsSystem };
-	auto levelTriangleMesh3 = levelCollider3.cookLevel(glm::scale(glm::mat4(1), glm::vec3(3.2)));
-	levelCollider3.initLevelRigidBody(levelTriangleMesh3);
+	// CPU_Geometry levelColliderOuter_raw = CPU_Geometry();
+	// GraphicsSystem::importOBJ(levelColliderOuter_raw, "STADIUM_COLLIDER_OUTER.obj");
+	// LevelCollider levelCollider3{ levelColliderOuter_raw, physicsSystem };
+	// auto levelTriangleMesh3 = levelCollider3.cookLevel(glm::scale(glm::mat4(1), glm::vec3(3.2)));
+	// levelCollider3.initLevelRigidBody(levelTriangleMesh3);
 
 	//Level
-	RenderModel level_r = RenderModel();
-	//GraphicsSystem::importOBJ(level_r, "Stadium.obj");
-	GraphicsSystem::importOBJ(level_r, "Stadium_MINIMAL.obj"); //for faster loading times
-	mainScene.AddComponent(level_e.guid, level_r);
-	mainScene.AddComponent(level_e.guid, level_t);
+	// RenderModel level_r = RenderModel();
+	// //GraphicsSystem::importOBJ(level_r, "Stadium.obj");
+	// GraphicsSystem::importOBJ(level_r, "Stadium_MINIMAL.obj"); //for faster loading times
+	// mainScene.AddComponent(level_e.guid, level_r);
+	// mainScene.AddComponent(level_e.guid, level_t);
 
 
 
@@ -264,40 +275,52 @@ int main(int argc, char* argv[]) {
 	TransformComponent new_level_t = TransformComponent();
 	level_t.setScale(glm::vec3(1.f, 1.f, 1.f));
 
+
+
+	CPU_Geometry new_level_geom = CPU_Geometry();
+	GraphicsSystem::importOBJ(new_level_geom, "zz-track.obj");
+	LevelCollider new_level_collider{ new_level_geom, physicsSystem };
+	auto new_level_collider_mesh = new_level_collider.cookLevel(glm::scale(glm::mat4(1), glm::vec3(1.0)));
+	new_level_collider.initLevelRigidBody(new_level_collider_mesh);
+
+
 	RenderModel new_level_r = RenderModel();
 	GraphicsSystem::importOBJ(new_level_r,"zz-track.obj");
 	mainScene.AddComponent(new_level_e.guid, new_level_r);
 	mainScene.AddComponent(new_level_e.guid, new_level_t);
 
 
-	// Tether poles
-	RenderModel tetherPole1_r = RenderModel();
-	GraphicsSystem::importOBJ(tetherPole1_r, "alpha_tether_pole.obj");
-	tetherPole1_r.setModelColor(glm::vec3(205.f / 255.f, 133.f / 255.f, 63.f / 255.f));
-	mainScene.AddComponent(tetherPole1_e.guid, tetherPole1_r);
-	TransformComponent tetherPole1_t = TransformComponent();
-	tetherPole1_t.setPosition(glm::vec3(0.f, 0.f, 162.f));
-	tetherPole1_t.setScale(glm::vec3(3.2f, 3.2f, 3.2f));
-	mainScene.AddComponent(tetherPole1_e.guid, tetherPole1_t);
+
+
+
+	// // Tether poles
+	// RenderModel tetherPole1_r = RenderModel();
+	// GraphicsSystem::importOBJ(tetherPole1_r, "alpha_tether_pole.obj");
+	// tetherPole1_r.setModelColor(glm::vec3(205.f / 255.f, 133.f / 255.f, 63.f / 255.f));
+	// mainScene.AddComponent(tetherPole1_e.guid, tetherPole1_r);
+	// TransformComponent tetherPole1_t = TransformComponent();
+	// tetherPole1_t.setPosition(glm::vec3(0.f, 0.f, 162.f));
+	// tetherPole1_t.setScale(glm::vec3(3.2f, 3.2f, 3.2f));
+	// mainScene.AddComponent(tetherPole1_e.guid, tetherPole1_t);
 	
-	RenderModel tetherPole2_r = RenderModel();
-	GraphicsSystem::importOBJ(tetherPole2_r, "alpha_tether_pole.obj");
-	tetherPole2_r.setModelColor(glm::vec3(205.f / 255.f, 133.f / 255.f, 63.f / 255.f));
-	mainScene.AddComponent(tetherPole2_e.guid, tetherPole2_r);
-	TransformComponent tetherPole2_t = TransformComponent();
-	tetherPole2_t.setPosition(glm::vec3(0.f, 0.f, -162.f));
-	tetherPole2_t.setScale(glm::vec3(3.2f, 3.2f, 3.2f));
-	mainScene.AddComponent(tetherPole2_e.guid, tetherPole2_t);
+	// RenderModel tetherPole2_r = RenderModel();
+	// GraphicsSystem::importOBJ(tetherPole2_r, "alpha_tether_pole.obj");
+	// tetherPole2_r.setModelColor(glm::vec3(205.f / 255.f, 133.f / 255.f, 63.f / 255.f));
+	// mainScene.AddComponent(tetherPole2_e.guid, tetherPole2_r);
+	// TransformComponent tetherPole2_t = TransformComponent();
+	// tetherPole2_t.setPosition(glm::vec3(0.f, 0.f, -162.f));
+	// tetherPole2_t.setScale(glm::vec3(3.2f, 3.2f, 3.2f));
+	// mainScene.AddComponent(tetherPole2_e.guid, tetherPole2_t);
 	
-	// Tether
-	RenderModel tether_r = RenderModel();
-	GraphicsSystem::importOBJ(tether_r, "alpha_tether.obj");
-	tether_r.setModelColor(glm::vec3(83.f / 255.f, 54.f / 255.f, 33.f / 255.f));
-	mainScene.AddComponent(tether_e.guid, tether_r);
-	TransformComponent tether_t = TransformComponent();
-	tether_t.setPosition(glm::vec3(0.f, 1.f, 0.f));
-	tether_t.setScale(glm::vec3(1.f, 2.f, 2.f));
-	mainScene.AddComponent(tether_e.guid, tether_t);
+	// // Tether
+	// RenderModel tether_r = RenderModel();
+	// GraphicsSystem::importOBJ(tether_r, "alpha_tether.obj");
+	// tether_r.setModelColor(glm::vec3(83.f / 255.f, 54.f / 255.f, 33.f / 255.f));
+	// mainScene.AddComponent(tether_e.guid, tether_r);
+	// TransformComponent tether_t = TransformComponent();
+	// tether_t.setPosition(glm::vec3(0.f, 1.f, 0.f));
+	// tether_t.setScale(glm::vec3(1.f, 2.f, 2.f));
+	// mainScene.AddComponent(tether_e.guid, tether_t);
 
 	/*
 	* Demonstration of the Billboard Component. It always expects a texture to be used and an optinal locking axis can be used
@@ -313,8 +336,8 @@ int main(int argc, char* argv[]) {
 
 
 	// Setting up log obstacles (currently boxes)
-	setUpLogs(mainScene);
-	addRigidBody(physicsSystem);
+	// setUpLogs(mainScene);
+	// addRigidBody(physicsSystem);
 
 	// This is how to change the position of the object after it has been passed to the ECS
 	/*
@@ -324,17 +347,17 @@ int main(int argc, char* argv[]) {
 	
 	// Fetching ecs components for system call debugs and other
 	// debug functionality
-	auto &finish_trans = mainScene.GetComponent<TransformComponent>(finish_e.guid);
-	TransformComponent &car_trans = mainScene.GetComponent<TransformComponent>(car_e.guid);
-	TransformComponent &sphere_transform = mainScene.GetComponent<TransformComponent>(sphere_e.guid);
-	TransformComponent &tetherPole1_transform = mainScene.GetComponent<TransformComponent>(tetherPole1_e.guid);
-	TransformComponent &tetherPole2_transform = mainScene.GetComponent<TransformComponent>(tetherPole2_e.guid);
-	TransformComponent &tether_transform = mainScene.GetComponent<TransformComponent>(tether_e.guid);
-	PxTransform loc;
+	// auto &finish_trans = mainScene.GetComponent<TransformComponent>(finish_e.guid);
+	// TransformComponent &car_trans = mainScene.GetComponent<TransformComponent>(car_e.guid);
+	// TransformComponent &sphere_transform = mainScene.GetComponent<TransformComponent>(sphere_e.guid);
+	// TransformComponent &tetherPole1_transform = mainScene.GetComponent<TransformComponent>(tetherPole1_e.guid);
+	// TransformComponent &tetherPole2_transform = mainScene.GetComponent<TransformComponent>(tetherPole2_e.guid);
+	// TransformComponent &tether_transform = mainScene.GetComponent<TransformComponent>(tether_e.guid);
+	// PxTransform loc;
 
-	std::vector<TransformComponent> c_tether_points;
-	c_tether_points.push_back(tetherPole1_transform);
-	c_tether_points.push_back(tetherPole2_transform);
+	// std::vector<TransformComponent> c_tether_points;
+	// c_tether_points.push_back(tetherPole1_transform);
+	// c_tether_points.push_back(tetherPole2_transform);
 
 	FramerateCounter framerate;
 
@@ -434,13 +457,13 @@ int main(int argc, char* argv[]) {
 						break;
 					case SDLK_m:
 						if (!testCar.getCTethered()) {
-							loc.p.x = tetherPole1_transform.getTranslation().x;
-							loc.p.y = tetherPole1_transform.getTranslation().y;
-							loc.p.z = tetherPole1_transform.getTranslation().z;
-							testCar.TetherSteer(loc);
+							// loc.p.x = tetherPole1_transform.getTranslation().x;
+							// loc.p.y = tetherPole1_transform.getTranslation().y;
+							// loc.p.z = tetherPole1_transform.getTranslation().z;
+							// testCar.TetherSteer(loc);
 						}
 						else if (testCar.getCTethered()) {
-							testCar.resetModifications();
+							// testCar.resetModifications();
 						}
 
 						break;
@@ -448,30 +471,30 @@ int main(int argc, char* argv[]) {
 
 					// Prinout of camera matrix
 				case SDLK_c:
-					std::cout << gs.getCameraView()[0][0] << ", " << gs.getCameraView()[0][1] << ", " << gs.getCameraView()[0][2] << ", " << gs.getCameraView()[0][3] << "," << std::endl;
-					std::cout << gs.getCameraView()[1][0] << ", " << gs.getCameraView()[1][1] << ", " << gs.getCameraView()[1][2] << ", " << gs.getCameraView()[1][3] << "," << std::endl;
-					std::cout << gs.getCameraView()[2][0] << ", " << gs.getCameraView()[2][1] << ", " << gs.getCameraView()[2][2] << ", " << gs.getCameraView()[2][3] << "," << std::endl;
-					std::cout << gs.getCameraView()[3][0] << ", " << gs.getCameraView()[3][1] << ", " << gs.getCameraView()[3][2] << ", " << gs.getCameraView()[3][3] << std::endl;
-					std::cout << std::endl;
+					// std::cout << gs.getCameraView()[0][0] << ", " << gs.getCameraView()[0][1] << ", " << gs.getCameraView()[0][2] << ", " << gs.getCameraView()[0][3] << "," << std::endl;
+					// std::cout << gs.getCameraView()[1][0] << ", " << gs.getCameraView()[1][1] << ", " << gs.getCameraView()[1][2] << ", " << gs.getCameraView()[1][3] << "," << std::endl;
+					// std::cout << gs.getCameraView()[2][0] << ", " << gs.getCameraView()[2][1] << ", " << gs.getCameraView()[2][2] << ", " << gs.getCameraView()[2][3] << "," << std::endl;
+					// std::cout << gs.getCameraView()[3][0] << ", " << gs.getCameraView()[3][1] << ", " << gs.getCameraView()[3][2] << ", " << gs.getCameraView()[3][3] << std::endl;
+					// std::cout << std::endl;
 
-					std::cout << "finish line: " << finish_trans.getTranslation().x << ", " << finish_trans.getTranslation().y << ", " << finish_trans.getTranslation().z << std::endl;
-					std::cout << std::endl;
+					// std::cout << "finish line: " << finish_trans.getTranslation().x << ", " << finish_trans.getTranslation().y << ", " << finish_trans.getTranslation().z << std::endl;
+					// std::cout << std::endl;
 
-					std::cout << "tether pole 1: " << tetherPole1_t.getTranslation().x << ", " << tetherPole1_t.getTranslation().y << "," << tetherPole1_t.getTranslation().z << std::endl;
-					std::cout << std::endl;
+					// std::cout << "tether pole 1: " << tetherPole1_t.getTranslation().x << ", " << tetherPole1_t.getTranslation().y << "," << tetherPole1_t.getTranslation().z << std::endl;
+					// std::cout << std::endl;
 
-					std::cout << "Car Transform: " << std::endl;
+					// std::cout << "Car Transform: " << std::endl;
 
-					std::cout << car_trans.getTranslation().x << ", " << car_trans.getTranslation().y << ", " << car_trans.getTranslation().z << std::endl;
+					// std::cout << car_trans.getTranslation().x << ", " << car_trans.getTranslation().y << ", " << car_trans.getTranslation().z << std::endl;
 
 
-					std::cout << mainScene.GetComponent<TransformComponent>(car_e.guid).getTranslation().x << ","
-						<< mainScene.GetComponent<TransformComponent>(car_e.guid).getTranslation().y << ","
-						<< mainScene.GetComponent<TransformComponent>(car_e.guid).getTranslation().z << std::endl;
+					// std::cout << mainScene.GetComponent<TransformComponent>(car_e.guid).getTranslation().x << ","
+					// 	<< mainScene.GetComponent<TransformComponent>(car_e.guid).getTranslation().y << ","
+					// 	<< mainScene.GetComponent<TransformComponent>(car_e.guid).getTranslation().z << std::endl;
 
-					std::cout << testCar.getVehicleRigidBody()->getGlobalPose().p.x << ", "
-							  << testCar.getVehicleRigidBody()->getGlobalPose().p.y << ", "
-						      << testCar.getVehicleRigidBody()->getGlobalPose().p.z << std::endl;
+					// std::cout << testCar.getVehicleRigidBody()->getGlobalPose().p.x << ", "
+					// 		  << testCar.getVehicleRigidBody()->getGlobalPose().p.y << ", "
+					// 	      << testCar.getVehicleRigidBody()->getGlobalPose().p.z << std::endl;
 					break;
 				case SDLK_ESCAPE:	// (Pressing escape closes the window, useful for fullscreen);
 					quit = true;
@@ -509,30 +532,30 @@ int main(int argc, char* argv[]) {
 		//testCar.m_Vehicle.mPhysXParams.physxActorCMassLocalPose = c_mass_f;
 		
 
-		auto& center_of_mass = testCar.m_Vehicle.mPhysXParams.physxActorCMassLocalPose;
-		renderCMassSphere(center_of_mass, sphere_transform);
+		// auto& center_of_mass = testCar.m_Vehicle.mPhysXParams.physxActorCMassLocalPose;
+		// renderCMassSphere(center_of_mass, sphere_transform);
 
-		// Tether check to render the tether graphic properly
-		if (testCar.getCTethered()) {
-			updateTetherGraphic(car_trans, c_tether_points, testCar, tether_transform);
-		}
-		else {
-			tether_transform.setScale(glm::vec3(0.f, 0.f, 0.f));
-		}
+		// // Tether check to render the tether graphic properly
+		// if (testCar.getCTethered()) {
+		// 	updateTetherGraphic(car_trans, c_tether_points, testCar, tether_transform);
+		// }
+		// else {
+		// 	tether_transform.setScale(glm::vec3(0.f, 0.f, 0.f));
+		// }
 
-		// Finish line code
-		if (car_trans.getTranslation().x >= 28.f && car_trans.getTranslation().x <= 40.f &&
-			car_trans.getTranslation().z >= -2.f && car_trans.getTranslation().z <= 0.f)
-		{
-			if (isFinished == false) {
-				isFinished = true;
-				finishLinePrint();
-			}
+		// // Finish line code
+		// if (car_trans.getTranslation().x >= 28.f && car_trans.getTranslation().x <= 40.f &&
+		// 	car_trans.getTranslation().z >= -2.f && car_trans.getTranslation().z <= 0.f)
+		// {
+		// 	if (isFinished == false) {
+		// 		isFinished = true;
+		// 		finishLinePrint();
+		// 	}
 
-		}
-		else {
-			isFinished = false;
-		}
+		// }
+		// else {
+		// 	isFinished = false;
+		// }
 
 		gs.Update(mainScene, 0.0f);
 		aiSystem.Update(mainScene, 0.f);
