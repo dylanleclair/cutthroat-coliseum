@@ -121,6 +121,7 @@ int main(int argc, char* argv[]) {
 
 	// init ecs 
 
+ 	static float levelMaterial[3] = { 0.10f, 0.730f, 0.135f};
 
 	std::cout << "Component initalization finished\n";
 
@@ -170,24 +171,24 @@ int main(int argc, char* argv[]) {
 			vert.y = 0.f;
 	}
 
-	NavPath aiPath{aiPathGeom.verts};
+	// NavPath aiPath{aiPathGeom.verts};
 
-	ecs::Entity navRenderer_e = mainScene.CreateEntity();
-	mainScene.AddComponent(navRenderer_e.guid,TransformComponent{});
-	auto navPathRender = RenderLine{aiPathGeom};
-	navPathRender.setColor(glm::vec3{1.0f,0.f,1.0f});
-	mainScene.AddComponent(navRenderer_e.guid,navPathRender);
+	// ecs::Entity navRenderer_e = mainScene.CreateEntity();
+	// mainScene.AddComponent(navRenderer_e.guid,TransformComponent{});
+	// auto navPathRender = RenderLine{aiPathGeom};
+	// navPathRender.setColor(glm::vec3{1.0f,0.f,1.0f});
+	// mainScene.AddComponent(navRenderer_e.guid,navPathRender);
 
-	// only spawn one for now!! consider this ur final warning.
-	//spawnAIEntity(mainScene,&physicsSystem, car_e.guid,{10.f, 10.f,10.f}, &aiPath);
-	Guid aiCarGuid = spawnAIEntity(mainScene, &physicsSystem, car_e.guid, { 10.f, 10.f,10.f }, &aiPath);
-	AICar& aiCarInstance = mainScene.GetComponent<AICar>(aiCarGuid);
-	// spawnAIEntity(mainScene,&physicsSystem, car_e.guid,{0.f, 0.f,5.f}, &circlePath);
+	// // only spawn one for now!! consider this ur final warning.
+	// //spawnAIEntity(mainScene,&physicsSystem, car_e.guid,{10.f, 10.f,10.f}, &aiPath);
+	// Guid aiCarGuid = spawnAIEntity(mainScene, &physicsSystem, car_e.guid, { 10.f, 10.f,10.f }, &aiPath);
+	// AICar& aiCarInstance = mainScene.GetComponent<AICar>(aiCarGuid);
+	// // spawnAIEntity(mainScene,&physicsSystem, car_e.guid,{0.f, 0.f,5.f}, &circlePath);
 	
 
-	NavPath aiPath2{aiPathGeom.verts};
-	Guid aiCarGuid2 = spawnAIEntity(mainScene, &physicsSystem, car_e.guid, { 00.f, 10.f,20.f }, &aiPath2);
-	AICar& aiCarInstance2 = mainScene.GetComponent<AICar>(aiCarGuid2);
+	// NavPath aiPath2{aiPathGeom.verts};
+	// Guid aiCarGuid2 = spawnAIEntity(mainScene, &physicsSystem, car_e.guid, { 00.f, 10.f,20.f }, &aiPath2);
+	// AICar& aiCarInstance2 = mainScene.GetComponent<AICar>(aiCarGuid2);
 
 
 
@@ -275,13 +276,13 @@ int main(int argc, char* argv[]) {
 	TransformComponent new_level_t = TransformComponent();
 	level_t.setScale(glm::vec3(1.f, 1.f, 1.f));
 
-
+	physx::PxMaterial* lMaterial = physicsSystem.m_Physics->createMaterial(0.10f, 0.730f, 0.135f);
 
 	CPU_Geometry new_level_geom = CPU_Geometry();
 	GraphicsSystem::importOBJ(new_level_geom, "zz-track.obj");
 	LevelCollider new_level_collider{ new_level_geom, physicsSystem };
 	auto new_level_collider_mesh = new_level_collider.cookLevel(glm::scale(glm::mat4(1), glm::vec3(1.0)));
-	new_level_collider.initLevelRigidBody(new_level_collider_mesh);
+	new_level_collider.initLevelRigidBody(new_level_collider_mesh, lMaterial);
 
 
 	RenderModel new_level_r = RenderModel();
@@ -416,14 +417,16 @@ int main(int argc, char* argv[]) {
 					case SDLK_r:
 						//TODO recompile the shader
 						// Rudementary car reset (will keep using the velocity and rotation of the car through the rest).
-						testCar.m_Vehicle.mPhysXState.physxActor.rigidBody->setGlobalPose(PxTransform(35.f, 0.f, 0.f));
+						testCar.m_Vehicle.mPhysXState.physxActor.rigidBody->setGlobalPose(PxTransform(PxVec3(-4.108957, 3.397303, -43.794819)));
 						testCar.m_Vehicle.mPhysXState.physxActor.rigidBody->setLinearDamping(10000.f);
 						testCar.m_Vehicle.mPhysXState.physxActor.rigidBody->setAngularDamping(10000.f);
 						lapCount = 1;
-						aiCarInstance.m_lapCount = 1;
 						// TODO: apply the dampening to ai when resetting the ai
 						// Will need to for loop all ai cars
-						aiCarInstance.m_Vehicle.mPhysXState.physxActor.rigidBody->setGlobalPose(PxTransform(10.f, 2.f, 10.f));
+						
+						
+						//aiCarInstance.m_lapCount = 1;
+						//aiCarInstance.m_Vehicle.mPhysXState.physxActor.rigidBody->setGlobalPose(PxTransform(10.f, 2.f, 10.f));
 						break;
 						
 					// TODO: change the file that is serializes (Want to do base.json and enginedrive.json)
@@ -451,6 +454,12 @@ int main(int argc, char* argv[]) {
 						else if (showImgui) {
 							showImgui = false;
 						}
+						break;
+					case SDLK_9:
+						 new_level_collider.release();
+						 new_level_collider.initLevelRigidBody(new_level_collider_mesh, physicsSystem.m_Physics->createMaterial(levelMaterial[0], levelMaterial[1], levelMaterial[2]));
+							testCar.m_Vehicle.mPhysXState.physxActor.rigidBody->setGlobalPose(PxTransform(PxVec3(-4.108957, 3.397303, -43.794819)));
+
 						break;
 					case SDLK_SPACE:
 						testCar.TetherJump();
@@ -561,7 +570,7 @@ int main(int argc, char* argv[]) {
 		aiSystem.Update(mainScene, 0.f);
 		physicsSystem.Update(mainScene,timestep);
 
-		update_sounds(testCar, aiCarInstance, playSounds);
+		//update_sounds(testCar, aiCarInstance, playSounds);
 
 		// END__ ECS SYSTEMS UPDATES
 
@@ -578,6 +587,7 @@ int main(int argc, char* argv[]) {
 			ImGui::Text("framerate: %d", (int)framerate.framerate());
 			ImGui::PlotLines("Frametime plot (ms)", framerate.m_time_queue_ms.data(), framerate.m_time_queue_ms.size());
 			ImGui::PlotLines("Framerate plot (hz)", framerate.m_rate_queue.data(), framerate.m_rate_queue.size());
+			ImGui::SliderFloat3("Level material params", levelMaterial, 0.0f, 5.0f);
 			ImGui::End();
 			// END FRAMERATE COUNTER
 
@@ -626,7 +636,7 @@ int main(int argc, char* argv[]) {
 		ImGui::Begin("UI", (bool*)0, textWindowFlags);
 		ImGui::SetWindowFontScale(2.f);
 		ImGui::PushFont(CabalBold);
-		ImGui::TextColored(ImVec4(1.0f, 1.0f, 1.0f, 1.0f), "AI Lap: %d/3", aiCarInstance.m_lapCount);
+		//ImGui::TextColored(ImVec4(1.0f, 1.0f, 1.0f, 1.0f), "AI Lap: %d/3", aiCarInstance.m_lapCount);
 		ImGui::PopFont();
 		ImGui::End();
 
@@ -653,22 +663,22 @@ int main(int argc, char* argv[]) {
 			}
 		}
 
-		else if (aiCarInstance.m_lapCount >= 3) {
-			counter += timestep.getMilliseconds();
-			if (counter >= delayInSeconds * 1000) {
-				counter = 0;
-				display = !display;
-			}
-			if (display) {
-				ImGui::SetNextWindowPos(ImVec2(200, 200));
-				ImGui::Begin("UI2", (bool*)0, textWindowFlags);
-				ImGui::SetWindowFontScale(5.f);
-				ImGui::PushFont(CabalBold);
-				ImGui::TextColored(ImVec4(1.0f, 1.0f, 1.0f, 1.0f), "AI VICTORY");
-				ImGui::PopFont();
-				ImGui::End();
-			}
-		}
+		// else if (aiCarInstance.m_lapCount >= 3) {
+		// 	counter += timestep.getMilliseconds();
+		// 	if (counter >= delayInSeconds * 1000) {
+		// 		counter = 0;
+		// 		display = !display;
+		// 	}
+		// 	if (display) {
+		// 		ImGui::SetNextWindowPos(ImVec2(200, 200));
+		// 		ImGui::Begin("UI2", (bool*)0, textWindowFlags);
+		// 		ImGui::SetWindowFontScale(5.f);
+		// 		ImGui::PushFont(CabalBold);
+		// 		ImGui::TextColored(ImVec4(1.0f, 1.0f, 1.0f, 1.0f), "AI VICTORY");
+		// 		ImGui::PopFont();
+		// 		ImGui::End();
+		// 	}
+		// }
 
 		ImGui::Render();
 		glViewport(0, 0, (int)io.DisplaySize.x, (int)io.DisplaySize.y);

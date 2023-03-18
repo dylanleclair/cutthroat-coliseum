@@ -78,18 +78,43 @@ physx::PxTriangleMesh * LevelCollider::cookLevel(glm::mat4 transform)
 
     void LevelCollider::initLevelRigidBody(physx::PxTriangleMesh* levelMesh)
     {
+
+        physx::PxMaterial* levelMaterial = m_physicsSystem.m_Physics->createMaterial(0.5f, 0.5f, 0.2f);
         auto gPhysics = m_physicsSystem.m_Physics;
-        auto material = m_physicsSystem.m_Material;
+        auto material = levelMaterial;
         auto scene = m_physicsSystem.m_Scene;
 
         physx::PxTriangleMeshGeometry levelGeo = physx::PxTriangleMeshGeometry(levelMesh, physx::PxMeshScale(1));
-	    physx::PxShape* levelShape = gPhysics->createShape(levelGeo, *material, true);
+	    m_levelShape = gPhysics->createShape(levelGeo, *material, true);
 
         physx::PxTransform levelTransform(physx::PxVec3(0,0,0), physx::PxQuat(physx::PxIdentity));
-        physx::PxRigidStatic* level = gPhysics->createRigidStatic(levelTransform);
+        m_level = gPhysics->createRigidStatic(levelTransform);
 
-        level->attachShape(*levelShape);
-        scene->addActor(*level);
+        m_level->attachShape(*m_levelShape);
+        scene->addActor(*m_level);
+    }
+
+
+    void LevelCollider::release() {
+         m_levelShape->release();
+         m_level->release();
     }
     
+
+
+    void LevelCollider::initLevelRigidBody(physx::PxTriangleMesh* levelMesh, physx::PxMaterial* material)
+    {
+
+        auto gPhysics = m_physicsSystem.m_Physics;
+        auto scene = m_physicsSystem.m_Scene;
+
+        physx::PxTriangleMeshGeometry levelGeo = physx::PxTriangleMeshGeometry(levelMesh, physx::PxMeshScale(1));
+	    m_levelShape = gPhysics->createShape(levelGeo, *material, true);
+
+        physx::PxTransform levelTransform(physx::PxVec3(0,0,0), physx::PxQuat(physx::PxIdentity));
+        physx::PxRigidStatic* m_level = gPhysics->createRigidStatic(levelTransform);
+
+        m_level->attachShape(*m_levelShape);
+        scene->addActor(*m_level);
+    }
 
