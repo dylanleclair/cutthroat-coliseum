@@ -257,6 +257,19 @@ int main(int argc, char* argv[]) {
 	mainScene.AddComponent(level_e.guid, level_r);
 	mainScene.AddComponent(level_e.guid, level_t);
 
+
+
+	ecs::Entity new_level_e = mainScene.CreateEntity();
+
+	TransformComponent new_level_t = TransformComponent();
+	level_t.setScale(glm::vec3(1.f, 1.f, 1.f));
+
+	RenderModel new_level_r = RenderModel();
+	GraphicsSystem::importOBJ(new_level_r,"zz-track.obj");
+	mainScene.AddComponent(new_level_e.guid, new_level_r);
+	mainScene.AddComponent(new_level_e.guid, new_level_t);
+
+
 	// Tether poles
 	RenderModel tetherPole1_r = RenderModel();
 	GraphicsSystem::importOBJ(tetherPole1_r, "alpha_tether_pole.obj");
