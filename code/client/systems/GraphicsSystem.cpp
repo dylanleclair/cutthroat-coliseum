@@ -18,6 +18,8 @@
 #include <assimp/postprocess.h>
 #include <PxPhysicsAPI.h>
 
+#include <fstream>
+
 //DEBUG IMPORTS
 #include "graphics/snippetrender/SnippetRender.h"
 
@@ -803,6 +805,35 @@ void GraphicsSystem::importOBJ(CPU_Geometry& _geometry, const std::string _fileN
 	}
 
 	processNode(scene->mRootNode, scene, _geometry);
+}
+
+void GraphicsSystem::importSplineFromOBJ(CPU_Geometry& _geometry, std::string filename)
+{
+	std::string line;
+
+	// Read from the text file
+	std::ifstream inputfile("models/" + filename);
+
+	// Use a while loop together with the getline() function to read the file line by line
+	while (getline (inputfile, line)) {
+	// Output the text from the file
+	std::cout << line;
+
+	glm::vec3 vert;
+
+	int scanned = sscanf(line.c_str(), "v %f %f %f", &vert.x, &vert.y, &vert.z);
+
+	if (scanned == 3)
+	{
+		_geometry.verts.push_back(vert);
+	}
+
+
+	}
+
+
+	// Close the file
+	inputfile.close(); 
 }
 
 
