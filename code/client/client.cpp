@@ -75,10 +75,37 @@ void renderCMassSphere(PxTransform & _target, TransformComponent& sphere_transfo
 	sphere_transform.setPosition(glm::vec3(_target.p.x, _target.p.y, _target.p.z));
 }
 
+
+std::vector<glm::vec3> spawnpointsAlongAxis(int rows, int cols,float spread, glm::vec3 axis, glm::vec3 start)
+{
+	std::vector<glm::vec3> result;
+
+	axis = glm::normalize(axis);
+	const glm::vec3 UP = {0.f, 1.f,0.f};
+	// spawn the cars along the axis
+	glm::vec3 binormal = glm::cross(axis,UP);
+	// spawn a row of cars on binormal of axis
+
+
+	for (int col =0; col < cols; col++)
+	{
+		glm::vec3 colStart = start + (-axis * (col * spread));
+		for (int row = 0; row < rows; row++)
+		{
+			glm::vec3 spawnPosition = colStart + (binormal * (row * spread));
+			result.push_back(spawnPosition);
+		}
+	}
+	return result;
+
+}
+
 int main(int argc, char* argv[]) {
 	//RUN_GRAPHICS_TEST_BENCH();
 	printf("Starting main");
 
+
+	const int driverCount = 8;
 
 
 	init_sound_system();
@@ -140,11 +167,6 @@ int main(int argc, char* argv[]) {
 
 	// ecs::Entity aiDriver_e = mainScene.CreateEntity();
 
-
-	CPU_Geometry spawns;
-	GraphicsSystem::importOBJ(spawns, "zz-track-spawn.obj");
-	
-
 	mainScene.AddComponent(car_e.guid, Car{});
 	Car& testCar = mainScene.GetComponent<Car>(car_e.guid);
 	testCar.physicsSystem = &physicsSystem;
@@ -164,6 +186,31 @@ int main(int argc, char* argv[]) {
 	// transform verts same way level will be???
 
 
+	// PATHFINDING FOR NEW TRACK
+	CPU_Geometry zzPathGeom;
+	GraphicsSystem::importSplineFromOBJ(zzPathGeom, "zz-track-nav.obj");
+	std::cout << "zz track navmesh has " << zzPathGeom.verts.size() << " vertices" << std::endl;
+
+	glm::vec3 desiredSpawnLocation = {-4.108957, 3.397303, -43.794819};
+	int zzSpawnIndex = 0;
+	float minDistToSpawn = std::numeric_limits<float>::max();
+	for (int i = 0; i < zzPathGeom.verts.size(); i++)
+	{	
+		float currDistance = glm::distance(zzPathGeom.verts[i], desiredSpawnLocation);
+		if (currDistance < minDistToSpawn)
+		{
+			zzSpawnIndex = i;
+			minDistToSpawn = currDistance;
+		}
+	}
+
+	glm::vec3 forward = (zzSpawnIndex == zzPathGeom.verts.size() - 1) ? zzPathGeom.verts[0] - zzPathGeom.verts[zzSpawnIndex] : zzPathGeom.verts[zzSpawnIndex + 1] - zzPathGeom.verts[zzSpawnIndex];
+
+	// generate spawnpoints along the axis!
+	std::vector<glm::vec3> aiSpawnPoints = spawnpointsAlongAxis(1,1, 5.f, forward, zzPathGeom.verts[zzSpawnIndex]);
+
+	// find the point on the track to desired spawn location
+
 	auto scaling =  glm::scale(glm::mat4{1.f},glm::vec3(3.2f, 3.2f, 3.2f));
 	for (auto& vert : aiPathGeom.verts)
 	{
@@ -171,13 +218,28 @@ int main(int argc, char* argv[]) {
 			vert.y = 0.f;
 	}
 
+	std::vector<NavPath> aiPaths;
+	aiPaths.reserve(aiSpawnPoints.size());
+
+	// for (auto& spawnPoint : aiSpawnPoints)
+	// {
+	// 	aiPaths.emplace_back(zzPathGeom.verts);
+	// 	auto& navPath = aiPaths[aiPaths.size() - 1];
+	// 	Guid aiCarGuid = spawnAIEntity(mainScene, &physicsSystem, car_e.guid, spawnPoint, &navPath);
+	// 	AICar& aiCarInstance = mainScene.GetComponent<AICar>(aiCarGuid);
+	// 	// idk why we get the car instance tbh
+	// }
+
+	// NavPath aiPath{zzPathGeom.verts};
+
+
 	// NavPath aiPath{aiPathGeom.verts};
 
-	// ecs::Entity navRenderer_e = mainScene.CreateEntity();
-	// mainScene.AddComponent(navRenderer_e.guid,TransformComponent{});
-	// auto navPathRender = RenderLine{aiPathGeom};
-	// navPathRender.setColor(glm::vec3{1.0f,0.f,1.0f});
-	// mainScene.AddComponent(navRenderer_e.guid,navPathRender);
+	ecs::Entity navRenderer_e = mainScene.CreateEntity();
+	mainScene.AddComponent(navRenderer_e.guid,TransformComponent{});
+	auto navPathRender = RenderLine{zzPathGeom};
+	navPathRender.setColor(glm::vec3{1.0f,0.f,1.0f});
+	mainScene.AddComponent(navRenderer_e.guid,navPathRender);
 
 	// // only spawn one for now!! consider this ur final warning.
 	// //spawnAIEntity(mainScene,&physicsSystem, car_e.guid,{10.f, 10.f,10.f}, &aiPath);
@@ -268,8 +330,6 @@ int main(int argc, char* argv[]) {
 	// GraphicsSystem::importOBJ(level_r, "Stadium_MINIMAL.obj"); //for faster loading times
 	// mainScene.AddComponent(level_e.guid, level_r);
 	// mainScene.AddComponent(level_e.guid, level_t);
-
-
 
 	ecs::Entity new_level_e = mainScene.CreateEntity();
 

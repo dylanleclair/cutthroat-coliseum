@@ -389,6 +389,19 @@ void Car::Update(Guid carGuid, ecs::Scene& scene, float deltaTime)
 }
 
 
+glm::vec3 Car::getForwardDir()
+{
+        // find rotation matrix of car
+    PxTransform carPose = this->m_Vehicle.mPhysXState.physxActor.rigidBody->getGlobalPose();
+
+    // find the direction vector of the vehicle
+    glm::quat vehicleQuat = PxtoGLM(carPose.q);
+    glm::mat4 vehicleRotM = glm::toMat4(vehicleQuat);
+    glm::vec3 headingDir = glm::vec3{vehicleRotM * glm::vec4{0.f, 0.f, -1.f, 1.f}};
+    
+    return headingDir;
+}
+
 void Car::checkFlipped(PxTransform carPose)
 {
 

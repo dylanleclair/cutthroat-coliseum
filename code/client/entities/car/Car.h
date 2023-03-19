@@ -123,6 +123,9 @@ struct Car {
     void setClosestTetherPoint(PxTransform _loc);
     void setClosestTetherPoint(glm::vec3 _loc);
 
+    glm::vec3 getForwardDir();
+
+
     void carImGui();
 
     void resetModifications();
