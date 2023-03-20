@@ -171,19 +171,38 @@ private:
 	GLuint numberOfVerticies = 0;
 };
 
-struct VFXComponent {
+struct VFXBillboard {
 	enum VFXtype {
 		VFX_billbaord = 0,
 		VFX_textureStrip = 1
 	};
 	//billboard constructors
-	VFXComponent(VFXtype _type, std::string _textureName);
-	VFXComponent(VFXtype _type, std::string _textureName, glm::vec3 _lockingAxis);
-	VFXComponent(VFXtype _type, std::string _textureName, const CPU_Geometry& _line);
+	VFXBillboard(std::string _textureName);
+	VFXBillboard(std::string _textureName, glm::vec3 _lockingAxis);
 private:
 	friend class GraphicsSystem;
-	VFXtype type = VFX_billbaord;
-	CPU_Geometry line;
 	glm::vec3 lockingAxis = glm::vec3(0);
 	Texture* texture = Texture::getNoTextureTexture();
+};
+
+struct VFXTextureStrip {
+	VFXTextureStrip(std::string _textureName, float _width, float textureLength = 1);
+	VFXTextureStrip(std::string _textureName, const CPU_Geometry& _line, float _width, float textureLength = 1);
+	void extrude(glm::vec3 _position, glm::vec3 _normal);
+	glm::vec3 g_previousPosition();
+	int maxLength = 10; //the length of the 'spline'
+private:
+	//functions
+	friend class GraphicsSystem;
+	GPU_Geometry* GPUline = new GPU_Geometry();
+	Texture* texture = Texture::getNoTextureTexture();
+	glm::vec3 previousPoint = glm::vec3(0,0,0);
+	glm::vec3 previousNormal = glm::vec3(0,1,0);
+	glm::vec3 previousRight = glm::vec3(0,0,0);
+	float width;
+	float textureLength;
+	int currentLength = -1; //the current length of the 'spline' (-1 = uninitalized, 0 = 1 pair, >=1 number of quads
+	std::vector<glm::vec2> texCoords = std::vector<glm::vec2>();
+	std::vector<glm::vec3> verticies = std::vector<glm::vec3>();
+	std::vector<GLuint> indicies = std::vector<GLuint>();
 };

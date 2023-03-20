@@ -189,13 +189,13 @@ GraphicsSystem::GraphicsSystem(Window& _window) :
 
 	//generate the data for the billboard effect
 	static const GLfloat billboard_vertex_buffer_data[] = {
-		//x, y
-	-.5f, -.5f, 
-	.5f, -.5f, 
-	-.5f,  .5f, 
-	-.5f,  .5f, 
-	.5f, -.5f, 
-	.5f,  .5f, 
+		//x, y, z
+	-.5f, -.5f, 0, 0, 0,
+	.5f, -.5f, 0, 1, 0,
+	-.5f,  .5f, 0, 0, 1,
+	-.5f,  .5f, 0, 0, 1,
+	.5f, -.5f, 0, 1, 0,
+	.5f,  .5f, 0, 1, 1
 	};
 	glGenBuffers(1, &billboard_vertexBuffer);
 	glBindBuffer(GL_ARRAY_BUFFER, billboard_vertexBuffer);
@@ -203,8 +203,10 @@ GraphicsSystem::GraphicsSystem(Window& _window) :
 
 	glGenVertexArrays(1, &billboard_vertexArray);
 	glBindVertexArray(billboard_vertexArray);
-	glVertexAttribPointer(0, 2, GL_FLOAT, GL_FALSE, 2 * sizeof(float), (void*)0);
+	glVertexAttribPointer(0, 2, GL_FLOAT, GL_FALSE, 5 * sizeof(float), (void*)0);
 	glEnableVertexAttribArray(0);
+	glVertexAttribPointer(1, 2, GL_FLOAT, GL_FALSE, 5 * sizeof(float), (void*)(sizeof(float)*3));
+	glEnableVertexAttribArray(1);
 }
 
 GraphicsSystem::~GraphicsSystem() {
@@ -558,7 +560,6 @@ void GraphicsSystem::Update(ecs::Scene& scene, float deltaTime) {
 		//glDepthMask(false);
 		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 		glDisable(GL_CULL_FACE);
-		//glDisable(GL_DEPTH_TEST);
 		viewUniform = glGetUniformLocation(GLuint(VFXshader), "V");
 		perspectiveUniform = glGetUniformLocation(GLuint(VFXshader), "P");
 		glUniformMatrix4fv(perspectiveUniform, 1, GL_FALSE, glm::value_ptr(P));
@@ -568,8 +569,11 @@ void GraphicsSystem::Update(ecs::Scene& scene, float deltaTime) {
 		GLuint centrePosUniform = glGetUniformLocation(GLuint(VFXshader), "centrePos");
 		GLuint cameraPositionUniform = glGetUniformLocation(GLuint(VFXshader), "cameraPos");
 		GLuint lockingAxisUniform = glGetUniformLocation(GLuint(VFXshader), "lockingAxis");
-		for (Guid entityGuid : ecs::EntitiesInScene<VFXComponent, TransformComponent>(scene)) {
-			VFXComponent& comp = scene.GetComponent<VFXComponent>(entityGuid);
+		GLuint typeUniform = glGetUniformLocation(GLuint(VFXshader), "type");
+		//billboards
+		glUniform1ui(typeUniform, 0);
+		for (Guid entityGuid : ecs::EntitiesInScene<VFXBillboard, TransformComponent>(scene)) {
+			VFXBillboard& comp = scene.GetComponent<VFXBillboard>(entityGuid);
 			TransformComponent& trans = scene.GetComponent<TransformComponent>(entityGuid);
 
 			glUniform3fv(cameraPositionUniform, 1, glm::value_ptr(cameras[0].cameraPos));
@@ -579,7 +583,19 @@ void GraphicsSystem::Update(ecs::Scene& scene, float deltaTime) {
 			comp.texture->bind();
 			glDrawArrays(GL_TRIANGLES, 0, 6);
 		}
+		//textureStrips
+		glUniform1ui(typeUniform, 1);
+		for (Guid entityGuid : ecs::EntitiesInScene<VFXTextureStrip, TransformComponent>(scene)) {
+			VFXTextureStrip& comp = scene.GetComponent<VFXTextureStrip>(entityGuid);
+			TransformComponent& trans = scene.GetComponent<TransformComponent>(entityGuid);
 
+			glUniform3fv(centrePosUniform, 1, glm::value_ptr(trans.getTranslation()));
+			
+			comp.texture->bind();
+			comp.GPUline->bind();
+			glDisableVertexAttribArray(1);
+			glDrawElements(GL_TRIANGLES, comp.indicies.size(), GL_UNSIGNED_INT, 0);
+		}
 
 		/*
 		* APPLY SHADING EFFECTS AND DRAW TO gColor buffer

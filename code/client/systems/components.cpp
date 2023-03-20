@@ -99,26 +99,136 @@ void RenderLine::setGeometry(const CPU_Geometry _geometry)
 	numberOfVerticies = _geometry.verts.size();
 }
 
-VFXComponent::VFXComponent(VFXtype _type, std::string _textureName)
+VFXBillboard::VFXBillboard(std::string _textureName)
 {
 	texture = new Texture(_textureName, GL_LINEAR);
 
 }
 
-VFXComponent::VFXComponent(VFXtype _type, std::string _textureName, glm::vec3 _lockingAxis)
+VFXBillboard::VFXBillboard(std::string _textureName, glm::vec3 _lockingAxis)
 {
 	texture = new Texture(_textureName, GL_LINEAR);
 	lockingAxis = _lockingAxis;
 }
 
-VFXComponent::VFXComponent(VFXtype _type, std::string _textureName, const CPU_Geometry& _line)
+VFXTextureStrip::VFXTextureStrip(std::string _textureName, float _width, float _textureLength) : width(_width), textureLength(_textureLength)
 {
 	texture = new Texture(_textureName, GL_LINEAR);
-	line = CPU_Geometry();
-	if (_line.verts.size() < 2)
-		return;
-	for (int i = 1; i < _line.verts.size(); i++) {
-		glm::vec3 right = glm::cross(_line.norms[i], _line.verts[i] - _line.verts[i - 1]);
-		//line.verts.push_back(glm::vec3(_line.verts));
+}
+
+VFXTextureStrip::VFXTextureStrip(std::string _textureName, const CPU_Geometry& _line, float _width, float _textureLength) : width(_width), textureLength(_textureLength)
+{
+	texture = new Texture(_textureName, GL_LINEAR);
+	for (int i = 0; i < _line.verts.size(); i++) {
+		extrude(_line.verts[i], _line.norms[i]);
 	}
+}
+
+void VFXTextureStrip::extrude(glm::vec3 _position, glm::vec3 _normal)
+{
+	//check if the buffer is full and remove the oldest position if yes
+	if (currentLength == maxLength) {
+		//shift all elements back four
+		for (int i = 0; i < verticies.size() - 4; i += 4) {
+			verticies[i] = verticies[i + 4];
+			verticies[i + 1] = verticies[i + 5];
+			verticies[i + 2] = verticies[i + 6];
+			verticies[i + 3] = verticies[i + 7];
+		}
+		//delete the last element
+		verticies.pop_back();
+		verticies.pop_back();
+		verticies.pop_back();
+		verticies.pop_back();
+		currentLength--;
+	}
+
+	//update the position of the previous verticies if it can
+	if (currentLength == 0) {
+		//if this is the second point we are processing then we will need to update the previous right to be accurate since it was initallty a default value
+		previousRight = glm::normalize(glm::cross(_position - previousPoint, previousNormal));
+	}
+	
+	
+	glm::vec3 right = glm::cross(_normal, previousPoint - _position);
+	if (glm::length(right) != 0)
+		right = glm::normalize(right);
+	if (currentLength != -1) {
+		int i = currentLength;
+		//make a quad
+		verticies.push_back(previousPoint + previousRight * width);
+		verticies.push_back(previousPoint - previousRight * width);
+		verticies.push_back(_position + right * width);
+		verticies.push_back(_position - right * width);
+		float ratio = glm::length(previousPoint - _position) / textureLength;
+		texCoords.push_back(glm::vec2(0, 0));
+		texCoords.push_back(glm::vec2(1, 0));
+		texCoords.push_back(glm::vec2(0, 1 * ratio));
+		texCoords.push_back(glm::vec2(1, 1 * ratio));
+		//triangle 1
+		indicies.push_back(4 * i);
+		indicies.push_back(4 * i + 2);
+		indicies.push_back(4 * i + 3);
+		//triangle 2
+		indicies.push_back(4 * i);
+		indicies.push_back(4 * i + 3);
+		indicies.push_back(4 * i + 1);
+	}
+
+	currentLength++;
+
+	//adjust the vertex positions to make a miter joint for the textures
+	if (currentLength >= 2) {
+		glm::vec3 angle = glm::normalize(previousRight + right) * width;
+		//calculate the length of the 4 sides that are about to be transformed
+		float a = glm::length(verticies[verticies.size() - 6] - verticies[verticies.size() - 8]);
+		float b = glm::length(verticies[verticies.size() - 5] - verticies[verticies.size() - 7]);
+		float c = glm::length(verticies[verticies.size() - 4] - verticies[verticies.size() - 2]);
+		float d = glm::length(verticies[verticies.size() - 3] - verticies[verticies.size() - 1]);
+		//transform the verticies
+		verticies[verticies.size() - 3] = -angle + previousPoint;
+		verticies[verticies.size() - 4] = angle + previousPoint;
+		verticies[verticies.size() - 5] = -angle + previousPoint;
+		verticies[verticies.size() - 6] = angle + previousPoint;
+		//calculate the new side lengths
+		/*
+		float newa = glm::length(verticies[verticies.size() - 6] - verticies[verticies.size() - 8]);
+		float newb = glm::length(verticies[verticies.size() - 5] - verticies[verticies.size() - 7]);
+		float newc = glm::length(verticies[verticies.size() - 4] - verticies[verticies.size() - 2]);
+		float newd = glm::length(verticies[verticies.size() - 3] - verticies[verticies.size() - 1]);
+		//calculate the change in side lengths
+		float ca = (a / newa) * glm::length(angle);
+		float cb = (b / newb) * glm::length(angle);
+		float cc = (c / newc) * glm::length(angle);
+		float cd = (d / newd) * glm::length(angle);
+		//adjust the UV so the texture isn't distorted by scaling by the length change
+		// TODO, figure this out... But it works so I'm leaving it as is for now
+		texCoords[texCoords.size() - 6] *= glm::vec2(1 - ca, 0);
+		texCoords[texCoords.size() - 5] *= glm::vec2(1 - cb, 0);
+		texCoords[texCoords.size() - 4] *= glm::vec2(1 - cc, 0);
+		texCoords[texCoords.size() - 3] *= glm::vec2(1 - cd, 0);
+		*/
+		
+	}
+
+	previousPoint = _position;
+	previousNormal = _normal;
+	previousRight = right;
+
+	//if the current length is 0 then add the position but write nothing to the GPU buffer
+	if (currentLength <= 0) {
+		GPUline->setVerts(std::vector<glm::vec3>());
+		GPUline->setIndexBuff(std::vector<GLuint>());
+		GPUline->setTexCoords(std::vector<glm::vec2>());
+		return;
+	}
+
+	GPUline->setVerts(verticies);
+	GPUline->setIndexBuff(indicies);
+	GPUline->setTexCoords(texCoords);
+}
+
+glm::vec3 VFXTextureStrip::g_previousPosition()
+{
+	return previousPoint;
 }

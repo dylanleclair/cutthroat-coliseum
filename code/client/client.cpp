@@ -23,6 +23,7 @@
 
 #include "utils/Time.h"
 #include "Input.h"
+#include "utils/PxConversionUtils.h"
 
 #include "systems/PhysicsSystem.h"
 
@@ -146,7 +147,6 @@ int main(int argc, char* argv[]) {
 	{
 		std::cout << "ERROR: could not initialize vehicle";
 	}
-
 	NavPath circlePath = generateCirclePath(30);
 
 	CPU_Geometry aiPathGeom;
@@ -282,12 +282,35 @@ int main(int argc, char* argv[]) {
 	tether_t.setScale(glm::vec3(1.f, 2.f, 2.f));
 	mainScene.AddComponent(tether_e.guid, tether_t);
 
+	//tire tracks for the main player cart
+	//front tire
+	ecs::Entity frontTireTrack = mainScene.CreateEntity();
+	VFXTextureStrip frontTireTrack_r = VFXTextureStrip("textures/MotercycleTireTread.png", 0.07, 2);
+	frontTireTrack_r.maxLength = 25;
+	TransformComponent frontTireTrack_t = TransformComponent();
+	mainScene.AddComponent(frontTireTrack.guid, frontTireTrack_r);
+	mainScene.AddComponent(frontTireTrack.guid, frontTireTrack_t);
+	//right tire
+	ecs::Entity rightTireTrack = mainScene.CreateEntity();
+	VFXTextureStrip rightTireTrack_r = VFXTextureStrip("textures/MotercycleTireTread.png", 0.07, 1);
+	rightTireTrack_r.maxLength = 15;
+	TransformComponent rightTireTrack_t = TransformComponent();
+	mainScene.AddComponent(rightTireTrack.guid, rightTireTrack_r);
+	mainScene.AddComponent(rightTireTrack.guid, rightTireTrack_t);
+	//left tire
+	ecs::Entity leftTireTrack = mainScene.CreateEntity();
+	VFXTextureStrip leftTireTrack_r = VFXTextureStrip("textures/MotercycleTireTread.png", 0.07, 1);
+	leftTireTrack_r.maxLength = 15;
+	TransformComponent leftTireTrack_t = TransformComponent();
+	mainScene.AddComponent(leftTireTrack.guid, leftTireTrack_r);
+	mainScene.AddComponent(leftTireTrack.guid, leftTireTrack_t);
+
 	/*
 	* Demonstration of the Billboard Component. It always expects a texture to be used and an optinal locking axis can be used
 	* The Billboard will always try to face the camera
 	*/
 	ecs::Entity billboard = mainScene.CreateEntity();
-	VFXComponent bill_r = VFXComponent("textures/CFHX3384.JPG", glm::vec3(0,1,0));
+	VFXBillboard bill_r = VFXBillboard("textures/CFHX3384.JPG", glm::vec3(0, 1, 0));
 	TransformComponent bill_t = TransformComponent();
 	bill_t.setPosition(glm::vec3(0, 20, 0));
 	bill_t.setScale(glm::vec3(10, 5, 0));
@@ -298,7 +321,7 @@ int main(int argc, char* argv[]) {
 	// Setting up log obstacles (currently boxes)
 	setUpLogs(mainScene);
 	addRigidBody(physicsSystem);
-
+	//physicsSystem.m_Scene.get
 	// This is how to change the position of the object after it has been passed to the ECS
 	/*
 	auto &wallTrans = mainScene.GetComponent<TransformComponent>(outWall_e.guid);
@@ -515,6 +538,27 @@ int main(int argc, char* argv[]) {
 		}
 		else {
 			isFinished = false;
+		}
+
+		//tire track logic
+		
+		//front tire
+		glm::vec3 frontTirePosition = PxtoGLM(testCar.getVehicleRigidBody()->getGlobalPose().p) + glm::vec3(PxtoGLM(testCar.getVehicleRigidBody()->getGlobalPose().q) * glm::vec4(0,0,4,1));
+		VFXTextureStrip& frontTireTracks = mainScene.GetComponent<VFXTextureStrip>(frontTireTrack.guid);
+		if (glm::length(frontTirePosition - frontTireTracks.g_previousPosition()) > 1) {
+			frontTireTracks.extrude(frontTirePosition, glm::vec3(0,1,0));
+		}
+		//right tire
+		glm::vec3 rightTirePosition = PxtoGLM(testCar.getVehicleRigidBody()->getGlobalPose().p) + glm::vec3(PxtoGLM(testCar.getVehicleRigidBody()->getGlobalPose().q) * glm::vec4(1, 0, 0, 1));
+		VFXTextureStrip&  rightTireTracks = mainScene.GetComponent<VFXTextureStrip>(rightTireTrack.guid);
+		if (glm::length(rightTirePosition - rightTireTracks.g_previousPosition()) > 1) {
+			rightTireTracks.extrude(rightTirePosition, glm::vec3(0, 1, 0));
+		}
+		//left tire
+		glm::vec3 leftTirePosition = PxtoGLM(testCar.getVehicleRigidBody()->getGlobalPose().p) + glm::vec3(PxtoGLM(testCar.getVehicleRigidBody()->getGlobalPose().q) * glm::vec4(-1, 0, 0, 1));
+		VFXTextureStrip& leftTireTracks = mainScene.GetComponent<VFXTextureStrip>(leftTireTrack.guid);
+		if (glm::length(leftTirePosition - leftTireTracks.g_previousPosition()) > 1) {
+			leftTireTracks.extrude(leftTirePosition, glm::vec3(0, 1, 0));
 		}
 
 		gs.Update(mainScene, 0.0f);
