@@ -265,7 +265,7 @@ void Car::Update(Guid carGuid, ecs::Scene& scene, float deltaTime)
 
       // Controller deadzone to avoid controller drift when
       // stick is at rest
-      if (carAxis < 0.1f && carAxis > -0.1f) {
+      if (carAxis < 0.2f && carAxis > -0.2f) {
           carAxis = 0.f;
       }
   }
