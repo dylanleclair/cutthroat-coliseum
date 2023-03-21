@@ -64,6 +64,14 @@ static PxReal fvs11;
 static PxReal fvs20;
 static PxReal fvs21;
 
+// Tire Forces
+static PxReal camberStiff;
+static PxReal latStiffX;
+static PxReal latStiffY;
+static PxReal longStiff;
+static PxReal restLoad;
+static PxReal(*loadFilter)[2];
+
 // Engine Params
 static PxReal eng_moi;
 static PxReal eng_torque;

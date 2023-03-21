@@ -84,7 +84,7 @@ namespace physics
         // First value is static friction (how hard it is to move an object from rest)
         // Second value is dynamic friction (how much resistance does it provide to an object moving accross the surface)
         // Third value is Restitution (how much force is returned upon collision, in other words how bouncy is the material)
-        m_Material = m_Physics->createMaterial(0.5f, 0.5f, 0.5f);
+        m_Material = m_Physics->createMaterial(0.5f, 0.5f, 0.1f);
         //m_Material = m_Physics->createMaterial(0.5f, 1.0f, 0.1f);
 
         PxInitVehicleExtension(*m_Foundation);
