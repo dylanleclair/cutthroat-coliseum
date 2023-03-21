@@ -2,8 +2,12 @@
 #include <iostream>
 
 // Initializes variables
-void baseVariablesInit(EngineDriveVehicle &m_Vehicle) {
+void baseVariablesInit(EngineDriveVehicle &m_Vehicle, physics::PhysicsSystem &m_Physics) {
 	all_wheels = true; // sets the boolean flag to affect all wheels
+
+	static_friction = m_Physics.m_Material->getStaticFriction();
+	dynamic_friction = m_Physics.m_Material->getDynamicFriction();
+	restitution = m_Physics.m_Material->getRestitution();
 
 	rigid_mass = m_Vehicle.mBaseParams.rigidBodyParams.mass;
 	rigid_MOI = m_Vehicle.mBaseParams.rigidBodyParams.moi;
@@ -136,8 +140,25 @@ void dampeningRatioPrint(int i) {
 	}
 }
 
-void vehicleTuning(EngineDriveVehicle &m_Vehicle) {
+void vehicleTuning(EngineDriveVehicle &m_Vehicle, physics::PhysicsSystem &m_Physics) {
 	ImGui::Begin("Vehicle Tuning");
+
+	// PhysX material 
+	// TODO : (right now affects all objects, will need to assign different materials to different objects)
+	if (ImGui::TreeNode("PhysX")) {
+		if (ImGui::InputFloat("Material Static Friction", &static_friction)) {
+			m_Physics.m_Material->setStaticFriction(static_friction);
+		}
+		if (ImGui::InputFloat("Material Dynamic Friction", &dynamic_friction)) {
+			m_Physics.m_Material->setDynamicFriction(dynamic_friction);
+		}
+		if (ImGui::InputFloat("Material Restitution", &restitution)) {
+			m_Physics.m_Material->setRestitution(restitution);
+		}
+		ImGui::TreePop();
+	}
+
+	m_Physics.m_Material;
 
 	// Rigid Body params
 	if (ImGui::TreeNode("Rigid Body:")) {

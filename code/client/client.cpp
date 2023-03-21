@@ -325,7 +325,7 @@ int main(int argc, char* argv[]) {
 	int controlledCamera = 0;
 	
 	// Initalizes variables for the vehicle tuning Imgui
-	baseVariablesInit(testCar.m_Vehicle);
+	baseVariablesInit(testCar.m_Vehicle, physicsSystem);
 	engineVariablesInit(testCar.m_Vehicle);
 
 
@@ -552,7 +552,7 @@ int main(int argc, char* argv[]) {
 
 			//ImGui Panels for tuning
 			//reloadVehicleJSON();
-			vehicleTuning(testCar.m_Vehicle);
+			vehicleTuning(testCar.m_Vehicle, physicsSystem);
 			engineTuning(testCar.m_Vehicle);
 		}
 		/*

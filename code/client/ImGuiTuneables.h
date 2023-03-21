@@ -3,12 +3,18 @@
 #include "imgui_impl_sdl.h"
 #include "imgui_impl_opengl3.h"
 #include "entities/car/Car.h"
+#include "systems/PhysicsSystem.h"
 
 #include <glm/glm.hpp>
 
 using namespace physx;
 
 static bool all_wheels;
+
+// PhysX Material
+static float static_friction;
+static float dynamic_friction;
+static float restitution;
 
 // Rigid Body Params
 static float rigid_mass;
@@ -23,7 +29,6 @@ static PxF32 steer_max_response;
 static PxReal *steer_multiplier;
 
 // Ackerman Angle
-
 static PxU32 *ack_wheel_ids;
 static PxReal ack_wheel_base;
 static PxReal ack_track_width;
@@ -51,6 +56,7 @@ static PxReal sus_stiffness[4];
 static PxReal sus_dampening[4];
 static float dampening_ratio[4];
 
+// Friction vs Slip
 static PxReal fvs00;
 static PxReal fvs01;
 static PxReal fvs10;
@@ -81,8 +87,8 @@ static PxReal auto_down[7];
 static PxReal auto_latency;
 
 void dampeningRatioPrint(int i);
-void baseVariablesInit(EngineDriveVehicle &m_Vehicle);
+void baseVariablesInit(EngineDriveVehicle &m_Vehicle, physics::PhysicsSystem& m_Physics);
 void engineVariablesInit(EngineDriveVehicle &m_Vehicle);
-void vehicleTuning(EngineDriveVehicle &m_Vehicle);
+void vehicleTuning(EngineDriveVehicle &m_Vehicle, physics::PhysicsSystem& m_Physics);
 void engineTuning(EngineDriveVehicle &m_Vehicle);
 void reloadVehicleJSON(EngineDriveVehicle &m_Vehicle);
