@@ -52,7 +52,30 @@ void baseVariablesInit(EngineDriveVehicle &m_Vehicle) {
 	//m_Vehicle.mBaseParams.suspensionComplianceParams->wheelToeAngle;
 	//m_Vehicle.mBaseParams.suspensionComplianceParams->wheelCamberAngle;
 	//m_Vehicle.mBaseParams.suspensionComplianceParams->suspForceAppPoint;
-	//m_Vehicle.mBaseParams.suspensionComplianceParams->tireForceAppPoint;	
+	//m_Vehicle.mBaseParams.suspensionComplianceParams->tireForceAppPoint;
+
+	/*
+	\brief Graph of friction vs longitudinal slip with 3 points.
+	\note frictionVsSlip[0][0] is always zero.
+	\note frictionVsSlip[0][1] is the friction available at zero longitudinal slip.
+	\note frictionVsSlip[1][0] is the value of longitudinal slip with maximum friction.
+	\note frictionVsSlip[1][1] is the maximum friction.
+	\note frictionVsSlip[2][0] is the end point of the graph.
+	\note frictionVsSlip[2][1] is the value of friction for slips greater than frictionVsSlip[2][0].
+	\note The friction value is computed from the friction vs longitudinal slip graph using linear interpolation.
+	\note The friction value computed from the friction vs longitudinal slip graph is used to scale the friction
+	value of the road geometry.
+	\note frictionVsSlip[2][0] > frictionVsSlip[1][0] > frictionVsSlip[0][0]
+	\note frictionVsSlip[1][1] is typically greater than frictionVsSlip[0][1]
+	\note frictionVsSlip[2][1] is typically smaller than frictionVsSlip[1][1]
+	\note longitudinal slips > frictionVsSlip[2][0] use friction multiplier frictionVsSlip[2][1]
+	*/
+	fvs00 = m_Vehicle.mBaseParams.tireForceParams->frictionVsSlip[0][0];
+	fvs01 = m_Vehicle.mBaseParams.tireForceParams->frictionVsSlip[0][1];
+	fvs10 = m_Vehicle.mBaseParams.tireForceParams->frictionVsSlip[1][0];
+	fvs11 = m_Vehicle.mBaseParams.tireForceParams->frictionVsSlip[1][1];
+	fvs20 = m_Vehicle.mBaseParams.tireForceParams->frictionVsSlip[2][0];
+	fvs21 = m_Vehicle.mBaseParams.tireForceParams->frictionVsSlip[2][1];
 }
 
 // Initalizes variables for the engine drive model
@@ -481,6 +504,33 @@ void vehicleTuning(EngineDriveVehicle &m_Vehicle) {
 		ImGui::TreePop();
 	}
 
+	if (ImGui::TreeNode("Tire Force:")) {
+
+		if (ImGui::TreeNode("Friction Vs Slip")) {
+			
+			if (ImGui::InputFloat("F v S [0][0] - always zero:", &fvs00)) {
+				m_Vehicle.mBaseParams.tireForceParams->frictionVsSlip[0][0] = fvs00;
+			}
+			if (ImGui::InputFloat("F v S [0][1] - friction avail at 0 slip", &fvs01)) {
+				m_Vehicle.mBaseParams.tireForceParams->frictionVsSlip[0][1] = fvs01;
+			}
+			if (ImGui::InputFloat("F v S [1][0] - slip with max friction", &fvs10)) {
+				m_Vehicle.mBaseParams.tireForceParams->frictionVsSlip[1][0] = fvs10;
+			}
+			if (ImGui::InputFloat("F v S [1][1] - maximum friction, typically greater than [0][1]", &fvs11)) {
+				m_Vehicle.mBaseParams.tireForceParams->frictionVsSlip[1][1] = fvs11;
+			}
+			if (ImGui::InputFloat("F v S [2][0] - end of graph, should be greater than [1][0]", &fvs20)) {
+				m_Vehicle.mBaseParams.tireForceParams->frictionVsSlip[2][0] = fvs20;
+			}
+			if (ImGui::InputFloat("F v S [2][1] - friction for slip greater than [2][1] - should be smaller than [1][1]", &fvs21)) {
+				m_Vehicle.mBaseParams.tireForceParams->frictionVsSlip[2][1] = fvs21;
+			}
+							
+			ImGui::TreePop();
+		}
+		ImGui::TreePop();
+	}
 
 	ImGui::End();
 }

@@ -51,6 +51,13 @@ static PxReal sus_stiffness[4];
 static PxReal sus_dampening[4];
 static float dampening_ratio[4];
 
+static PxReal fvs00;
+static PxReal fvs01;
+static PxReal fvs10;
+static PxReal fvs11;
+static PxReal fvs20;
+static PxReal fvs21;
+
 // Engine Params
 static PxReal eng_moi;
 static PxReal eng_torque;
