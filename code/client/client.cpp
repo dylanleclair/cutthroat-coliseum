@@ -38,6 +38,9 @@
 
 #include "systems/SoundSystem.h"
 
+#include <chrono>  // chrono::system_clock
+#include <ctime>   // localtime
+
 glm::vec3 calculateSpherePoint(float s, float t)
 {
 	float z = cos(2 * M_PI * t) * sin(M_PI * s);
@@ -332,6 +335,19 @@ int main(int argc, char* argv[]) {
 	auto default_lin_damp = testCar.m_Vehicle.mPhysXState.physxActor.rigidBody->getLinearDamping();
 	auto default_ang_damp = testCar.m_Vehicle.mPhysXState.physxActor.rigidBody->getAngularDamping();
 
+	// Stuff for the physics timestep accumualtor
+	// Previously was clamped
+	float t = 0.f;
+	uint32_t old_time_sdl = SDL_GetTicks();
+	float t_p = (float) old_time_sdl / 1000.f;
+
+	float acc_t = 0.f;
+	const float delta_t = 1.f/60.f;
+
+	baseVariablesInit(testCar.m_Vehicle, physicsSystem);
+	engineVariablesInit(testCar.m_Vehicle);
+
+
 	// GAME LOOP
 	while (!quit) {
 		Timestep timestep; // Time since last frame
@@ -349,10 +365,9 @@ int main(int argc, char* argv[]) {
 		testCar.m_Vehicle.mPhysXState.physxActor.rigidBody->setLinearDamping(default_lin_damp);
 		testCar.m_Vehicle.mPhysXState.physxActor.rigidBody->setAngularDamping(default_ang_damp);
 
-		// Initalizes variables for the vehicle tuning Imgui
-		// I put this in the render loop so the ImGui window would update with changes from other sources
-		baseVariablesInit(testCar.m_Vehicle, physicsSystem);
-		engineVariablesInit(testCar.m_Vehicle);
+		// Update the Imgui every frame
+		//baseVariablesInit(testCar.m_Vehicle, physicsSystem);
+		//engineVariablesInit(testCar.m_Vehicle);
 
 		//polls all pending input events until there are none left in the queue
 		while (SDL_PollEvent(&window.event)) {
@@ -528,7 +543,19 @@ int main(int argc, char* argv[]) {
 
 		gs.Update(mainScene, 0.0f);
 		aiSystem.Update(mainScene, 0.f);
-		physicsSystem.Update(mainScene,timestep);
+
+
+		// Timestep accumulate for proper physics stepping
+		uint32_t time_sdl = SDL_GetTicks();
+		t = (float)time_sdl / 1000.f;
+		acc_t = acc_t + (t - t_p);
+		t_p = t;
+		while (acc_t >= delta_t) {
+			acc_t = acc_t - delta_t;
+			physicsSystem.Update(mainScene, delta_t);
+		}
+
+		
 
 		update_sounds(testCar, aiCarInstance, playSounds);
 
