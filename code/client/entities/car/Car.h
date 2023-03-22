@@ -124,6 +124,8 @@ struct Car {
     void setClosestTetherPoint(glm::vec3 _loc);
 
     void carImGui();
+    void baseSetup();
+    void Car::setup1();
 
     void resetModifications();
     bool isGroundedDelay(Car& car);
