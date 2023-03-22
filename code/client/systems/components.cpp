@@ -140,10 +140,24 @@ void VFXTextureStrip::extrude(glm::vec3 _position, glm::vec3 _normal)
 		verticies.pop_back();
 		verticies.pop_back();
 		verticies.pop_back();
+		texCoords.pop_back();
+		texCoords.pop_back();
+		texCoords.pop_back();
+		texCoords.pop_back();
+		indicies.pop_back();
+		indicies.pop_back();
+		indicies.pop_back();
+		indicies.pop_back();
+		indicies.pop_back();
+		indicies.pop_back();
 		currentLength--;
 	}
 
-	//update the position of the previous verticies if it can
+	previousRight = right;
+	previousPoint = position;
+	previousNormal = normal;
+
+	//update the position of the previous verticies if it is needed
 	if (state == 1) {
 		//if this is the second point we are processing then we will need to update the previous right to be accurate since it was initallty a default value
 		previousRight = glm::normalize(glm::cross(_position - previousPoint, previousNormal));
@@ -151,10 +165,13 @@ void VFXTextureStrip::extrude(glm::vec3 _position, glm::vec3 _normal)
 	}
 	
 	
-	glm::vec3 right = glm::cross(_normal, previousPoint - _position);
+	right = glm::cross(_normal, previousPoint - _position);
+	position = _position;
+	normal = _normal;
+
 	if (glm::length(right) != 0)
 		right = glm::normalize(right);
-	if (state != 0) {
+	if (state == 2) {
 		int i = currentLength;
 		//make a quad
 		verticies.push_back(previousPoint + previousRight * width);
@@ -179,45 +196,20 @@ void VFXTextureStrip::extrude(glm::vec3 _position, glm::vec3 _normal)
 	currentLength++;
 
 	//adjust the vertex positions to make a miter joint for the textures
-	if (state == 2) {
+	if (state == 2 && verticies.size() >= 8) {
 		glm::vec3 angle = glm::normalize(previousRight + right) * width;
-		//calculate the length of the 4 sides that are about to be transformed
-		float a = glm::length(verticies[verticies.size() - 6] - verticies[verticies.size() - 8]);
-		float b = glm::length(verticies[verticies.size() - 5] - verticies[verticies.size() - 7]);
-		float c = glm::length(verticies[verticies.size() - 4] - verticies[verticies.size() - 2]);
-		float d = glm::length(verticies[verticies.size() - 3] - verticies[verticies.size() - 1]);
 		//transform the verticies
 		verticies[verticies.size() - 3] = -angle + previousPoint;
 		verticies[verticies.size() - 4] = angle + previousPoint;
 		verticies[verticies.size() - 5] = -angle + previousPoint;
 		verticies[verticies.size() - 6] = angle + previousPoint;
-		//calculate the new side lengths
-		/*
-		float newa = glm::length(verticies[verticies.size() - 6] - verticies[verticies.size() - 8]);
-		float newb = glm::length(verticies[verticies.size() - 5] - verticies[verticies.size() - 7]);
-		float newc = glm::length(verticies[verticies.size() - 4] - verticies[verticies.size() - 2]);
-		float newd = glm::length(verticies[verticies.size() - 3] - verticies[verticies.size() - 1]);
-		//calculate the change in side lengths
-		float ca = (a / newa) * glm::length(angle);
-		float cb = (b / newb) * glm::length(angle);
-		float cc = (c / newc) * glm::length(angle);
-		float cd = (d / newd) * glm::length(angle);
-		//adjust the UV so the texture isn't distorted by scaling by the length change
-		// TODO, figure this out... But it works so I'm leaving it as is for now
-		texCoords[texCoords.size() - 6] *= glm::vec2(1 - ca, 0);
-		texCoords[texCoords.size() - 5] *= glm::vec2(1 - cb, 0);
-		texCoords[texCoords.size() - 4] *= glm::vec2(1 - cc, 0);
-		texCoords[texCoords.size() - 3] *= glm::vec2(1 - cd, 0);
-		*/
-		
 	}
 
-	if (state == 0)
+	if (state == 0) {
+		previousNormal = _normal;
+		previousPoint = _position;
 		state = 1;
-
-	previousPoint = _position;
-	previousNormal = _normal;
-	previousRight = right;
+	}
 
 	//if the current length is 0 then add the position but write nothing to the GPU buffer
 	if (currentLength <= 0) {
@@ -232,12 +224,38 @@ void VFXTextureStrip::extrude(glm::vec3 _position, glm::vec3 _normal)
 	GPUline->setTexCoords(texCoords);
 }
 
-void VFXTextureStrip::moveEndPoint(glm::vec3 _position)
+void VFXTextureStrip::moveEndPoint(glm::vec3 _position, glm::vec3 _normal)
 {
+	if(state == 1) {
+		extrude(_position, _normal);
+		return;
+	}
+
+	if (state != 2)
+		return;
+
+	right = glm::cross(_normal, previousPoint - _position);
+	position = _position;
+	normal = _normal;
+
+	if (glm::length(right) != 0)
+		right = glm::normalize(right);
+
+	glm::vec3 angle = glm::normalize(previousRight + right) * width;
+	//transform the verticies
+	verticies[verticies.size() - 3] = -angle + previousPoint;
+	verticies[verticies.size() - 4] = angle + previousPoint;
+	verticies[verticies.size() - 5] = -angle + previousPoint;
+	verticies[verticies.size() - 6] = angle + previousPoint;
+
+	GPUline->setVerts(verticies);
+	GPUline->setIndexBuff(indicies);
+	GPUline->setTexCoords(texCoords);
 }
 
 void VFXTextureStrip::cut()
 {
+	state = 0;
 }
 
 glm::vec3 VFXTextureStrip::g_previousPosition()
