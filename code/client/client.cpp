@@ -324,10 +324,6 @@ int main(int argc, char* argv[]) {
 	bool quit = false;
 	int controlledCamera = 0;
 	
-	// Initalizes variables for the vehicle tuning Imgui
-	baseVariablesInit(testCar.m_Vehicle, physicsSystem);
-	engineVariablesInit(testCar.m_Vehicle);
-
 
 	bool playSounds = true;
 
@@ -352,6 +348,11 @@ int main(int argc, char* argv[]) {
 		//TODO:  May need to put in an if check, and factor out ?
 		testCar.m_Vehicle.mPhysXState.physxActor.rigidBody->setLinearDamping(default_lin_damp);
 		testCar.m_Vehicle.mPhysXState.physxActor.rigidBody->setAngularDamping(default_ang_damp);
+
+		// Initalizes variables for the vehicle tuning Imgui
+		// I put this in the render loop so the ImGui window would update with changes from other sources
+		baseVariablesInit(testCar.m_Vehicle, physicsSystem);
+		engineVariablesInit(testCar.m_Vehicle);
 
 		//polls all pending input events until there are none left in the queue
 		while (SDL_PollEvent(&window.event)) {
