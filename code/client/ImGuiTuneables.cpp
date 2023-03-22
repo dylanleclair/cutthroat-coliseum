@@ -540,27 +540,27 @@ void vehicleTuning(EngineDriveVehicle &m_Vehicle, physics::PhysicsSystem &m_Phys
 		if (ImGui::TreeNode("Friction Vs Slip")) {
 
 			ImGui::Text("F v S[0][0] - always zero");
-			if (ImGui::InputFloat("", &fvs00)) {
+			if (ImGui::InputFloat(".", &fvs00)) {
 				m_Vehicle.mBaseParams.tireForceParams->frictionVsSlip[0][0] = fvs00;
 			}
 			ImGui::Text("F v S[0][1] - friction avail at 0 slip");
-			if (ImGui::InputFloat("", &fvs01)) {
+			if (ImGui::InputFloat(".", &fvs01)) {
 				m_Vehicle.mBaseParams.tireForceParams->frictionVsSlip[0][1] = fvs01;
 			}
 			ImGui::Text("F v S [1][0] - slip with max friction");
-			if (ImGui::InputFloat("", &fvs10)) {
+			if (ImGui::InputFloat(".", &fvs10)) {
 				m_Vehicle.mBaseParams.tireForceParams->frictionVsSlip[1][0] = fvs10;
 			}
 			ImGui::Text("F v S[1][1] - maximum friction, typically greater than[0][1]");
-			if (ImGui::InputFloat("", &fvs11)) {
+			if (ImGui::InputFloat(".", &fvs11)) {
 				m_Vehicle.mBaseParams.tireForceParams->frictionVsSlip[1][1] = fvs11;
 			}
 			ImGui::Text("F v S [2][0] - end of graph, should be greater than [1][0]");
-			if (ImGui::InputFloat("", &fvs20)) {
+			if (ImGui::InputFloat(".", &fvs20)) {
 				m_Vehicle.mBaseParams.tireForceParams->frictionVsSlip[2][0] = fvs20;
 			}
 			ImGui::Text("F v S[2][1] - friction for slip greater than[2][1] - should be smaller than[1][1]");
-			if (ImGui::InputFloat("", &fvs21)) {
+			if (ImGui::InputFloat(".", &fvs21)) {
 				m_Vehicle.mBaseParams.tireForceParams->frictionVsSlip[2][1] = fvs21;
 			}
 

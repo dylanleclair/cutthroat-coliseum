@@ -145,6 +145,8 @@ void Car::carImGui() {
     ImGui::Text("Rotation x: %f, y: %f, z: %f", m_Vehicle.mPhysXState.physxActor.rigidBody->getGlobalPose().q.x, m_Vehicle.mPhysXState.physxActor.rigidBody->getGlobalPose().q.y,
                                                 m_Vehicle.mPhysXState.physxActor.rigidBody->getGlobalPose().q.z);
     ImGui::Text("On the ground ?: %s", m_Vehicle.mBaseState.roadGeomStates->hitState ? "true" : "false");
+    ImGui::Text("Percent Rot: %f", 1.f - m_Vehicle.mEngineDriveState.engineState.rotationSpeed / m_Vehicle.mEngineDriveParams.engineParams.maxOmega);
+    ImGui::Text("Steer Response: %f", m_Vehicle.mBaseParams.steerResponseParams.maxResponse);
     ImGui::End();
 }
 
@@ -210,6 +212,8 @@ bool Car::TetherJump() {
         // applying angular dampening prevents the car from rotating while in the air
         // it will prevent the car from turning when landing however
         m_Vehicle.mPhysXState.physxActor.rigidBody->setAngularDamping(20.f); 
+        // Prevents the car from spinning around the y axis while in the air
+        m_Vehicle.mPhysXState.physxActor.rigidBody->setAngularDamping(10000.f);
         //m_Vehicle.mPhysXState.physxActor.rigidBody->addTorque(PxVec3(0.f, 10.f, 0.f), PxForceMode::eVELOCITY_CHANGE, true);
     }
     return true;

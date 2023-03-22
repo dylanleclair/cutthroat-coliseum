@@ -517,6 +517,10 @@ int main(int argc, char* argv[]) {
 			isFinished = false;
 		}
 
+		float percent_rot = testCar.m_Vehicle.mEngineDriveState.engineState.rotationSpeed / testCar.m_Vehicle.mEngineDriveParams.engineParams.maxOmega;
+		percent_rot = 1.f - percent_rot;
+		//testCar.m_Vehicle.mBaseParams.steerResponseParams.maxResponse = percent_rot * 1.52;
+
 		gs.Update(mainScene, 0.0f);
 		aiSystem.Update(mainScene, 0.f);
 		physicsSystem.Update(mainScene,timestep);
