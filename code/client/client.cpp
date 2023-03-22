@@ -517,6 +517,10 @@ int main(int argc, char* argv[]) {
 			isFinished = false;
 		}
 
+
+		// Stuff to check engine rotation speed and steering response
+		// Used for debugging and tuning the vehicle 
+		// CAN DELETE LATER
 		float percent_rot = testCar.m_Vehicle.mEngineDriveState.engineState.rotationSpeed / testCar.m_Vehicle.mEngineDriveParams.engineParams.maxOmega;
 		percent_rot = 1.f - percent_rot;
 		//testCar.m_Vehicle.mBaseParams.steerResponseParams.maxResponse = percent_rot * 1.52;
@@ -538,7 +542,7 @@ int main(int argc, char* argv[]) {
 			// BEGIN FRAMERATE COUNTER
 			framerate.update(timestep);
 			ImGui::SetNextWindowSize(ImVec2(500, 100));
-			ImGui::Begin("Milestone 3");
+			ImGui::Begin("Milestone 4");
 			ImGui::Text("framerate: %d", (int)framerate.framerate());
 			ImGui::PlotLines("Frametime plot (ms)", framerate.m_time_queue_ms.data(), framerate.m_time_queue_ms.size());
 			ImGui::PlotLines("Framerate plot (hz)", framerate.m_rate_queue.data(), framerate.m_rate_queue.size());
@@ -558,6 +562,9 @@ int main(int argc, char* argv[]) {
 			//reloadVehicleJSON();
 			vehicleTuning(testCar.m_Vehicle, physicsSystem);
 			engineTuning(testCar.m_Vehicle);
+
+			// Obstacles ImGui
+			obstaclesImGui(mainScene, physicsSystem);
 		}
 		/*
 		* Render the UI. I am doing this here for now but I might move it.

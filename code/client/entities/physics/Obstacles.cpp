@@ -1,5 +1,9 @@
 #include "Obstacles.h"
 
+bool obstaclesOn = true;
+std::vector<PxRigidStatic*> actors;
+std::vector<int> guids;
+
 void addRigidBody(physics::PhysicsSystem physicsSystem) {
 	//PxBoxGeometry boxGeom(PxVec3(15.0f, 2.0f, 1.0f));
 
@@ -291,6 +295,49 @@ void addRigidBody(physics::PhysicsSystem physicsSystem) {
 	////*physics->createMaterial(0.5f, 0.5f, 0.1f)
 	//physicsSystem.m_Scene->addActor(*ramp);
 
+	actors.push_back(actor);
+	actors.push_back(actor2);
+	actors.push_back(actor3);
+	actors.push_back(actor4);
+	actors.push_back(actor5);
+	actors.push_back(actor6);
+	actors.push_back(actor7);
+	actors.push_back(actor8);
+	actors.push_back(actor9);
+	actors.push_back(actor10);
+	actors.push_back(actor11);
+	actors.push_back(actor12);
+	actors.push_back(actor13);
+	actors.push_back(actor14);
+	actors.push_back(actor15);
+	actors.push_back(actor16);
+}
+
+void clearObstacles(physics::PhysicsSystem physicsSystem, ecs::Scene& mainScene) {
+	// Removes the actors from the scene (Rigid Body)
+	for (int i = 0; i < actors.size(); i++) {
+		physicsSystem.m_Scene->removeActor(*actors.at(i));
+	}
+	actors.clear();
+	
+	// Change the ecs entity's transform scales
+	// I originally wanted to delete the entities, but you can't do that without
+	// messign up memory pointers in the ECS
+	for (int i = 0; i < guids.size(); i++) {
+		auto &transform = mainScene.GetComponent<TransformComponent>(guids.at(i));
+		transform.setScale(glm::vec3(0.f));
+		//mainScene.DestroyEntity(guids.at(i));
+	}	
+	//guids.clear();
+}
+
+void resetTransforms(ecs::Scene& mainScene) {
+	// Resets the transforms of the components to their original values
+	for (int i = 0; i < guids.size(); i++) {
+		auto &transform = mainScene.GetComponent<TransformComponent>(guids.at(i));
+		// This is hard-coded
+		transform.setScale(glm::vec3(15.f, 2.f, 1.f));
+	}
 }
 
 void setUpLogs(ecs::Scene &mainScene) {
@@ -426,4 +473,36 @@ void setUpLogs(ecs::Scene &mainScene) {
 	log14_t.setPosition(glm::vec3(45.f, 0.f, -160.f));
 	log14_t.setScale(glm::vec3(15.f, 2.f, 1.f));
 	mainScene.AddComponent(log14_e.guid, log14_t);
+
+	guids.push_back(log1_e.guid);
+	guids.push_back(log2_e.guid);
+	guids.push_back(log3_e.guid);
+	guids.push_back(log4_e.guid);
+	guids.push_back(log5_e.guid);
+	guids.push_back(log6_e.guid);
+	guids.push_back(log7_e.guid);
+	guids.push_back(log8_e.guid);
+	guids.push_back(log9_e.guid);
+	guids.push_back(log10_e.guid);
+	guids.push_back(log11_e.guid);
+	guids.push_back(log12_e.guid);
+	guids.push_back(log13_e.guid);
+	guids.push_back(log14_e.guid);
+}
+
+void obstaclesImGui(ecs::Scene& mainScene, physics::PhysicsSystem physicsSystem) {
+	ImGui::Begin("Obstacles");
+
+	if (ImGui::Checkbox("Obstacles", &obstaclesOn)) {
+		if (obstaclesOn) {
+			//setUpLogs(mainScene);
+			resetTransforms(mainScene);
+			addRigidBody(physicsSystem);
+		}
+		else {
+			clearObstacles(physicsSystem, mainScene);
+		}
+	}
+
+	ImGui::End();
 }
