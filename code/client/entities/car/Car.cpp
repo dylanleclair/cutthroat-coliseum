@@ -74,6 +74,7 @@ bool Car::initVehicle(PxVec3 initialPosition)
   }
 
   // Apply a start pose to the physx actor and add it to the physx scene.
+  //this is where the name of the car is applied to the actor
   PxTransform pose(initialPosition, PxQuat(PxIdentity));
   m_Vehicle.setUpActor(*physicsSystem->m_Scene, pose, m_vehicleName);
 

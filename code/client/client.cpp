@@ -541,25 +541,42 @@ int main(int argc, char* argv[]) {
 		}
 
 		//tire track logic
-		
+		static bool previousState[3] = { false, false, false };
 		//front tire
-		glm::vec3 frontTirePosition = PxtoGLM(testCar.getVehicleRigidBody()->getGlobalPose().p) + glm::vec3(PxtoGLM(testCar.getVehicleRigidBody()->getGlobalPose().q) * glm::vec4(0,0,4,1));
-		VFXTextureStrip& frontTireTracks = mainScene.GetComponent<VFXTextureStrip>(frontTireTrack.guid);
-		if (glm::length(frontTirePosition - frontTireTracks.g_previousPosition()) > 1) {
-			frontTireTracks.extrude(frontTirePosition, glm::vec3(0,1,0));
+		if (testCar.m_Vehicle.mBaseState.roadGeomStates[0].hitState && testCar.m_Vehicle.mBaseState.roadGeomStates[1].hitState) {
+			glm::vec3 frontTirePosition = PxtoGLM(testCar.getVehicleRigidBody()->getGlobalPose().p) + glm::vec3(PxtoGLM(testCar.getVehicleRigidBody()->getGlobalPose().q) * glm::vec4(0, 0, 4, 1));
+			VFXTextureStrip& frontTireTracks = mainScene.GetComponent<VFXTextureStrip>(frontTireTrack.guid);
+			if (previousState[0] == false) 
+				frontTireTracks.state = 0;
+			if (glm::length(frontTirePosition - frontTireTracks.g_previousPosition()) > 1 || previousState[0] == false) {
+				frontTireTracks.extrude(frontTirePosition, glm::vec3(0, 1, 0));
+			}
 		}
 		//right tire
-		glm::vec3 rightTirePosition = PxtoGLM(testCar.getVehicleRigidBody()->getGlobalPose().p) + glm::vec3(PxtoGLM(testCar.getVehicleRigidBody()->getGlobalPose().q) * glm::vec4(1, 0, 0, 1));
-		VFXTextureStrip&  rightTireTracks = mainScene.GetComponent<VFXTextureStrip>(rightTireTrack.guid);
-		if (glm::length(rightTirePosition - rightTireTracks.g_previousPosition()) > 1) {
-			rightTireTracks.extrude(rightTirePosition, glm::vec3(0, 1, 0));
+		if (testCar.m_Vehicle.mBaseState.roadGeomStates[2].hitState) {
+			glm::vec3 rightTirePosition = PxtoGLM(testCar.getVehicleRigidBody()->getGlobalPose().p) + glm::vec3(PxtoGLM(testCar.getVehicleRigidBody()->getGlobalPose().q) * glm::vec4(1, 0, 0, 1));
+			VFXTextureStrip& rightTireTracks = mainScene.GetComponent<VFXTextureStrip>(rightTireTrack.guid);
+			if (previousState[1] == false)
+				rightTireTracks.state = 0;
+			if (glm::length(rightTirePosition - rightTireTracks.g_previousPosition()) > 1 || previousState[1] == false) {
+				rightTireTracks.extrude(rightTirePosition, glm::vec3(0, 1, 0));
+			}
 		}
 		//left tire
-		glm::vec3 leftTirePosition = PxtoGLM(testCar.getVehicleRigidBody()->getGlobalPose().p) + glm::vec3(PxtoGLM(testCar.getVehicleRigidBody()->getGlobalPose().q) * glm::vec4(-1, 0, 0, 1));
-		VFXTextureStrip& leftTireTracks = mainScene.GetComponent<VFXTextureStrip>(leftTireTrack.guid);
-		if (glm::length(leftTirePosition - leftTireTracks.g_previousPosition()) > 1) {
-			leftTireTracks.extrude(leftTirePosition, glm::vec3(0, 1, 0));
+		if (testCar.m_Vehicle.mBaseState.roadGeomStates[3].hitState) {
+			glm::vec3 leftTirePosition = PxtoGLM(testCar.getVehicleRigidBody()->getGlobalPose().p) + glm::vec3(PxtoGLM(testCar.getVehicleRigidBody()->getGlobalPose().q) * glm::vec4(-1, 0, 0, 1));
+			VFXTextureStrip& leftTireTracks = mainScene.GetComponent<VFXTextureStrip>(leftTireTrack.guid);
+			if (previousState[2] == false)
+				leftTireTracks.state = 0;
+			if (glm::length(leftTirePosition - leftTireTracks.g_previousPosition()) > 1 || previousState[2] == false) {
+				leftTireTracks.extrude(leftTirePosition, glm::vec3(0, 1, 0));
+			}
 		}
+		//store the hit state
+		previousState[0] = testCar.m_Vehicle.mBaseState.roadGeomStates[0].hitState && testCar.m_Vehicle.mBaseState.roadGeomStates[1].hitState;
+		previousState[1] = testCar.m_Vehicle.mBaseState.roadGeomStates[2].hitState;
+		previousState[2] = testCar.m_Vehicle.mBaseState.roadGeomStates[3].hitState;
+
 
 		gs.Update(mainScene, 0.0f);
 		aiSystem.Update(mainScene, 0.f);

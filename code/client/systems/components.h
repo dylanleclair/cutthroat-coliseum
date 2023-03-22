@@ -188,9 +188,12 @@ private:
 struct VFXTextureStrip {
 	VFXTextureStrip(std::string _textureName, float _width, float textureLength = 1);
 	VFXTextureStrip(std::string _textureName, const CPU_Geometry& _line, float _width, float textureLength = 1);
-	void extrude(glm::vec3 _position, glm::vec3 _normal);
+	void extrude(glm::vec3 _position, glm::vec3 _normal);	//extrudes a new quad from the last point (if avaiable) to _position
+	void moveEndPoint(glm::vec3 _position); //moves the position of the last point in the texture strip
+	void cut(); //cuts the strip and creates a gap between the last point and the next time extrude is called
 	glm::vec3 g_previousPosition();
-	int maxLength = 10; //the length of the 'spline'
+	int maxLength = 1000; //the length of the 'spline'
+	char state = 0; //0 = starting point, 1 = first point after starting, 2 = extend strip
 private:
 	//functions
 	friend class GraphicsSystem;
@@ -201,6 +204,7 @@ private:
 	glm::vec3 previousRight = glm::vec3(0,0,0);
 	float width;
 	float textureLength;
+	
 	int currentLength = -1; //the current length of the 'spline' (-1 = uninitalized, 0 = 1 pair, >=1 number of quads
 	std::vector<glm::vec2> texCoords = std::vector<glm::vec2>();
 	std::vector<glm::vec3> verticies = std::vector<glm::vec3>();
