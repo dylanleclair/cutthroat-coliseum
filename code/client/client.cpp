@@ -86,7 +86,6 @@ std::vector<glm::vec3> spawnpointsAlongAxis(int rows, int cols,float spread, glm
 	glm::vec3 binormal = glm::cross(axis,UP);
 	// spawn a row of cars on binormal of axis
 
-
 	for (int col =0; col < cols; col++)
 	{
 		glm::vec3 colStart = start + (-axis * (col * spread));
@@ -96,6 +95,8 @@ std::vector<glm::vec3> spawnpointsAlongAxis(int rows, int cols,float spread, glm
 			result.push_back(spawnPosition);
 		}
 	}
+
+	
 	return result;
 
 }
@@ -207,7 +208,7 @@ int main(int argc, char* argv[]) {
 	glm::vec3 forward = (zzSpawnIndex == zzPathGeom.verts.size() - 1) ? zzPathGeom.verts[0] - zzPathGeom.verts[zzSpawnIndex] : zzPathGeom.verts[zzSpawnIndex + 1] - zzPathGeom.verts[zzSpawnIndex];
 
 	// generate spawnpoints along the axis!
-	std::vector<glm::vec3> aiSpawnPoints = spawnpointsAlongAxis(1,1, 5.f, forward, zzPathGeom.verts[zzSpawnIndex]);
+	std::vector<glm::vec3> aiSpawnPoints = spawnpointsAlongAxis(2,3, 5.f, forward, zzPathGeom.verts[zzSpawnIndex]);
 
 	// find the point on the track to desired spawn location
 
@@ -221,14 +222,14 @@ int main(int argc, char* argv[]) {
 	std::vector<NavPath> aiPaths;
 	aiPaths.reserve(aiSpawnPoints.size());
 
-	// for (auto& spawnPoint : aiSpawnPoints)
-	// {
-	// 	aiPaths.emplace_back(zzPathGeom.verts);
-	// 	auto& navPath = aiPaths[aiPaths.size() - 1];
-	// 	Guid aiCarGuid = spawnAIEntity(mainScene, &physicsSystem, car_e.guid, spawnPoint, &navPath);
-	// 	AICar& aiCarInstance = mainScene.GetComponent<AICar>(aiCarGuid);
-	// 	// idk why we get the car instance tbh
-	// }
+	for (auto& spawnPoint : aiSpawnPoints)
+	{
+		aiPaths.emplace_back(zzPathGeom.verts);
+		auto& navPath = aiPaths[aiPaths.size() - 1];
+		Guid aiCarGuid = spawnAIEntity(mainScene, &physicsSystem, car_e.guid, spawnPoint, &navPath);
+		AICar& aiCarInstance = mainScene.GetComponent<AICar>(aiCarGuid);
+		// idk why we get the car instance tbh
+	}
 
 	// NavPath aiPath{zzPathGeom.verts};
 
@@ -240,17 +241,6 @@ int main(int argc, char* argv[]) {
 	auto navPathRender = RenderLine{zzPathGeom};
 	navPathRender.setColor(glm::vec3{1.0f,0.f,1.0f});
 	mainScene.AddComponent(navRenderer_e.guid,navPathRender);
-
-	// // only spawn one for now!! consider this ur final warning.
-	// //spawnAIEntity(mainScene,&physicsSystem, car_e.guid,{10.f, 10.f,10.f}, &aiPath);
-	// Guid aiCarGuid = spawnAIEntity(mainScene, &physicsSystem, car_e.guid, { 10.f, 10.f,10.f }, &aiPath);
-	// AICar& aiCarInstance = mainScene.GetComponent<AICar>(aiCarGuid);
-	// // spawnAIEntity(mainScene,&physicsSystem, car_e.guid,{0.f, 0.f,5.f}, &circlePath);
-	
-
-	// NavPath aiPath2{aiPathGeom.verts};
-	// Guid aiCarGuid2 = spawnAIEntity(mainScene, &physicsSystem, car_e.guid, { 00.f, 10.f,20.f }, &aiPath2);
-	// AICar& aiCarInstance2 = mainScene.GetComponent<AICar>(aiCarGuid2);
 
 
 
@@ -349,9 +339,6 @@ int main(int argc, char* argv[]) {
 	GraphicsSystem::importOBJ(new_level_r,"zz-track.obj");
 	mainScene.AddComponent(new_level_e.guid, new_level_r);
 	mainScene.AddComponent(new_level_e.guid, new_level_t);
-
-
-
 
 
 	// // Tether poles
