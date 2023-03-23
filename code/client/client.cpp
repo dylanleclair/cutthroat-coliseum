@@ -561,7 +561,7 @@ int main(int argc, char* argv[]) {
 				frontTireTracks.cut();
 			previousState[0] = false;
 		}
-		/*
+		
 		//right tire
 		if (testCar.m_Vehicle.mBaseState.roadGeomStates[2].hitState) {
 			previousState[1] = true;
@@ -570,7 +570,7 @@ int main(int argc, char* argv[]) {
 				rightTireTracks.extrude(rightTirePosition, glm::vec3(0, 1, 0));
 			}
 			else {
-				rightTireTracks.moveEndPoint(rightTirePosition, glm::vec3(0, 1, 0));
+				//rightTireTracks.moveEndPoint(rightTirePosition, glm::vec3(0, 1, 0));
 			}
 		}
 		else {
@@ -587,7 +587,7 @@ int main(int argc, char* argv[]) {
 				leftTireTracks.extrude(leftTirePosition, glm::vec3(0, 1, 0));
 			}
 			else {
-				leftTireTracks.moveEndPoint(leftTirePosition, glm::vec3(0, 1, 0));
+				//leftTireTracks.moveEndPoint(leftTirePosition, glm::vec3(0, 1, 0));
 			}
 		}
 		else {
@@ -595,7 +595,7 @@ int main(int argc, char* argv[]) {
 				leftTireTracks.cut();
 			previousState[2] = false;
 		}
-		*/
+		
 		gs.Update(mainScene, 0.0f);
 		aiSystem.Update(mainScene, 0.f);
 		physicsSystem.Update(mainScene,timestep);

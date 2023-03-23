@@ -8,7 +8,7 @@ uniform sampler2D gDepth;
 uniform sampler2D gShadow;
 uniform sampler2D gVFXColor;
 uniform sampler2D gVFXDepth;
-
+uniform samplerCube cubemap;
 
 //variable uniforms
 uniform float normalDiffWeight = 1;
@@ -21,6 +21,7 @@ uniform vec3 lightDir;
 uniform float ambiantStr;
 uniform float diffuseWeight;
 uniform int numQuantizedSplits;
+uniform vec3 cameraDirection;
 
 in vec2 tc;
 
