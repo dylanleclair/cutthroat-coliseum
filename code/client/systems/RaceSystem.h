@@ -4,6 +4,13 @@
 #include "core/ecs.h"
 #include <map>
 
+struct Contestant {
+  Guid carGuid;
+  glm::vec3 worldPosition;
+  float curveIndex;
+  // other data if needed I guess 
+};
+
 /**
  * A RaceTracker will compute the ranking of each individual in the race! 
 */
@@ -20,9 +27,3 @@ private:
   std::map<Guid,int> m_rankings;
 };
 
-struct Contestant {
-  Guid carGuid;
-  glm::vec3 worldPosition;
-  float curveIndex;
-  // other data if needed I guess 
-};
