@@ -337,13 +337,11 @@ int main(int argc, char* argv[]) {
 
 	// Stuff for the physics timestep accumualtor
 	// Previously was clamped
-	float t = 0.f;
-	uint32_t old_time_sdl = SDL_GetTicks();
-	float t_p = (float) old_time_sdl / 1000.f;
+
+	auto previous_time = (float)SDL_GetTicks()/1000.f;
 
 	float acc_t = 0.f;
 	const float delta_t = 1.f/60.f;
-
 
 	// Sets up the better handling model on runtime 
 	testCar.setup1();
@@ -544,15 +542,19 @@ int main(int argc, char* argv[]) {
 		percent_rot = 1.f - percent_rot;
 		//testCar.m_Vehicle.mBaseParams.steerResponseParams.maxResponse = percent_rot * 1.52;
 
-		gs.Update(mainScene, 0.0f);
-		aiSystem.Update(mainScene, 0.f);
+		gs.Update(mainScene, delta_t);
+		aiSystem.Update(mainScene, delta_t);
 
 
 		// Timestep accumulate for proper physics stepping
-		uint32_t time_sdl = SDL_GetTicks();
-		t = (float)time_sdl / 1000.f;
-		acc_t = acc_t + (t - t_p);
-		t_p = t;
+		auto current_time = (float)SDL_GetTicks()/1000.f;
+		auto time_diff = current_time - previous_time;
+		if (time_diff > 0.25f) {
+			time_diff = 0.25f;
+		}
+		previous_time = current_time;
+
+		acc_t = acc_t + (time_diff);
 		while (acc_t >= delta_t) {
 			acc_t = acc_t - delta_t;
 			physicsSystem.Update(mainScene, delta_t);
