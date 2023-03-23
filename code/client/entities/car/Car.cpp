@@ -171,10 +171,14 @@ void Car::baseSetup() {
     m_Vehicle.mBaseParams.rigidBodyParams.moi.z = 750.0f;
 
     m_Vehicle.mBaseParams.steerResponseParams.maxResponse = 0.52f;
+    m_Vehicle.mBaseParams.steerResponseParams.wheelResponseMultipliers[0] = 1.0f;
+    m_Vehicle.mBaseParams.steerResponseParams.wheelResponseMultipliers[1] = 1.0f;
     m_Vehicle.mBaseParams.tireForceParams->latStiffY = 143930.84033118f;
 
     m_Vehicle.mEngineDriveParams.engineParams.peakTorque = 500.f;
     m_Vehicle.mEngineDriveParams.engineParams.maxOmega = 600.f;
+    m_Vehicle.mEngineDriveParams.autoboxParams.latency = 2.0f;
+    m_Vehicle.mEngineDriveParams.gearBoxParams.switchTime = 0.5f;
 }
 
 void Car::setup1() {
@@ -189,10 +193,14 @@ void Car::setup1() {
     m_Vehicle.mBaseParams.rigidBodyParams.moi.z = 3200;
 
     m_Vehicle.mBaseParams.steerResponseParams.maxResponse = 0.6f;
+    m_Vehicle.mBaseParams.steerResponseParams.wheelResponseMultipliers[0] = 0.5f;
+    m_Vehicle.mBaseParams.steerResponseParams.wheelResponseMultipliers[1] = 0.5f;
     m_Vehicle.mBaseParams.tireForceParams->latStiffY = 1186990.625f;
 
     m_Vehicle.mEngineDriveParams.engineParams.peakTorque = 500.f;
     m_Vehicle.mEngineDriveParams.engineParams.maxOmega = 600.f;
+    m_Vehicle.mEngineDriveParams.autoboxParams.latency = 0.5f;
+    m_Vehicle.mEngineDriveParams.gearBoxParams.switchTime = 0.2f;
 }
 
 void Car::setClosestTetherPoint(PxTransform _loc) {

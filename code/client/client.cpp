@@ -344,11 +344,12 @@ int main(int argc, char* argv[]) {
 	float acc_t = 0.f;
 	const float delta_t = 1.f/60.f;
 
-	baseVariablesInit(testCar.m_Vehicle, physicsSystem);
-	engineVariablesInit(testCar.m_Vehicle);
 
 	// Sets up the better handling model on runtime 
 	testCar.setup1();
+
+	baseVariablesInit(testCar.m_Vehicle, physicsSystem);
+	engineVariablesInit(testCar.m_Vehicle);
 
 	// GAME LOOP
 	while (!quit) {
