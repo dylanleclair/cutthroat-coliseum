@@ -81,8 +81,6 @@ int main(int argc, char* argv[]) {
 
 
 
-	init_sound_system();
-
 
 	SDL_Init(SDL_INIT_EVERYTHING); // initialize all sdl systems
 	Window window(1200, 800, "Maximus Overdrive");
@@ -333,12 +331,14 @@ int main(int argc, char* argv[]) {
 	engineVariablesInit(testCar.m_Vehicle);
 
 
-	bool playSounds = true;
 
 	// Find the default values of movement dampening
 	// This will be used to reset changes to dampening
 	auto default_lin_damp = testCar.m_Vehicle.mPhysXState.physxActor.rigidBody->getLinearDamping();
 	auto default_ang_damp = testCar.m_Vehicle.mPhysXState.physxActor.rigidBody->getAngularDamping();
+
+	bool playSounds = true;
+	init_sound_system();
 
 	// GAME LOOP
 	while (!quit) {
