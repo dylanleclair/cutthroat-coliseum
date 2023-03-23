@@ -347,6 +347,8 @@ int main(int argc, char* argv[]) {
 	baseVariablesInit(testCar.m_Vehicle, physicsSystem);
 	engineVariablesInit(testCar.m_Vehicle);
 
+	// Sets up the better handling model on runtime 
+	testCar.setup1();
 
 	// GAME LOOP
 	while (!quit) {
@@ -365,9 +367,9 @@ int main(int argc, char* argv[]) {
 		testCar.m_Vehicle.mPhysXState.physxActor.rigidBody->setLinearDamping(default_lin_damp);
 		testCar.m_Vehicle.mPhysXState.physxActor.rigidBody->setAngularDamping(default_ang_damp);
 
-		// Update the Imgui every frame
-		//baseVariablesInit(testCar.m_Vehicle, physicsSystem);
-		//engineVariablesInit(testCar.m_Vehicle);
+		// Update the Imgui every frame (Might cause performance issues) 
+		baseVariablesInit(testCar.m_Vehicle, physicsSystem);
+		engineVariablesInit(testCar.m_Vehicle);
 
 		//polls all pending input events until there are none left in the queue
 		while (SDL_PollEvent(&window.event)) {
