@@ -16,15 +16,22 @@ FMOD_RESULT result;
 struct SoundSystem {
 	FMOD::System* system = NULL;
 
+    // music things
+	FMOD::Sound* musicsound = NULL;
+	FMOD::Channel* musicchannel = NULL;
+
+    // car sounds
 	FMOD::Sound* beepsound = NULL;
 	FMOD::Sound* enginesound = NULL;
 	FMOD::Sound* brakesound = NULL;
 	FMOD::Sound* collisionsound = NULL;
 
+    // player channels
 	FMOD::Channel* playerenginechannel = NULL;
 	FMOD::Channel* playerbrakechannel = NULL;
 	FMOD::Channel* playercollisionchannel = NULL;
 
+    // opponent channels
 	FMOD::Channel* opponentenginechannel = NULL;
 	FMOD::Channel* opponentbrakechannel = NULL;
 	FMOD::Channel* opponentcollisionchannel = NULL;
@@ -52,6 +59,12 @@ void init_sound_system() {
 	handle_fmod_error();
 
 	result = soundsystem.system->createSound("audio/bus-engine-idling-26992.mp3", FMOD_3D, 0, &soundsystem.enginesound);
+	handle_fmod_error();
+
+	result = soundsystem.system->createSound("audio/dark_pit_theme.mp3", FMOD_LOOP_NORMAL, 0, &soundsystem.musicsound);
+	handle_fmod_error();
+
+    result = soundsystem.system->playSound(soundsystem.musicsound, 0, false, &soundsystem.musicchannel);
 	handle_fmod_error();
 
 	// TODO: collision sound
@@ -94,6 +107,7 @@ void update_sounds(Car& player, AICar& opponent, bool playSounds) {
 		soundsystem.playerbrakechannel->stop();
 	}
 	soundsystem.playerenginechannel->setVolume(0.5f);
+	soundsystem.musicchannel->setVolume(0.3f);
 
 	// PLAYER: play brake sound if we're throttling and not already playing on the channel
 	isPlaying = false;
