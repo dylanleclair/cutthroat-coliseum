@@ -557,7 +557,6 @@ int main(int argc, char* argv[]) {
 			}
 		}
 		else {
-			std::cout << "SCREAN\n";
 			if (previousState[0] == true)
 				frontTireTracks.cut();
 			previousState[0] = false;
@@ -579,7 +578,7 @@ int main(int argc, char* argv[]) {
 				rightTireTracks.cut();
 			previousState[1] = false;
 		}
-		testCar.getVehicleRigidBody()->setName("DAVE");
+
 		//left tire
 		if (testCar.m_Vehicle.mBaseState.roadGeomStates[3].hitState) {
 			previousState[2] = true;
@@ -595,9 +594,8 @@ int main(int argc, char* argv[]) {
 			if (previousState[2] == true)
 				leftTireTracks.cut();
 			previousState[2] = false;
-		}*/
-
-
+		}
+		*/
 		gs.Update(mainScene, 0.0f);
 		aiSystem.Update(mainScene, 0.f);
 		physicsSystem.Update(mainScene,timestep);

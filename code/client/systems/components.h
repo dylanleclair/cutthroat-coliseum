@@ -192,7 +192,7 @@ struct VFXTextureStrip {
 	void moveEndPoint(glm::vec3 _position, glm::vec3 normal); //moves the position of the last point in the texture strip
 	void cut(); //cuts the strip and creates a gap between the last point and the next time extrude is called
 	glm::vec3 g_previousPosition();
-	int maxLength = 1000; //the length of the 'spline'
+	int maxLength = 30; //the length of the 'spline'
 	
 private:
 	//functions
@@ -202,7 +202,7 @@ private:
 	glm::vec3 position = glm::vec3(0);
 	glm::vec3 normal = glm::vec3(0);
 	glm::vec3 right = glm::vec3(0);
-	char state = 0; //0 = we are adding the starting point, 1 = we are adding the first quad, 2 = we are adding more quads
+	char state = 0; //0 = we are adding the starting point, 1 = we are adding the first quad, 2 = we are adding more quads, 3 = enable joint smoothing 
 	glm::vec3 previousPoint = glm::vec3(0,0,0);
 	glm::vec3 previousNormal = glm::vec3(0,1,0);
 	glm::vec3 previousRight = glm::vec3(0,0,0);
