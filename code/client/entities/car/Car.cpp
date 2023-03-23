@@ -170,6 +170,15 @@ void Car::baseSetup() {
     m_Vehicle.mBaseParams.rigidBodyParams.moi.y = 3414.0f;
     m_Vehicle.mBaseParams.rigidBodyParams.moi.z = 750.0f;
 
+    m_Vehicle.mBaseParams.wheelParams[0].radius = 0.3432520031929016;
+    m_Vehicle.mBaseParams.wheelParams[0].halfWidth = 0.15768450498580934;
+    m_Vehicle.mBaseParams.wheelParams[1].radius = 0.3432520031929016;
+    m_Vehicle.mBaseParams.wheelParams[1].halfWidth = 0.15768450498580934;
+    m_Vehicle.mBaseParams.wheelParams[2].radius = 0.3432520031929016;
+    m_Vehicle.mBaseParams.wheelParams[2].halfWidth = 0.15768450498580934;
+    m_Vehicle.mBaseParams.wheelParams[3].radius = 0.3432520031929016;
+    m_Vehicle.mBaseParams.wheelParams[3].halfWidth = 0.15768450498580934;
+
     m_Vehicle.mBaseParams.steerResponseParams.maxResponse = 0.52f;
     m_Vehicle.mBaseParams.brakeResponseParams->wheelResponseMultipliers[0] = 1.0f;
     m_Vehicle.mBaseParams.brakeResponseParams->wheelResponseMultipliers[1] = 1.0f;
@@ -191,6 +200,15 @@ void Car::setup1() {
     m_Vehicle.mBaseParams.rigidBodyParams.moi.x = 3200;
     m_Vehicle.mBaseParams.rigidBodyParams.moi.y = 2000;
     m_Vehicle.mBaseParams.rigidBodyParams.moi.z = 3200;
+
+    m_Vehicle.mBaseParams.wheelParams[0].radius = .6f;
+    m_Vehicle.mBaseParams.wheelParams[0].halfWidth = .3f;
+    m_Vehicle.mBaseParams.wheelParams[1].radius = .6f;
+    m_Vehicle.mBaseParams.wheelParams[1].halfWidth = .3f;
+    m_Vehicle.mBaseParams.wheelParams[2].radius = .6f;
+    m_Vehicle.mBaseParams.wheelParams[2].halfWidth = .3f;
+    m_Vehicle.mBaseParams.wheelParams[3].radius = .6f;
+    m_Vehicle.mBaseParams.wheelParams[3].halfWidth = .3f;
 
     m_Vehicle.mBaseParams.steerResponseParams.maxResponse = 0.6f;
     m_Vehicle.mBaseParams.brakeResponseParams->wheelResponseMultipliers[0] = 0.5f;
