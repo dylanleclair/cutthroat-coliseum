@@ -542,8 +542,7 @@ int main(int argc, char* argv[]) {
 		percent_rot = 1.f - percent_rot;
 		//testCar.m_Vehicle.mBaseParams.steerResponseParams.maxResponse = percent_rot * 1.52;
 
-		gs.Update(mainScene, delta_t);
-		aiSystem.Update(mainScene, delta_t);
+
 
 
 		// Timestep accumulate for proper physics stepping
@@ -560,7 +559,8 @@ int main(int argc, char* argv[]) {
 			physicsSystem.Update(mainScene, delta_t);
 		}
 
-		
+		gs.Update(mainScene, delta_t);
+		aiSystem.Update(mainScene, delta_t);
 
 		update_sounds(testCar, aiCarInstance, playSounds);
 
