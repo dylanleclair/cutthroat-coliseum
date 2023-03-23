@@ -424,3 +424,10 @@ void Car::checkFlipped(PxTransform carPose)
         m_Vehicle.mPhysXState.physxActor.rigidBody->setGlobalPose(carPose);
     }
 }
+
+
+glm::vec3 Car::getPosition()
+{
+    PxTransform carPose = m_Vehicle.mPhysXState.physxActor.rigidBody->getGlobalPose();
+    return PxtoGLM(carPose.p);
+}

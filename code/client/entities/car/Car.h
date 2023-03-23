@@ -135,6 +135,8 @@ struct Car {
 
     PxRigidBody* getVehicleRigidBody();
 
+    glm::vec3 getPosition();
+
     virtual void Update(Guid carGuid, ecs::Scene& scene, float deltaTime);
 
 protected: 
