@@ -10,7 +10,7 @@ namespace physics
     void PhysicsSystem::Initialize()
     {
 		initPhysX();
-		initGroundPlane();
+		// initGroundPlane();
 		initMaterialFrictionTable();
         initCooking(); 
 		// if (!initVehicles())
@@ -52,7 +52,7 @@ namespace physics
 
     void PhysicsSystem::Cleanup()
     {
-        cleanupGroundPlane();
+        // cleanupGroundPlane();
         cleanupPhysX();
     }
 

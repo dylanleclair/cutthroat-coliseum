@@ -31,6 +31,7 @@ public:
 	glm::vec3 GraphicsSystem::g_cameraVelocity();
 	static void importOBJ(CPU_Geometry& _geometry, const std::string _fileName);
 	static void importOBJ(RenderModel& _component, const std::string _fileName);
+	static void importSplineFromOBJ(CPU_Geometry& _geometry, std::string filename);
 private:
 
 	Camera cameras[4];

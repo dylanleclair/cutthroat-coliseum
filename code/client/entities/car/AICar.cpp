@@ -43,6 +43,9 @@ float euclideanBasic(glm::vec3 a, glm::vec3 b)
     return sqrt(dist);
 }
 
+
+
+
 Command AICar::pathfind(glm::vec3 currentPosition)
 {
 
