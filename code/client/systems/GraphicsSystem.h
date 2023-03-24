@@ -112,6 +112,7 @@ private:
 	float follow_cam_y;
 	float follow_cam_z;
 	float follow_correction_strength;
+	float maximum_follow_distance;
 	bool faceCulling;
 	bool front_face;
 	bool back_face;

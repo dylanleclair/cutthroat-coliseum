@@ -69,6 +69,7 @@ GraphicsSystem::GraphicsSystem(Window& _window) :
 	follow_cam_y = 6.f;
 	follow_cam_z = -16.f;
 	follow_correction_strength = 40.f;
+	maximum_follow_distance = 5;
 	front_face = false;
 	back_face = true;
 
@@ -349,6 +350,7 @@ void GraphicsSystem::ImGuiPanel() {
 		ImGui::InputFloat("Y Distance: ", &follow_cam_y);
 		ImGui::InputFloat("Z Distance: ", &follow_cam_z);
 		ImGui::InputFloat("Correction Strength", &follow_correction_strength);
+		ImGui::InputFloat("max follow distance", &maximum_follow_distance);
 	}
 
 	ImGui::End();
@@ -471,13 +473,13 @@ void GraphicsSystem::Update(ecs::Scene& scene, float deltaTime) {
 			glm::vec3 cameraTargetLocation = glm::translate(glm::mat4(1), trans.getTranslation()) * toMat4(trans.getRotation()) * glm::vec4(follow_cam_x, follow_cam_y, follow_cam_z, 1);
 			//calculate the speed of the car
 			float speed = glm::distance(previousCarPosition, trans.getTranslation());
-			//calculate how far the camera is from the target position
-			float cameraOffset = glm::distance(cameraTargetLocation, cameras[0].getPos());
-			//use a sigmoid function to determine how much to move the camera to the target position (can't go higher than 1)
-			float correctionAmount = cameraOffset / (follow_correction_strength + cameraOffset);
-			//lerp the camera to a good location based on the correction amount
-			cameras[0].setPos(cameras[0].getPos() * (1-correctionAmount) + correctionAmount * cameraTargetLocation);
-
+			//calculate the vector from the cameras current position to the target position
+			glm::vec3 cameraOffset = cameras[0].getPos() - cameraTargetLocation;
+			if (glm::length(cameraOffset) != 0) {
+				float followDistance = (speed / (speed + follow_correction_strength)) * maximum_follow_distance;
+				cameraOffset = glm::normalize(cameraOffset) * followDistance;
+				cameras[0].setPos(cameraTargetLocation + cameraOffset);
+			}
 			//set the camera variables
 			previousCarPosition = trans.getTranslation();
 			V = glm::lookAt(cameras[0].getPos(), trans.getTranslation(), glm::vec3(0.0f, 1.0f, 0.0f));
