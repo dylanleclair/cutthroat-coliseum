@@ -492,10 +492,11 @@ int main(int argc, char* argv[]) {
 						lapCount = 1;
 						// TODO: apply the dampening to ai when resetting the ai
 						// Will need to for loop all ai cars
-						
-						
-						//aiCarInstance.m_lapCount = 1;
 						//aiCarInstance.m_Vehicle.mPhysXState.physxActor.rigidBody->setGlobalPose(PxTransform(10.f, 2.f, 10.f));
+
+						// Resets the accumulator
+						acc_t = 0;
+
 						break;
 						
 					// TODO: change the file that is serializes (Want to do base.json and enginedrive.json)
@@ -643,9 +644,6 @@ int main(int argc, char* argv[]) {
 		//testCar.m_Vehicle.mBaseParams.steerResponseParams.maxResponse = percent_rot * 1.52;
 
 
-		gs.Update(mainScene, delta_t);
-		aiSystem.Update(mainScene, delta_t);
-				raceSystem.Update(mainScene,delta_t);
 
 		// Timestep accumulate for proper physics stepping
 		auto current_time = (float)SDL_GetTicks()/1000.f;
@@ -661,7 +659,9 @@ int main(int argc, char* argv[]) {
 			physicsSystem.Update(mainScene, delta_t);
 		}
 
-		// update_sounds(testCar, aiCarInstance, playSounds);
+		gs.Update(mainScene, time_diff);
+
+		//update_sounds(testCar, aiCarInstance, playSounds);
 
 		// END__ ECS SYSTEMS UPDATES
 
