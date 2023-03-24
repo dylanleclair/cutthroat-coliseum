@@ -21,6 +21,7 @@
 #include <stdio.h>
 #include "stb_image.h"
 #include <cstring>
+#include <fstream>
 
 //DEBUG IMPORTS
 #include "graphics/snippetrender/SnippetRender.h"
