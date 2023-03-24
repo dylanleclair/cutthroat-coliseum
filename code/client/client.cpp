@@ -38,6 +38,9 @@
 
 #include "systems/SoundSystem.h"
 
+#include <chrono>  // chrono::system_clock
+#include <ctime>   // localtime
+
 glm::vec3 calculateSpherePoint(float s, float t)
 {
 	float z = cos(2 * M_PI * t) * sin(M_PI * s);
@@ -142,7 +145,7 @@ int main(int argc, char* argv[]) {
 	mainScene.AddComponent(car_e.guid, Car{});
 	Car& testCar = mainScene.GetComponent<Car>(car_e.guid);
 	testCar.physicsSystem = &physicsSystem;
-	if (!testCar.initVehicle(PxVec3(35.000000000f, -0.0500000119f, -1.59399998f)))
+	if (!testCar.initVehicle(PxVec3(35.000000000f, 0.2f, -1.59399998f)))
 	{
 		std::cout << "ERROR: could not initialize vehicle";
 	}
@@ -188,7 +191,7 @@ int main(int argc, char* argv[]) {
 	car_r.isShadowed(true);
 	mainScene.AddComponent(car_e.guid, car_r);
 	TransformComponent car_t = TransformComponent(testCar.getVehicleRigidBody());
-	car_t.setPosition(glm::vec3(0, 0, 0.5f));
+	car_t.setPosition(glm::vec3(0, -0.3f, 0.5f));
 	car_t.setScale(glm::vec3(3.2f, 3.2f, 3.2f));
 	mainScene.AddComponent(car_e.guid, car_t);
 	
@@ -328,10 +331,6 @@ int main(int argc, char* argv[]) {
 	bool quit = false;
 	int controlledCamera = 0;
 	
-	// Initalizes variables for the vehicle tuning Imgui
-	baseVariablesInit(testCar.m_Vehicle);
-	engineVariablesInit(testCar.m_Vehicle);
-
 
 	bool playSounds = true;
 
@@ -339,6 +338,20 @@ int main(int argc, char* argv[]) {
 	// This will be used to reset changes to dampening
 	auto default_lin_damp = testCar.m_Vehicle.mPhysXState.physxActor.rigidBody->getLinearDamping();
 	auto default_ang_damp = testCar.m_Vehicle.mPhysXState.physxActor.rigidBody->getAngularDamping();
+
+	// Stuff for the physics timestep accumualtor
+	// Previously was clamped
+
+	auto previous_time = (float)SDL_GetTicks()/1000.f;
+
+	float acc_t = 0.f;
+	const float delta_t = 1.f/60.f;
+
+	// Sets up the better handling model on runtime 
+	testCar.setup1();
+
+	baseVariablesInit(testCar.m_Vehicle, physicsSystem);
+	engineVariablesInit(testCar.m_Vehicle);
 
 	// GAME LOOP
 	while (!quit) {
@@ -356,6 +369,10 @@ int main(int argc, char* argv[]) {
 		//TODO:  May need to put in an if check, and factor out ?
 		testCar.m_Vehicle.mPhysXState.physxActor.rigidBody->setLinearDamping(default_lin_damp);
 		testCar.m_Vehicle.mPhysXState.physxActor.rigidBody->setAngularDamping(default_ang_damp);
+
+		// Update the Imgui every frame (Might cause performance issues) 
+		baseVariablesInit(testCar.m_Vehicle, physicsSystem);
+		engineVariablesInit(testCar.m_Vehicle);
 
 		//polls all pending input events until there are none left in the queue
 		while (SDL_PollEvent(&window.event)) {
@@ -521,9 +538,31 @@ int main(int argc, char* argv[]) {
 			isFinished = false;
 		}
 
-		gs.Update(mainScene, 0.0f);
-		aiSystem.Update(mainScene, 0.f);
-		physicsSystem.Update(mainScene,timestep);
+
+		// Stuff to check engine rotation speed and steering response
+		// Used for debugging and tuning the vehicle 
+		// CAN DELETE LATER
+		float percent_rot = testCar.m_Vehicle.mEngineDriveState.engineState.rotationSpeed / testCar.m_Vehicle.mEngineDriveParams.engineParams.maxOmega;
+		percent_rot = 1.f - percent_rot;
+		//testCar.m_Vehicle.mBaseParams.steerResponseParams.maxResponse = percent_rot * 1.52;
+
+
+		gs.Update(mainScene, delta_t);
+		aiSystem.Update(mainScene, delta_t);
+
+		// Timestep accumulate for proper physics stepping
+		auto current_time = (float)SDL_GetTicks()/1000.f;
+		auto time_diff = current_time - previous_time;
+		if (time_diff > 0.25f) {
+			time_diff = 0.25f;
+		}
+		previous_time = current_time;
+
+		acc_t = acc_t + (time_diff);
+		while (acc_t >= delta_t) {
+			acc_t = acc_t - delta_t;
+			physicsSystem.Update(mainScene, delta_t);
+		}
 
 		update_sounds(testCar, aiCarInstance, playSounds);
 
@@ -538,7 +577,7 @@ int main(int argc, char* argv[]) {
 			// BEGIN FRAMERATE COUNTER
 			framerate.update(timestep);
 			ImGui::SetNextWindowSize(ImVec2(500, 100));
-			ImGui::Begin("Milestone 3");
+			ImGui::Begin("Milestone 4");
 			ImGui::Text("framerate: %d", (int)framerate.framerate());
 			ImGui::PlotLines("Frametime plot (ms)", framerate.m_time_queue_ms.data(), framerate.m_time_queue_ms.size());
 			ImGui::PlotLines("Framerate plot (hz)", framerate.m_rate_queue.data(), framerate.m_rate_queue.size());
@@ -556,8 +595,11 @@ int main(int argc, char* argv[]) {
 
 			//ImGui Panels for tuning
 			//reloadVehicleJSON();
-			vehicleTuning(testCar.m_Vehicle);
+			vehicleTuning(testCar.m_Vehicle, physicsSystem);
 			engineTuning(testCar.m_Vehicle);
+
+			// Obstacles ImGui
+			obstaclesImGui(mainScene, physicsSystem);
 		}
 		/*
 		* Render the UI. I am doing this here for now but I might move it.
