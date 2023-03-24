@@ -25,20 +25,37 @@
 //DEBUG IMPORTS
 #include "graphics/snippetrender/SnippetRender.h"
 
+
+
 void importSkybox(std::string _texture, GLuint target, int xoff, int yoff) {
-	int width, height, nrChannels;
-	unsigned char* data = stbi_load("textures/skybox.png", &width, &height, &nrChannels, 0);
+	int imageWidth, imageHeight, nrChannels;
+	unsigned char* image = stbi_load("textures/skybox.png", &imageWidth, &imageHeight, &nrChannels, 0);
 	//make it a square even if it loses some data
-	int subimageWidth = min(width / 4, height / 3);
-	int subimageHeight = subimageWidth;
-	//store the subdata
-	unsigned char* subImage = (unsigned char*)calloc(subimageWidth * subimageHeight, sizeof(unsigned char));
-	for (int i = 0; i < subimageHeight; i++) {
-		std::memcpy(&subImage[i* subimageWidth], &data[i + yoff * subimageHeight + xoff * subimageWidth], sizeof(unsigned char) * subimageWidth);
+	int subimageSize = min(imageWidth / 4, imageHeight / 3);
+
+	if (!image) {
+		std::cerr << "Error: failed to load image.\n";
 	}
-	//memcpy(subImage, data, subimageHeight * subimageWidth * sizeof(unsigned char));
-	glTexImage2D(target, 0, GL_RGB, subimageWidth, subimageHeight, 0, GL_RGB, GL_UNSIGNED_BYTE, subImage);
-	free(subImage);
+
+	xoff = subimageSize * xoff;
+	yoff = subimageSize * yoff;
+
+	stbi_uc* subimage = new stbi_uc[subimageSize * subimageSize * 3]; // allocate memory for the subimage
+
+	for (int y = 0; y < subimageSize; y++) {
+		for (int x = 0; x < subimageSize; x++) {
+			int index = ((y + yoff) * imageWidth + (x + xoff)) * nrChannels; // calculate the index of the pixel in the main image
+			int subindex = y * (subimageSize * 3) + x * 3; // calculate the index of the pixel in the subimage
+
+			// copy the pixel from the main image to the subimage
+			subimage[subindex] = image[index];
+			subimage[subindex + 1] = image[index + 1];
+			subimage[subindex + 2] = image[index + 2];
+		}
+	}
+	glTexImage2D(target, 0, GL_RGB, subimageSize, subimageSize, 0, GL_RGB, GL_UNSIGNED_BYTE, subimage);
+	stbi_image_free(image);
+	delete[] subimage;
 }
 
 GraphicsSystem::GraphicsSystem(Window& _window) :
@@ -138,7 +155,7 @@ GraphicsSystem::GraphicsSystem(Window& _window) :
 	glTexImage2D(GL_TEXTURE_CUBE_MAP_NEGATIVE_Z,0, GL_RGB, width, height, 0, GL_RGB, GL_UNSIGNED_BYTE, data);
 	*/
 	importSkybox("", GL_TEXTURE_CUBE_MAP_POSITIVE_X, 1, 1);
-	importSkybox("", GL_TEXTURE_CUBE_MAP_NEGATIVE_X, 3, 1);
+	importSkybox("", GL_TEXTURE_CUBE_MAP_NEGATIVE_X, 1, 1);
 	importSkybox("", GL_TEXTURE_CUBE_MAP_POSITIVE_Y, 1, 1);
 	importSkybox("", GL_TEXTURE_CUBE_MAP_NEGATIVE_Y, 1, 1);
 	importSkybox("", GL_TEXTURE_CUBE_MAP_POSITIVE_Z, 1, 1);

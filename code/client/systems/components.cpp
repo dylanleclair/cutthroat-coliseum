@@ -222,7 +222,7 @@ void VFXTextureStrip::extrude(glm::vec3 _position, glm::vec3 _normal)
 
 void VFXTextureStrip::moveEndPoint(glm::vec3 _position, glm::vec3 _normal)
 {
-	if (state < 2) {
+	if (state <= 2) {
 		extrude(_position, _normal);
 		return;
 	} 
