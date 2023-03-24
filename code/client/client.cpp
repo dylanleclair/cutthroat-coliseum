@@ -144,7 +144,6 @@ int main(int argc, char* argv[]) {
 
 	RaceTracker raceSystem{zzPathGeom.verts, glm::vec3{-4.108957, 3.397303, -43.794819}};	
 
-
 	//load fonts into ImGui
 	io.Fonts->AddFontDefault();
 	ImFont* Debrosee = io.Fonts->AddFontFromFileTTF("fonts/Debrosee-ALPnL.ttf", 18.5f);
@@ -176,27 +175,23 @@ int main(int argc, char* argv[]) {
 	ecs::Entity sphere_e = mainScene.CreateEntity();
 	ecs::Entity tether_e = mainScene.CreateEntity();
 
-	// ecs::Entity aiDriver_e = mainScene.CreateEntity();
 
-	mainScene.AddComponent(car_e.guid, Car{});
-	Car& testCar = mainScene.GetComponent<Car>(car_e.guid);
-	testCar.physicsSystem = &physicsSystem;
-	
-	if (!testCar.initVehicle(PxVec3(-4.108957, 3.397303, -43.794819)))
-	{
-		std::cout << "ERROR: could not initialize vehicle";
-	}
+	ecs::Entity stands_e = mainScene.CreateEntity();
+	RenderModel stands_r = RenderModel();
+	GraphicsSystem::importOBJ(stands_r, "zz-track-stands.obj");
+	stands_r.setModelColor(glm::vec3(0.5f, 0.5f, 0.f));
+	stands_r.isShadowed(true);
+	mainScene.AddComponent(stands_e.guid, stands_r);
+	TransformComponent stands_t = TransformComponent();
+	// car_t.setPosition(glm::vec3(0, -0.3f, 0.5f));
+	// car_t.setScale(glm::vec3(3.2f, 3.2f, 3.2f));
+	mainScene.AddComponent(stands_e.guid, stands_t);
 
-	NavPath circlePath = generateCirclePath(30);
 
 	CPU_Geometry aiPathGeom;
 	// import the obj for the path
 	GraphicsSystem::importOBJ(aiPathGeom, "ai_path.obj");
 	// transform verts same way level will be???
-
-	// PATHFINDING FOR NEW TRACK
-
-	std::cout << "zz track navmesh has " << zzPathGeom.verts.size() << " vertices" << std::endl;
 
 	glm::vec3 desiredSpawnLocation = {-4.108957, 3.397303, -43.794819};
 	int zzSpawnIndex = 0;
@@ -214,7 +209,7 @@ int main(int argc, char* argv[]) {
 	glm::vec3 forward = (zzSpawnIndex == zzPathGeom.verts.size() - 1) ? zzPathGeom.verts[0] - zzPathGeom.verts[zzSpawnIndex] : zzPathGeom.verts[zzSpawnIndex + 1] - zzPathGeom.verts[zzSpawnIndex];
 
 	// generate spawnpoints along the axis!
-	std::vector<glm::vec3> aiSpawnPoints = spawnpointsAlongAxis(2,3, 5.f, forward, zzPathGeom.verts[zzSpawnIndex]);
+	std::vector<glm::vec3> aiSpawnPoints = spawnpointsAlongAxis(2,1, 5.f, forward, zzPathGeom.verts[zzSpawnIndex]);
 
 	// find the point on the track to desired spawn location
 
@@ -225,17 +220,47 @@ int main(int argc, char* argv[]) {
 			vert.y = 0.f;
 	}
 
+
+	// ecs::Entity aiDriver_e = mainScene.CreateEntity();
+
+	mainScene.AddComponent(car_e.guid, Car{});
+	Car& testCar = mainScene.GetComponent<Car>(car_e.guid);
+	testCar.physicsSystem = &physicsSystem;
+	
+	if (!testCar.initVehicle(GLMtoPx(aiSpawnPoints[0])))
+	{
+		std::cout << "ERROR: could not initialize vehicle";
+	}
+
+	NavPath circlePath = generateCirclePath(30);
+
+
+	// PATHFINDING FOR NEW TRACK
+
+	std::cout << "zz track navmesh has " << zzPathGeom.verts.size() << " vertices" << std::endl;
+
+
 	std::vector<NavPath> aiPaths;
 	aiPaths.reserve(aiSpawnPoints.size());
 
-	for (auto& spawnPoint : aiSpawnPoints)
+	for (int i = 1; i < aiSpawnPoints.size(); i++)
 	{
+		auto& spawnPoint = aiSpawnPoints[i];
 		aiPaths.emplace_back(zzPathGeom.verts);
 		auto& navPath = aiPaths[aiPaths.size() - 1];
 		Guid aiCarGuid = spawnAIEntity(mainScene, &physicsSystem, car_e.guid, spawnPoint, &navPath);
 		AICar& aiCarInstance = mainScene.GetComponent<AICar>(aiCarGuid);
 		// idk why we get the car instance tbh
 	}
+
+	// for (auto& spawnPoint : aiSpawnPoints)
+	// {
+	// 	aiPaths.emplace_back(zzPathGeom.verts);
+	// 	auto& navPath = aiPaths[aiPaths.size() - 1];
+	// 	Guid aiCarGuid = spawnAIEntity(mainScene, &physicsSystem, car_e.guid, spawnPoint, &navPath);
+	// 	AICar& aiCarInstance = mainScene.GetComponent<AICar>(aiCarGuid);
+	// 	// idk why we get the car instance tbh
+	// }
 
 	// NavPath aiPath{zzPathGeom.verts};
 
