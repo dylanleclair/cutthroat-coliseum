@@ -699,7 +699,7 @@ void GraphicsSystem::Update(ecs::Scene& scene, float deltaTime) {
 		GLuint cameraPositionUniform = glGetUniformLocation(GLuint(VFXshader), "cameraPos");
 		GLuint lockingAxisUniform = glGetUniformLocation(GLuint(VFXshader), "lockingAxis");
 		GLuint typeUniform = glGetUniformLocation(GLuint(VFXshader), "type");
-		//billboards
+		//Billboards
 		glUniform1ui(typeUniform, 0);
 		for (Guid entityGuid : ecs::EntitiesInScene<VFXBillboard, TransformComponent>(scene)) {
 			VFXBillboard& comp = scene.GetComponent<VFXBillboard>(entityGuid);
