@@ -38,6 +38,8 @@
 
 #include "systems/SoundSystem.h"
 
+#include "systems/RaceSystem.h"
+
 glm::vec3 calculateSpherePoint(float s, float t)
 {
 	float z = cos(2 * M_PI * t) * sin(M_PI * s);
@@ -96,7 +98,7 @@ std::vector<glm::vec3> spawnpointsAlongAxis(int rows, int cols,float spread, glm
 		}
 	}
 
-	
+
 	return result;
 
 }
@@ -134,6 +136,10 @@ int main(int argc, char* argv[]) {
 	physics::PhysicsSystem physicsSystem{};
 	physicsSystem.Initialize();
 
+	CPU_Geometry zzPathGeom;
+	GraphicsSystem::importSplineFromOBJ(zzPathGeom, "zz-track-nav.obj");
+
+	RaceTracker raceSystem{zzPathGeom.verts, glm::vec3{-4.108957, 3.397303, -43.794819}};	
 
 	//load fonts into ImGui
 	io.Fonts->AddFontDefault();
@@ -171,10 +177,8 @@ int main(int argc, char* argv[]) {
 	mainScene.AddComponent(car_e.guid, Car{});
 	Car& testCar = mainScene.GetComponent<Car>(car_e.guid);
 	testCar.physicsSystem = &physicsSystem;
-	// if (!testCar.initVehicle(GLMtoPx(spawns.verts[0])))
 	
 	if (!testCar.initVehicle(PxVec3(-4.108957, 3.397303, -43.794819)))
-	// if (!testCar.initVehicle(PxVec3(35.000000000f, -0.0500000119f, -1.59399998f)))
 	{
 		std::cout << "ERROR: could not initialize vehicle";
 	}
@@ -188,8 +192,7 @@ int main(int argc, char* argv[]) {
 
 
 	// PATHFINDING FOR NEW TRACK
-	CPU_Geometry zzPathGeom;
-	GraphicsSystem::importSplineFromOBJ(zzPathGeom, "zz-track-nav.obj");
+
 	std::cout << "zz track navmesh has " << zzPathGeom.verts.size() << " vertices" << std::endl;
 
 	glm::vec3 desiredSpawnLocation = {-4.108957, 3.397303, -43.794819};
@@ -616,7 +619,7 @@ int main(int argc, char* argv[]) {
 		gs.Update(mainScene, 0.0f);
 		aiSystem.Update(mainScene, 0.f);
 		physicsSystem.Update(mainScene,timestep);
-
+		raceSystem.Update(mainScene,0.0f);
 		//update_sounds(testCar, aiCarInstance, playSounds);
 
 		// END__ ECS SYSTEMS UPDATES
@@ -688,6 +691,15 @@ int main(int argc, char* argv[]) {
 		ImGui::End();
 
 		
+		//Lap counter
+		ImGui::SetNextWindowPos(ImVec2(10, 30));
+		ImGui::Begin("UI", (bool*)0, textWindowFlags);
+		ImGui::SetWindowFontScale(2.f);
+		ImGui::PushFont(CabalBold);
+		ImGui::TextColored(ImVec4(1.0f, 1.0f, 1.0f, 1.0f), "Rank: %d/%d", raceSystem.getRanking(car_e.guid), 1 + aiSpawnPoints.size() );
+		ImGui::PopFont();
+		ImGui::End();
+
 
 		//you win message
 		static int counter = 0;

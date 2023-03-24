@@ -2,8 +2,6 @@
 #include "../entities/car/Car.h"
 #include "../entities/car/AICar.h"
 
-#include <set>
-
 void RaceTracker::Initialize() {}
 
 
@@ -42,32 +40,55 @@ int RaceTracker::findClosestPointOnCurve(glm::vec3 position)
   int closestPoint{0};
   for (int i = 0; i < m_racepath.size(); i++)
   {
-    glm::vec3 pointOnCurve{m_racepath[i]};
-    float distToCurve{glm::distance(pointOnCurve, position)};
+    glm::vec3 pointOnCurve = m_racepath[i];
+    float distToCurve = glm::distance(pointOnCurve, position);
     
     if (glm::distance(pointOnCurve, position) < distance)
     {
       distance = distToCurve;
       closestPoint = i;
     }
+  }
     return closestPoint;
+}
+
+
+void RaceTracker::correctIndices(std::vector<Contestant> contestants)
+{
+  for (auto& contestant : contestants)
+  {
+    int index = contestant.curveIndex;
+    int diffy = index - startIndex;
+
+
+    contestant.curveIndex = (index < startIndex) ? m_racepath.size() - diffy : index;  
+
   }
 }
 
+int RaceTracker::getRanking(Guid contestantGuid)
+{
+  return m_rankings[contestantGuid];
+}
+
+// idea: use the navigationcomponent to track laps since it tracks a racer's progress anyways?
 void RaceTracker::computeRankings(std::vector<Contestant> contestants)
 {
   
   // iterate over every point on the curve. 
   // for each car
-
-  auto cmp = [](Contestant a, Contestant b) {return a.curveIndex - b.curveIndex; };
-  std::set<Contestant, decltype(cmp)> orderedRankings{cmp};
+  auto cmp = [](Contestant a, Contestant b) {return a.curveIndex > b.curveIndex; };
+  std::vector<Contestant> orderedRankings;
 
   for (Contestant& car : contestants)
   {
     car.curveIndex = findClosestPointOnCurve(car.worldPosition); 
-    orderedRankings.insert(car);
+    orderedRankings.push_back(car);
   }
+
+  // need to fix the indices of the rankings
+  correctIndices(contestants);
+  std::sort(orderedRankings.begin(),orderedRankings.end(), cmp);
 
   int ranking = 1;
   // iterate over the rankings, put results in the map
