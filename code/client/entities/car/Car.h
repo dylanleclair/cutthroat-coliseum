@@ -127,6 +127,8 @@ struct Car {
 
 
     void carImGui();
+    void baseSetup();
+    void Car::setup1();
 
     void resetModifications();
     bool isGroundedDelay(Car& car);
