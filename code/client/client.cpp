@@ -672,7 +672,7 @@ int main(int argc, char* argv[]) {
 		ImGui::NewFrame();
 		if (showImgui) {
 			// BEGIN FRAMERATE COUNTER
-			framerate.update(timestep);
+			framerate.update(time_diff * 1000.f);
 			ImGui::SetNextWindowSize(ImVec2(500, 100));
 			ImGui::Begin("Milestone 4");
 			ImGui::Text("framerate: %d", (int)framerate.framerate());
