@@ -141,6 +141,7 @@ int main(int argc, char* argv[]) {
 
 	RaceTracker raceSystem{zzPathGeom.verts, glm::vec3{-4.108957, 3.397303, -43.794819}};	
 
+
 	//load fonts into ImGui
 	io.Fonts->AddFontDefault();
 	ImFont* Debrosee = io.Fonts->AddFontFromFileTTF("fonts/Debrosee-ALPnL.ttf", 18.5f);
@@ -427,6 +428,9 @@ int main(int argc, char* argv[]) {
 	auto default_lin_damp = testCar.m_Vehicle.mPhysXState.physxActor.rigidBody->getLinearDamping();
 	auto default_ang_damp = testCar.m_Vehicle.mPhysXState.physxActor.rigidBody->getAngularDamping();
 
+
+	raceSystem.Initialize(mainScene);
+
 	// GAME LOOP
 	while (!quit) {
 		Timestep timestep; // Time since last frame
@@ -677,7 +681,7 @@ int main(int argc, char* argv[]) {
 		ImGui::Begin("UI", (bool*)0, textWindowFlags);
 		ImGui::SetWindowFontScale(2.f);
 		ImGui::PushFont(CabalBold);
-		ImGui::TextColored(ImVec4(1.0f, 1.0f, 1.0f, 1.0f), "Lap: %d/3", lapCount);
+		ImGui::TextColored(ImVec4(1.0f, 1.0f, 1.0f, 1.0f), "Lap: %d/3", raceSystem.getLapCount(car_e.guid));
 		ImGui::PopFont();
 		ImGui::End();
 

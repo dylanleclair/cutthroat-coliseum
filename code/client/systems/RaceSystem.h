@@ -2,15 +2,18 @@
 
 #include "glm/glm.hpp"
 #include "core/ecs.h"
+#include "../entities/car/Car.h"
 #include <map>
 
 struct Contestant {
-  Guid carGuid;
-  glm::vec3 worldPosition;
-  float curveIndex;
-  int lapCount;
-  int checkpoints;
-  // other data if needed I guess 
+  Car* car;
+  Guid guid;
+  int curveIndex = 0;
+  int lapCount = 0;
+  int checkpoints = 0;
+  // other data if needed I guess
+
+  Contestant(Car* car, Guid g) : guid(g), car(car) {}
 };
 
 /**
@@ -28,16 +31,18 @@ struct RaceTracker : ecs::ISystem {
     for (int i = 0; i < NUM_CHECKPOINTS; i++)
     {
       // calculate index of each checkpoint and add to the checkpoints array
-      m_checkpoints.push_back(startIndex + indexesBetweenCheckpoints); 
+      m_checkpoints.push_back(((indexesBetweenCheckpoints * i)) %  race_spline.size()); 
     }
 
   }
 
   void Initialize();
-  void Initialize(ecs::Scene& scene, float deltaTime);
+  void Initialize(ecs::Scene& scene);
   void Update(ecs::Scene& scene, float deltaTime);
 
   int getRanking(Guid contestantGuid);
+  int getLapCount(Guid contestantGuid);
+
   std::map<Guid,int>& getRankings() { return m_rankings; };
 private: 
   void computeRankings(std::vector<Contestant> contestants);
@@ -48,6 +53,7 @@ private:
 
   std::map<Guid,int> m_rankings;
   std::vector<int> m_checkpoints;
+  std::vector<Contestant> m_contestants;
 
 };
 

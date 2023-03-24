@@ -4,33 +4,61 @@
 
 void RaceTracker::Initialize() {}
 
-
-void RaceTracker::Update(ecs::Scene& scene, float deltaTime) {
-
-  // first thing we need to do is associate each guid with a position
-
-  std::vector<Contestant> contestants;
+void RaceTracker::Initialize(ecs::Scene& scene)
+{
 
   for (auto entityGuid : ecs::EntitiesInScene<AICar>(scene))
   {
       AICar& aicar = scene.GetComponent<AICar>(entityGuid);
       // push back incomplete Ranking to m_rankings
       
-      Contestant c{entityGuid, aicar.getPosition(), -1};
-      contestants.push_back(c);
+      Contestant c{&aicar, entityGuid};
+      m_contestants.push_back(c);
   }
 
-    for (auto entityGuid : ecs::EntitiesInScene<Car>(scene))
+  for (auto entityGuid : ecs::EntitiesInScene<Car>(scene))
   {
       Car& car = scene.GetComponent<Car>(entityGuid);
       // push back incomplete Ranking to m_rankings
       
-      Contestant c{entityGuid,car.getPosition(), -1};
-      contestants.push_back(c);
+      Contestant c{&car, entityGuid};
+      m_contestants.push_back(c);
   }
 
-  // after getting the positions, we need to sort the rankings by distance to the finish line.
-  computeRankings(contestants);
+}
+
+void RaceTracker::Update(ecs::Scene& scene, float deltaTime) {
+
+  // every tick, update the curve index of the car. check if it is near a checkpoint.
+  // if it has completed all the checkpoints and is close to the initial checkpoint,
+  // it's completed a lap!
+  for (Contestant& car : m_contestants)
+  {
+    car.curveIndex = findClosestPointOnCurve(car.car->getPosition()); 
+  }
+
+  correctIndices(m_contestants);
+
+  for (Contestant& car : m_contestants)
+  {
+    // first see if the car's completed a lap
+    if ((car.checkpoints == m_checkpoints.size() - 1) && abs(car.curveIndex - m_checkpoints[0]) == 0)
+    {
+      std::cout << "completed a lap!";
+      car.lapCount++;
+      car.checkpoints = 0;
+    }
+
+    int next_checkpoint = (car.checkpoints + 1 == m_checkpoints.size()) ? 0 : car.checkpoints + 1; 
+
+    if (abs(car.curveIndex - m_checkpoints[next_checkpoint]) < 3)
+    {
+      car.checkpoints++;
+      std::cout << "reached the next checkpoint!";
+    }
+  }
+  computeRankings(m_contestants);
+
 }
 
 
@@ -71,6 +99,19 @@ int RaceTracker::getRanking(Guid contestantGuid)
   return m_rankings[contestantGuid];
 }
 
+int RaceTracker::getLapCount(Guid contestantGuid)
+{
+  for (auto& c : m_contestants)
+  {
+    if (c.guid == contestantGuid)
+    {
+      return c.lapCount;
+    }
+  }
+  return -1;
+}
+
+
 // idea: use the navigationcomponent to track laps since it tracks a racer's progress anyways?
 void RaceTracker::computeRankings(std::vector<Contestant> contestants)
 {
@@ -78,23 +119,20 @@ void RaceTracker::computeRankings(std::vector<Contestant> contestants)
   // iterate over every point on the curve. 
   // for each car
   auto cmp = [](Contestant a, Contestant b) {return a.curveIndex > b.curveIndex; };
-  std::vector<Contestant> orderedRankings;
 
-  for (Contestant& car : contestants)
+  for (auto& contestant : m_contestants)
   {
-    car.curveIndex = findClosestPointOnCurve(car.worldPosition); 
-    orderedRankings.push_back(car);
+    // add the lap multiple to their count
+    contestant.curveIndex += contestant.lapCount * m_racepath.size();
   }
 
-  // need to fix the indices of the rankings
-  correctIndices(contestants);
-  std::sort(orderedRankings.begin(),orderedRankings.end(), cmp);
+  std::sort(m_contestants.begin(),m_contestants.end(), cmp);
 
   int ranking = 1;
   // iterate over the rankings, put results in the map
-  for (auto& contestant : orderedRankings)
+  for (auto& contestant : m_contestants)
   {
-    m_rankings[contestant.carGuid] = ranking;
+    m_rankings[contestant.guid] = ranking;
     ranking++;
   }
 
