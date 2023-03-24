@@ -171,11 +171,47 @@ private:
 	GLuint numberOfVerticies = 0;
 };
 
-struct BillboardComponent {
-	BillboardComponent(std::string _textureName);
-	BillboardComponent(std::string _textureName, glm::vec3 _lockingAxis);
+struct VFXBillboard {
+	enum VFXtype {
+		VFX_billbaord = 0,
+		VFX_textureStrip = 1
+	};
+	//billboard constructors
+	VFXBillboard(std::string _textureName);
+	VFXBillboard(std::string _textureName, glm::vec3 _lockingAxis);
 private:
 	friend class GraphicsSystem;
 	glm::vec3 lockingAxis = glm::vec3(0);
 	Texture* texture = Texture::getNoTextureTexture();
+};
+
+struct VFXTextureStrip {
+	VFXTextureStrip(std::string _textureName, float _width, float textureLength = 1);
+	VFXTextureStrip(std::string _textureName, const CPU_Geometry& _line, float _width, float textureLength = 1);
+	void extrude(glm::vec3 _position, glm::vec3 _normal);	//extrudes a new quad from the last point (if avaiable) to _position
+	void moveEndPoint(glm::vec3 _position, glm::vec3 normal); //moves the position of the last point in the texture strip
+	void cut(); //cuts the strip and creates a gap between the last point and the next time extrude is called
+	glm::vec3 g_previousPosition();
+	int maxLength = 30; //the length of the 'spline'
+	
+private:
+	//functions
+	friend class GraphicsSystem;
+	GPU_Geometry* GPUline = new GPU_Geometry();
+	Texture* texture = Texture::getNoTextureTexture();
+	glm::vec3 position = glm::vec3(0);
+	glm::vec3 normal = glm::vec3(0);
+	glm::vec3 right = glm::vec3(0);
+	char state = 0; //0 = we are adding the starting point, 1 = we are adding the first quad, 2 = we are adding more quads, 3 = enable joint smoothing 
+	glm::vec3 previousPoint = glm::vec3(0,0,0);
+	glm::vec3 previousNormal = glm::vec3(0,1,0);
+	glm::vec3 previousRight = glm::vec3(0,0,0);
+
+	float width;
+	float textureLength;
+	
+	int currentLength = -1; //the current length of the 'spline' (-1 = uninitalized, 0 = 1 pair, >=1 number of quads
+	std::vector<glm::vec2> texCoords = std::vector<glm::vec2>();
+	std::vector<glm::vec3> verticies = std::vector<glm::vec3>();
+	std::vector<GLuint> indicies = std::vector<GLuint>();
 };

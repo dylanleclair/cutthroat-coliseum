@@ -8,4 +8,6 @@ in vec2 tc;
 void main()
 {             
 	color = texture(tex, tc);
+	if(color.a == 0)
+		discard;
 }

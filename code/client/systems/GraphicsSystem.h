@@ -18,6 +18,8 @@
 #include <glm/gtc/quaternion.hpp> 
 #include <glm/gtx/quaternion.hpp>
 
+
+
 struct GraphicsSystem : ecs::ISystem {
 public:
 	GraphicsSystem(Window& _window);
@@ -76,6 +78,7 @@ private:
 	ShaderProgram celShader;
 	ShaderProgram shadowGShader;
 	ShaderProgram VFXshader;
+	ShaderProgram skyboxShader;
 	//buffer for offscreen rendering
 	//buffers
 	GLuint gBuffer;
@@ -89,11 +92,16 @@ private:
 	GLuint gShadow;
 	GLuint gVFXColor;
 	GLuint gVFXDepth;
+	//skybox texture
+	GLuint skyboxCubemap;
 	//texture used in shadow map calculation
 	GLuint gLightDepth;
 	//variables for rendering whole screen quad
 	GLuint quad_vertexArray;
 	GLuint quad_vertexBuffer;
+	//variables for rendering the skybox
+	GLuint skybox_vertexArray;
+	GLuint skybox_vertexBuffer;
 
 	glm::ivec2 windowSize;
 	static void processNode(aiNode* node, const aiScene* scene, RenderModel& _component);

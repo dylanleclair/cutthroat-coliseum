@@ -99,13 +99,165 @@ void RenderLine::setGeometry(const CPU_Geometry _geometry)
 	numberOfVerticies = _geometry.verts.size();
 }
 
-BillboardComponent::BillboardComponent(std::string _textureName)
+VFXBillboard::VFXBillboard(std::string _textureName)
+{
+	texture = new Texture(_textureName, GL_LINEAR);
+
+}
+
+VFXBillboard::VFXBillboard(std::string _textureName, glm::vec3 _lockingAxis)
+{
+	texture = new Texture(_textureName, GL_LINEAR);
+	lockingAxis = _lockingAxis;
+}
+
+VFXTextureStrip::VFXTextureStrip(std::string _textureName, float _width, float _textureLength) : width(_width), textureLength(_textureLength)
 {
 	texture = new Texture(_textureName, GL_LINEAR);
 }
 
-BillboardComponent::BillboardComponent(std::string _textureName, glm::vec3 _lockingAxis)
+VFXTextureStrip::VFXTextureStrip(std::string _textureName, const CPU_Geometry& _line, float _width, float _textureLength) : width(_width), textureLength(_textureLength)
 {
 	texture = new Texture(_textureName, GL_LINEAR);
-	lockingAxis = _lockingAxis;
+	for (int i = 0; i < _line.verts.size(); i++) {
+		extrude(_line.verts[i], _line.norms[i]);
+	}
+}
+
+void VFXTextureStrip::extrude(glm::vec3 _position, glm::vec3 _normal)
+{
+	//check if the buffer is full and remove the oldest position if yes
+	if (currentLength == maxLength) {
+		//shift all elements back four
+		for (int i = 0; i < verticies.size() - 4; i += 4) {
+			verticies[i] = verticies[i + 4];
+			verticies[i + 1] = verticies[i + 5];
+			verticies[i + 2] = verticies[i + 6];
+			verticies[i + 3] = verticies[i + 7];
+		}
+	}
+
+	previousRight = right;
+	previousPoint = position;
+	previousNormal = normal;
+
+	//update the position of the previous verticies if it is needed
+	if (state == 1) {
+		//if this is the second point we are processing then we will need to update the previous right to be accurate since it was initallty a default value
+		previousRight = glm::normalize(glm::cross(_position - previousPoint, previousNormal));
+		state = 2;
+	}
+	
+	right = glm::cross(_normal, previousPoint - _position);
+	position = _position;
+	normal = _normal;
+
+	if (glm::length(right) != 0)
+		right = glm::normalize(right);
+	if (state >= 2) {
+		if (currentLength < maxLength) {
+			int i = currentLength;
+			//make a quad
+			verticies.push_back(previousPoint + previousRight * width);
+			verticies.push_back(previousPoint - previousRight * width);
+			verticies.push_back(_position + right * width);
+			verticies.push_back(_position - right * width);
+			float ratio = glm::length(previousPoint - _position) / textureLength;
+			texCoords.push_back(glm::vec2(0, 0));
+			texCoords.push_back(glm::vec2(1, 0));
+			texCoords.push_back(glm::vec2(0, 1 * ratio));
+			texCoords.push_back(glm::vec2(1, 1 * ratio));
+			//triangle 1
+			indicies.push_back(4 * i);
+			indicies.push_back(4 * i + 2);
+			indicies.push_back(4 * i + 3);
+			//triangle 2
+			indicies.push_back(4 * i);
+			indicies.push_back(4 * i + 3);
+			indicies.push_back(4 * i + 1);
+			currentLength++;
+		}
+		else {
+			//adjust the last quad
+			verticies[verticies.size() - 4] = previousPoint + previousRight * width;
+			verticies[verticies.size() - 3] = previousPoint - previousRight * width;
+			verticies[verticies.size() - 2] = _position + right * width;
+			verticies[verticies.size() - 1] = _position - right * width;
+		}
+	}
+
+	
+
+	//adjust the vertex positions to make a miter joint for the textures
+	if (state == 3) {
+		glm::vec3 angle = glm::normalize(previousRight + right) * width;
+		//transform the verticies
+		verticies[verticies.size() - 3] = -angle + previousPoint;
+		verticies[verticies.size() - 4] = angle + previousPoint;
+		verticies[verticies.size() - 5] = -angle + previousPoint;
+		verticies[verticies.size() - 6] = angle + previousPoint;
+	}
+
+	if (state == 2)
+		state = 3;
+
+	if (state == 0) {
+		previousNormal = _normal;
+		previousPoint = _position;
+		state = 1;
+	}
+
+	//if the current length is 0 then add the position but write nothing to the GPU buffer
+	if (currentLength <= 0) {
+		GPUline->setVerts(std::vector<glm::vec3>());
+		GPUline->setIndexBuff(std::vector<GLuint>());
+		GPUline->setTexCoords(std::vector<glm::vec2>());
+		return;
+	}
+
+	GPUline->setVerts(verticies);
+	GPUline->setIndexBuff(indicies);
+	GPUline->setTexCoords(texCoords);
+}
+
+void VFXTextureStrip::moveEndPoint(glm::vec3 _position, glm::vec3 _normal)
+{
+	if (state <= 2) {
+		extrude(_position, _normal);
+		return;
+	} 
+
+	right = glm::cross(_normal, previousPoint - _position);
+	position = _position;
+	normal = _normal;
+
+	if (glm::length(right) != 0)
+		right = glm::normalize(right);
+
+	//adjust the last 2 verticies
+	verticies[verticies.size() - 2] = _position + right * width;
+	verticies[verticies.size() - 1] = _position - right * width;
+
+	if (state == 3) {
+		glm::vec3 angle = glm::normalize(previousRight + right) * width;
+		//transform the verticies
+		verticies[verticies.size() - 3] = -angle + previousPoint;
+		verticies[verticies.size() - 4] = angle + previousPoint;
+		verticies[verticies.size() - 5] = -angle + previousPoint;
+		verticies[verticies.size() - 6] = angle + previousPoint;
+	}
+
+	GPUline->setVerts(verticies);
+	GPUline->setIndexBuff(indicies);
+	GPUline->setTexCoords(texCoords);
+}
+
+void VFXTextureStrip::cut()
+{
+	state = 0;
+}
+
+glm::vec3 VFXTextureStrip::g_previousPosition()
+{
+	return previousPoint;
 }
