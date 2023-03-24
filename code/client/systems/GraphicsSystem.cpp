@@ -832,7 +832,7 @@ void GraphicsSystem::importSplineFromOBJ(CPU_Geometry& _geometry, std::string fi
 	}
 	// Close the file
 	inputfile.close(); 
-	_geometry.verts.push_back(_geometry.verts[_geometry.verts.size() - 1]);
+	_geometry.verts.push_back(_geometry.verts[0]);
 
 }
 

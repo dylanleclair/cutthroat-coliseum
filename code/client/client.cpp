@@ -191,7 +191,6 @@ int main(int argc, char* argv[]) {
 	GraphicsSystem::importOBJ(aiPathGeom, "ai_path.obj");
 	// transform verts same way level will be???
 
-
 	// PATHFINDING FOR NEW TRACK
 
 	std::cout << "zz track navmesh has " << zzPathGeom.verts.size() << " vertices" << std::endl;
@@ -709,7 +708,7 @@ int main(int argc, char* argv[]) {
 		static int counter = 0;
 		const float delayInSeconds = 0.5;
 		static bool display = true;
-		if (lapCount >= 3) {
+		if (raceSystem.getLapCount(car_e.guid) >= 3) {
 			counter += timestep.getMilliseconds();
 			if (counter >= delayInSeconds * 1000) {
 				counter = 0;
