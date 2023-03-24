@@ -27,35 +27,30 @@
 
 
 
-void importSkybox(std::string _texture, GLuint target, int xoff, int yoff) {
-	int imageWidth, imageHeight, nrChannels;
-	unsigned char* image = stbi_load("textures/skybox.png", &imageWidth, &imageHeight, &nrChannels, 0);
-	//make it a square even if it loses some data
-	int subimageSize = min(imageWidth / 4, imageHeight / 3);
-
-	if (!image) {
-		std::cerr << "Error: failed to load image.\n";
-	}
-
-	xoff = subimageSize * xoff;
-	yoff = subimageSize * yoff;
-
-	stbi_uc* subimage = new stbi_uc[subimageSize * subimageSize * 3]; // allocate memory for the subimage
-
-	for (int y = 0; y < subimageSize; y++) {
-		for (int x = 0; x < subimageSize; x++) {
-			int index = ((y + yoff) * imageWidth + (x + xoff)) * nrChannels; // calculate the index of the pixel in the main image
-			int subindex = y * (subimageSize * 3) + x * 3; // calculate the index of the pixel in the subimage
-
-			// copy the pixel from the main image to the subimage
-			subimage[subindex] = image[index];
-			subimage[subindex + 1] = image[index + 1];
-			subimage[subindex + 2] = image[index + 2];
+void loadCubemap(std::vector<std::string> faces)
+{
+	int width, height, nrChannels;
+	for (unsigned int i = 0; i < faces.size(); i++)
+	{
+		unsigned char* data = stbi_load(faces[i].c_str(), &width, &height, &nrChannels, 0);
+		if (data)
+		{
+			glTexImage2D(GL_TEXTURE_CUBE_MAP_POSITIVE_X + i,
+				0, GL_RGB, width, height, 0, GL_RGB, GL_UNSIGNED_BYTE, data
+			);
+			stbi_image_free(data);
+		}
+		else
+		{
+			std::cout << "Cubemap tex failed to load at path: " << faces[i] << std::endl;
+			stbi_image_free(data);
 		}
 	}
-	glTexImage2D(target, 0, GL_RGB, subimageSize, subimageSize, 0, GL_RGB, GL_UNSIGNED_BYTE, subimage);
-	stbi_image_free(image);
-	delete[] subimage;
+	glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+	glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+	glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
+	glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
+	glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_WRAP_R, GL_CLAMP_TO_EDGE);
 }
 
 GraphicsSystem::GraphicsSystem(Window& _window) :
@@ -143,23 +138,8 @@ GraphicsSystem::GraphicsSystem(Window& _window) :
 	glGenTextures(1, &skyboxCubemap);
 	glBindTexture(GL_TEXTURE_CUBE_MAP, skyboxCubemap);
 	glActiveTexture(GL_TEXTURE0);
-
-	/*
-	width = min(width, height);
-	height = min(width, height);
-	glTexImage2D(GL_TEXTURE_CUBE_MAP_POSITIVE_X,0, GL_RGB, width, height, 0, GL_RGB, GL_UNSIGNED_BYTE, data);
-	glTexImage2D(GL_TEXTURE_CUBE_MAP_NEGATIVE_X,0, GL_RGB, width, height, 0, GL_RGB, GL_UNSIGNED_BYTE, data);
-	glTexImage2D(GL_TEXTURE_CUBE_MAP_POSITIVE_Y,0, GL_RGB, width, height, 0, GL_RGB, GL_UNSIGNED_BYTE, data);
-	glTexImage2D(GL_TEXTURE_CUBE_MAP_NEGATIVE_Y,0, GL_RGB, width, height, 0, GL_RGB, GL_UNSIGNED_BYTE, data);
-	glTexImage2D(GL_TEXTURE_CUBE_MAP_POSITIVE_Z,0, GL_RGB, width, height, 0, GL_RGB, GL_UNSIGNED_BYTE, data);
-	glTexImage2D(GL_TEXTURE_CUBE_MAP_NEGATIVE_Z,0, GL_RGB, width, height, 0, GL_RGB, GL_UNSIGNED_BYTE, data);
-	*/
-	importSkybox("", GL_TEXTURE_CUBE_MAP_POSITIVE_X, 1, 1);
-	importSkybox("", GL_TEXTURE_CUBE_MAP_NEGATIVE_X, 1, 1);
-	importSkybox("", GL_TEXTURE_CUBE_MAP_POSITIVE_Y, 1, 1);
-	importSkybox("", GL_TEXTURE_CUBE_MAP_NEGATIVE_Y, 1, 1);
-	importSkybox("", GL_TEXTURE_CUBE_MAP_POSITIVE_Z, 1, 1);
-	importSkybox("", GL_TEXTURE_CUBE_MAP_NEGATIVE_Z, 1, 1);
+	std::vector<std::string> faces{"textures/-X.jpg","textures/+X.jpg","textures/+Y.jpg","textures/-Y.jpg","textures/-Z.jpg","textures/+Z.jpg"};
+	loadCubemap(faces);
 
 	glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
 	glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
@@ -285,47 +265,47 @@ GraphicsSystem::GraphicsSystem(Window& _window) :
 	//generate the data for the skybox
 	const float skyboxVertices[] = {
 		// positions          
-		-10.0f,  10.0f, -10.0f,
-		-10.0f, -10.0f, -10.0f,
-		 10.0f, -10.0f, -10.0f,
-		 10.0f, -10.0f, -10.0f,
-		 10.0f,  10.0f, -10.0f,
-		-10.0f,  10.0f, -10.0f,
+		-5.0f,  5.0f, -5.0f,
+		-5.0f, -5.0f, -5.0f,
+		 5.0f, -5.0f, -5.0f,
+		 5.0f, -5.0f, -5.0f,
+		 5.0f,  5.0f, -5.0f,
+		-5.0f,  5.0f, -5.0f,
 
-		-10.0f, -10.0f,  10.0f,
-		-10.0f, -10.0f, -10.0f,
-		-10.0f,  10.0f, -10.0f,
-		-10.0f,  10.0f, -10.0f,
-		-10.0f,  10.0f,  10.0f,
-		-10.0f, -10.0f,  10.0f,
+		-5.0f, -5.0f,  5.0f,
+		-5.0f, -5.0f, -5.0f,
+		-5.0f,  5.0f, -5.0f,
+		-5.0f,  5.0f, -5.0f,
+		-5.0f,  5.0f,  5.0f,
+		-5.0f, -5.0f,  5.0f,
 
-		 10.0f, -10.0f, -10.0f,
-		 10.0f, -10.0f,  10.0f,
-		 10.0f,  10.0f,  10.0f,
-		 10.0f,  10.0f,  10.0f,
-		 10.0f,  10.0f, -10.0f,
-		 10.0f, -10.0f, -10.0f,
+		 5.0f, -5.0f, -5.0f,
+		 5.0f, -5.0f,  5.0f,
+		 5.0f,  5.0f,  5.0f,
+		 5.0f,  5.0f,  5.0f,
+		 5.0f,  5.0f, -5.0f,
+		 5.0f, -5.0f, -5.0f,
 
-		-10.0f, -10.0f,  10.0f,
-		-10.0f,  10.0f,  10.0f,
-		 10.0f,  10.0f,  10.0f,
-		 10.0f,  10.0f,  10.0f,
-		 10.0f, -10.0f,  10.0f,
-		-10.0f, -10.0f,  10.0f,
+		-5.0f, -5.0f,  5.0f,
+		-5.0f,  5.0f,  5.0f,
+		 5.0f,  5.0f,  5.0f,
+		 5.0f,  5.0f,  5.0f,
+		 5.0f, -5.0f,  5.0f,
+		-5.0f, -5.0f,  5.0f,
 
-		-10.0f,  10.0f, -10.0f,
-		 10.0f,  10.0f, -10.0f,
-		 10.0f,  10.0f,  10.0f,
-		 10.0f,  10.0f,  10.0f,
-		-10.0f,  10.0f,  10.0f,
-		-10.0f,  10.0f, -10.0f,
+		-5.0f,  5.0f, -5.0f,
+		 5.0f,  5.0f, -5.0f,
+		 5.0f,  5.0f,  5.0f,
+		 5.0f,  5.0f,  5.0f,
+		-5.0f,  5.0f,  5.0f,
+		-5.0f,  5.0f, -5.0f,
 
-		-10.0f, -10.0f, -10.0f,
-		-10.0f, -10.0f,  10.0f,
-		 10.0f, -10.0f, -10.0f,
-		 10.0f, -10.0f, -10.0f,
-		-10.0f, -10.0f,  10.0f,
-		 10.0f, -10.0f,  10.0f
+		-5.0f, -5.0f, -5.0f,
+		-5.0f, -5.0f,  5.0f,
+		 5.0f, -5.0f, -5.0f,
+		 5.0f, -5.0f, -5.0f,
+		-5.0f, -5.0f,  5.0f,
+		 5.0f, -5.0f,  5.0f
 	};
 	glGenBuffers(1, &skybox_vertexBuffer);
 	glBindBuffer(GL_ARRAY_BUFFER, skybox_vertexBuffer);
