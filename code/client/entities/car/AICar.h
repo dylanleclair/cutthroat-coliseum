@@ -61,9 +61,10 @@ struct AICar : Car {
 
     AICar() : Car() {}
 
+    virtual void Update(Guid carGuid, ecs::Scene& scene, float deltaTime);
+
     void Initialize(NavPath* pathToFollow); 
 
     Command pathfind(glm::vec3 currentPosition);
-    
 
 };

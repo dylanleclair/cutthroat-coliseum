@@ -55,6 +55,7 @@ Command AICar::pathfind(glm::vec3 currentPosition)
     bool didLap{false};
 
     glm::vec3 targetPos = m_navPath->getNextPoint(currentPosition,didLap);
+
     // find rotation matrix of car
     PxTransform carPose = this->m_Vehicle.mPhysXState.physxActor.rigidBody->getGlobalPose();
 
@@ -111,3 +112,80 @@ Command AICar::pathfind(glm::vec3 currentPosition)
 
     return command;
 }
+
+void AICar::Update(Guid carGuid,ecs::Scene& scene, float deltaTime) 
+{
+
+
+  Command command = {0.f, 0.f, 0.f, m_TargetGearCommand};
+
+    // need to get access to the pathfinding system....
+
+    // so the job of the pathfinding system is to:
+    //  - calculate the path to the opponent
+    //  - after that, the physics system will update the car (by calling this function)
+    //      - this should make the car follow the path
+
+    if (scene.HasComponent<TransformComponent>(carGuid))
+    {
+        TransformComponent& tComponent = scene.GetComponent<TransformComponent>(carGuid);
+        auto currentPos = tComponent.getTranslation();
+        command = pathfind(currentPos);
+    }   
+
+  float delta_seconds = deltaTime;
+  assert(delta_seconds > 0.f && delta_seconds < 0.2000001f);
+  // Apply the brake, throttle and steer to the command state of the vehicle.
+  // const Command &command = gCommands[gCommandProgress];
+
+  // command.duration = timestep;
+
+  // Throttle to 2.f will cause weird behaviour
+//   if (SDL_GameControllerGetButton(ControllerInput::controller, SDL_CONTROLLER_BUTTON_A) || w_key)
+//   {
+//       command.throttle = carThrottle;
+//       // goto end; // so we don't attempt to throttle and break
+//   }
+//   else if (SDL_GameControllerGetButton(ControllerInput::controller, SDL_CONTROLLER_BUTTON_B) || s_key)
+//   {
+//       command.brake = carBrake;
+//       // goto end;????
+//   }
+  // end:
+
+  // Normalize controller axis
+  // BUG: max positive is 1 less in magnitude than max min meaning full negative will be slightly above 1
+//   carAxis = (float)-SDL_GameControllerGetAxis(ControllerInput::controller, SDL_CONTROLLER_AXIS_LEFTX) / SHRT_MAX;
+//   // std::cout << axis << std::endl;
+//   if (a_key)
+//   {
+//       command.steer = 1.f;
+//   }
+//   else if (d_key)
+//   {
+//       command.steer = -1.f;
+//   }
+//   else
+//   {
+//       command.steer = carAxis * carAxisScale;
+//   }  
+
+
+  m_Vehicle.mCommandState.brakes[0] = command.brake;
+  m_Vehicle.mCommandState.nbBrakes = 1;
+  m_Vehicle.mCommandState.throttle = command.throttle;
+  m_Vehicle.mCommandState.steer = command.steer;
+  m_Vehicle.mTransmissionCommandState.targetGear = command.gear;
+
+  // Forward integrate the vehicle by a single timestep.
+  // Apply substepping at low forward speed to improve simulation fidelity.
+  const PxVec3 linVel = m_Vehicle.mPhysXState.physxActor.rigidBody->getLinearVelocity();
+  const PxVec3 forwardDir = m_Vehicle.mPhysXState.physxActor.rigidBody->getGlobalPose().q.getBasisVector2();
+  const PxReal forwardSpeed = linVel.dot(forwardDir);
+  const PxU8 nbSubsteps = (forwardSpeed < 5.0f ? 3 : 1);
+  m_Vehicle.mComponentSequence.setSubsteps(m_Vehicle.mComponentSequenceSubstepGroupHandle, nbSubsteps);
+  m_Vehicle.step(delta_seconds, m_VehicleSimulationContext);
+
+
+}
+
