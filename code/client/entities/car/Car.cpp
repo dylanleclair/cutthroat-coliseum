@@ -3,6 +3,11 @@
 #include "glm/glm.hpp"
 #include "../../utils/PxConversionUtils.h"
 
+#include "imgui.h"
+#include "imgui_impl_sdl.h"
+#include "imgui_impl_opengl3.h"
+
+#include <iostream>
 
 const char* gVehicleDataPath = "vehicledata";
 

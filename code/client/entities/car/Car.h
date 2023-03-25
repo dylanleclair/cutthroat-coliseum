@@ -1,27 +1,11 @@
 #pragma once
-#include <ctype.h>
-#include <iostream>
 
 #include "PxPhysicsAPI.h"
 #include "vehicle2/PxVehicleAPI.h"
-#include "../../physx/snippetvehicle2common/enginedrivetrain/EngineDrivetrain.h"
-#include "../../physx/snippetvehicle2common/serialization/EngineDrivetrainSerialization.h"
-#include "../../physx/snippetvehicle2common/serialization/BaseSerialization.h"
-#include "../../physx/snippetvehicle2common/SnippetVehicleHelpers.h"
-
-#include "../../physx/snippetcommon/SnippetPVD.h"
 
 #include <glm/glm.hpp>
 
-#include "../../utils/Time.h"
-#include "SDL.h"
-#include <limits>
-
 #include "../../systems/PhysicsSystem.h"
-
-#include "imgui.h"
-#include "imgui_impl_sdl.h"
-#include "imgui_impl_opengl3.h"
 
 using namespace physx;
 using namespace physx::vehicle2;
@@ -103,17 +87,6 @@ struct Car {
 };
 
     PxU32 m_NbCommands = sizeof(m_Commands) / sizeof(Command);
-
-    // // all the physics stuff lives in the physics system
-    // Car(physics::PhysicsSystem* physicsSystem) : physicsSystem(physicsSystem)
-    // {
-    //     // The vehicle with engine 
-    //     bool success = initVehicle();
-    //     if (!success)
-    //     {
-    //         std::cerr << "error initializing vehicle!" << std::endl;
-    //     }
-    // }
 
     Car() : physicsSystem(nullptr) {};
 

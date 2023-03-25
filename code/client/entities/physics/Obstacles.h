@@ -3,11 +3,6 @@
 #include "../../systems/GraphicsSystem.h"
 #include "../../systems/components.h"
 #include "../../systems/PhysicsSystem.h"
-#include "PxPhysicsAPI.h"
-
-#include "imgui.h"
-#include "imgui_impl_sdl.h"
-#include "imgui_impl_opengl3.h"
 
 using namespace physx;
 

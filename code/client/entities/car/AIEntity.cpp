@@ -4,6 +4,7 @@
 #include "core/pathfinding.h"
 #include "../../systems/PhysicsSystem.h"
 #include "AICar.h"
+#include <iostream>
 
 Guid spawnAIEntity(ecs::Scene& scene, physics::PhysicsSystem* physicsSystem, Guid entityToFollow, glm::vec3 position, NavPath* circlePath)
 {
