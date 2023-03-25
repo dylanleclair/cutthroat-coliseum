@@ -143,9 +143,9 @@ int main(int argc, char* argv[]) {
 	CPU_Geometry zzPathGeom;
 	GraphicsSystem::importSplineFromOBJ(zzPathGeom, "zz-track-nav.obj");
 
-	RaceTracker raceSystem{zzPathGeom.verts, glm::vec3{-4.108957, 3.397303, -43.794819}};	
+	glm::vec3 desiredSpawnLocation = {-4.108957, 3.397303, -43.794819}; // hardcoded value near the straight strip of the track
 
-
+	RaceTracker raceSystem{zzPathGeom.verts, desiredSpawnLocation};	
 	//load fonts into ImGui
 	io.Fonts->AddFontDefault();
 	ImFont* Debrosee = io.Fonts->AddFontFromFileTTF("fonts/Debrosee-ALPnL.ttf", 18.5f);
@@ -179,7 +179,6 @@ int main(int argc, char* argv[]) {
 
 
 	// FIND SPAWNPOINTS FOR VEHICLES (player car is first)
-	glm::vec3 desiredSpawnLocation = {-4.108957, 3.397303, -43.794819}; // hardcoded value near the straight strip of the track
 	int zzSpawnIndex = 0;
 	float minDistToSpawn = std::numeric_limits<float>::max();
 	for (int i = 0; i < zzPathGeom.verts.size(); i++)
@@ -237,9 +236,6 @@ int main(int argc, char* argv[]) {
 	auto navPathRender = RenderLine{zzPathGeom};
 	navPathRender.setColor(glm::vec3{1.0f,0.f,1.0f});
 	mainScene.AddComponent(navRenderer_e.guid,navPathRender);
-
-
-
 
 	// Car Entity
 	RenderModel car_r = RenderModel();
@@ -734,6 +730,7 @@ int main(int argc, char* argv[]) {
 		}
 
 		gs.Update(mainScene, time_diff);
+		raceSystem.Update(mainScene,time_diff);
 
 		//update_sounds(testCar, aiCarInstance, playSounds);
 
