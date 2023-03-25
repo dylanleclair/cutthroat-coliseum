@@ -1,4 +1,5 @@
 #include "CenterMass.h"
+#include "systems/GraphicsSystem.h"
 
 
 // TODO :: this file has not been cleaned up and may not work when
@@ -16,7 +17,7 @@ void renderCMassSphere(PxTransform& _target, TransformComponent& sphere_transfor
 	sphere_transform.setPosition(glm::vec3(_target.p.x, _target.p.y, _target.p.z));
 }
 
-void setupSphere(ecs::Scene& mainScene) {
+void setupSphere(ecs::Scene& mainScene, Car& car) {
 	ecs::Entity sphere_e = mainScene.CreateEntity();
 
 	// Center of gravity sphere - used for debug
@@ -24,7 +25,7 @@ void setupSphere(ecs::Scene& mainScene) {
 	GraphicsSystem::importOBJ(sphere_r, "sphere.obj");
 	sphere_r.setModelColor(glm::vec3(0.5f, 0.0f, 0.5f));
 	mainScene.AddComponent(sphere_e.guid, sphere_r);
-	TransformComponent sphere_t = TransformComponent(testCar.getVehicleRigidBody());
+	TransformComponent sphere_t = TransformComponent(car.getVehicleRigidBody());
 	sphere_t.setScale(glm::vec3(0.5f, 0.5f, 0.5f));
 	mainScene.AddComponent(sphere_e.guid, sphere_t);
 }
