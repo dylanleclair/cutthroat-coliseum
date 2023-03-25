@@ -1,6 +1,5 @@
 #pragma once
 #include "Car.h"
-#include "../../systems/ai.h"
 #include "core/ecs.h"
 #include <vector>
 #include "glm/glm.hpp"
@@ -62,11 +61,9 @@ struct AICar : Car {
 
     AICar() : Car() {}
 
-    virtual void Update(Guid carGuid, ecs::Scene& scene, float deltaTime);
-
     void Initialize(NavPath* pathToFollow); 
 
     Command pathfind(glm::vec3 currentPosition);
+    
 
-    Command pathfind(glm::vec3 currentPosition, ecs::Scene& scene, Guid targetEntity);
 };

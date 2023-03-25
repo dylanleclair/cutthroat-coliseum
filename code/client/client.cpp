@@ -17,7 +17,6 @@
 #include "GRAPHICS_TESTBENCH.h"
 
 #include "FrameCounter.h"
-#include "systems/ai.h"
 
 #include "ImGuiTuneables.h"
 
@@ -288,9 +287,6 @@ int main(int argc, char* argv[]) {
 	mainScene.AddComponent(path.guid, TransformComponent{});
 	mainScene.AddComponent(path.guid, RenderLine{});
 
-	AISystem aiSystem{ path.guid };
-
-	
 	// Level
 	// TransformComponent level_t = TransformComponent();
 	// level_t.setScale(glm::vec3(3.2f, 3.2f, 3.2f));
