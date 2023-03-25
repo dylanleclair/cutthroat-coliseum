@@ -118,7 +118,69 @@ void TireTracks(Car& car, std::vector<Guid> &AIGuids, ecs::Scene mainScene) {
 		previousStates.at(0).at(2) = false;
 	}
 
-	//For all the AI cars
+	//////
+	//////
 
-	AICar& AICarTest = mainScene.GetComponent<AICar>(AIGuids.at(0));
+	//For all the AI cars
+	for (int i = 0; i < AIGuids.size(); i++) {
+		AICar& AIcar = mainScene.GetComponent<AICar>(AIGuids.at(i));
+
+		// index is i+1 because of the player car being first
+		std::vector<Guid> guid = tireTrackGuids.at(i+1);
+
+		VFXTextureStrip& frontTireTracks = mainScene.GetComponent<VFXTextureStrip>(guid.at(0));
+		VFXTextureStrip& rightTireTracks = mainScene.GetComponent<VFXTextureStrip>(guid.at(1));
+		VFXTextureStrip& leftTireTracks = mainScene.GetComponent<VFXTextureStrip>(guid.at(2));
+
+		if (AIcar.m_Vehicle.mBaseState.roadGeomStates[0].hitState && AIcar.m_Vehicle.mBaseState.roadGeomStates[1].hitState) {
+			previousStates.at(i+1).at(0) = true;
+			glm::vec3 frontTirePosition = PxtoGLM(AIcar.getVehicleRigidBody()->getGlobalPose().p) + glm::vec3(PxtoGLM(AIcar.getVehicleRigidBody()->getGlobalPose().q) * glm::vec4(0, -.3, 4, 1));
+			if (glm::length(frontTirePosition - frontTireTracks.g_previousPosition()) > 1) {
+				frontTireTracks.extrude(frontTirePosition, glm::vec3(0, 1, 0));
+			}
+			else {
+				//frontTireTracks.moveEndPoint(frontTirePosition, glm::vec3(0, 1, 0));
+			}
+		}
+		else {
+			if (previousStates.at(i+1).at(0) == true)
+				frontTireTracks.cut();
+			previousStates.at(i+1).at(0) = false;
+		}
+
+		//right tire
+		if (AIcar.m_Vehicle.mBaseState.roadGeomStates[2].hitState) {
+			previousStates.at(i+1).at(1) = true;
+			glm::vec3 rightTirePosition = PxtoGLM(AIcar.getVehicleRigidBody()->getGlobalPose().p) + glm::vec3(PxtoGLM(AIcar.getVehicleRigidBody()->getGlobalPose().q) * glm::vec4(1, -.3, 1, 1));
+			if (glm::length(rightTirePosition - rightTireTracks.g_previousPosition()) > 1) {
+				rightTireTracks.extrude(rightTirePosition, glm::vec3(0, 1, 0));
+			}
+			else {
+				//rightTireTracks.moveEndPoint(rightTirePosition, glm::vec3(0, 1, 0));
+			}
+		}
+		else {
+			if (previousStates.at(i+1).at(1) == true)
+				rightTireTracks.cut();
+			previousStates.at(i+1).at(1) = false;
+		}
+
+		//left tire
+		if (AIcar.m_Vehicle.mBaseState.roadGeomStates[3].hitState) {
+			previousStates.at(i+1).at(2) = true;
+			glm::vec3 leftTirePosition = PxtoGLM(AIcar.getVehicleRigidBody()->getGlobalPose().p) + glm::vec3(PxtoGLM(AIcar.getVehicleRigidBody()->getGlobalPose().q) * glm::vec4(-1, -.3, 1, 1));
+			if (glm::length(leftTirePosition - leftTireTracks.g_previousPosition()) > 1) {
+				leftTireTracks.extrude(leftTirePosition, glm::vec3(0, 1, 0));
+			}
+			else {
+				//leftTireTracks.moveEndPoint(leftTirePosition, glm::vec3(0, 1, 0));
+			}
+		}
+		else {
+			if (previousStates.at(i+1).at(2) == true)
+				leftTireTracks.cut();
+			previousStates.at(i+1).at(2) = false;
+		}
+	}
+	
 }
