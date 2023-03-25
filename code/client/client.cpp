@@ -218,16 +218,25 @@ int main(int argc, char* argv[]) {
 	std::vector<NavPath> aiPaths;
 	aiPaths.reserve(spawnPoints.size());
 
+
+	// need to load the path for each ai
+	// ai path is lower resolution curve to help prevent ai from "overcorrecting"
+	// but this could also be fixed by fixing normal computation
+	// in steering code
+	CPU_Geometry nav_geom;
+	GraphicsSystem::importSplineFromOBJ(nav_geom, "zz-track-ai-nav.obj");
+
 	std::vector<Guid> aiCars;
 	// skip the first spot (player driven vehicle) 
 	for (int i = 1; i < spawnPoints.size(); i++)
 	{		
 		auto& spawnPoint = spawnPoints[i];
-		aiPaths.emplace_back(zzPathGeom.verts);
+		aiPaths.emplace_back(nav_geom.verts);
 		auto& navPath = aiPaths[aiPaths.size() - 1];
 		Guid aiCarGuid = spawnAIEntity(mainScene, &physicsSystem, car_e.guid, spawnPoint, &navPath);
 		aiCars.push_back(aiCarGuid);
 		AICar& aiCarInstance = mainScene.GetComponent<AICar>(aiCarGuid);
+		aiCarInstance.setup1();
 		// idk why we get the car instance tbh
 	}
 
