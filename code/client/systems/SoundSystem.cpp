@@ -45,6 +45,8 @@ void handle_fmod_error() {
 	}
 }
 
+
+#define MAX_SOUND_DISTANCE 50000.f
 void init_sound_system() {
 	result = FMOD::System_Create(&soundsystem.system);      // Create the main system object.
 	handle_fmod_error();
@@ -52,8 +54,10 @@ void init_sound_system() {
 	result = soundsystem.system->init(512, FMOD_INIT_3D_RIGHTHANDED, 0);    // Initialize FMOD.
 	handle_fmod_error();
 
-	result = soundsystem.system->createSound("audio/beep.ogg", FMOD_3D, 0, &soundsystem.beepsound);
-	handle_fmod_error();
+    // create sounds
+
+	// result = soundsystem.system->createSound("audio/beep.ogg", FMOD_3D, 0, &soundsystem.beepsound);
+	// handle_fmod_error();
 
 	result = soundsystem.system->createSound("audio/brake-6315.mp3", FMOD_3D, 0, &soundsystem.brakesound);
 	handle_fmod_error();
@@ -66,6 +70,15 @@ void init_sound_system() {
 
     result = soundsystem.system->playSound(soundsystem.musicsound, 0, false, &soundsystem.musicchannel);
 	handle_fmod_error();
+
+    // fix attenuation
+
+    result = soundsystem.brakesound->set3DMinMaxDistance(1.f, MAX_SOUND_DISTANCE);
+    handle_fmod_error();
+
+    result = soundsystem.enginesound->set3DMinMaxDistance(1.f, MAX_SOUND_DISTANCE);
+    handle_fmod_error();
+
 
 	// TODO: collision sound
 	//result = soundsystem.system->createSound("audio/beep.ogg", FMOD_3D, 0, &soundsystem.beepsound);
