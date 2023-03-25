@@ -70,6 +70,18 @@ void finishLinePrint() {
 	}
 }
 
+// Provides a target (ideally the center of mass of a moving object)
+// Renders the sphere where the transform for that object is
+// This is the transform component version
+void renderCMassSphere(TransformComponent &_target, TransformComponent& sphere_transform) {
+	sphere_transform.setPosition(glm::vec3(_target.getTranslation().x, _target.getTranslation().y, _target.getTranslation().z));
+}
+// This is the PxTransform version as vehicle PhysX models use PxTransforms for their center of mass
+void renderCMassSphere(PxTransform & _target, TransformComponent& sphere_transform) {
+	sphere_transform.setPosition(glm::vec3(_target.p.x, _target.p.y, _target.p.z));
+}
+
+
 std::vector<glm::vec3> spawnpointsAlongAxis(int rows, int cols,float spread, glm::vec3 axis, glm::vec3 start)
 {
 	std::vector<glm::vec3> result;
@@ -152,15 +164,6 @@ int main(int argc, char* argv[]) {
 
 	std::cout << "Component initalization finished\n";
 
-	//GRAPHICS TESTING
-	ecs::Entity TEST_e = mainScene.CreateEntity();
-	RenderModel TEST_r = RenderModel();
-	TransformComponent TEST_t = TransformComponent();
-	GraphicsSystem::importOBJ(TEST_r, "TEST.obj");
-	mainScene.AddComponent(TEST_e.guid, TEST_r);
-	mainScene.AddComponent(TEST_e.guid, TEST_t);
-
-
 
 	//make an entity
 	ecs::Entity car_e = mainScene.CreateEntity();
@@ -171,7 +174,7 @@ int main(int argc, char* argv[]) {
 	ecs::Entity finish_e = mainScene.CreateEntity();
 	ecs::Entity tetherPole1_e = mainScene.CreateEntity();
 	ecs::Entity tetherPole2_e = mainScene.CreateEntity();
-
+	ecs::Entity sphere_e = mainScene.CreateEntity();
 	ecs::Entity tether_e = mainScene.CreateEntity();
 
 
@@ -254,7 +257,14 @@ int main(int argc, char* argv[]) {
 	car_t.setScale(glm::vec3(3.2f, 3.2f, 3.2f));
 	mainScene.AddComponent(car_e.guid, car_t);
 	
-
+	// Center of gravity sphere - used for debug
+	RenderModel sphere_r = RenderModel();
+	GraphicsSystem::importOBJ(sphere_r, "sphere.obj");
+	sphere_r.setModelColor(glm::vec3(0.5f, 0.0f, 0.5f));
+	mainScene.AddComponent(sphere_e.guid, sphere_r);
+	TransformComponent sphere_t = TransformComponent(testCar.getVehicleRigidBody());
+	sphere_t.setScale(glm::vec3(0.5f, 0.5f, 0.5f));
+	mainScene.AddComponent(sphere_e.guid, sphere_t);
 
 	
 	// Finish line components
@@ -616,7 +626,27 @@ int main(int argc, char* argv[]) {
 		}
 		PxTransform c_mass_f;
 
+		// Debug stuff for centre of mass - not working properly
+		//c_mass_f.p.x = car_trans.getTranslation().x - tetherPole1_t.getTranslation().x;
+		//c_mass_f.p.y = car_trans.getTranslation().y - tetherPole1_t.getTranslation().y;
+		//c_mass_f.p.z = car_trans.getTranslation().z - tetherPole1_t.getTranslation().z;
+		//c_mass_f.p.x = tetherPole1_t.getTranslation().x;
+		//c_mass_f.p.y = tetherPole1_t.getTranslation().y;
+		//c_mass_f.p.z = tetherPole1_t.getTranslation().z;
+		//testCar.m_Vehicle.mPhysXParams.physxActorCMassLocalPose = c_mass_f;
 		
+
+		// auto& center_of_mass = testCar.m_Vehicle.mPhysXParams.physxActorCMassLocalPose;
+		// renderCMassSphere(center_of_mass, sphere_transform);
+
+		// // Tether check to render the tether graphic properly
+		// if (testCar.getCTethered()) {
+		// 	updateTetherGraphic(car_trans, c_tether_points, testCar, tether_transform);
+		// }
+		// else {
+		// 	tether_transform.setScale(glm::vec3(0.f, 0.f, 0.f));
+		// }
+
 		// // Finish line code
 		// if (car_trans.getTranslation().x >= 28.f && car_trans.getTranslation().x <= 40.f &&
 		// 	car_trans.getTranslation().z >= -2.f && car_trans.getTranslation().z <= 0.f)
@@ -721,44 +751,33 @@ int main(int argc, char* argv[]) {
 		ImGui_ImplSDL2_NewFrame();
 		ImGui::NewFrame();
 		if (showImgui) {
-			ImGui::Begin("Milestone 4 debug panel");
-			if (ImGui::BeginTabBar("Debug Tab Bar")) {
-				if (ImGui::BeginTabItem("Performance")) {
-					// BEGIN FRAMERATE COUNTER
-					framerate.update(time_diff * 1000.f);
-					ImGui::SetNextWindowSize(ImVec2(500, 100));
-					ImGui::Text("framerate: %d", (int)framerate.framerate());
-					ImGui::PlotLines("Frametime plot (ms)", framerate.m_time_queue_ms.data(), framerate.m_time_queue_ms.size());
-					ImGui::PlotLines("Framerate plot (hz)", framerate.m_rate_queue.data(), framerate.m_rate_queue.size());
-					ImGui::SliderFloat3("Level material params", levelMaterial, 0.0f, 5.0f);
-					// END FRAMERATE COUNTER
-					ImGui::EndTabItem();
-				}
-				if (ImGui::BeginTabItem("Vehicle")) {
-					// Car PhysX variable panels
-					testCar.carImGui();
-					//ImGui Panels for tuning
-					//reloadVehicleJSON();
-					if(ImGui::CollapsingHeader("Vehicle Tuning"))
-						vehicleTuning(testCar.m_Vehicle, physicsSystem);
-					if (ImGui::CollapsingHeader("Engine Tuning"))
-						engineTuning(testCar.m_Vehicle);
-					ImGui::EndTabItem();
-				}
-				if (ImGui::BeginTabItem("Graphics")) {
-					// Graphics imgui panel for graphics tuneables
-					gs.ImGuiPanel();
-					ImGui::EndTabItem();
-				}
-				if (ImGui::BeginTabItem("Obstacles")) {
-					// Obstacles ImGui
-					obstaclesImGui(mainScene, physicsSystem);
-					ImGui::EndTabItem();
-				}
-				ImGui::EndTabBar();
-			}
+			// BEGIN FRAMERATE COUNTER
+			framerate.update(time_diff * 1000.f);
+			ImGui::SetNextWindowSize(ImVec2(500, 100));
+			ImGui::Begin("Milestone 4");
+			ImGui::Text("framerate: %d", (int)framerate.framerate());
+			ImGui::PlotLines("Frametime plot (ms)", framerate.m_time_queue_ms.data(), framerate.m_time_queue_ms.size());
+			ImGui::PlotLines("Framerate plot (hz)", framerate.m_rate_queue.data(), framerate.m_rate_queue.size());
+			ImGui::SliderFloat3("Level material params", levelMaterial, 0.0f, 5.0f);
 			ImGui::End();
+			// END FRAMERATE COUNTER
 
+			// Car PhysX variable panels
+			testCar.carImGui();
+
+			// NOTE: the imgui bible - beau
+			//ImGui::ShowDemoWindow();
+
+			// Graphics imgui panel for graphics tuneables
+			gs.ImGuiPanel();
+
+			//ImGui Panels for tuning
+			//reloadVehicleJSON();
+			vehicleTuning(testCar.m_Vehicle, physicsSystem);
+			engineTuning(testCar.m_Vehicle);
+
+			// Obstacles ImGui
+			obstaclesImGui(mainScene, physicsSystem);
 		}
 		/*
 		* Render the UI. I am doing this here for now but I might move it.
