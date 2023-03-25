@@ -5,6 +5,8 @@
 #include "../../systems/GraphicsSystem.h"
 #include "../../utils/PxConversionUtils.h"
 #include "glm/glm.hpp"
+#include <ctype.h>
+#include <iostream>
 
 
 NavPath generateCirclePath(int radius) {

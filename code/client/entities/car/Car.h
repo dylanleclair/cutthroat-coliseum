@@ -3,8 +3,6 @@
 #include "PxPhysicsAPI.h"
 #include "vehicle2/PxVehicleAPI.h"
 
-#include "../../physx/snippetcommon/SnippetPVD.h"
-
 #include <glm/glm.hpp>
 
 #include "../../systems/PhysicsSystem.h"
