@@ -123,7 +123,12 @@ struct Car {
     void setClosestTetherPoint(PxTransform _loc);
     void setClosestTetherPoint(glm::vec3 _loc);
 
+    glm::vec3 getForwardDir();
+
+
     void carImGui();
+    void baseSetup();
+    void Car::setup1();
 
     void resetModifications();
     bool isGroundedDelay(Car& car);
@@ -131,6 +136,8 @@ struct Car {
     bool TetherJump();
 
     PxRigidBody* getVehicleRigidBody();
+
+    glm::vec3 getPosition();
 
     virtual void Update(Guid carGuid, ecs::Scene& scene, float deltaTime);
 

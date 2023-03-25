@@ -18,6 +18,8 @@
 #include <glm/gtc/quaternion.hpp> 
 #include <glm/gtx/quaternion.hpp>
 
+
+
 struct GraphicsSystem : ecs::ISystem {
 public:
 	GraphicsSystem(Window& _window);
@@ -31,6 +33,7 @@ public:
 	glm::vec3 GraphicsSystem::g_cameraVelocity();
 	static void importOBJ(CPU_Geometry& _geometry, const std::string _fileName);
 	static void importOBJ(RenderModel& _component, const std::string _fileName);
+	static void importSplineFromOBJ(CPU_Geometry& _geometry, std::string filename);
 private:
 
 	Camera cameras[4];
@@ -75,6 +78,7 @@ private:
 	ShaderProgram celShader;
 	ShaderProgram shadowGShader;
 	ShaderProgram VFXshader;
+	ShaderProgram skyboxShader;
 	//buffer for offscreen rendering
 	//buffers
 	GLuint gBuffer;
@@ -88,11 +92,16 @@ private:
 	GLuint gShadow;
 	GLuint gVFXColor;
 	GLuint gVFXDepth;
+	//skybox texture
+	GLuint skyboxCubemap;
 	//texture used in shadow map calculation
 	GLuint gLightDepth;
 	//variables for rendering whole screen quad
 	GLuint quad_vertexArray;
 	GLuint quad_vertexBuffer;
+	//variables for rendering the skybox
+	GLuint skybox_vertexArray;
+	GLuint skybox_vertexBuffer;
 
 	glm::ivec2 windowSize;
 	static void processNode(aiNode* node, const aiScene* scene, RenderModel& _component);
@@ -103,6 +112,7 @@ private:
 	float follow_cam_y;
 	float follow_cam_z;
 	float follow_correction_strength;
+	float maximum_follow_distance;
 	bool faceCulling;
 	bool front_face;
 	bool back_face;

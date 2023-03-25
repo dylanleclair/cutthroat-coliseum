@@ -7,6 +7,9 @@
 #include <glm/glm.hpp>
 
 
+
+
+
 class Texture {
 public:
 	Texture(std::string path, GLint interpolation);

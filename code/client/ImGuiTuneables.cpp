@@ -2,8 +2,12 @@
 #include <iostream>
 
 // Initializes variables
-void baseVariablesInit(EngineDriveVehicle &m_Vehicle) {
+void baseVariablesInit(EngineDriveVehicle &m_Vehicle, physics::PhysicsSystem &m_Physics) {
 	all_wheels = true; // sets the boolean flag to affect all wheels
+
+	static_friction = m_Physics.m_Material->getStaticFriction();
+	dynamic_friction = m_Physics.m_Material->getDynamicFriction();
+	restitution = m_Physics.m_Material->getRestitution();
 
 	rigid_mass = m_Vehicle.mBaseParams.rigidBodyParams.mass;
 	rigid_MOI = m_Vehicle.mBaseParams.rigidBodyParams.moi;
@@ -52,7 +56,40 @@ void baseVariablesInit(EngineDriveVehicle &m_Vehicle) {
 	//m_Vehicle.mBaseParams.suspensionComplianceParams->wheelToeAngle;
 	//m_Vehicle.mBaseParams.suspensionComplianceParams->wheelCamberAngle;
 	//m_Vehicle.mBaseParams.suspensionComplianceParams->suspForceAppPoint;
-	//m_Vehicle.mBaseParams.suspensionComplianceParams->tireForceAppPoint;	
+	//m_Vehicle.mBaseParams.suspensionComplianceParams->tireForceAppPoint;
+
+	/*
+	\brief Graph of friction vs longitudinal slip with 3 points.
+	\note frictionVsSlip[0][0] is always zero.
+	\note frictionVsSlip[0][1] is the friction available at zero longitudinal slip.
+	\note frictionVsSlip[1][0] is the value of longitudinal slip with maximum friction.
+	\note frictionVsSlip[1][1] is the maximum friction.
+	\note frictionVsSlip[2][0] is the end point of the graph.
+	\note frictionVsSlip[2][1] is the value of friction for slips greater than frictionVsSlip[2][0].
+	\note The friction value is computed from the friction vs longitudinal slip graph using linear interpolation.
+	\note The friction value computed from the friction vs longitudinal slip graph is used to scale the friction
+	value of the road geometry.
+	\note frictionVsSlip[2][0] > frictionVsSlip[1][0] > frictionVsSlip[0][0]
+	\note frictionVsSlip[1][1] is typically greater than frictionVsSlip[0][1]
+	\note frictionVsSlip[2][1] is typically smaller than frictionVsSlip[1][1]
+	\note longitudinal slips > frictionVsSlip[2][0] use friction multiplier frictionVsSlip[2][1]
+	*/
+	fvs00 = m_Vehicle.mBaseParams.tireForceParams->frictionVsSlip[0][0];
+	fvs01 = m_Vehicle.mBaseParams.tireForceParams->frictionVsSlip[0][1];
+	fvs10 = m_Vehicle.mBaseParams.tireForceParams->frictionVsSlip[1][0];
+	fvs11 = m_Vehicle.mBaseParams.tireForceParams->frictionVsSlip[1][1];
+	fvs20 = m_Vehicle.mBaseParams.tireForceParams->frictionVsSlip[2][0];
+	fvs21 = m_Vehicle.mBaseParams.tireForceParams->frictionVsSlip[2][1];
+
+	// Tire forces
+	camberStiff = m_Vehicle.mBaseParams.tireForceParams->camberStiff;
+	latStiffX = m_Vehicle.mBaseParams.tireForceParams->latStiffX;
+	latStiffY = m_Vehicle.mBaseParams.tireForceParams->latStiffY;
+	longStiff = m_Vehicle.mBaseParams.tireForceParams->longStiff;
+	restLoad = m_Vehicle.mBaseParams.tireForceParams->restLoad;
+	
+	// For fine tuned controls hard to set up
+	//(*loadFilter)[2] = m_Vehicle.mBaseParams.tireForceParams->loadFilter;
 }
 
 // Initalizes variables for the engine drive model
@@ -113,8 +150,25 @@ void dampeningRatioPrint(int i) {
 	}
 }
 
-void vehicleTuning(EngineDriveVehicle &m_Vehicle) {
+void vehicleTuning(EngineDriveVehicle &m_Vehicle, physics::PhysicsSystem &m_Physics) {
 	ImGui::Begin("Vehicle Tuning");
+
+	// PhysX material 
+	// TODO : (right now affects all objects, will need to assign different materials to different objects)
+	if (ImGui::TreeNode("PhysX")) {
+		if (ImGui::InputFloat("Material Static Friction", &static_friction)) {
+			m_Physics.m_Material->setStaticFriction(static_friction);
+		}
+		if (ImGui::InputFloat("Material Dynamic Friction", &dynamic_friction)) {
+			m_Physics.m_Material->setDynamicFriction(dynamic_friction);
+		}
+		if (ImGui::InputFloat("Material Restitution", &restitution)) {
+			m_Physics.m_Material->setRestitution(restitution);
+		}
+		ImGui::TreePop();
+	}
+
+	m_Physics.m_Material;
 
 	// Rigid Body params
 	if (ImGui::TreeNode("Rigid Body:")) {
@@ -481,6 +535,73 @@ void vehicleTuning(EngineDriveVehicle &m_Vehicle) {
 		ImGui::TreePop();
 	}
 
+	if (ImGui::TreeNode("Tire Force:")) {
+
+		if (ImGui::TreeNode("Friction Vs Slip")) {
+
+			ImGui::Text("F v S[0][0] - always zero");
+			if (ImGui::InputFloat(".", &fvs00)) {
+				m_Vehicle.mBaseParams.tireForceParams->frictionVsSlip[0][0] = fvs00;
+			}
+			ImGui::Text("F v S[0][1] - friction avail at 0 slip");
+			if (ImGui::InputFloat(".", &fvs01)) {
+				m_Vehicle.mBaseParams.tireForceParams->frictionVsSlip[0][1] = fvs01;
+			}
+			ImGui::Text("F v S [1][0] - slip with max friction");
+			if (ImGui::InputFloat(".", &fvs10)) {
+				m_Vehicle.mBaseParams.tireForceParams->frictionVsSlip[1][0] = fvs10;
+			}
+			ImGui::Text("F v S[1][1] - maximum friction, typically greater than[0][1]");
+			if (ImGui::InputFloat(".", &fvs11)) {
+				m_Vehicle.mBaseParams.tireForceParams->frictionVsSlip[1][1] = fvs11;
+			}
+			ImGui::Text("F v S [2][0] - end of graph, should be greater than [1][0]");
+			if (ImGui::InputFloat(".", &fvs20)) {
+				m_Vehicle.mBaseParams.tireForceParams->frictionVsSlip[2][0] = fvs20;
+			}
+			ImGui::Text("F v S[2][1] - friction for slip greater than[2][1] - should be smaller than[1][1]");
+			if (ImGui::InputFloat(".", &fvs21)) {
+				m_Vehicle.mBaseParams.tireForceParams->frictionVsSlip[2][1] = fvs21;
+			}
+
+			ImGui::TreePop();
+		}
+
+		if (ImGui::TreeNode("Tire Forces")) {
+			if (ImGui::InputFloat("Camber Stiffness", &camberStiff)) {
+				m_Vehicle.mBaseParams.tireForceParams->camberStiff = camberStiff;
+			}
+
+			ImGui::Text("Helps car turn quicker, may reduce long force");
+			if (ImGui::InputFloat("Lateral Stiff X", &latStiffX)) {
+				m_Vehicle.mBaseParams.tireForceParams->latStiffX = latStiffX;
+			}
+			if (ImGui::InputFloat("Lateral Stiff Y", &latStiffY)) {
+				m_Vehicle.mBaseParams.tireForceParams->latStiffY = latStiffY;
+			}
+
+			ImGui::Text("Helps car accelerate and brake, may reduce lat force");
+			if (ImGui::InputFloat("Long Stiff", &longStiff)) {
+				m_Vehicle.mBaseParams.tireForceParams->longStiff = longStiff;
+			}
+
+
+			if (ImGui::InputFloat("Rest Load", &restLoad)) {
+				m_Vehicle.mBaseParams.tireForceParams->restLoad = restLoad;
+			}
+			
+			// TODO : Implement this
+			// Maybe not needed right now as it's for fine tuning control 
+			// 
+			//if (ImGui::InputFloat4("Load Filter", *loadFilter)) {
+			//	m_Vehicle.mBaseParams.tireForceParams->loadFilter = (*loadFilter)[2];
+			//}
+
+			ImGui::TreePop();
+		}
+
+		ImGui::TreePop();
+	}
 
 	ImGui::End();
 }
