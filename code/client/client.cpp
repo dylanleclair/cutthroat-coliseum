@@ -148,7 +148,8 @@ int main(int argc, char* argv[]) {
 
 	// init ecs 
 
- 	static float levelMaterial[3] = { 0.10f, 0.730f, 0.135f};
+	// Static Friction, Dynamic Friction, Restitution
+ 	static float levelMaterial[3] = { 0.5f, 1.0f, 0.10f};
 
 	std::cout << "Component initalization finished\n";
 
@@ -214,6 +215,8 @@ int main(int argc, char* argv[]) {
 			vert.y = 0.f;
 	}
 
+	std::vector<AICar> AICollection;
+	std::vector<Guid> AIGuids;
 	std::vector<NavPath> aiPaths;
 	aiPaths.reserve(aiSpawnPoints.size());
 
@@ -223,11 +226,11 @@ int main(int argc, char* argv[]) {
 		auto& navPath = aiPaths[aiPaths.size() - 1];
 		Guid aiCarGuid = spawnAIEntity(mainScene, &physicsSystem, car_e.guid, spawnPoint, &navPath);
 		AICar& aiCarInstance = mainScene.GetComponent<AICar>(aiCarGuid);
+		AICollection.push_back(aiCarInstance);
+		AIGuids.push_back(aiCarGuid);
 		// idk why we get the car instance tbh
 	}
-
 	// NavPath aiPath{zzPathGeom.verts};
-
 
 	// NavPath aiPath{aiPathGeom.verts};
 
@@ -362,24 +365,45 @@ int main(int argc, char* argv[]) {
 	//front tire
 	ecs::Entity frontTireTrack = mainScene.CreateEntity();
 	VFXTextureStrip frontTireTrack_r = VFXTextureStrip("textures/MotercycleTireTread.png", 0.07, 2);
-	frontTireTrack_r.maxLength = 25;
+	frontTireTrack_r.maxLength = 35;
 	TransformComponent frontTireTrack_t = TransformComponent();
 	mainScene.AddComponent(frontTireTrack.guid, frontTireTrack_r);
 	mainScene.AddComponent(frontTireTrack.guid, frontTireTrack_t);
 	//right tire
 	ecs::Entity rightTireTrack = mainScene.CreateEntity();
 	VFXTextureStrip rightTireTrack_r = VFXTextureStrip("textures/MotercycleTireTread.png", 0.07, 1);
-	rightTireTrack_r.maxLength = 15;
+	rightTireTrack_r.maxLength = 25;
 	TransformComponent rightTireTrack_t = TransformComponent();
 	mainScene.AddComponent(rightTireTrack.guid, rightTireTrack_r);
 	mainScene.AddComponent(rightTireTrack.guid, rightTireTrack_t);
 	//left tire
 	ecs::Entity leftTireTrack = mainScene.CreateEntity();
 	VFXTextureStrip leftTireTrack_r = VFXTextureStrip("textures/MotercycleTireTread.png", 0.07, 1);
-	leftTireTrack_r.maxLength = 15;
+	leftTireTrack_r.maxLength = 25;
 	TransformComponent leftTireTrack_t = TransformComponent();
 	mainScene.AddComponent(leftTireTrack.guid, leftTireTrack_r);
 	mainScene.AddComponent(leftTireTrack.guid, leftTireTrack_t);
+
+	ecs::Entity frontTireTrack2 = mainScene.CreateEntity();
+	VFXTextureStrip frontTireTrack_r2 = VFXTextureStrip("textures/MotercycleTireTread.png", 0.07, 2);
+	frontTireTrack_r2.maxLength = 35;
+	TransformComponent frontTireTrack_t2 = TransformComponent();
+	mainScene.AddComponent(frontTireTrack2.guid, frontTireTrack_r2);
+	mainScene.AddComponent(frontTireTrack2.guid, frontTireTrack_t2);
+	//right tire
+	ecs::Entity rightTireTrack2 = mainScene.CreateEntity();
+	VFXTextureStrip rightTireTrack_r2 = VFXTextureStrip("textures/MotercycleTireTread.png", 0.07, 1);
+	rightTireTrack_r2.maxLength = 25;
+	TransformComponent rightTireTrack_t2 = TransformComponent();
+	mainScene.AddComponent(rightTireTrack2.guid, rightTireTrack_r2);
+	mainScene.AddComponent(rightTireTrack2.guid, rightTireTrack_t2);
+	//left tire
+	ecs::Entity leftTireTrack2 = mainScene.CreateEntity();
+	VFXTextureStrip leftTireTrack_r2 = VFXTextureStrip("textures/MotercycleTireTread.png", 0.07, 1);
+	leftTireTrack_r2.maxLength = 25;
+	TransformComponent leftTireTrack_t2 = TransformComponent();
+	mainScene.AddComponent(leftTireTrack2.guid, leftTireTrack_r2);
+	mainScene.AddComponent(leftTireTrack2.guid, leftTireTrack_t2);
 
 	/*
 	* Demonstration of the Billboard Component. It always expects a texture to be used and an optinal locking axis can be used
@@ -446,6 +470,8 @@ int main(int argc, char* argv[]) {
 
 	baseVariablesInit(testCar.m_Vehicle, physicsSystem);
 	engineVariablesInit(testCar.m_Vehicle);
+
+	AICar& AICarTest = mainScene.GetComponent<AICar>(AIGuids.at(0));
 
 	// GAME LOOP
 	while (!quit) {
@@ -621,13 +647,6 @@ int main(int argc, char* argv[]) {
 		// 	isFinished = false;
 		// }
 
-		// Stuff to check engine rotation speed and steering response
-		// Used for debugging and tuning the vehicle 
-		// CAN DELETE LATER
-		float percent_rot = testCar.m_Vehicle.mEngineDriveState.engineState.rotationSpeed / testCar.m_Vehicle.mEngineDriveParams.engineParams.maxOmega;
-		percent_rot = 1.f - percent_rot;
-		//testCar.m_Vehicle.mBaseParams.steerResponseParams.maxResponse = percent_rot * 1.52;
-
 		//tire track logic
 		static bool previousState[3] = { false, false, false };
 		VFXTextureStrip& frontTireTracks = mainScene.GetComponent<VFXTextureStrip>(frontTireTrack.guid);
@@ -636,7 +655,7 @@ int main(int argc, char* argv[]) {
 		//front tire
 		if (testCar.m_Vehicle.mBaseState.roadGeomStates[0].hitState && testCar.m_Vehicle.mBaseState.roadGeomStates[1].hitState) {
 			previousState[0] = true;
-			glm::vec3 frontTirePosition = PxtoGLM(testCar.getVehicleRigidBody()->getGlobalPose().p) + glm::vec3(PxtoGLM(testCar.getVehicleRigidBody()->getGlobalPose().q) * glm::vec4(0, 0, 4, 1));
+			glm::vec3 frontTirePosition = PxtoGLM(testCar.getVehicleRigidBody()->getGlobalPose().p) + glm::vec3(PxtoGLM(testCar.getVehicleRigidBody()->getGlobalPose().q) * glm::vec4(0, -.3, 4, 1));
 			if (glm::length(frontTirePosition - frontTireTracks.g_previousPosition()) > 1) {
 				frontTireTracks.extrude(frontTirePosition, glm::vec3(0, 1, 0));
 			}
@@ -653,7 +672,7 @@ int main(int argc, char* argv[]) {
 		//right tire
 		if (testCar.m_Vehicle.mBaseState.roadGeomStates[2].hitState) {
 			previousState[1] = true;
-			glm::vec3 rightTirePosition = PxtoGLM(testCar.getVehicleRigidBody()->getGlobalPose().p) + glm::vec3(PxtoGLM(testCar.getVehicleRigidBody()->getGlobalPose().q) * glm::vec4(1, 0, 0, 1));
+			glm::vec3 rightTirePosition = PxtoGLM(testCar.getVehicleRigidBody()->getGlobalPose().p) + glm::vec3(PxtoGLM(testCar.getVehicleRigidBody()->getGlobalPose().q) * glm::vec4(1, -.3, 1, 1));
 			if (glm::length(rightTirePosition - rightTireTracks.g_previousPosition()) > 1) {
 				rightTireTracks.extrude(rightTirePosition, glm::vec3(0, 1, 0));
 			}
@@ -670,7 +689,7 @@ int main(int argc, char* argv[]) {
 		//left tire
 		if (testCar.m_Vehicle.mBaseState.roadGeomStates[3].hitState) {
 			previousState[2] = true;
-			glm::vec3 leftTirePosition = PxtoGLM(testCar.getVehicleRigidBody()->getGlobalPose().p) + glm::vec3(PxtoGLM(testCar.getVehicleRigidBody()->getGlobalPose().q) * glm::vec4(-1, 0, 0, 1));
+			glm::vec3 leftTirePosition = PxtoGLM(testCar.getVehicleRigidBody()->getGlobalPose().p) + glm::vec3(PxtoGLM(testCar.getVehicleRigidBody()->getGlobalPose().q) * glm::vec4(-1, -.3, 1, 1));
 			if (glm::length(leftTirePosition - leftTireTracks.g_previousPosition()) > 1) {
 				leftTireTracks.extrude(leftTirePosition, glm::vec3(0, 1, 0));
 			}
@@ -683,6 +702,116 @@ int main(int argc, char* argv[]) {
 				leftTireTracks.cut();
 			previousState[2] = false;
 		}
+
+		static bool previousState2[3] = { false, false, false };
+		VFXTextureStrip& frontTireTracks2 = mainScene.GetComponent<VFXTextureStrip>(frontTireTrack2.guid);
+		VFXTextureStrip& rightTireTracks2 = mainScene.GetComponent<VFXTextureStrip>(rightTireTrack2.guid);
+		VFXTextureStrip& leftTireTracks2 = mainScene.GetComponent<VFXTextureStrip>(leftTireTrack2.guid);
+
+			//front tire
+			if (AICarTest.m_Vehicle.mBaseState.roadGeomStates[0].hitState && AICarTest.m_Vehicle.mBaseState.roadGeomStates[1].hitState) {
+				previousState2[0] = true;
+				glm::vec3 frontTirePosition2 = PxtoGLM(AICarTest.getVehicleRigidBody()->getGlobalPose().p) + glm::vec3(PxtoGLM(AICarTest.getVehicleRigidBody()->getGlobalPose().q) * glm::vec4(0, 0, 4, 1));
+				if (glm::length(frontTirePosition2 - frontTireTracks2.g_previousPosition()) > 1) {
+					frontTireTracks2.extrude(frontTirePosition2, glm::vec3(0, 1, 0));
+				}
+				else {
+					//frontTireTracks.moveEndPoint(frontTirePosition, glm::vec3(0, 1, 0));
+				}
+			}
+			else {
+				if (previousState2[0] == true)
+					frontTireTracks2.cut();
+				previousState2[0] = false;
+			}
+
+			//right tire
+			if (AICarTest.m_Vehicle.mBaseState.roadGeomStates[2].hitState) {
+				previousState2[1] = true;
+				glm::vec3 rightTirePosition2 = PxtoGLM(AICarTest.getVehicleRigidBody()->getGlobalPose().p) + glm::vec3(PxtoGLM(AICarTest.getVehicleRigidBody()->getGlobalPose().q) * glm::vec4(1, 0, 0, 1));
+				if (glm::length(rightTirePosition2 - rightTireTracks2.g_previousPosition()) > 1) {
+					rightTireTracks2.extrude(rightTirePosition2, glm::vec3(0, 1, 0));
+				}
+				else {
+					//rightTireTracks.moveEndPoint(rightTirePosition, glm::vec3(0, 1, 0));
+				}
+			}
+			else {
+				if (previousState2[1] == true)
+					rightTireTracks2.cut();
+				previousState2[1] = false;
+			}
+
+			//left tire
+			if (AICarTest.m_Vehicle.mBaseState.roadGeomStates[3].hitState) {
+				previousState[2] = true;
+				glm::vec3 leftTirePosition2 = PxtoGLM(AICarTest.getVehicleRigidBody()->getGlobalPose().p) + glm::vec3(PxtoGLM(AICarTest.getVehicleRigidBody()->getGlobalPose().q) * glm::vec4(-1, 0, 0, 1));
+				if (glm::length(leftTirePosition2 - leftTireTracks2.g_previousPosition()) > 1) {
+					leftTireTracks2.extrude(leftTirePosition2, glm::vec3(0, 1, 0));
+				}
+				else {
+					//leftTireTracks.moveEndPoint(leftTirePosition, glm::vec3(0, 1, 0));
+				}
+			}
+			else {
+				if (previousState2[2] == true)
+					leftTireTracks2.cut();
+				previousState[2] = false;
+			}
+
+		//for (int i = 0; i < AICollection.size(); i++) {
+		//	
+		//	//front tire
+		//	if (AICollection.at(i).m_Vehicle.mBaseState.roadGeomStates[0].hitState && AICollection.at(i).m_Vehicle.mBaseState.roadGeomStates[1].hitState) {
+		//		previousState[0] = true;
+		//		glm::vec3 frontTirePosition = PxtoGLM(AICollection.at(i).getVehicleRigidBody()->getGlobalPose().p) + glm::vec3(PxtoGLM(AICollection.at(i).getVehicleRigidBody()->getGlobalPose().q) * glm::vec4(0, 0, 4, 1));
+		//		if (glm::length(frontTirePosition - frontTireTracks.g_previousPosition()) > 1) {
+		//			frontTireTracks.extrude(frontTirePosition, glm::vec3(0, 1, 0));
+		//		}
+		//		else {
+		//			//frontTireTracks.moveEndPoint(frontTirePosition, glm::vec3(0, 1, 0));
+		//		}
+		//	}
+		//	else {
+		//		if (previousState[0] == true)
+		//			frontTireTracks.cut();
+		//		previousState[0] = false;
+		//	}
+
+		//	//right tire
+		//	if (AICollection.at(i).m_Vehicle.mBaseState.roadGeomStates[2].hitState) {
+		//		previousState[1] = true;
+		//		glm::vec3 rightTirePosition = PxtoGLM(AICollection.at(i).getVehicleRigidBody()->getGlobalPose().p) + glm::vec3(PxtoGLM(AICollection.at(i).getVehicleRigidBody()->getGlobalPose().q) * glm::vec4(1, 0, 0, 1));
+		//		if (glm::length(rightTirePosition - rightTireTracks.g_previousPosition()) > 1) {
+		//			rightTireTracks.extrude(rightTirePosition, glm::vec3(0, 1, 0));
+		//		}
+		//		else {
+		//			//rightTireTracks.moveEndPoint(rightTirePosition, glm::vec3(0, 1, 0));
+		//		}
+		//	}
+		//	else {
+		//		if (previousState[1] == true)
+		//			rightTireTracks.cut();
+		//		previousState[1] = false;
+		//	}
+
+		//	//left tire
+		//	if (AICollection.at(i).m_Vehicle.mBaseState.roadGeomStates[3].hitState) {
+		//		previousState[2] = true;
+		//		glm::vec3 leftTirePosition = PxtoGLM(AICollection.at(i).getVehicleRigidBody()->getGlobalPose().p) + glm::vec3(PxtoGLM(AICollection.at(i).getVehicleRigidBody()->getGlobalPose().q) * glm::vec4(-1, 0, 0, 1));
+		//		if (glm::length(leftTirePosition - leftTireTracks.g_previousPosition()) > 1) {
+		//			leftTireTracks.extrude(leftTirePosition, glm::vec3(0, 1, 0));
+		//		}
+		//		else {
+		//			//leftTireTracks.moveEndPoint(leftTirePosition, glm::vec3(0, 1, 0));
+		//		}
+		//	}
+		//	else {
+		//		if (previousState[2] == true)
+		//			leftTireTracks.cut();
+		//		previousState[2] = false;
+		//	}
+		//}
 
 		// Timestep accumulate for proper physics stepping
 		auto current_time = (float)SDL_GetTicks()/1000.f;
@@ -718,6 +847,9 @@ int main(int argc, char* argv[]) {
 			ImGui::PlotLines("Frametime plot (ms)", framerate.m_time_queue_ms.data(), framerate.m_time_queue_ms.size());
 			ImGui::PlotLines("Framerate plot (hz)", framerate.m_rate_queue.data(), framerate.m_rate_queue.size());
 			ImGui::SliderFloat3("Level material params", levelMaterial, 0.0f, 5.0f);
+			ImGui::Text("Player Car Loc: %f, %f, %f", testCar.getVehicleRigidBody()->getGlobalPose().p.x, testCar.getVehicleRigidBody()->getGlobalPose().p.y, testCar.getVehicleRigidBody()->getGlobalPose().p.z);
+			ImGui::Text("AI Car Loc: %f, %f, %f", AICarTest.getVehicleRigidBody()->getGlobalPose().p.x, AICollection.at(0).getVehicleRigidBody()->getGlobalPose().p.y, AICollection.at(0).getVehicleRigidBody()->getGlobalPose().p.z);
+			ImGui::Text("AI Hit state %s", AICarTest.m_Vehicle.mBaseState.roadGeomStates->hitState ? "true" : "false");
 			ImGui::End();
 			// END FRAMERATE COUNTER
 
