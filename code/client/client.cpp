@@ -70,18 +70,6 @@ void finishLinePrint() {
 	}
 }
 
-// Provides a target (ideally the center of mass of a moving object)
-// Renders the sphere where the transform for that object is
-// This is the transform component version
-void renderCMassSphere(TransformComponent &_target, TransformComponent& sphere_transform) {
-	sphere_transform.setPosition(glm::vec3(_target.getTranslation().x, _target.getTranslation().y, _target.getTranslation().z));
-}
-// This is the PxTransform version as vehicle PhysX models use PxTransforms for their center of mass
-void renderCMassSphere(PxTransform & _target, TransformComponent& sphere_transform) {
-	sphere_transform.setPosition(glm::vec3(_target.p.x, _target.p.y, _target.p.z));
-}
-
-
 std::vector<glm::vec3> spawnpointsAlongAxis(int rows, int cols,float spread, glm::vec3 axis, glm::vec3 start)
 {
 	std::vector<glm::vec3> result;
@@ -174,7 +162,7 @@ int main(int argc, char* argv[]) {
 	ecs::Entity finish_e = mainScene.CreateEntity();
 	ecs::Entity tetherPole1_e = mainScene.CreateEntity();
 	ecs::Entity tetherPole2_e = mainScene.CreateEntity();
-	ecs::Entity sphere_e = mainScene.CreateEntity();
+
 	ecs::Entity tether_e = mainScene.CreateEntity();
 
 	// ecs::Entity aiDriver_e = mainScene.CreateEntity();
@@ -263,14 +251,7 @@ int main(int argc, char* argv[]) {
 	car_t.setScale(glm::vec3(3.2f, 3.2f, 3.2f));
 	mainScene.AddComponent(car_e.guid, car_t);
 	
-	// Center of gravity sphere - used for debug
-	RenderModel sphere_r = RenderModel();
-	GraphicsSystem::importOBJ(sphere_r, "sphere.obj");
-	sphere_r.setModelColor(glm::vec3(0.5f, 0.0f, 0.5f));
-	mainScene.AddComponent(sphere_e.guid, sphere_r);
-	TransformComponent sphere_t = TransformComponent(testCar.getVehicleRigidBody());
-	sphere_t.setScale(glm::vec3(0.5f, 0.5f, 0.5f));
-	mainScene.AddComponent(sphere_e.guid, sphere_t);
+
 
 	
 	// Finish line components
@@ -625,27 +606,7 @@ int main(int argc, char* argv[]) {
 		}
 		PxTransform c_mass_f;
 
-		// Debug stuff for centre of mass - not working properly
-		//c_mass_f.p.x = car_trans.getTranslation().x - tetherPole1_t.getTranslation().x;
-		//c_mass_f.p.y = car_trans.getTranslation().y - tetherPole1_t.getTranslation().y;
-		//c_mass_f.p.z = car_trans.getTranslation().z - tetherPole1_t.getTranslation().z;
-		//c_mass_f.p.x = tetherPole1_t.getTranslation().x;
-		//c_mass_f.p.y = tetherPole1_t.getTranslation().y;
-		//c_mass_f.p.z = tetherPole1_t.getTranslation().z;
-		//testCar.m_Vehicle.mPhysXParams.physxActorCMassLocalPose = c_mass_f;
 		
-
-		// auto& center_of_mass = testCar.m_Vehicle.mPhysXParams.physxActorCMassLocalPose;
-		// renderCMassSphere(center_of_mass, sphere_transform);
-
-		// // Tether check to render the tether graphic properly
-		// if (testCar.getCTethered()) {
-		// 	updateTetherGraphic(car_trans, c_tether_points, testCar, tether_transform);
-		// }
-		// else {
-		// 	tether_transform.setScale(glm::vec3(0.f, 0.f, 0.f));
-		// }
-
 		// // Finish line code
 		// if (car_trans.getTranslation().x >= 28.f && car_trans.getTranslation().x <= 40.f &&
 		// 	car_trans.getTranslation().z >= -2.f && car_trans.getTranslation().z <= 0.f)
