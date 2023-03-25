@@ -491,8 +491,6 @@ void setUpLogs(ecs::Scene &mainScene) {
 }
 
 void obstaclesImGui(ecs::Scene& mainScene, physics::PhysicsSystem physicsSystem) {
-	ImGui::Begin("Obstacles");
-
 	if (ImGui::Checkbox("Obstacles", &obstaclesOn)) {
 		if (obstaclesOn) {
 			//setUpLogs(mainScene);
@@ -503,6 +501,4 @@ void obstaclesImGui(ecs::Scene& mainScene, physics::PhysicsSystem physicsSystem)
 			clearObstacles(physicsSystem, mainScene);
 		}
 	}
-
-	ImGui::End();
 }
