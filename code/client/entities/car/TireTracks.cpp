@@ -1,13 +1,13 @@
 #include "TireTracks.h"
 #include "AICar.h"
 
-std::vector<std::vector<VFXTextureStrip>> tireTrackCol;
 std::vector<std::vector<bool>> previousStates;
+std::vector<std::vector<Guid>> tireTrackGuids;
 
 // Sets up tire tracks ecs entities
 // Needs a unique one for each driver
 void setupTireTrackVisuals(ecs::Scene& mainScene, int number_of_vehicles) {
-	std::vector<VFXTextureStrip> tireTrackVisuals;
+	std::vector<Guid> tireTrackGuid;
 
 	for (int i = 0; i < number_of_vehicles; i++) {
 		//front tire
@@ -18,10 +18,6 @@ void setupTireTrackVisuals(ecs::Scene& mainScene, int number_of_vehicles) {
 		mainScene.AddComponent(frontTireTrack.guid, frontTireTrack_r);
 		mainScene.AddComponent(frontTireTrack.guid, frontTireTrack_t);
 
-		// Putting it into the collection for out of scope use
-		VFXTextureStrip& frontTireT = mainScene.GetComponent<VFXTextureStrip>(frontTireTrack.guid);
-		tireTrackVisuals.push_back(frontTireT);
-
 		//right tire
 		ecs::Entity rightTireTrack = mainScene.CreateEntity();
 		VFXTextureStrip rightTireTrack_r = VFXTextureStrip("textures/MotercycleTireTread.png", 0.07, 1);
@@ -29,10 +25,6 @@ void setupTireTrackVisuals(ecs::Scene& mainScene, int number_of_vehicles) {
 		TransformComponent rightTireTrack_t = TransformComponent();
 		mainScene.AddComponent(rightTireTrack.guid, rightTireTrack_r);
 		mainScene.AddComponent(rightTireTrack.guid, rightTireTrack_t);
-
-		// Putting it into the collection for out of scope use
-		VFXTextureStrip& rightTireT = mainScene.GetComponent<VFXTextureStrip>(rightTireTrack.guid);
-		tireTrackVisuals.push_back(rightTireT);
 
 		//left tire
 		ecs::Entity leftTireTrack = mainScene.CreateEntity();
@@ -42,12 +34,12 @@ void setupTireTrackVisuals(ecs::Scene& mainScene, int number_of_vehicles) {
 		mainScene.AddComponent(leftTireTrack.guid, leftTireTrack_r);
 		mainScene.AddComponent(leftTireTrack.guid, leftTireTrack_t);
 
-		// Putting it into the collection for out of scope use
-		VFXTextureStrip& leftTireT = mainScene.GetComponent<VFXTextureStrip>(leftTireTrack.guid);
-		tireTrackVisuals.push_back(leftTireT);
-
-		tireTrackCol.push_back(tireTrackVisuals);
-		tireTrackVisuals.clear();
+		// Grabbing all the GUIDs to reference objects from the ECS later
+		tireTrackGuid.push_back(frontTireTrack.guid);
+		tireTrackGuid.push_back(rightTireTrack.guid);
+		tireTrackGuid.push_back(leftTireTrack.guid);
+		tireTrackGuids.push_back(tireTrackGuid);
+		tireTrackGuid.clear();
 	}
 
 	setupPreviousStates(number_of_vehicles);
@@ -69,15 +61,11 @@ void setupPreviousStates(int number_of_vehicles) {
 void TireTracks(Car& car, std::vector<Guid> &AIGuids, ecs::Scene mainScene) {
 
 	// For the player car 
-	std::vector<VFXTextureStrip> tracks = tireTrackCol.at(0);
+	std::vector<Guid> guid = tireTrackGuids.at(0);
 
-	VFXTextureStrip& frontTireTracks = tracks.at(0);
-	VFXTextureStrip& rightTireTracks = tracks.at(1);
-	VFXTextureStrip& leftTireTracks = tracks.at(2);
-
-	//VFXTextureStrip& frontTireTracks = mainScene.GetComponent<VFXTextureStrip>(frontTireT.guid);
-	//VFXTextureStrip& rightTireTracks = mainScene.GetComponent<VFXTextureStrip>(rightTireTrack.guid);
-	//VFXTextureStrip& leftTireTracks = mainScene.GetComponent<VFXTextureStrip>(leftTireTrack.guid);
+	VFXTextureStrip& frontTireTracks = mainScene.GetComponent<VFXTextureStrip>(guid.at(0));
+	VFXTextureStrip& rightTireTracks = mainScene.GetComponent<VFXTextureStrip>(guid.at(1));
+	VFXTextureStrip& leftTireTracks = mainScene.GetComponent<VFXTextureStrip>(guid.at(2));
 
 	//front tire
 	if (car.m_Vehicle.mBaseState.roadGeomStates[0].hitState && car.m_Vehicle.mBaseState.roadGeomStates[1].hitState) {
