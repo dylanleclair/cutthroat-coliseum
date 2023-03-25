@@ -130,7 +130,7 @@ PxRigidBody* Car::getVehicleRigidBody()
 }
 
 void Car::carImGui() {
-    ImGui::Begin("Car");
+    //ImGui::Begin("Car");
     if (ImGui::TreeNode("Debug Readouts")) {        
         ImGui::Text("left stick horizontal tilt: %f", carAxis);
         //ImGui::Text("Car Throttle: %f", controller_throttle);
@@ -162,7 +162,7 @@ void Car::carImGui() {
         ImGui::TreePop();
     }
 
-    ImGui::End();
+   // ImGui::End();
 }
 
 void Car::baseSetup() {

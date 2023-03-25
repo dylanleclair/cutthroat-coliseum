@@ -38,7 +38,7 @@ void main()
     //determine the fragment color
 	vec3 sampleCol = vec3(1);
 	if((shaderState & 1) != 0) {
-		sampleCol = vec3(0,1,0);//vec3(texture(tex, tc));
+		sampleCol = vec3(texture(diffTexture, tc));
 	} else {
 		sampleCol = userColor;
 	}

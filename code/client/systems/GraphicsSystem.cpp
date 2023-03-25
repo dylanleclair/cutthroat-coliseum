@@ -223,6 +223,7 @@ GraphicsSystem::GraphicsSystem(Window& _window) :
 	
 	gShader.use();
 	glUniform1i(glGetUniformLocation(GLuint(gShader), "gShadowDepth"), 0);
+	glUniform1i(glGetUniformLocation(GLuint(gShader), "diffTexture"), 1);
 
 	//generate the data for the full screen render quad
 	const GLfloat g_quad_vertex_buffer_data[] = {
@@ -330,32 +331,29 @@ GraphicsSystem::~GraphicsSystem() {
 
 // Panel to controls the cameras
 void GraphicsSystem::ImGuiPanel() {
-	ImGui::Begin("Camera States");
-	ImGui::Checkbox("Culling: Front Face", &front_face);
-	ImGui::Checkbox("Culling: Back Face", &back_face);
+	if (ImGui::CollapsingHeader("Camera")) {
+		ImGui::Checkbox("Culling: Front Face", &front_face);
+		ImGui::Checkbox("Culling: Back Face", &back_face);
 
-	if (ImGui::Button("Free Camera")) {
-		cam_mode = 1;
-	}
-	if (ImGui::Button("Fixed Camera")) {
-		cam_mode = 2;
-	}
-	if (ImGui::Button("Follow Camera")) {
-		cam_mode = 3;
-	}
+		if (ImGui::Button("Free Camera")) {
+			cam_mode = 1;
+		}
+		if (ImGui::Button("Fixed Camera")) {
+			cam_mode = 2;
+		}
+		if (ImGui::Button("Follow Camera")) {
+			cam_mode = 3;
+		}
 
-	if (cam_mode == 3) {
-		ImGui::InputFloat("X Distance: ", &follow_cam_x);
-		ImGui::InputFloat("Y Distance: ", &follow_cam_y);
-		ImGui::InputFloat("Z Distance: ", &follow_cam_z);
-		ImGui::InputFloat("Correction Strength", &follow_correction_strength);
-		ImGui::InputFloat("max follow distance", &maximum_follow_distance);
+		if (cam_mode == 3) {
+			ImGui::InputFloat("X Distance: ", &follow_cam_x);
+			ImGui::InputFloat("Y Distance: ", &follow_cam_y);
+			ImGui::InputFloat("Z Distance: ", &follow_cam_z);
+			ImGui::InputFloat("Correction Strength", &follow_correction_strength);
+			ImGui::InputFloat("max follow distance", &maximum_follow_distance);
+		}
 	}
-
-	ImGui::End();
-
-	ImGui::Begin("Debug Rendering");
-	if (ImGui::CollapsingHeader("Visuals")) {		
+	if (ImGui::CollapsingHeader("Rendering")) {
 		ImGui::SliderFloat3("Light Direction", &(lightDirection.x), -50, 50);
 		ImGui::SliderFloat("diffuse strength", &diffuseWeight, 0, 1);
 		ImGui::SliderFloat("ambiant strength", &ambiantStrength, 0, 1);
@@ -366,7 +364,6 @@ void GraphicsSystem::ImGuiPanel() {
 		ImGui::ColorPicker3("gooch cool", &(goochCool[0]));
 		ImGui::ColorPicker3("gooch warm", &(goochWarm[0]));
 	}
-
 	if (ImGui::CollapsingHeader("Transforms")) {
 		ImGui::Checkbox("Collider Meshes", &showColliders);
 		//show all renderables in a list
@@ -412,8 +409,6 @@ void GraphicsSystem::ImGuiPanel() {
 			entityTransforms.read_write[item_current_idx] = 2;
 		}
 	}
-
-	ImGui::End();
 }
 
 glm::mat4 getViewMatrix(const glm::vec3& position, const glm::vec3& direction, const glm::vec3& up) {
@@ -644,10 +639,8 @@ void GraphicsSystem::Update(ecs::Scene& scene, float deltaTime) {
 		glUniformMatrix4fv(viewUniform, 1, GL_FALSE, glm::value_ptr(V));
 		glUniformMatrix4fv(lightSpaceMatixUniform, 1, GL_FALSE, glm::value_ptr(shadowP * shadowV));
 
-		//bind the light depth texture
-		glActiveTexture(GL_TEXTURE0);
-		glBindTexture(GL_TEXTURE_2D, gLightDepth);
-		glActiveTexture(GL_TEXTURE1);
+
+		
 		
 
 		for (Guid entityGuid : ecs::EntitiesInScene<RenderModel,TransformComponent>(scene)) {
@@ -659,11 +652,15 @@ void GraphicsSystem::Update(ecs::Scene& scene, float deltaTime) {
 			glUniformMatrix4fv(modelUniform, 1, GL_FALSE, glm::value_ptr(M));
 			glm::mat3 normalsMatrix = glm::mat3(glm::transpose(glm::inverse(M)));
 			glUniformMatrix3fv(normalMatUniform, 1, GL_FALSE, glm::value_ptr(normalsMatrix));
+			//bind the light depth texture
+			glActiveTexture(GL_TEXTURE0);
+			glBindTexture(GL_TEXTURE_2D, gLightDepth);
 
 			//loop through each mesh in the renderComponent
 			for each (Mesh mesh in comp.meshes) {
 				mesh.geometry->bind();
 				if ((mesh.properties & Mesh::meshProperties::m_hasTexture) != 0 && mesh.textureIndex != -1) {
+					glActiveTexture(GL_TEXTURE1);
 					comp.textures[mesh.textureIndex]->bind();
 					glUniform1ui(shaderStateUniform, 1);
 				}

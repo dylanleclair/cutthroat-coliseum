@@ -719,33 +719,44 @@ int main(int argc, char* argv[]) {
 		ImGui_ImplSDL2_NewFrame();
 		ImGui::NewFrame();
 		if (showImgui) {
-			// BEGIN FRAMERATE COUNTER
-			framerate.update(time_diff * 1000.f);
-			ImGui::SetNextWindowSize(ImVec2(500, 100));
-			ImGui::Begin("Milestone 4");
-			ImGui::Text("framerate: %d", (int)framerate.framerate());
-			ImGui::PlotLines("Frametime plot (ms)", framerate.m_time_queue_ms.data(), framerate.m_time_queue_ms.size());
-			ImGui::PlotLines("Framerate plot (hz)", framerate.m_rate_queue.data(), framerate.m_rate_queue.size());
-			ImGui::SliderFloat3("Level material params", levelMaterial, 0.0f, 5.0f);
+			ImGui::Begin("Milestone 4 debug panel");
+			if (ImGui::BeginTabBar("Debug Tab Bar")) {
+				if (ImGui::BeginTabItem("Performance")) {
+					// BEGIN FRAMERATE COUNTER
+					framerate.update(time_diff * 1000.f);
+					ImGui::SetNextWindowSize(ImVec2(500, 100));
+					ImGui::Text("framerate: %d", (int)framerate.framerate());
+					ImGui::PlotLines("Frametime plot (ms)", framerate.m_time_queue_ms.data(), framerate.m_time_queue_ms.size());
+					ImGui::PlotLines("Framerate plot (hz)", framerate.m_rate_queue.data(), framerate.m_rate_queue.size());
+					ImGui::SliderFloat3("Level material params", levelMaterial, 0.0f, 5.0f);
+					// END FRAMERATE COUNTER
+					ImGui::EndTabItem();
+				}
+				if (ImGui::BeginTabItem("Vehicle")) {
+					// Car PhysX variable panels
+					testCar.carImGui();
+					//ImGui Panels for tuning
+					//reloadVehicleJSON();
+					if(ImGui::CollapsingHeader("Vehicle Tuning"))
+						vehicleTuning(testCar.m_Vehicle, physicsSystem);
+					if (ImGui::CollapsingHeader("Engine Tuning"))
+						engineTuning(testCar.m_Vehicle);
+					ImGui::EndTabItem();
+				}
+				if (ImGui::BeginTabItem("Graphics")) {
+					// Graphics imgui panel for graphics tuneables
+					gs.ImGuiPanel();
+					ImGui::EndTabItem();
+				}
+				if (ImGui::BeginTabItem("Obstacles")) {
+					// Obstacles ImGui
+					obstaclesImGui(mainScene, physicsSystem);
+					ImGui::EndTabItem();
+				}
+				ImGui::EndTabBar();
+			}
 			ImGui::End();
-			// END FRAMERATE COUNTER
 
-			// Car PhysX variable panels
-			testCar.carImGui();
-
-			// NOTE: the imgui bible - beau
-			//ImGui::ShowDemoWindow();
-
-			// Graphics imgui panel for graphics tuneables
-			gs.ImGuiPanel();
-
-			//ImGui Panels for tuning
-			//reloadVehicleJSON();
-			vehicleTuning(testCar.m_Vehicle, physicsSystem);
-			engineTuning(testCar.m_Vehicle);
-
-			// Obstacles ImGui
-			obstaclesImGui(mainScene, physicsSystem);
 		}
 		/*
 		* Render the UI. I am doing this here for now but I might move it.
