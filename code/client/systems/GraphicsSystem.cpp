@@ -11,7 +11,6 @@
 #include <glm/gtx/quaternion.hpp>
 #define GLM_ENABLE_EXPERIMENTAL
 #include <glm/gtx/string_cast.hpp>
-#include "components.h"
 
 #include <assimp/Importer.hpp>
 #include <assimp/scene.h>
@@ -22,6 +21,11 @@
 #include "stb_image.h"
 #include <cstring>
 #include <fstream>
+#include <iostream>
+#include <ctype.h>
+
+
+#include "graphics/Texture.h"
 
 //DEBUG IMPORTS
 #include "graphics/snippetrender/SnippetRender.h"

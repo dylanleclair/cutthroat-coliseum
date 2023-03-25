@@ -5,9 +5,7 @@
 #include "../client/Window.h"
 #include "graphics/Camera.h"
 #include "graphics/ShaderProgram.h"
-#include "graphics/Texture.h"
 #include "components.h"
-#include <iostream>
 
 #include <assimp/Importer.hpp>
 #include <assimp/scene.h>
@@ -15,8 +13,6 @@
 
 #include "PxPhysicsAPI.h"
 
-#include <glm/gtc/quaternion.hpp> 
-#include <glm/gtx/quaternion.hpp>
 
 
 
