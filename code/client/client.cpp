@@ -24,6 +24,7 @@
 #include "utils/Time.h"
 #include "Input.h"
 #include "utils/PxConversionUtils.h"
+#include "glm/gtx/string_cast.hpp"
 
 #include "systems/PhysicsSystem.h"
 
@@ -152,16 +153,6 @@ int main(int argc, char* argv[]) {
 
 	std::cout << "Component initalization finished\n";
 
-	//GRAPHICS TESTING
-	ecs::Entity TEST_e = mainScene.CreateEntity();
-	RenderModel TEST_r = RenderModel();
-	TransformComponent TEST_t = TransformComponent();
-	GraphicsSystem::importOBJ(TEST_r, "TEST.obj");
-	mainScene.AddComponent(TEST_e.guid, TEST_r);
-	mainScene.AddComponent(TEST_e.guid, TEST_t);
-
-
-
 	//make an entity
 	ecs::Entity car_e = mainScene.CreateEntity();
 	ecs::Entity level_e = mainScene.CreateEntity();
@@ -253,7 +244,6 @@ int main(int argc, char* argv[]) {
 	RenderModel car_r = RenderModel();
 	GraphicsSystem::importOBJ(car_r, "alpha_cart.obj");
 	car_r.setModelColor(glm::vec3(0.5f, 0.5f, 0.f));
-	car_r.isShadowed(true);
 	mainScene.AddComponent(car_e.guid, car_r);
 	TransformComponent car_t = TransformComponent(testCar.getVehicleRigidBody());
 	car_t.setPosition(glm::vec3(0, -0.3f, 0.5f));
@@ -636,7 +626,22 @@ int main(int argc, char* argv[]) {
 		float percent_rot = testCar.m_Vehicle.mEngineDriveState.engineState.rotationSpeed / testCar.m_Vehicle.mEngineDriveParams.engineParams.maxOmega;
 		percent_rot = 1.f - percent_rot;
 		//testCar.m_Vehicle.mBaseParams.steerResponseParams.maxResponse = percent_rot * 1.52;
+		//std::cout << glm::to_string(PxtoGLM(testCar.m_Vehicle.mBaseState.wheelLocalPoses[2].localPose.q)) << '\n';
+		//tire animation logic
+		RenderModel& rightTireModel = mainScene.GetComponent<RenderModel>(car_e.guid);
+		glm::mat4 rightWheelRotation = glm::toMat4(PxtoGLM(testCar.m_Vehicle.mBaseState.wheelLocalPoses[2].localPose.q));
+		glm::mat4 rightWheelTranslation = glm::translate(glm::mat4(1), glm::vec3(0.31741, -0.18433, 0.28755));
+		rightTireModel.setMeshLocalTransformation(glm::inverse(rightWheelTranslation) * rightWheelRotation * rightWheelTranslation, "rightWheel");
 
+		RenderModel& leftTireModel = mainScene.GetComponent<RenderModel>(car_e.guid);
+		glm::mat4 leftWheelRotation = glm::toMat4(PxtoGLM(testCar.m_Vehicle.mBaseState.wheelLocalPoses[3].localPose.q));
+		glm::mat4 leftWheelTranslation = glm::translate(glm::mat4(1), glm::vec3(-0.31741, -0.18433, 0.28755));
+		leftTireModel.setMeshLocalTransformation(glm::inverse(leftWheelTranslation)* leftWheelRotation* leftWheelTranslation, "leftWheel");
+
+		RenderModel& frontTireModel = mainScene.GetComponent<RenderModel>(car_e.guid);
+		glm::mat4 frontWheelRotation = glm::toMat4(PxtoGLM(testCar.m_Vehicle.mBaseState.wheelLocalPoses[0].localPose.q));
+		glm::mat4 frontWheelTranslation = glm::translate(glm::mat4(1), glm::vec3(-0.026044, -0.18433, -0.92589));
+		frontTireModel.setMeshLocalTransformation(glm::inverse(frontWheelTranslation)* frontWheelRotation* frontWheelTranslation, "frontWheel");
 		//tire track logic
 		static bool previousState[3] = { false, false, false };
 		VFXTextureStrip& frontTireTracks = mainScene.GetComponent<VFXTextureStrip>(frontTireTrack.guid);

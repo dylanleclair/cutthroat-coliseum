@@ -69,6 +69,7 @@ GraphicsSystem::GraphicsSystem(Window& _window) :
 	follow_cam_y = 6.f;
 	follow_cam_z = -16.f;
 	follow_correction_strength = 40.f;
+	maximum_follow_distance = 10;
 	front_face = false;
 	back_face = true;
 
@@ -127,9 +128,9 @@ GraphicsSystem::GraphicsSystem(Window& _window) :
 	// light depth texture
 	glGenTextures(1, &gLightDepth);
 	glBindTexture(GL_TEXTURE_2D, gLightDepth);
-	glTexImage2D(GL_TEXTURE_2D, 0, GL_DEPTH_COMPONENT, 1024, 1024, 0, GL_DEPTH_COMPONENT, GL_FLOAT, NULL);
-	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
-	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+	glTexImage2D(GL_TEXTURE_2D, 0, GL_DEPTH_COMPONENT, 4096, 4096, 0, GL_DEPTH_COMPONENT, GL_HALF_FLOAT, NULL);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_BORDER);
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_BORDER);
 	float borderColor[] = { 1, 1, 1, 1 };
@@ -554,9 +555,9 @@ void GraphicsSystem::Update(ecs::Scene& scene, float deltaTime) {
 		glClear(GL_DEPTH_BUFFER_BIT);
 		glEnable(GL_DEPTH_TEST);
 		glEnable(GL_CULL_FACE);
-		glCullFace(GL_BACK);
-		glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
-		glViewport(0, 0, 1024, 1024);
+		glCullFace(GL_FRONT);
+		glPolygonMode(GL_BACK, GL_FILL);
+		glViewport(0, 0, 4096, 4096);
 		GLuint modelUniform = glGetUniformLocation(GLuint(shadowGShader), "M");
 		GLuint viewUniform = glGetUniformLocation(GLuint(shadowGShader), "V");
 		GLuint perspectiveUniform = glGetUniformLocation(GLuint(shadowGShader), "P");
@@ -568,11 +569,11 @@ void GraphicsSystem::Update(ecs::Scene& scene, float deltaTime) {
 			TransformComponent& trans = scene.GetComponent<TransformComponent>(entityGuid);
 
 			glm::mat4 M = glm::translate(glm::mat4(1), trans.getTranslation()) * toMat4(trans.getRotation()) * glm::scale(glm::mat4(1), trans.getScale());
-			glUniformMatrix4fv(modelUniform, 1, GL_FALSE, glm::value_ptr(M));
 
 			//loop through each mesh in the renderComponent
 			for each (Mesh mesh in comp.meshes) {
 				mesh.geometry->bind();
+				glUniformMatrix4fv(modelUniform, 1, GL_FALSE, glm::value_ptr(M * mesh.localTransformation));
 				glDrawElements(GL_TRIANGLES, mesh.numberOfIndicies, GL_UNSIGNED_INT, 0);
 			}
 		}
@@ -649,9 +650,7 @@ void GraphicsSystem::Update(ecs::Scene& scene, float deltaTime) {
 
 			//properties the geometry is ALWAYS going to have
 			glm::mat4 M = glm::translate(glm::mat4(1), trans.getTranslation()) * toMat4(trans.getRotation()) * glm::scale(glm::mat4(1), trans.getScale());
-			glUniformMatrix4fv(modelUniform, 1, GL_FALSE, glm::value_ptr(M));
-			glm::mat3 normalsMatrix = glm::mat3(glm::transpose(glm::inverse(M)));
-			glUniformMatrix3fv(normalMatUniform, 1, GL_FALSE, glm::value_ptr(normalsMatrix));
+
 			//bind the light depth texture
 			glActiveTexture(GL_TEXTURE0);
 			glBindTexture(GL_TEXTURE_2D, gLightDepth);
@@ -659,6 +658,9 @@ void GraphicsSystem::Update(ecs::Scene& scene, float deltaTime) {
 			//loop through each mesh in the renderComponent
 			for each (Mesh mesh in comp.meshes) {
 				mesh.geometry->bind();
+				glUniformMatrix4fv(modelUniform, 1, GL_FALSE, glm::value_ptr(M * mesh.localTransformation));
+				glm::mat3 normalsMatrix = glm::mat3(glm::transpose(glm::inverse(M * mesh.localTransformation)));
+				glUniformMatrix3fv(normalMatUniform, 1, GL_FALSE, glm::value_ptr(normalsMatrix));
 				if ((mesh.properties & Mesh::meshProperties::m_hasTexture) != 0 && mesh.textureIndex != -1) {
 					glActiveTexture(GL_TEXTURE1);
 					comp.textures[mesh.textureIndex]->bind();
@@ -892,6 +894,7 @@ void GraphicsSystem::processNode(aiNode* node, const aiScene* scene, RenderModel
 		}
 		
 		int ID = _component.attachMesh(geometry);
+		_component.meshes[_component.getMeshIndex(ID)].name = mesh->mName.C_Str();
 		// process material
 
 
