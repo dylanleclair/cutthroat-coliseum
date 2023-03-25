@@ -3,6 +3,9 @@
 #include "glm/glm.hpp"
 #include "../../utils/PxConversionUtils.h"
 
+#include "imgui.h"
+#include "imgui_impl_sdl.h"
+#include "imgui_impl_opengl3.h"
 
 const char* gVehicleDataPath = "vehicledata";
 
@@ -409,7 +412,7 @@ void Car::Update(Guid carGuid, ecs::Scene& scene, float deltaTime)
       }
   }
 
-
+    auto carPose = m_Vehicle.mPhysXState.physxActor.rigidBody->getGlobalPose();
 
   // Keyboard Controls
   if (a_key && !c_tethered)
@@ -427,7 +430,7 @@ void Car::Update(Guid carGuid, ecs::Scene& scene, float deltaTime)
   }
 
   if (f_key || SDL_GameControllerGetButton(ControllerInput::controller, SDL_CONTROLLER_BUTTON_Y)) {
-      checkFlipped(m_Vehicle.mPhysXState.physxActor.rigidBody->getGlobalPose());
+    checkFlipped(carPose);
   }
 
   // An attempt at replicating the b face button function
@@ -477,6 +480,7 @@ glm::vec3 Car::getForwardDir()
     
     return headingDir;
 }
+
 
 void Car::checkFlipped(PxTransform carPose)
 {

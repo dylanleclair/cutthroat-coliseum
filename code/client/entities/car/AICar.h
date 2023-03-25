@@ -46,8 +46,6 @@ struct NavPath {
             nextCP = CheckPoint{nextIndex, checkpoints[nextIndex]};
             distanceToCurrent = glm::distance(currentCheckpoint.position, currentPos);
             distanceToNext = glm::distance(nextCP.position, currentPos);
-            // std::cout << "dist to next: " << distanceToNext << std::endl;
-            // std::cout << "dist to current: " << distanceToNext << std::endl;
         }
         return nextCP.position;
     }
@@ -60,22 +58,10 @@ struct NavPath {
 
 struct AICar : Car {
 
-    // TODO(dylan): add a renderer to render the path the AI car is following
-
     NavPath* m_navPath;
-    int m_lapCount = 1;
 
     AICar() : Car() {}
-        // all the physics stuff lives in the physics system
-    // AICar(physics::PhysicsSystem* physicsSystem, PathfindingComponent& pathfinder) :  Car()
-    // {
-    //     // The vehicle with engine 
-    //     bool success = initVehicle();
-    //     if (!success)
-    //     {
-    //         std::cerr << "error initializing vehicle!" << std::endl;
-    //     }
-    // }
+
     virtual void Update(Guid carGuid, ecs::Scene& scene, float deltaTime);
 
     void Initialize(NavPath* pathToFollow); 

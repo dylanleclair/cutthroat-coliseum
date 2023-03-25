@@ -57,19 +57,6 @@ Command AICar::pathfind(glm::vec3 currentPosition)
 
     glm::vec3 targetPos = m_navPath->getNextPoint(currentPosition,didLap);
 
-    if (didLap)
-    {
-        m_lapCount++;
-        std::cout << "AI completed a lap!" << std::endl;
-        std::cout << "AI starting lap: " << m_lapCount << std::endl;
-    }
-
-    // Commenting this out because we have GUID in the render loop for this
-    //if (m_lapCount == 3)
-    //{
-    //    std::cout << "AI wins!" << std::endl;
-    //}
-
     std::vector<glm::vec3> path = pathfinding::AStar<glm::vec3>(roundPositionToGraph(currentPosition), roundPositionToGraph(targetPos), euclideanBasic, AISystem::generateNearby);
 
     // find rotation matrix of car
@@ -85,18 +72,28 @@ Command AICar::pathfind(glm::vec3 currentPosition)
     
     // only drive to the target if it's far enough away (for now)
 
-    command.throttle = .7f;
 
+    // need to scale down throttle based on the angle we're trying to turn
+    // this will help the AI turn!
+
+    command.throttle = 1.f;
 
     targetDir.normalize();
 
+    // radians!!
+
     float angleBetween = targetDir.dot(GLMtoPx(headingDir));
+    float actualAngle = acos(angleBetween);
+
+    std::cout << "actual angle " << actualAngle << std::endl;
+    std::cout << "angle between " << angleBetween << std::endl;
 
     // if almost parallel, don't worry about steering
-    if (abs(angleBetween) > 0.95f)
+    if (abs(actualAngle) < 0.10f)
     {
         command.steer = 0.0f;
     } else {
+        
         PxVec3 cross = GLMtoPx(headingDir).cross(targetDir);
         if (cross.y < 0)
         {
