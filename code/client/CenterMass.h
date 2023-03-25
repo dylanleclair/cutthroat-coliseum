@@ -1,4 +1,4 @@
-#pragam once
+#pragma once
 
 #include "core/ecs.h"
 #include "PxPhysicsAPI.h"
