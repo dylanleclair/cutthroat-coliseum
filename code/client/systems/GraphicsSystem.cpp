@@ -21,6 +21,7 @@
 #include <stdio.h>
 #include "stb_image.h"
 #include <cstring>
+#include <fstream>
 
 //DEBUG IMPORTS
 #include "graphics/snippetrender/SnippetRender.h"
@@ -348,6 +349,7 @@ void GraphicsSystem::ImGuiPanel() {
 		ImGui::InputFloat("Y Distance: ", &follow_cam_y);
 		ImGui::InputFloat("Z Distance: ", &follow_cam_z);
 		ImGui::InputFloat("Correction Strength", &follow_correction_strength);
+		ImGui::InputFloat("max follow distance", &maximum_follow_distance);
 	}
 
 	ImGui::End();
@@ -470,13 +472,13 @@ void GraphicsSystem::Update(ecs::Scene& scene, float deltaTime) {
 			glm::vec3 cameraTargetLocation = glm::translate(glm::mat4(1), trans.getTranslation()) * toMat4(trans.getRotation()) * glm::vec4(follow_cam_x, follow_cam_y, follow_cam_z, 1);
 			//calculate the speed of the car
 			float speed = glm::distance(previousCarPosition, trans.getTranslation());
-			//calculate how far the camera is from the target position
-			float cameraOffset = glm::distance(cameraTargetLocation, cameras[0].getPos());
-			//use a sigmoid function to determine how much to move the camera to the target position (can't go higher than 1)
-			float correctionAmount = cameraOffset / (follow_correction_strength + cameraOffset);
-			//lerp the camera to a good location based on the correction amount
-			cameras[0].setPos(cameras[0].getPos() * (1-correctionAmount) + correctionAmount * cameraTargetLocation);
-
+			//calculate the vector from the cameras current position to the target position
+			glm::vec3 cameraOffset = cameras[0].getPos() - cameraTargetLocation;
+			if (glm::length(cameraOffset) != 0) {
+				float followDistance = (speed / (speed + follow_correction_strength)) * maximum_follow_distance;
+				cameraOffset = glm::normalize(cameraOffset) * followDistance;
+				cameras[0].setPos(cameraTargetLocation + cameraOffset);
+			}
 			//set the camera variables
 			previousCarPosition = trans.getTranslation();
 			V = glm::lookAt(cameras[0].getPos(), trans.getTranslation(), glm::vec3(0.0f, 1.0f, 0.0f));
@@ -946,6 +948,35 @@ void GraphicsSystem::importOBJ(CPU_Geometry& _geometry, const std::string _fileN
 	}
 
 	processNode(scene->mRootNode, scene, _geometry);
+}
+
+void GraphicsSystem::importSplineFromOBJ(CPU_Geometry& _geometry, std::string filename)
+{
+	std::string line;
+
+	// Read from the text file
+	std::ifstream inputfile("models/" + filename);
+
+	// Use a while loop together with the getline() function to read the file line by line
+	while (getline (inputfile, line)) {
+	// Output the text from the file
+	std::cout << line;
+
+	glm::vec3 vert;
+
+	int scanned = sscanf(line.c_str(), "v %f %f %f", &vert.x, &vert.y, &vert.z);
+
+	if (scanned == 3)
+	{
+		_geometry.verts.push_back(vert);
+	}
+
+
+	}
+	// Close the file
+	inputfile.close(); 
+	_geometry.verts.push_back(_geometry.verts[0]);
+
 }
 
 

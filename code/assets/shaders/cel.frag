@@ -8,7 +8,7 @@ uniform sampler2D gDepth;
 uniform sampler2D gShadow;
 uniform sampler2D gVFXColor;
 uniform sampler2D gVFXDepth;
-
+uniform samplerCube cubemap;
 
 //variable uniforms
 uniform float normalDiffWeight = 1;
@@ -21,6 +21,7 @@ uniform vec3 lightDir;
 uniform float ambiantStr;
 uniform float diffuseWeight;
 uniform int numQuantizedSplits;
+uniform vec3 cameraDirection;
 
 in vec2 tc;
 
@@ -40,10 +41,8 @@ void main()
 {             
 	float tdepth = LinearizeDepth(texture(gDepth, tc).x);
 	float VFXdepth = LinearizeDepth(texture(gVFXDepth, tc).x);
-	if(tdepth - VFXdepth > 0) {
-		color = vec4(texture(gVFXColor, tc).xyz, 1);
 
-	} else {
+
 		vec3 tposition = texture(gPosition, tc).xyz;
 		vec3 tnormal = texture(gNormal, tc).xyz;
 		vec3 tcolor = texture(gColor, tc).xyz;
@@ -78,13 +77,15 @@ void main()
 
 		//quantize the color
 		vec3 calculatedCol = (diff + ambiant) * tcolor;
-		vec3 quantized = (ceil(calculatedCol * numQuantizedSplits) - 1)/(numQuantizedSplits - 1);    
-	
+		vec3 quantized = (ceil(calculatedCol * numQuantizedSplits) - 1)/(numQuantizedSplits - 1);   
+
 		//calculate final color
 		//if shadow = 1 then the pixel is in shadow
 		color = mix(vec4(mix(quantized, gooch, goochWeight), 1),vec4(0,0,0,1),outline) * ((1-shadow) + (shadow * 0.4));
+		if(tdepth - VFXdepth > 0) 
+			color = vec4(texture(gVFXColor, tc).xyz, 1);
 		//color = vec4(tcolor, 1) * ((1-shadow) + (shadow * 0.8));
 		//color = vec4(shadow, 0, 0, 1);
-	}
+	
 
 }

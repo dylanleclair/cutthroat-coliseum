@@ -74,6 +74,7 @@ bool Car::initVehicle(PxVec3 initialPosition)
   }
 
   // Apply a start pose to the physx actor and add it to the physx scene.
+  //this is where the name of the car is applied to the actor
   PxTransform pose(initialPosition, PxQuat(PxIdentity));
   m_Vehicle.setUpActor(*physicsSystem->m_Scene, pose, m_vehicleName);
 
@@ -129,23 +130,96 @@ PxRigidBody* Car::getVehicleRigidBody()
 }
 
 void Car::carImGui() {
-    ImGui::Begin("Car commands tuner", nullptr);
-    ImGui::Text("left stick horizontal tilt: %f", carAxis);
-    //ImGui::Text("Car Throttle: %f", controller_throttle);
-    //ImGui::Text("Car Brake: %f", controller_brake);
-    ImGui::Text("Car Location: %f, %f", m_Vehicle.mPhysXState.physxActor.rigidBody->getGlobalPose().p.x, m_Vehicle.mPhysXState.physxActor.rigidBody->getGlobalPose().p.z);
-    ImGui::Text("Current Gear: %d", m_Vehicle.mEngineDriveState.gearboxState.currentGear);
-    ImGui::Text("Current engine rotational speed: %f", m_Vehicle.mEngineDriveState.engineState.rotationSpeed);
-    ImGui::Text("Center of Gravity: %f, %f, %f", m_Vehicle.mPhysXParams.physxActorCMassLocalPose.p.x,
-        m_Vehicle.mPhysXParams.physxActorCMassLocalPose.p.y,
-        m_Vehicle.mPhysXParams.physxActorCMassLocalPose.p.z);
-    ImGui::Text("Suspension force x: %f", m_Vehicle.mBaseState.suspensionForces->force.x);
-    ImGui::Text("Suspension force y: %f", m_Vehicle.mBaseState.suspensionForces->force.y);
-    ImGui::Text("Suspension force z: %f", m_Vehicle.mBaseState.suspensionForces->force.z);
-    ImGui::Text("Rotation x: %f, y: %f, z: %f", m_Vehicle.mPhysXState.physxActor.rigidBody->getGlobalPose().q.x, m_Vehicle.mPhysXState.physxActor.rigidBody->getGlobalPose().q.y,
-                                                m_Vehicle.mPhysXState.physxActor.rigidBody->getGlobalPose().q.z);
-    ImGui::Text("On the ground ?: %s", m_Vehicle.mBaseState.roadGeomStates->hitState ? "true" : "false");
+    ImGui::Begin("Car");
+    if (ImGui::TreeNode("Debug Readouts")) {        
+        ImGui::Text("left stick horizontal tilt: %f", carAxis);
+        //ImGui::Text("Car Throttle: %f", controller_throttle);
+        //ImGui::Text("Car Brake: %f", controller_brake);
+        ImGui::Text("Car Location: %f, %f", m_Vehicle.mPhysXState.physxActor.rigidBody->getGlobalPose().p.x, m_Vehicle.mPhysXState.physxActor.rigidBody->getGlobalPose().p.z);
+        ImGui::Text("Current Gear: %d", m_Vehicle.mEngineDriveState.gearboxState.currentGear);
+        ImGui::Text("Current engine rotational speed: %f", m_Vehicle.mEngineDriveState.engineState.rotationSpeed);
+        ImGui::Text("Center of Gravity: %f, %f, %f", m_Vehicle.mPhysXParams.physxActorCMassLocalPose.p.x,
+            m_Vehicle.mPhysXParams.physxActorCMassLocalPose.p.y,
+            m_Vehicle.mPhysXParams.physxActorCMassLocalPose.p.z);
+        ImGui::Text("Suspension force x: %f", m_Vehicle.mBaseState.suspensionForces->force.x);
+        ImGui::Text("Suspension force y: %f", m_Vehicle.mBaseState.suspensionForces->force.y);
+        ImGui::Text("Suspension force z: %f", m_Vehicle.mBaseState.suspensionForces->force.z);
+        ImGui::Text("Rotation x: %f, y: %f, z: %f", m_Vehicle.mPhysXState.physxActor.rigidBody->getGlobalPose().q.x, m_Vehicle.mPhysXState.physxActor.rigidBody->getGlobalPose().q.y,
+            m_Vehicle.mPhysXState.physxActor.rigidBody->getGlobalPose().q.z);
+        ImGui::Text("On the ground ?: %s", m_Vehicle.mBaseState.roadGeomStates->hitState ? "true" : "false");
+        ImGui::Text("Percent Rot: %f", 1.f - m_Vehicle.mEngineDriveState.engineState.rotationSpeed / m_Vehicle.mEngineDriveParams.engineParams.maxOmega);
+        ImGui::Text("Steer Response: %f", m_Vehicle.mBaseParams.steerResponseParams.maxResponse);
+        ImGui::TreePop();
+    }
+    if (ImGui::TreeNode("Parameter Switching")) {
+        if (ImGui::Button("Default parameters")) {
+            baseSetup();
+        }
+        if (ImGui::Button("Setup 1")) {
+            setup1();
+        }
+
+        ImGui::TreePop();
+    }
+
     ImGui::End();
+}
+
+void Car::baseSetup() {
+    m_Vehicle.mBaseParams.rigidBodyParams.mass = 1500.f;
+    m_Vehicle.mBaseParams.rigidBodyParams.moi.x = 3200.0f;
+    m_Vehicle.mBaseParams.rigidBodyParams.moi.y = 3414.0f;
+    m_Vehicle.mBaseParams.rigidBodyParams.moi.z = 750.0f;
+
+    m_Vehicle.mBaseParams.wheelParams[0].radius = 0.3432520031929016;
+    m_Vehicle.mBaseParams.wheelParams[0].halfWidth = 0.15768450498580934;
+    m_Vehicle.mBaseParams.wheelParams[1].radius = 0.3432520031929016;
+    m_Vehicle.mBaseParams.wheelParams[1].halfWidth = 0.15768450498580934;
+    m_Vehicle.mBaseParams.wheelParams[2].radius = 0.3432520031929016;
+    m_Vehicle.mBaseParams.wheelParams[2].halfWidth = 0.15768450498580934;
+    m_Vehicle.mBaseParams.wheelParams[3].radius = 0.3432520031929016;
+    m_Vehicle.mBaseParams.wheelParams[3].halfWidth = 0.15768450498580934;
+
+    m_Vehicle.mBaseParams.steerResponseParams.maxResponse = 0.52f;
+    m_Vehicle.mBaseParams.brakeResponseParams->wheelResponseMultipliers[0] = 1.0f;
+    m_Vehicle.mBaseParams.brakeResponseParams->wheelResponseMultipliers[1] = 1.0f;
+    m_Vehicle.mBaseParams.tireForceParams->latStiffY = 143930.84033118f;
+
+    m_Vehicle.mEngineDriveParams.engineParams.peakTorque = 500.f;
+    m_Vehicle.mEngineDriveParams.engineParams.maxOmega = 600.f;
+    m_Vehicle.mEngineDriveParams.autoboxParams.latency = 2.0f;
+    m_Vehicle.mEngineDriveParams.gearBoxParams.switchTime = 0.5f;
+}
+
+void Car::setup1() {
+    // For rigid body moi calculations
+    // x= (L^2 + H^2)*M/12, y=(W^2+L^2)*M/12, z=(H^2+W^2)*M/12
+    //width = 1.68
+    //height = 1.3
+    //length = 2.74
+    m_Vehicle.mBaseParams.rigidBodyParams.mass = 500.f;
+    m_Vehicle.mBaseParams.rigidBodyParams.moi.x = 3200;
+    m_Vehicle.mBaseParams.rigidBodyParams.moi.y = 2000;
+    m_Vehicle.mBaseParams.rigidBodyParams.moi.z = 3200;
+
+    m_Vehicle.mBaseParams.wheelParams[0].radius = .6f;
+    m_Vehicle.mBaseParams.wheelParams[0].halfWidth = .3f;
+    m_Vehicle.mBaseParams.wheelParams[1].radius = .6f;
+    m_Vehicle.mBaseParams.wheelParams[1].halfWidth = .3f;
+    m_Vehicle.mBaseParams.wheelParams[2].radius = .6f;
+    m_Vehicle.mBaseParams.wheelParams[2].halfWidth = .3f;
+    m_Vehicle.mBaseParams.wheelParams[3].radius = .6f;
+    m_Vehicle.mBaseParams.wheelParams[3].halfWidth = .3f;
+
+    m_Vehicle.mBaseParams.steerResponseParams.maxResponse = 0.6f;
+    m_Vehicle.mBaseParams.brakeResponseParams->wheelResponseMultipliers[0] = 0.5f;
+    m_Vehicle.mBaseParams.brakeResponseParams->wheelResponseMultipliers[1] = 0.5f;
+    m_Vehicle.mBaseParams.tireForceParams->latStiffY = 3186990.625f;
+
+    m_Vehicle.mEngineDriveParams.engineParams.peakTorque = 500.f;
+    m_Vehicle.mEngineDriveParams.engineParams.maxOmega = 600.f;
+    m_Vehicle.mEngineDriveParams.autoboxParams.latency = 0.5f;
+    m_Vehicle.mEngineDriveParams.gearBoxParams.switchTime = 0.2f;
 }
 
 void Car::setClosestTetherPoint(PxTransform _loc) {
@@ -203,13 +277,15 @@ bool Car::TetherJump() {
 
     // if v_pos.p.y is to prevent jumping if the car is already in the air
     // This is a very messy way of doing this - there might be a flag for if the car is in the air
-    if (v_pos.p.y < 2.0f) {
+    if (m_Vehicle.mBaseState.roadGeomStates->hitState) {
         // Caution force is proportional to the mass of the car, the lower the mass, the harder the force will be applied
         // TODO:: Make a function to calculate approriate force to be passed based on vehicle mass
-        m_Vehicle.mPhysXState.physxActor.rigidBody->addForce(PxVec3(0.f, 4000.f, 0.f), PxForceMode::eIMPULSE, true);
+        m_Vehicle.mPhysXState.physxActor.rigidBody->addForce(PxVec3(0.f, 8.f, 0.f), PxForceMode::eVELOCITY_CHANGE, true);
         // applying angular dampening prevents the car from rotating while in the air
         // it will prevent the car from turning when landing however
         m_Vehicle.mPhysXState.physxActor.rigidBody->setAngularDamping(20.f); 
+        // Prevents the car from spinning around the y axis while in the air
+        m_Vehicle.mPhysXState.physxActor.rigidBody->setAngularDamping(10000.f);
         //m_Vehicle.mPhysXState.physxActor.rigidBody->addTorque(PxVec3(0.f, 10.f, 0.f), PxForceMode::eVELOCITY_CHANGE, true);
     }
     return true;
@@ -265,7 +341,7 @@ void Car::Update(Guid carGuid, ecs::Scene& scene, float deltaTime)
 
       // Controller deadzone to avoid controller drift when
       // stick is at rest
-      if (carAxis < 0.1f && carAxis > -0.1f) {
+      if (carAxis < 0.2f && carAxis > -0.2f) {
           carAxis = 0.f;
       }
   }
@@ -389,6 +465,19 @@ void Car::Update(Guid carGuid, ecs::Scene& scene, float deltaTime)
 }
 
 
+glm::vec3 Car::getForwardDir()
+{
+        // find rotation matrix of car
+    PxTransform carPose = this->m_Vehicle.mPhysXState.physxActor.rigidBody->getGlobalPose();
+
+    // find the direction vector of the vehicle
+    glm::quat vehicleQuat = PxtoGLM(carPose.q);
+    glm::mat4 vehicleRotM = glm::toMat4(vehicleQuat);
+    glm::vec3 headingDir = glm::vec3{vehicleRotM * glm::vec4{0.f, 0.f, -1.f, 1.f}};
+    
+    return headingDir;
+}
+
 void Car::checkFlipped(PxTransform carPose)
 {
 
@@ -410,4 +499,11 @@ void Car::checkFlipped(PxTransform carPose)
         // need to subtract y components
         m_Vehicle.mPhysXState.physxActor.rigidBody->setGlobalPose(carPose);
     }
+}
+
+
+glm::vec3 Car::getPosition()
+{
+    PxTransform carPose = m_Vehicle.mPhysXState.physxActor.rigidBody->getGlobalPose();
+    return PxtoGLM(carPose.p);
 }

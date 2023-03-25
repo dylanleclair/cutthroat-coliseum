@@ -21,9 +21,15 @@ struct LevelCollider
     // physx::PxTriangleMesh * cookLevel(std::vector<physx::PxVec3> levelVertices, std::vector<physx::PxU32> levelIndices, physx::PxPhysics* gPhysics, physx::PxCooking *gCooking);
     // void LevelCollider::initLevelRigidBody(physx::PxPhysics* gPhysics, physx::PxScene* scene, physx::PxMaterial* material, physx::PxTriangleMesh* levelMesh);
 
+    void LevelCollider::release();
+    void LevelCollider::initLevelRigidBody(physx::PxTriangleMesh* levelMesh, physx::PxMaterial* material);
+
 
 private:
     std::vector<physx::PxVec3> levelVertices = std::vector<physx::PxVec3>();
     std::vector<physx::PxU32> levelIndices = std::vector<physx::PxU32>();
     PhysicsSystem& m_physicsSystem;
+
+    physx::PxShape* m_levelShape;
+    physx::PxRigidStatic* m_level;
 };
