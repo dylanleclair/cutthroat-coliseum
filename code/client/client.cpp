@@ -124,6 +124,15 @@ int main(int argc, char* argv[]) {
 
 	std::cout << "Component initalization finished\n";
 
+	//GRAPHICS TESTING
+	ecs::Entity TEST_e = mainScene.CreateEntity();
+	RenderModel TEST_r = RenderModel();
+	TransformComponent TEST_t = TransformComponent();
+	GraphicsSystem::importOBJ(TEST_r, "TEST.obj");
+	mainScene.AddComponent(TEST_e.guid, TEST_r);
+	mainScene.AddComponent(TEST_e.guid, TEST_t);
+
+
 
 	//make an entity
 	ecs::Entity car_e = mainScene.CreateEntity();

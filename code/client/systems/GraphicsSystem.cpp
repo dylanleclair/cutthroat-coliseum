@@ -18,8 +18,40 @@
 #include <assimp/postprocess.h>
 #include <PxPhysicsAPI.h>
 
+#include <stdio.h>
+#include "stb_image.h"
+#include <cstring>
+
 //DEBUG IMPORTS
 #include "graphics/snippetrender/SnippetRender.h"
+
+
+
+void loadCubemap(std::vector<std::string> faces)
+{
+	int width, height, nrChannels;
+	for (unsigned int i = 0; i < faces.size(); i++)
+	{
+		unsigned char* data = stbi_load(faces[i].c_str(), &width, &height, &nrChannels, 0);
+		if (data)
+		{
+			glTexImage2D(GL_TEXTURE_CUBE_MAP_POSITIVE_X + i,
+				0, GL_RGB, width, height, 0, GL_RGB, GL_UNSIGNED_BYTE, data
+			);
+			stbi_image_free(data);
+		}
+		else
+		{
+			std::cout << "Cubemap tex failed to load at path: " << faces[i] << std::endl;
+			stbi_image_free(data);
+		}
+	}
+	glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+	glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+	glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
+	glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
+	glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_WRAP_R, GL_CLAMP_TO_EDGE);
+}
 
 GraphicsSystem::GraphicsSystem(Window& _window) :
 	modelShader("shaders/lighting_simple.vert", "shaders/lighting_simple.frag"),
@@ -28,7 +60,8 @@ GraphicsSystem::GraphicsSystem(Window& _window) :
 	gShader("shaders/gShader.vert", "shaders/gShader.frag"),
 	celShader("shaders/cel.vert", "shaders/cel.frag"),
 	shadowGShader("shaders/shadowMap.vert", "shaders/shadowMap.frag"),
-	VFXshader("shaders/VFX.vert", "shaders/VFX.frag")
+	VFXshader("shaders/VFX.vert", "shaders/VFX.frag"),
+	skyboxShader("shaders/skybox.vert", "shaders/skybox.frag")
 {
 	windowSize = _window.getSize();
 	follow_cam_x = 0.f;
@@ -41,56 +74,56 @@ GraphicsSystem::GraphicsSystem(Window& _window) :
 	/*
 	* create all textures
 	*/
-	// gposition buffer
+	// gposition texture
 	glGenTextures(1, &gPosition);
 	glBindTexture(GL_TEXTURE_2D, gPosition);
 	glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA16F, windowSize.x, windowSize.y, 0, GL_RGBA, GL_FLOAT, NULL);
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
 
-	// gnormal buffer
+	// gnormal texture
 	glGenTextures(1, &gNormal);
 	glBindTexture(GL_TEXTURE_2D, gNormal);
 	glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA16F, windowSize.x, windowSize.y, 0, GL_RGBA, GL_FLOAT, NULL);
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
 	
-	// gcolor buffer
+	// gcolor texture
 	glGenTextures(1, &gColor);
 	glBindTexture(GL_TEXTURE_2D, gColor);
 	glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, windowSize.x, windowSize.y, 0, GL_RGBA, GL_UNSIGNED_BYTE, NULL);
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
 	
-	// gshadow buffer
+	// gshadow texture
 	glGenTextures(1, &gShadow);
 	glBindTexture(GL_TEXTURE_2D, gShadow);
 	glTexImage2D(GL_TEXTURE_2D, 0, GL_RED, windowSize.x, windowSize.y, 0, GL_RED, GL_UNSIGNED_BYTE, NULL);
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
 	
-	// gdepth buffer
+	// gdepth texture
 	glGenTextures(1, &gDepth);
 	glBindTexture(GL_TEXTURE_2D, gDepth);
 	glTexImage2D(GL_TEXTURE_2D, 0, GL_DEPTH_COMPONENT, windowSize.x, windowSize.y, 0, GL_DEPTH_COMPONENT, GL_FLOAT, NULL);
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
 
-	// gVFXcolor buffer
+	// gVFXcolor texture
 	glGenTextures(1, &gVFXColor);
 	glBindTexture(GL_TEXTURE_2D, gVFXColor);
 	glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, windowSize.x, windowSize.y, 0, GL_RGBA, GL_UNSIGNED_BYTE, NULL);
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
 
-	//gVFXdepth buffer
+	//gVFXdepth texture
 	glGenTextures(1, &gVFXDepth);
 	glBindTexture(GL_TEXTURE_2D, gVFXDepth);
 	glTexImage2D(GL_TEXTURE_2D, 0, GL_DEPTH_COMPONENT, windowSize.x, windowSize.y, 0, GL_DEPTH_COMPONENT, GL_FLOAT, NULL);
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
 	 
-	// light depth buffer
+	// light depth texture
 	glGenTextures(1, &gLightDepth);
 	glBindTexture(GL_TEXTURE_2D, gLightDepth);
 	glTexImage2D(GL_TEXTURE_2D, 0, GL_DEPTH_COMPONENT, 1024, 1024, 0, GL_DEPTH_COMPONENT, GL_FLOAT, NULL);
@@ -101,7 +134,21 @@ GraphicsSystem::GraphicsSystem(Window& _window) :
 	float borderColor[] = { 1, 1, 1, 1 };
 	glTexParameterfv(GL_TEXTURE_2D, GL_TEXTURE_BORDER_COLOR, borderColor);
 
+	//skybox cubemap texture
+	glGenTextures(1, &skyboxCubemap);
+	glBindTexture(GL_TEXTURE_CUBE_MAP, skyboxCubemap);
+	glActiveTexture(GL_TEXTURE0);
+	std::vector<std::string> faces{"textures/-X.jpg","textures/+X.jpg","textures/+Y.jpg","textures/-Y.jpg","textures/-Z.jpg","textures/+Z.jpg"};
+	loadCubemap(faces);
+
+	glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+	glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+	glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
+	glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
+	glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_WRAP_R, GL_CLAMP_TO_EDGE);
+
 	glBindTexture(GL_TEXTURE_2D, 0);
+	glBindTexture(GL_TEXTURE_CUBE_MAP, 0);
 
 	/*
 	* create and configure g-buffer framebuffer
@@ -155,6 +202,12 @@ GraphicsSystem::GraphicsSystem(Window& _window) :
 	glBindFramebuffer(GL_FRAMEBUFFER, 0);
 	
 	/*
+	* configure the skybox shader input textures
+	*/
+	skyboxShader.use();
+	glUniform1i(glGetUniformLocation(GLuint(skyboxShader), "skybox"), 0);
+
+	/*
 	* configure the cel shader input textures
 	*/
 	celShader.use();
@@ -165,12 +218,13 @@ GraphicsSystem::GraphicsSystem(Window& _window) :
 	glUniform1i(glGetUniformLocation(GLuint(celShader), "gShadow"), 4);
 	glUniform1i(glGetUniformLocation(GLuint(celShader), "gVFXColor"), 5);
 	glUniform1i(glGetUniformLocation(GLuint(celShader), "gVFXDepth"), 6);
+	glUniform1i(glGetUniformLocation(GLuint(celShader), "cubemap"), 7);
 	
 	gShader.use();
 	glUniform1i(glGetUniformLocation(GLuint(gShader), "gShadowDepth"), 0);
 
 	//generate the data for the full screen render quad
-	static const GLfloat g_quad_vertex_buffer_data[] = {
+	const GLfloat g_quad_vertex_buffer_data[] = {
 	-1.0f, -1.0f, 0.0f,
 	1.0f, -1.0f, 0.0f,
 	-1.0f,  1.0f, 0.0f,
@@ -188,14 +242,14 @@ GraphicsSystem::GraphicsSystem(Window& _window) :
 	glEnableVertexAttribArray(0);
 
 	//generate the data for the billboard effect
-	static const GLfloat billboard_vertex_buffer_data[] = {
-		//x, y
-	-.5f, -.5f, 
-	.5f, -.5f, 
-	-.5f,  .5f, 
-	-.5f,  .5f, 
-	.5f, -.5f, 
-	.5f,  .5f, 
+	const GLfloat billboard_vertex_buffer_data[] = {
+		//x, y, z
+	-.5f, -.5f, 0, 0, 0,
+	.5f, -.5f, 0, 1, 0,
+	-.5f,  .5f, 0, 0, 1,
+	-.5f,  .5f, 0, 0, 1,
+	.5f, -.5f, 0, 1, 0,
+	.5f,  .5f, 0, 1, 1
 	};
 	glGenBuffers(1, &billboard_vertexBuffer);
 	glBindBuffer(GL_ARRAY_BUFFER, billboard_vertexBuffer);
@@ -203,7 +257,63 @@ GraphicsSystem::GraphicsSystem(Window& _window) :
 
 	glGenVertexArrays(1, &billboard_vertexArray);
 	glBindVertexArray(billboard_vertexArray);
-	glVertexAttribPointer(0, 2, GL_FLOAT, GL_FALSE, 2 * sizeof(float), (void*)0);
+	glVertexAttribPointer(0, 2, GL_FLOAT, GL_FALSE, 5 * sizeof(float), (void*)0);
+	glEnableVertexAttribArray(0);
+	glVertexAttribPointer(1, 2, GL_FLOAT, GL_FALSE, 5 * sizeof(float), (void*)(sizeof(float)*3));
+	glEnableVertexAttribArray(1);
+
+	//generate the data for the skybox
+	const float skyboxVertices[] = {
+		// positions          
+		-5.0f,  5.0f, -5.0f,
+		-5.0f, -5.0f, -5.0f,
+		 5.0f, -5.0f, -5.0f,
+		 5.0f, -5.0f, -5.0f,
+		 5.0f,  5.0f, -5.0f,
+		-5.0f,  5.0f, -5.0f,
+
+		-5.0f, -5.0f,  5.0f,
+		-5.0f, -5.0f, -5.0f,
+		-5.0f,  5.0f, -5.0f,
+		-5.0f,  5.0f, -5.0f,
+		-5.0f,  5.0f,  5.0f,
+		-5.0f, -5.0f,  5.0f,
+
+		 5.0f, -5.0f, -5.0f,
+		 5.0f, -5.0f,  5.0f,
+		 5.0f,  5.0f,  5.0f,
+		 5.0f,  5.0f,  5.0f,
+		 5.0f,  5.0f, -5.0f,
+		 5.0f, -5.0f, -5.0f,
+
+		-5.0f, -5.0f,  5.0f,
+		-5.0f,  5.0f,  5.0f,
+		 5.0f,  5.0f,  5.0f,
+		 5.0f,  5.0f,  5.0f,
+		 5.0f, -5.0f,  5.0f,
+		-5.0f, -5.0f,  5.0f,
+
+		-5.0f,  5.0f, -5.0f,
+		 5.0f,  5.0f, -5.0f,
+		 5.0f,  5.0f,  5.0f,
+		 5.0f,  5.0f,  5.0f,
+		-5.0f,  5.0f,  5.0f,
+		-5.0f,  5.0f, -5.0f,
+
+		-5.0f, -5.0f, -5.0f,
+		-5.0f, -5.0f,  5.0f,
+		 5.0f, -5.0f, -5.0f,
+		 5.0f, -5.0f, -5.0f,
+		-5.0f, -5.0f,  5.0f,
+		 5.0f, -5.0f,  5.0f
+	};
+	glGenBuffers(1, &skybox_vertexBuffer);
+	glBindBuffer(GL_ARRAY_BUFFER, skybox_vertexBuffer);
+	glBufferData(GL_ARRAY_BUFFER, sizeof(skyboxVertices), skyboxVertices, GL_STATIC_DRAW);
+
+	glGenVertexArrays(1, &skybox_vertexArray);
+	glBindVertexArray(skybox_vertexArray);
+	glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 3 * sizeof(float), (void*)0);
 	glEnableVertexAttribArray(0);
 }
 
@@ -479,6 +589,30 @@ void GraphicsSystem::Update(ecs::Scene& scene, float deltaTime) {
 		glEnable(GL_FRAMEBUFFER_SRGB);
 		glClearColor(0.50f, 0.80f, 0.97f, 0.0f);
 		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+		
+		
+		
+		glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
+		/*
+		* render the skybox using the same framebuffer as the generative stage
+		*/
+		skyboxShader.use();
+		glDisable(GL_CULL_FACE);
+		glDepthMask(GL_FALSE);
+		glBindVertexArray(skybox_vertexArray);
+		glBindBuffer(GL_ARRAY_BUFFER, skybox_vertexBuffer);
+		glActiveTexture(GL_TEXTURE0);
+		glBindTexture(GL_TEXTURE_CUBE_MAP, skyboxCubemap);
+		viewUniform = glGetUniformLocation(GLuint(skyboxShader), "V");
+		perspectiveUniform = glGetUniformLocation(GLuint(skyboxShader), "P");
+		glUniformMatrix4fv(perspectiveUniform, 1, GL_FALSE, glm::value_ptr(P));
+		glUniformMatrix4fv(viewUniform, 1, GL_FALSE, glm::value_ptr(glm::mat4(glm::mat3(V))));
+		//glUniformMatrix4fv(viewUniform, 1, GL_FALSE, glm::value_ptr(V));
+		glDrawArrays(GL_TRIANGLES, 0, 36);
+		glDepthMask(GL_TRUE);
+		glEnable(GL_DEPTH_TEST);
+
+		gShader.use();
 		if (front_face || back_face) {
 			glEnable(GL_CULL_FACE);
 			if (front_face) {
@@ -489,20 +623,16 @@ void GraphicsSystem::Update(ecs::Scene& scene, float deltaTime) {
 			}
 			else if (back_face && front_face) {
 				glCullFace(GL_FRONT_AND_BACK);
-			}			
+			}
 		}
 		else {
 			glDisable(GL_CULL_FACE);
 		}
-		
-		
-		glEnable(GL_DEPTH_TEST);
-		glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
-		gShader.use();
 		//get uniform locations
 		modelUniform = glGetUniformLocation(GLuint(gShader), "M");
 		viewUniform = glGetUniformLocation(GLuint(gShader), "V");
 		perspectiveUniform = glGetUniformLocation(GLuint(gShader), "P");
+		GLuint cameraDirectionUniform = glGetUniformLocation(GLuint(gShader), "cameraDirection");
 		GLuint normalMatUniform = glGetUniformLocation(GLuint(gShader), "normalMat");
 		GLuint shaderStateUniform = glGetUniformLocation(GLuint(gShader), "shaderState");
 		GLuint userColorUniform = glGetUniformLocation(GLuint(gShader), "userColor");
@@ -515,6 +645,8 @@ void GraphicsSystem::Update(ecs::Scene& scene, float deltaTime) {
 		//bind the light depth texture
 		glActiveTexture(GL_TEXTURE0);
 		glBindTexture(GL_TEXTURE_2D, gLightDepth);
+		glActiveTexture(GL_TEXTURE1);
+		
 
 		for (Guid entityGuid : ecs::EntitiesInScene<RenderModel,TransformComponent>(scene)) {
 			RenderModel& comp = scene.GetComponent<RenderModel>(entityGuid);
@@ -529,16 +661,15 @@ void GraphicsSystem::Update(ecs::Scene& scene, float deltaTime) {
 			//loop through each mesh in the renderComponent
 			for each (Mesh mesh in comp.meshes) {
 				mesh.geometry->bind();
-				//I've disabled textures for now since they aren't being used
-				//if ((mesh.properties & Mesh::meshProperties::m_hasTexture) != 0 && mesh.textureIndex != -1) {
-					//comp.textures[mesh.textureIndex]->bind();
-					//glUniform1ui(shaderStateUniform, 1);
-				//}
-				//else {
+				if ((mesh.properties & Mesh::meshProperties::m_hasTexture) != 0 && mesh.textureIndex != -1) {
+					comp.textures[mesh.textureIndex]->bind();
+					glUniform1ui(shaderStateUniform, 1);
+				}
+				else {
 					glUniform3fv(userColorUniform, 1, glm::value_ptr(mesh.meshColor));
 					glDisableVertexAttribArray(2);
 					glUniform1ui(shaderStateUniform, 0);
-				//}
+				}
 				
 				glDrawElements(GL_TRIANGLES, mesh.numberOfIndicies, GL_UNSIGNED_INT, 0);
 			}
@@ -558,7 +689,6 @@ void GraphicsSystem::Update(ecs::Scene& scene, float deltaTime) {
 		//glDepthMask(false);
 		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 		glDisable(GL_CULL_FACE);
-		//glDisable(GL_DEPTH_TEST);
 		viewUniform = glGetUniformLocation(GLuint(VFXshader), "V");
 		perspectiveUniform = glGetUniformLocation(GLuint(VFXshader), "P");
 		glUniformMatrix4fv(perspectiveUniform, 1, GL_FALSE, glm::value_ptr(P));
@@ -568,8 +698,11 @@ void GraphicsSystem::Update(ecs::Scene& scene, float deltaTime) {
 		GLuint centrePosUniform = glGetUniformLocation(GLuint(VFXshader), "centrePos");
 		GLuint cameraPositionUniform = glGetUniformLocation(GLuint(VFXshader), "cameraPos");
 		GLuint lockingAxisUniform = glGetUniformLocation(GLuint(VFXshader), "lockingAxis");
-		for (Guid entityGuid : ecs::EntitiesInScene<BillboardComponent, TransformComponent>(scene)) {
-			BillboardComponent& comp = scene.GetComponent<BillboardComponent>(entityGuid);
+		GLuint typeUniform = glGetUniformLocation(GLuint(VFXshader), "type");
+		//Billboards
+		glUniform1ui(typeUniform, 0);
+		for (Guid entityGuid : ecs::EntitiesInScene<VFXBillboard, TransformComponent>(scene)) {
+			VFXBillboard& comp = scene.GetComponent<VFXBillboard>(entityGuid);
 			TransformComponent& trans = scene.GetComponent<TransformComponent>(entityGuid);
 
 			glUniform3fv(cameraPositionUniform, 1, glm::value_ptr(cameras[0].cameraPos));
@@ -579,7 +712,19 @@ void GraphicsSystem::Update(ecs::Scene& scene, float deltaTime) {
 			comp.texture->bind();
 			glDrawArrays(GL_TRIANGLES, 0, 6);
 		}
+		//textureStrips
+		glUniform1ui(typeUniform, 1);
+		for (Guid entityGuid : ecs::EntitiesInScene<VFXTextureStrip, TransformComponent>(scene)) {
+			VFXTextureStrip& comp = scene.GetComponent<VFXTextureStrip>(entityGuid);
+			TransformComponent& trans = scene.GetComponent<TransformComponent>(entityGuid);
 
+			glUniform3fv(centrePosUniform, 1, glm::value_ptr(trans.getTranslation()));
+			
+			comp.texture->bind();
+			comp.GPUline->bind();
+			glDisableVertexAttribArray(1);
+			glDrawElements(GL_TRIANGLES, comp.indicies.size(), GL_UNSIGNED_INT, 0);
+		}
 
 		/*
 		* APPLY SHADING EFFECTS AND DRAW TO gColor buffer
@@ -736,9 +881,7 @@ void GraphicsSystem::processNode(aiNode* node, const aiScene* scene, RenderModel
 			geometry.norms.push_back(glm::vec3(mesh->mNormals[i].x, mesh->mNormals[i].y, mesh->mNormals[i].z));
 			if (mesh->mTextureCoords[0]) // does the mesh contain texture coordinates?
 				geometry.texs.push_back(glm::vec2(mesh->mTextureCoords[0][i].x, mesh->mTextureCoords[0][i].y));
-			//TODO If disabling layouts isn't possible then uncomment this code!!!
-			//else
-				//geometry.texs.push_back(glm::vec2(0));
+
 		}
 		// process indices
 		for (unsigned int i = 0; i < mesh->mNumFaces; i++)
@@ -751,7 +894,7 @@ void GraphicsSystem::processNode(aiNode* node, const aiScene* scene, RenderModel
 		
 		int ID = _component.attachMesh(geometry);
 		// process material
-		//SAM TODO. Quite frankly this breaks my mind rn with the fact a material can have MULTIPLE textures SOMEHOW
+
 
 		if (mesh->mMaterialIndex >= 0) //if the mesh has a material attached
 		{

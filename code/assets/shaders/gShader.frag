@@ -10,7 +10,7 @@ in vec3 fragPos;
 in vec4 fragPosLightSpace;
 
 uniform sampler2D gShadowDepth;
-//uniform sampler2D tex;
+uniform sampler2D diffTexture;
 uniform uint shaderState;
 uniform vec3 userColor;
 
