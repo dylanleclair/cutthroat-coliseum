@@ -1,14 +1,14 @@
 #include "TireTracks.h"
 #include "AICar.h"
 
-
-std::vector<VFXTextureStrip> tireTrackVisuals;
 std::vector<std::vector<VFXTextureStrip>> tireTrackCol;
 std::vector<std::vector<bool>> previousStates;
 
 // Sets up tire tracks ecs entities
 // Needs a unique one for each driver
 void setupTireTrackVisuals(ecs::Scene& mainScene, int number_of_vehicles) {
+	std::vector<VFXTextureStrip> tireTrackVisuals;
+
 	for (int i = 0; i < number_of_vehicles; i++) {
 		//front tire
 		ecs::Entity frontTireTrack = mainScene.CreateEntity();
