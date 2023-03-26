@@ -54,6 +54,8 @@ glm::vec3 calculateSpherePoint(float s, float t)
 	return(glm::vec3(x, y, z));
 }
 
+
+
 // CarPhysics carPhysics;
 // CarPhysicsSerde carConfig(carPhysics);
 
@@ -61,6 +63,10 @@ bool showImgui = true;
 
 int lapCount = 0;
 bool isFinished = false;
+
+// Boolean to toggle gameplay mode
+// (follow cam, full level mesh, navmesh off, backface culling off)
+bool gameplayMode = false;
 
 uint32_t lastTime_millisecs;
 
@@ -411,6 +417,8 @@ int main(int argc, char* argv[]) {
 	baseVariablesInit(testCar.m_Vehicle, physicsSystem);
 	engineVariablesInit(testCar.m_Vehicle);
 
+	float original_z_follow_dist = gs.follow_cam_z;
+
 	// GAME LOOP
 	while (!quit) {
 		Timestep timestep; // Time since last frame
@@ -583,15 +591,16 @@ int main(int argc, char* argv[]) {
 		if (testCar.isGroundedDelay(testCar)) {
 			testCar.resetModifications();
 		}
-		PxTransform c_mass_f;
 
+		gs.follow_cam_z = original_z_follow_dist -length(PxtoGLM(testCar.getVehicleRigidBody()->getAngularVelocity()));
+
+		// Used to toggle the nav path rendering 
 		if (navPathToggle) {
 			navRender.setScale(navDefaultScale);
 		}
 		else {
 			navRender.setScale(vec3(0));
 		}
-		
 
 		// auto& center_of_mass = testCar.m_Vehicle.mPhysXParams.physxActorCMassLocalPose;
 		// renderCMassSphere(center_of_mass, sphere_transform);
@@ -658,11 +667,28 @@ int main(int argc, char* argv[]) {
 					ImGui::PlotLines("Frametime plot (ms)", framerate.m_time_queue_ms.data(), framerate.m_time_queue_ms.size());
 					ImGui::PlotLines("Framerate plot (hz)", framerate.m_rate_queue.data(), framerate.m_rate_queue.size());
 					ImGui::SliderFloat3("Level material params", levelMaterial, 0.0f, 5.0f);
+
 					// END FRAMERATE COUNTER
 
 					if (!loadLevelMesh)
 					{
 						ImGui::Checkbox("Load level mesh", &loadLevelMesh);
+					}
+					
+					// Used to toggle a bunch of stuff at the same time for gameplay
+					if (ImGui::Checkbox("Gameplay Mode", &gameplayMode)) {
+						if (gameplayMode) {
+							loadLevelMesh = true;
+							navPathToggle = false;
+							gs.cam_mode = 3; // follow cam
+							gs.back_face = false;
+						}
+						else {
+							loadLevelMesh = false;
+							navPathToggle = true;
+							gs.cam_mode = 1; // free cam
+							gs.back_face = true;
+						}
 					}
 
 					ImGui::EndTabItem();
