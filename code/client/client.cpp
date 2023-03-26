@@ -43,6 +43,10 @@
 #include <chrono>  // chrono::system_clock
 #include <ctime>   // localtime
 
+
+bool loadLevelMesh{false};
+bool levelMeshLoaded{false};
+
 glm::vec3 calculateSpherePoint(float s, float t)
 {
 	float z = cos(2 * M_PI * t) * sin(M_PI * s);
@@ -195,7 +199,7 @@ int main(int argc, char* argv[]) {
 
 	int spawnRows = 2;
 	int spawnCols = 2;
-	std::vector<glm::vec3> spawnPoints = spawnpointsAlongAxis(spawnRows,spawnCols, 5.f, forward, zzPathGeom.verts[zzSpawnIndex]);
+	std::vector<glm::vec3> spawnPoints = spawnpointsAlongAxis(spawnRows,spawnCols, 7.f, forward, zzPathGeom.verts[zzSpawnIndex]);
 
 	int numCars = spawnPoints.size();
 
@@ -216,7 +220,6 @@ int main(int argc, char* argv[]) {
 	// SPAWN THE AI CARS
 	std::vector<NavPath> aiPaths;
 	aiPaths.reserve(spawnPoints.size());
-
 
 	// need to load the path for each ai
 	// ai path is lower resolution curve to help prevent ai from "overcorrecting"
@@ -287,37 +290,6 @@ int main(int argc, char* argv[]) {
 	mainScene.AddComponent(path.guid, TransformComponent{});
 	mainScene.AddComponent(path.guid, RenderLine{});
 
-	// Level
-	// TransformComponent level_t = TransformComponent();
-	// level_t.setScale(glm::vec3(3.2f, 3.2f, 3.2f));
-	// mainScene.AddComponent(ground_e.guid, level_t);
-
-	// actual level mesh & collider for it
-	// CPU_Geometry levelColliderFloor_raw = CPU_Geometry();
-	// GraphicsSystem::importOBJ(levelColliderFloor_raw, "STADIUM_COLLIDER_FLOOR.obj");
-	// LevelCollider levelCollider1{ levelColliderFloor_raw, physicsSystem};
-	// auto levelTriangleMesh1 = levelCollider1.cookLevel(glm::scale(glm::mat4(1), glm::vec3(3.2)));
-	// levelCollider1.initLevelRigidBody(levelTriangleMesh1);
-
-	// CPU_Geometry levelColliderInner_raw = CPU_Geometry();
-	// GraphicsSystem::importOBJ(levelColliderInner_raw, "STADIUM_COLLIDER_INNER.obj");
-	// LevelCollider levelCollider2{ levelColliderInner_raw, physicsSystem };
-	// auto levelTriangleMesh2 = levelCollider2.cookLevel(glm::scale(glm::mat4(1), glm::vec3(3.2)));
-	// levelCollider2.initLevelRigidBody(levelTriangleMesh2);
-
-	// CPU_Geometry levelColliderOuter_raw = CPU_Geometry();
-	// GraphicsSystem::importOBJ(levelColliderOuter_raw, "STADIUM_COLLIDER_OUTER.obj");
-	// LevelCollider levelCollider3{ levelColliderOuter_raw, physicsSystem };
-	// auto levelTriangleMesh3 = levelCollider3.cookLevel(glm::scale(glm::mat4(1), glm::vec3(3.2)));
-	// levelCollider3.initLevelRigidBody(levelTriangleMesh3);
-
-	//Level
-	// RenderModel level_r = RenderModel();
-	// //GraphicsSystem::importOBJ(level_r, "Stadium.obj");
-	// GraphicsSystem::importOBJ(level_r, "Stadium_MINIMAL.obj"); //for faster loading times
-	// mainScene.AddComponent(level_e.guid, level_r);
-	// mainScene.AddComponent(level_e.guid, level_t);
-
 	ecs::Entity new_level_e = mainScene.CreateEntity();
 
 	TransformComponent new_level_t = TransformComponent();
@@ -326,15 +298,15 @@ int main(int argc, char* argv[]) {
 
 	CPU_Geometry new_level_geom = CPU_Geometry();
 	GraphicsSystem::importOBJ(new_level_geom, "zz-track-collider.obj");
-	LevelCollider new_level_collider{ new_level_geom, physicsSystem };
-	auto new_level_collider_mesh = new_level_collider.cookLevel(glm::scale(glm::mat4(1), glm::vec3(1.0)));
+
+	Guid level_collider_e = mainScene.CreateEntity().guid;
+	mainScene.AddComponent(level_collider_e, LevelCollider());
+	LevelCollider& new_level_collider = mainScene.GetComponent<LevelCollider>(level_collider_e);
+	new_level_collider.Initialize(new_level_geom, physicsSystem);
+	physx::PxTriangleMesh* new_level_collider_mesh = new_level_collider.cookLevel(glm::scale(glm::mat4(1), glm::vec3(1.0)));
 	new_level_collider.initLevelRigidBody(new_level_collider_mesh, lMaterial);
 
 
-	RenderModel new_level_r = RenderModel();
-	GraphicsSystem::importOBJ(new_level_r,"zz-track-mesh.obj");
-	mainScene.AddComponent(new_level_e.guid, new_level_r);
-	mainScene.AddComponent(new_level_e.guid, new_level_t);
 
 
 	ecs::Entity road_e = mainScene.CreateEntity();
@@ -472,6 +444,20 @@ int main(int argc, char* argv[]) {
 			if (delta_millisecs > 200) delta_millisecs = 200; // HACK: clamp delta time between frames so physics doesn't go boom
 			timestep = (float) delta_millisecs;
 			lastTime_millisecs = now_millisecs;
+		}
+
+		if (loadLevelMesh)
+		{
+			if (!levelMeshLoaded)
+			{
+
+				RenderModel new_level_r = RenderModel();
+				GraphicsSystem::importOBJ(new_level_r,"zz-track-mesh.obj");
+				mainScene.AddComponent(new_level_e.guid, new_level_r);
+				mainScene.AddComponent(new_level_e.guid, new_level_t);
+
+				levelMeshLoaded = true;
+			}
 		}
 
 		// Reset dampening values if they are changed every frame (used after car is reset) 
@@ -717,7 +703,7 @@ int main(int argc, char* argv[]) {
 		else {
 			if (previousState[2] == true)
 				leftTireTracks.cut();
-			previousState[2] = false;
+				previousState[2] = false;
 		}
 
 		// Timestep accumulate for proper physics stepping
@@ -755,6 +741,11 @@ int main(int argc, char* argv[]) {
 			ImGui::PlotLines("Frametime plot (ms)", framerate.m_time_queue_ms.data(), framerate.m_time_queue_ms.size());
 			ImGui::PlotLines("Framerate plot (hz)", framerate.m_rate_queue.data(), framerate.m_rate_queue.size());
 			ImGui::SliderFloat3("Level material params", levelMaterial, 0.0f, 5.0f);
+			
+			if (!loadLevelMesh)
+			{
+				ImGui::Checkbox("Load level mesh", &loadLevelMesh);
+			}
 			ImGui::End();
 			// END FRAMERATE COUNTER
 
