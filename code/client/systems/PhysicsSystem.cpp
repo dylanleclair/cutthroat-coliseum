@@ -4,6 +4,8 @@
 #include "../entities/car/Car.h"
 #include "../entities/car/AICar.h"
 
+#include <iostream>
+
 namespace physics
 {
 

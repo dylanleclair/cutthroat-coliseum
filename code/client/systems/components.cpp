@@ -2,6 +2,15 @@
 #include <iostream>
 #include <algorithm>
 
+int RenderModel::g_meshIDbyName(std::string _name)
+{
+	for (Mesh& m : meshes) {
+		if (m.name.compare(_name) == 0)
+			return m.ID;
+	}
+	return -1;
+}
+
 int RenderModel::attachMesh(CPU_Geometry& _geometry)
 {
 	Mesh mesh = Mesh();
@@ -62,6 +71,15 @@ bool RenderModel::attachTexture(std::string _textureName, unsigned int _meshID)
 	return false;
 }
 
+bool RenderModel::attachTexture(std::string _texturePath, std::string _meshName)
+{
+	int ID = g_meshIDbyName(_meshName);
+		if(ID == -1)
+			return false;
+		attachTexture(_texturePath, ID);
+		return true;
+}
+
 void RenderModel::setModelColor(const glm::vec3 _color)
 {
 	for (Mesh& mesh : meshes) {
@@ -69,17 +87,13 @@ void RenderModel::setModelColor(const glm::vec3 _color)
 	}
 }
 
-void RenderModel::isShadowed(bool isShadowed)
+bool RenderModel::setMeshLocalTransformation(glm::mat4 _transformation, std::string _meshName)
 {
-	if (isShadowed) {
-		for (Mesh& mesh : meshes)
-			mesh.properties |= 2;
-	}
-	else
-	{
-		for (Mesh& mesh : meshes)
-			mesh.properties &= ~(2);
-	}
+	unsigned int ID = g_meshIDbyName(_meshName);
+	if(ID == -1)
+		return false;
+	meshes[getMeshIndex(ID)].localTransformation = _transformation;
+	return true;
 }
 
 RenderLine::RenderLine(const CPU_Geometry _geometry)

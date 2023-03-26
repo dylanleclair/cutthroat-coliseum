@@ -2,6 +2,7 @@
 #include "../entities/car/Car.h"
 #include "../entities/car/AICar.h"
 #include <algorithm>
+#include <iostream> 
 
 void RaceTracker::Initialize() {}
 
