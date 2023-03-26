@@ -23,6 +23,7 @@
 #include "utils/PxConversionUtils.h"
 #include "glm/gtx/string_cast.hpp"
 
+#include "CenterMass.h"
 #include "systems/PhysicsSystem.h"
 
 #include "entities/car/Car.h"
@@ -77,18 +78,6 @@ void finishLinePrint() {
 		std::cout << "You win !" << std::endl;
 	}
 }
-
-// Provides a target (ideally the center of mass of a moving object)
-// Renders the sphere where the transform for that object is
-// This is the transform component version
-void renderCMassSphere(TransformComponent &_target, TransformComponent& sphere_transform) {
-	sphere_transform.setPosition(glm::vec3(_target.getTranslation().x, _target.getTranslation().y, _target.getTranslation().z));
-}
-// This is the PxTransform version as vehicle PhysX models use PxTransforms for their center of mass
-void renderCMassSphere(PxTransform & _target, TransformComponent& sphere_transform) {
-	sphere_transform.setPosition(glm::vec3(_target.p.x, _target.p.y, _target.p.z));
-}
-
 
 std::vector<glm::vec3> spawnpointsAlongAxis(int rows, int cols,float spread, glm::vec3 axis, glm::vec3 start)
 {
@@ -182,7 +171,6 @@ int main(int argc, char* argv[]) {
 	ecs::Entity finish_e = mainScene.CreateEntity();
 	ecs::Entity tetherPole1_e = mainScene.CreateEntity();
 	ecs::Entity tetherPole2_e = mainScene.CreateEntity();
-	ecs::Entity sphere_e = mainScene.CreateEntity();
 	ecs::Entity tether_e = mainScene.CreateEntity();
 
 
