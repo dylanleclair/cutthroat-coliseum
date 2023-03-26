@@ -658,11 +658,13 @@ int main(int argc, char* argv[]) {
 					ImGui::PlotLines("Frametime plot (ms)", framerate.m_time_queue_ms.data(), framerate.m_time_queue_ms.size());
 					ImGui::PlotLines("Framerate plot (hz)", framerate.m_rate_queue.data(), framerate.m_rate_queue.size());
 					ImGui::SliderFloat3("Level material params", levelMaterial, 0.0f, 5.0f);
+					// END FRAMERATE COUNTER
+
 					if (!loadLevelMesh)
 					{
 						ImGui::Checkbox("Load level mesh", &loadLevelMesh);
 					}
-					// END FRAMERATE COUNTER
+
 					ImGui::EndTabItem();
 				}
 				if (ImGui::BeginTabItem("Vehicle")) {
@@ -688,27 +690,11 @@ int main(int argc, char* argv[]) {
 					ImGui::EndTabItem();
 				}
 				ImGui::EndTabBar();
-			
+			}
 			ImGui::End();
-			// END FRAMERATE COUNTER
 
-			// Car PhysX variable panels
-			testCar.carImGui();
-
-			// NOTE: the imgui bible - beau
-			//ImGui::ShowDemoWindow();
-
-			// Graphics imgui panel for graphics tuneables
-			gs.ImGuiPanel();
-
-			//ImGui Panels for tuning
-			//reloadVehicleJSON();
-			vehicleTuning(testCar.m_Vehicle, physicsSystem);
-			engineTuning(testCar.m_Vehicle);
-
-			// Obstacles ImGui
-			obstaclesImGui(mainScene, physicsSystem);
-		}
+		}		
+		
 		/*
 		* Render the UI. I am doing this here for now but I might move it.
 		* ImGui uses coordinates in screen space (0-screen dimension) and is anchored on the top left corner
