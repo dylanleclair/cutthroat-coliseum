@@ -5,6 +5,7 @@
 #include "../../utils/PxConversionUtils.h"
 #include "glm/glm.hpp"
 #include "../physics/LevelCollider.h"
+#include <iostream>
 
 void AICar::Initialize(NavPath* pathToFollow)
 {
