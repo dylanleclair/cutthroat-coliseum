@@ -154,6 +154,8 @@ void Car::carImGui() {
         ImGui::Text("On the ground ?: %s", m_Vehicle.mBaseState.roadGeomStates->hitState ? "true" : "false");
         ImGui::Text("Percent Rot: %f", 1.f - m_Vehicle.mEngineDriveState.engineState.rotationSpeed / m_Vehicle.mEngineDriveParams.engineParams.maxOmega);
         ImGui::Text("Steer Response: %f", m_Vehicle.mBaseParams.steerResponseParams.maxResponse);
+        ImGui::Text("Linear Velocity: %f, %f, %f", m_Vehicle.mPhysXState.physxActor.rigidBody->getLinearVelocity().x, m_Vehicle.mPhysXState.physxActor.rigidBody->getLinearVelocity().y,
+            m_Vehicle.mPhysXState.physxActor.rigidBody->getLinearVelocity().z);
         ImGui::TreePop();
     }
     if (ImGui::TreeNode("Parameter Switching")) {
@@ -351,9 +353,15 @@ void Car::Update(Guid carGuid, ecs::Scene& scene, float deltaTime)
       }
   }
   
+  // Calculate the magnitude of the linear velocity
+  // Used to clamp the gear shift to reverse only when below a certain magnitude
+  // If not using clamp - it would cause the car to go into reverse when hitting the brake, which would not
+  // have the proper braking behaviour
+  float linVelMagnitude = length(PxtoGLM(m_Vehicle.mPhysXState.physxActor.rigidBody->getLinearVelocity()));
+
   // Code for going in reverse
-  // If the brake key is pressed, while the engine is idle, and the current gear is first gear, switch to reverse
-  if (s_key && this->m_Vehicle.mEngineDriveState.engineState.rotationSpeed == 0) {
+  // If the brake key is pressed, while you are going slow, switch to reverse
+  if (s_key && m_Vehicle.mEngineDriveState.gearboxState.currentGear != 0 && linVelMagnitude < 10.f) {
       this->m_TargetGearCommand = 0;
   }
   // While the gearbox is in reverse holding s goes backwards, hold w brakes
@@ -361,8 +369,8 @@ void Car::Update(Guid carGuid, ecs::Scene& scene, float deltaTime)
       if (s_key) {
           command.throttle = carThrottle;
       }
-      // If the engine is idle and the w key is pressed switch to normal driving
-      else if (w_key && this->m_Vehicle.mEngineDriveState.engineState.rotationSpeed == 0) {
+      // If you are going slow and the w key is pressed switch to normal driving
+      else if (w_key && linVelMagnitude < 10.f) {
           // 255 is eAUTOMATIC_GEAR 
            this->m_TargetGearCommand = 255;
       }
@@ -371,8 +379,7 @@ void Car::Update(Guid carGuid, ecs::Scene& scene, float deltaTime)
       }
   }
   // If the engine in neutral or above, drive normally
-  else if (this->m_Vehicle.mEngineDriveState.gearboxState.currentGear >= 1 && 
-      this->m_Vehicle.mEngineDriveState.engineState.rotationSpeed >= 0) {
+  else if (this->m_Vehicle.mEngineDriveState.gearboxState.currentGear >= 1) {
 
        if (w_key) {
           command.throttle = carThrottle;
@@ -386,7 +393,7 @@ void Car::Update(Guid carGuid, ecs::Scene& scene, float deltaTime)
   // doing keyboard or controller input do x - did not work great
   // So I separated them, there may be a cleaner way to do this
   if (SDL_GameControllerGetAxis(ControllerInput::controller, SDL_CONTROLLER_AXIS_TRIGGERLEFT)
-      && this->m_Vehicle.mEngineDriveState.engineState.rotationSpeed == 0) {
+      && m_Vehicle.mEngineDriveState.gearboxState.currentGear != 0 && linVelMagnitude < 10.f) {
       this->m_TargetGearCommand = 0;
   }
   else if (this->m_Vehicle.mEngineDriveState.gearboxState.currentGear == 0) {
@@ -394,8 +401,7 @@ void Car::Update(Guid carGuid, ecs::Scene& scene, float deltaTime)
           command.throttle = (float)SDL_GameControllerGetAxis(ControllerInput::controller, SDL_CONTROLLER_AXIS_TRIGGERLEFT) / SHRT_MAX;
       }
       // If the engine is idle and the w key is pressed switch to normal driving
-      else if (SDL_GameControllerGetAxis(ControllerInput::controller, SDL_CONTROLLER_AXIS_TRIGGERRIGHT)
-          && this->m_Vehicle.mEngineDriveState.engineState.rotationSpeed == 0) {
+      else if (SDL_GameControllerGetAxis(ControllerInput::controller, SDL_CONTROLLER_AXIS_TRIGGERRIGHT) && linVelMagnitude < 10.f) {
           // 255 is eAUTOMATIC_GEAR 
           this->m_TargetGearCommand = 255;
       }
@@ -403,8 +409,7 @@ void Car::Update(Guid carGuid, ecs::Scene& scene, float deltaTime)
           command.brake = (float)SDL_GameControllerGetAxis(ControllerInput::controller, SDL_CONTROLLER_AXIS_TRIGGERRIGHT) / SHRT_MAX;
       }
   }
-  else if (this->m_Vehicle.mEngineDriveState.gearboxState.currentGear >= 1 &&
-      this->m_Vehicle.mEngineDriveState.engineState.rotationSpeed >= 0) {
+  else if (this->m_Vehicle.mEngineDriveState.gearboxState.currentGear >= 1) {
 
       if (SDL_GameControllerGetAxis(ControllerInput::controller, SDL_CONTROLLER_AXIS_TRIGGERRIGHT)) {
           command.throttle = (float)SDL_GameControllerGetAxis(ControllerInput::controller, SDL_CONTROLLER_AXIS_TRIGGERRIGHT) / SHRT_MAX;
