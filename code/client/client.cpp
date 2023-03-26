@@ -196,8 +196,8 @@ int main(int argc, char* argv[]) {
 	// generate spawnpoints along the axis!
 
 
-	int spawnRows = 2;
-	int spawnCols = 2;
+	int spawnRows = 3;
+	int spawnCols = 3;
 	std::vector<glm::vec3> spawnPoints = spawnpointsAlongAxis(spawnRows,spawnCols, 7.f, forward, zzPathGeom.verts[zzSpawnIndex]);
 
 	int numCars = spawnPoints.size();

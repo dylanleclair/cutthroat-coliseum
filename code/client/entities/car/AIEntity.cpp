@@ -32,7 +32,7 @@ Guid spawnAIEntity(ecs::Scene& scene, physics::PhysicsSystem* physicsSystem, Gui
 	aiDriver_r.setModelColor(glm::vec3(1.0f, 0.0f, 1.f));
 	scene.AddComponent(aiDriver_e.guid, aiDriver_r);
 	TransformComponent aiDriver_t = TransformComponent(aiCar.getVehicleRigidBody());
-	aiDriver_t.setPosition(glm::vec3(0, 0, 1.2)); // relative position to collider?
+	aiDriver_t.setPosition(glm::vec3(0, -.34f, 1.2)); // relative position to collider?
 	aiDriver_t.setScale(glm::vec3(3.2f, 3.2f, 3.2f));
 	scene.AddComponent(aiDriver_e.guid, aiDriver_t);
 	CPU_Geometry testline = CPU_Geometry();

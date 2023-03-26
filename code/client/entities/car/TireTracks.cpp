@@ -49,18 +49,16 @@ void setupCarVFX(ecs::Scene& mainScene, Guid _ID) {
 }
 
 void updateCarVFX(ecs::Scene mainScene) {
-	float y_offset; // offset needs to be different for Player and AI cars
+	float y_offset = -0.32f; // tire tracks will be rendered not on the ground plane otherwise
 	// if same offset is used the AI car tracks will be inside the ground
 	for (int i = 0; i < VFXGuids.size(); i++) {
 		attachedVFX vfx = VFXGuids[i];
 		Car* car;
 		if (vfx.isAI) {
 			car = &mainScene.GetComponent<AICar>(vfx.ownerGuid);
-			y_offset = 0.0f;
 		}
 		else {
 			car = &mainScene.GetComponent<Car>(vfx.ownerGuid);
-			y_offset = -0.32f;
 		}
 
 		VFXTextureStrip& frontTireTracks = mainScene.GetComponent<VFXTextureStrip>(vfx.trackGuids[0]);
