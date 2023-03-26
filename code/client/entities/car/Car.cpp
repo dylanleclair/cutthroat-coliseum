@@ -3,11 +3,33 @@
 #include "glm/glm.hpp"
 #include "../../utils/PxConversionUtils.h"
 
+#include "../physics/LevelCollider.h"
+
 #include "imgui.h"
 #include "imgui_impl_sdl.h"
 #include "imgui_impl_opengl3.h"
 
 const char* gVehicleDataPath = "vehicledata";
+
+
+bool castRayCar(PxScene* scene, PxVec3 origin, PxVec3 dir, float dist, physx::PxShape* target_shape)
+{
+    PxRaycastBuffer hit;
+
+    bool status = scene->raycast(origin, dir, dist, hit);
+    if (status)
+    {
+        if (hit.block.shape == target_shape)
+        {
+            std::cout << "collision with wall detected!" << std::endl;
+            return true;
+        }
+
+    }
+    return false;
+}
+
+
 
 // // HACK(beau): make these visible to tuning imgui panel
 float carThrottle = 1.f;
@@ -449,6 +471,57 @@ void Car::Update(Guid carGuid, ecs::Scene& scene, float deltaTime)
   //   previous_b_press = false;
   //}
   
+
+// testing some logic !!
+
+// find the direction vector of the vehicle
+glm::quat vehicleQuat = PxtoGLM(carPose.q);
+glm::mat4 vehicleRotM = glm::toMat4(vehicleQuat);
+glm::vec3 headingDir = glm::vec3{vehicleRotM * glm::vec4{0.f, 0.f, 1.f, 1.f}};
+
+
+
+    // CODE FOR AI
+    // glm::vec3 up{0.f,1.f,0.f};
+    // std::vector<glm::vec3> steering_rays;
+    // glm::vec4 carLocalForward{0.f, 0.f, 1.f, 1.f};
+
+    // float rot_angle = M_PI_4;
+    // auto M = glm::rotate(glm::mat4{1.f}, -rot_angle, up);
+    // steering_rays.push_back(glm::vec3{vehicleRotM * M * carLocalForward});
+
+    // M = glm::rotate(glm::mat4{1.f}, rot_angle, up);
+    // steering_rays.push_back(glm::vec3{vehicleRotM * M * carLocalForward});
+
+
+    // LevelCollider* level_c;
+
+    // for (Guid entity : ecs::EntitiesInScene<LevelCollider>(scene))
+    // {
+    //     // get the level collider
+    //     LevelCollider& lc = scene.GetComponent<LevelCollider>(entity);
+    //     level_c = &lc;
+    //     break;
+    // }
+
+    // // split into left and right
+    // bool hit = castRay(physicsSystem->m_Scene, carPose.p, GLMtoPx(steering_rays[0]), 10.f, level_c->getShape());
+    // if (hit)
+    // {
+    //     // collided_rays.push_back(steering_rays[0]);
+    //     std::cout << "hit right!\n";
+    // }
+
+    // hit = castRay(physicsSystem->m_Scene, carPose.p, GLMtoPx(steering_rays[1]), 10.f, level_c->getShape());
+    // if (hit)
+    // {
+    //     // collided_rays.push_back(steering_rays[1]);
+    //     std::cout << "hit left!\n";
+    
+    // }
+
+    // end
+
 
   m_Vehicle.mCommandState.brakes[0] = command.brake;
   m_Vehicle.mCommandState.nbBrakes = 1;
