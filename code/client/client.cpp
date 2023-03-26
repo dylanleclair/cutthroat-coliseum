@@ -235,7 +235,12 @@ int main(int argc, char* argv[]) {
 	mainScene.AddComponent(navRenderer_e.guid,TransformComponent{});
 	auto navPathRender = RenderLine{zzPathGeom};
 	navPathRender.setColor(glm::vec3{1.0f,0.f,1.0f});
-	mainScene.AddComponent(navRenderer_e.guid,navPathRender);
+	mainScene.AddComponent(navRenderer_e.guid, navPathRender);
+
+	// Transform component used for toggling the rendering
+	auto& navRender = mainScene.GetComponent<TransformComponent>(navRenderer_e.guid);
+	auto navDefaultScale = navRender.getScale();
+	bool navPathToggle = true;
 
 	// Car Entity
 	RenderModel car_r = RenderModel();
@@ -272,7 +277,6 @@ int main(int argc, char* argv[]) {
 	mainScene.AddComponent(path.guid, RenderLine{});
 
 	AISystem aiSystem{ path.guid };
-
 	
 	// Level
 	TransformComponent level_t = TransformComponent();
@@ -580,6 +584,12 @@ int main(int argc, char* argv[]) {
 		}
 		PxTransform c_mass_f;
 
+		if (navPathToggle) {
+			navRender.setScale(navDefaultScale);
+		}
+		else {
+			navRender.setScale(vec3(0));
+		}
 		
 		// // Finish line code
 		// if (car_trans.getTranslation().x >= 28.f && car_trans.getTranslation().x <= 40.f &&
@@ -656,6 +666,7 @@ int main(int argc, char* argv[]) {
 				if (ImGui::BeginTabItem("Obstacles")) {
 					// Obstacles ImGui
 					obstaclesImGui(mainScene, physicsSystem);
+					ImGui::Checkbox("Nav Path Render", &navPathToggle);
 					ImGui::EndTabItem();
 				}
 				ImGui::EndTabBar();

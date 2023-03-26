@@ -801,7 +801,7 @@ void GraphicsSystem::Update(ecs::Scene& scene, float deltaTime) {
 			RenderLine& comp = scene.GetComponent<RenderLine>(entityGuid);
 			TransformComponent& trans = scene.GetComponent<TransformComponent>(entityGuid);
 			
-			glm::mat4 M = glm::translate(glm::mat4(1), trans.getTranslation()) * toMat4(trans.getRotation());
+			glm::mat4 M = glm::translate(glm::mat4(1), trans.getTranslation()) * toMat4(trans.getRotation()) * glm::scale(glm::mat4(1), trans.getScale());
 			glUniformMatrix4fv(modelUniform, 1, GL_FALSE, glm::value_ptr(M));
 
 			glUniform3fv(colorUniform, 1, glm::value_ptr(comp.color));
