@@ -419,6 +419,8 @@ int main(int argc, char* argv[]) {
 
 	bool playSounds = true;
 	init_sound_system();
+    SoundUpdater soundUpdater;
+    soundUpdater.Initialize(mainScene);
 
 	// GAME LOOP
 	while (!quit) {
@@ -614,6 +616,7 @@ int main(int argc, char* argv[]) {
 		gs.Update(mainScene, time_diff);
 
 		//update_sounds(testCar, aiCarInstance, playSounds);
+        soundUpdater.Update(mainScene, time_diff);
 
 		// END__ ECS SYSTEMS UPDATES
 
