@@ -10,7 +10,7 @@ in vec3 fragPos;
 in vec4 fragPosLightSpace;
 
 uniform sampler2D gShadowDepth;
-uniform sampler2D diffTexture;
+//uniform sampler2D tex;
 uniform uint shaderState;
 uniform vec3 userColor;
 
@@ -38,7 +38,7 @@ void main()
     //determine the fragment color
 	vec3 sampleCol = vec3(1);
 	if((shaderState & 1) != 0) {
-		sampleCol = vec3(texture(diffTexture, tc));
+		sampleCol = vec3(0,1,0);//vec3(texture(tex, tc));
 	} else {
 		sampleCol = userColor;
 	}

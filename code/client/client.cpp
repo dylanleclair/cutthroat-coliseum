@@ -15,7 +15,6 @@
 #include "systems/components.h"
 
 #include "FrameCounter.h"
-#include "systems/ai.h"
 
 #include "ImGuiTuneables.h"
 
@@ -43,6 +42,10 @@
 #include <chrono>  // chrono::system_clock
 #include <ctime>   // localtime
 
+
+bool loadLevelMesh{false};
+bool levelMeshLoaded{false};
+
 glm::vec3 calculateSpherePoint(float s, float t)
 {
 	float z = cos(2 * M_PI * t) * sin(M_PI * s);
@@ -68,6 +71,18 @@ void finishLinePrint() {
 		std::cout << "You win !" << std::endl;
 	}
 }
+
+// Provides a target (ideally the center of mass of a moving object)
+// Renders the sphere where the transform for that object is
+// This is the transform component version
+void renderCMassSphere(TransformComponent &_target, TransformComponent& sphere_transform) {
+	sphere_transform.setPosition(glm::vec3(_target.getTranslation().x, _target.getTranslation().y, _target.getTranslation().z));
+}
+// This is the PxTransform version as vehicle PhysX models use PxTransforms for their center of mass
+void renderCMassSphere(PxTransform & _target, TransformComponent& sphere_transform) {
+	sphere_transform.setPosition(glm::vec3(_target.p.x, _target.p.y, _target.p.z));
+}
+
 
 std::vector<glm::vec3> spawnpointsAlongAxis(int rows, int cols,float spread, glm::vec3 axis, glm::vec3 start)
 {
@@ -130,9 +145,9 @@ int main(int argc, char* argv[]) {
 	CPU_Geometry zzPathGeom;
 	GraphicsSystem::importSplineFromOBJ(zzPathGeom, "zz-track-nav.obj");
 
-	RaceTracker raceSystem{zzPathGeom.verts, glm::vec3{-4.108957, 3.397303, -43.794819}};	
+	glm::vec3 desiredSpawnLocation = {-4.108957, 3.397303, -43.794819}; // hardcoded value near the straight strip of the track
 
-
+	RaceTracker raceSystem{zzPathGeom.verts, desiredSpawnLocation};	
 	//load fonts into ImGui
 	io.Fonts->AddFontDefault();
 	ImFont* Debrosee = io.Fonts->AddFontFromFileTTF("fonts/Debrosee-ALPnL.ttf", 18.5f);
@@ -161,32 +176,11 @@ int main(int argc, char* argv[]) {
 	ecs::Entity finish_e = mainScene.CreateEntity();
 	ecs::Entity tetherPole1_e = mainScene.CreateEntity();
 	ecs::Entity tetherPole2_e = mainScene.CreateEntity();
-
+	ecs::Entity sphere_e = mainScene.CreateEntity();
 	ecs::Entity tether_e = mainScene.CreateEntity();
 
-	// ecs::Entity aiDriver_e = mainScene.CreateEntity();
 
-	mainScene.AddComponent(car_e.guid, Car{});
-	Car& testCar = mainScene.GetComponent<Car>(car_e.guid);
-	testCar.physicsSystem = &physicsSystem;
-	
-	if (!testCar.initVehicle(PxVec3(-4.108957, 3.397303, -43.794819)))
-	{
-		std::cout << "ERROR: could not initialize vehicle";
-	}
-
-	NavPath circlePath = generateCirclePath(30);
-
-	CPU_Geometry aiPathGeom;
-	// import the obj for the path
-	GraphicsSystem::importOBJ(aiPathGeom, "ai_path.obj");
-	// transform verts same way level will be???
-
-	// PATHFINDING FOR NEW TRACK
-
-	std::cout << "zz track navmesh has " << zzPathGeom.verts.size() << " vertices" << std::endl;
-
-	glm::vec3 desiredSpawnLocation = {-4.108957, 3.397303, -43.794819};
+	// FIND SPAWNPOINTS FOR VEHICLES (player car is first)
 	int zzSpawnIndex = 0;
 	float minDistToSpawn = std::numeric_limits<float>::max();
 	for (int i = 0; i < zzPathGeom.verts.size(); i++)
@@ -198,38 +192,57 @@ int main(int argc, char* argv[]) {
 			minDistToSpawn = currDistance;
 		}
 	}
-
 	glm::vec3 forward = (zzSpawnIndex == zzPathGeom.verts.size() - 1) ? zzPathGeom.verts[0] - zzPathGeom.verts[zzSpawnIndex] : zzPathGeom.verts[zzSpawnIndex + 1] - zzPathGeom.verts[zzSpawnIndex];
-
 	// generate spawnpoints along the axis!
-	std::vector<glm::vec3> aiSpawnPoints = spawnpointsAlongAxis(2,3, 5.f, forward, zzPathGeom.verts[zzSpawnIndex]);
+
+
+	int spawnRows = 2;
+	int spawnCols = 2;
+	std::vector<glm::vec3> spawnPoints = spawnpointsAlongAxis(spawnRows,spawnCols, 7.f, forward, zzPathGeom.verts[zzSpawnIndex]);
+
+	int numCars = spawnPoints.size();
+
+	std::cout << "Starting race with " << numCars << " drivers!";
+
+	// SPAWN CARS
+	mainScene.AddComponent(car_e.guid, Car{});
+	Car& testCar = mainScene.GetComponent<Car>(car_e.guid);
+	testCar.physicsSystem = &physicsSystem;
+	
+	if (!testCar.initVehicle(GLMtoPx(spawnPoints[0])))
+	{
+		std::cout << "ERROR: could not initialize vehicle";
+	}
 
 	// find the point on the track to desired spawn location
 
-	auto scaling =  glm::scale(glm::mat4{1.f},glm::vec3(3.2f, 3.2f, 3.2f));
-	for (auto& vert : aiPathGeom.verts)
-	{
-			vert = scaling * glm::vec4{vert,1.f}; 
-			vert.y = 0.f;
-	}
-
+	// SPAWN THE AI CARS
 	std::vector<Guid> AIGuids;
 	std::vector<NavPath> aiPaths;
-	aiPaths.reserve(aiSpawnPoints.size());
+	aiPaths.reserve(spawnPoints.size());
 
-	for (auto& spawnPoint : aiSpawnPoints)
-	{
-		aiPaths.emplace_back(zzPathGeom.verts);
+	// need to load the path for each ai
+	// ai path is lower resolution curve to help prevent ai from "overcorrecting"
+	// but this could also be fixed by fixing normal computation
+	// in steering code
+	CPU_Geometry nav_geom;
+	GraphicsSystem::importSplineFromOBJ(nav_geom, "zz-track-ai-nav.obj");
+
+	std::vector<Guid> aiCars;
+	// skip the first spot (player driven vehicle) 
+	for (int i = 1; i < spawnPoints.size(); i++)
+	{		
+		auto& spawnPoint = spawnPoints[i];
+		aiPaths.emplace_back(nav_geom.verts);
 		auto& navPath = aiPaths[aiPaths.size() - 1];
 		Guid aiCarGuid = spawnAIEntity(mainScene, &physicsSystem, car_e.guid, spawnPoint, &navPath);
+		aiCars.push_back(aiCarGuid);
 		AICar& aiCarInstance = mainScene.GetComponent<AICar>(aiCarGuid);
+		aiCarInstance.setup1();
 		AIGuids.push_back(aiCarGuid);
 		setupCarVFX(mainScene, aiCarGuid);
 		// idk why we get the car instance tbh
 	}
-	// NavPath aiPath{zzPathGeom.verts};
-
-	// NavPath aiPath{aiPathGeom.verts};
 
 	ecs::Entity navRenderer_e = mainScene.CreateEntity();
 	mainScene.AddComponent(navRenderer_e.guid,TransformComponent{});
@@ -276,58 +289,31 @@ int main(int argc, char* argv[]) {
 	mainScene.AddComponent(path.guid, TransformComponent{});
 	mainScene.AddComponent(path.guid, RenderLine{});
 
-	AISystem aiSystem{ path.guid };
-	
-	// Level
-	TransformComponent level_t = TransformComponent();
-	level_t.setScale(glm::vec3(3.2f, 3.2f, 3.2f));
-	mainScene.AddComponent(ground_e.guid, level_t);
-
-	// actual level mesh & collider for it
-	// CPU_Geometry levelColliderFloor_raw = CPU_Geometry();
-	// GraphicsSystem::importOBJ(levelColliderFloor_raw, "STADIUM_COLLIDER_FLOOR.obj");
-	// LevelCollider levelCollider1{ levelColliderFloor_raw, physicsSystem};
-	// auto levelTriangleMesh1 = levelCollider1.cookLevel(glm::scale(glm::mat4(1), glm::vec3(3.2)));
-	// levelCollider1.initLevelRigidBody(levelTriangleMesh1);
-
-	// CPU_Geometry levelColliderInner_raw = CPU_Geometry();
-	// GraphicsSystem::importOBJ(levelColliderInner_raw, "STADIUM_COLLIDER_INNER.obj");
-	// LevelCollider levelCollider2{ levelColliderInner_raw, physicsSystem };
-	// auto levelTriangleMesh2 = levelCollider2.cookLevel(glm::scale(glm::mat4(1), glm::vec3(3.2)));
-	// levelCollider2.initLevelRigidBody(levelTriangleMesh2);
-
-	// CPU_Geometry levelColliderOuter_raw = CPU_Geometry();
-	// GraphicsSystem::importOBJ(levelColliderOuter_raw, "STADIUM_COLLIDER_OUTER.obj");
-	// LevelCollider levelCollider3{ levelColliderOuter_raw, physicsSystem };
-	// auto levelTriangleMesh3 = levelCollider3.cookLevel(glm::scale(glm::mat4(1), glm::vec3(3.2)));
-	// levelCollider3.initLevelRigidBody(levelTriangleMesh3);
-
-	//Level
-	// RenderModel level_r = RenderModel();
-	// //GraphicsSystem::importOBJ(level_r, "Stadium.obj");
-	// GraphicsSystem::importOBJ(level_r, "Stadium_MINIMAL.obj"); //for faster loading times
-	// mainScene.AddComponent(level_e.guid, level_r);
-	// mainScene.AddComponent(level_e.guid, level_t);
-
 	ecs::Entity new_level_e = mainScene.CreateEntity();
 
 	TransformComponent new_level_t = TransformComponent();
-	level_t.setScale(glm::vec3(1.f, 1.f, 1.f));
 
 	physx::PxMaterial* lMaterial = physicsSystem.m_Physics->createMaterial(0.10f, 0.730f, 0.135f);
 
 	CPU_Geometry new_level_geom = CPU_Geometry();
-	GraphicsSystem::importOBJ(new_level_geom, "zz-track.obj");
-	LevelCollider new_level_collider{ new_level_geom, physicsSystem };
-	auto new_level_collider_mesh = new_level_collider.cookLevel(glm::scale(glm::mat4(1), glm::vec3(1.0)));
+	GraphicsSystem::importOBJ(new_level_geom, "zz-track-collider.obj");
+
+	Guid level_collider_e = mainScene.CreateEntity().guid;
+	mainScene.AddComponent(level_collider_e, LevelCollider());
+	LevelCollider& new_level_collider = mainScene.GetComponent<LevelCollider>(level_collider_e);
+	new_level_collider.Initialize(new_level_geom, physicsSystem);
+	physx::PxTriangleMesh* new_level_collider_mesh = new_level_collider.cookLevel(glm::scale(glm::mat4(1), glm::vec3(1.0)));
 	new_level_collider.initLevelRigidBody(new_level_collider_mesh, lMaterial);
 
 
-	RenderModel new_level_r = RenderModel();
-	GraphicsSystem::importOBJ(new_level_r,"zz-track.obj");
-	mainScene.AddComponent(new_level_e.guid, new_level_r);
-	mainScene.AddComponent(new_level_e.guid, new_level_t);
 
+
+	ecs::Entity road_e = mainScene.CreateEntity();
+	TransformComponent road_t = TransformComponent();
+	RenderModel road_r = RenderModel();
+	GraphicsSystem::importOBJ(road_r,"zz-track-road.obj");
+	mainScene.AddComponent(road_e.guid, road_r);
+	mainScene.AddComponent(road_e.guid, road_t);
 
 	// // Tether poles
 	// RenderModel tetherPole1_r = RenderModel();
@@ -437,6 +423,20 @@ int main(int argc, char* argv[]) {
 			lastTime_millisecs = now_millisecs;
 		}
 
+		if (loadLevelMesh)
+		{
+			if (!levelMeshLoaded)
+			{
+
+				RenderModel new_level_r = RenderModel();
+				GraphicsSystem::importOBJ(new_level_r,"zz-track-mesh.obj");
+				mainScene.AddComponent(new_level_e.guid, new_level_r);
+				mainScene.AddComponent(new_level_e.guid, new_level_t);
+
+				levelMeshLoaded = true;
+			}
+		}
+
 		// Reset dampening values if they are changed every frame (used after car is reset) 
 		//TODO:  May need to put in an if check, and factor out ?
 		testCar.m_Vehicle.mPhysXState.physxActor.rigidBody->setLinearDamping(default_lin_damp);
@@ -511,7 +511,8 @@ int main(int argc, char* argv[]) {
 					case SDLK_9:
 						 new_level_collider.release();
 						 new_level_collider.initLevelRigidBody(new_level_collider_mesh, physicsSystem.m_Physics->createMaterial(levelMaterial[0], levelMaterial[1], levelMaterial[2]));
-							testCar.m_Vehicle.mPhysXState.physxActor.rigidBody->setGlobalPose(PxTransform(PxVec3(-4.108957, 3.397303, -43.794819)));
+							testCar.m_Vehicle.mPhysXState.physxActor.rigidBody->setGlobalPose(PxTransform(GLMtoPx(spawnPoints[0])));
+							
 
 						break;
 					case SDLK_SPACE:
@@ -591,6 +592,18 @@ int main(int argc, char* argv[]) {
 			navRender.setScale(vec3(0));
 		}
 		
+
+		// auto& center_of_mass = testCar.m_Vehicle.mPhysXParams.physxActorCMassLocalPose;
+		// renderCMassSphere(center_of_mass, sphere_transform);
+
+		// // Tether check to render the tether graphic properly
+		// if (testCar.getCTethered()) {
+		// 	updateTetherGraphic(car_trans, c_tether_points, testCar, tether_transform);
+		// }
+		// else {
+		// 	tether_transform.setScale(glm::vec3(0.f, 0.f, 0.f));
+		// }
+
 		// // Finish line code
 		// if (car_trans.getTranslation().x >= 28.f && car_trans.getTranslation().x <= 40.f &&
 		// 	car_trans.getTranslation().z >= -2.f && car_trans.getTranslation().z <= 0.f)
@@ -623,6 +636,7 @@ int main(int argc, char* argv[]) {
 		}
 
 		gs.Update(mainScene, time_diff);
+		raceSystem.Update(mainScene,time_diff);
 
 		//update_sounds(testCar, aiCarInstance, playSounds);
 
@@ -645,6 +659,12 @@ int main(int argc, char* argv[]) {
 					ImGui::PlotLines("Framerate plot (hz)", framerate.m_rate_queue.data(), framerate.m_rate_queue.size());
 					ImGui::SliderFloat3("Level material params", levelMaterial, 0.0f, 5.0f);
 					// END FRAMERATE COUNTER
+
+					if (!loadLevelMesh)
+					{
+						ImGui::Checkbox("Load level mesh", &loadLevelMesh);
+					}
+
 					ImGui::EndTabItem();
 				}
 				if (ImGui::BeginTabItem("Vehicle")) {
@@ -673,7 +693,8 @@ int main(int argc, char* argv[]) {
 			}
 			ImGui::End();
 
-		}
+		}		
+		
 		/*
 		* Render the UI. I am doing this here for now but I might move it.
 		* ImGui uses coordinates in screen space (0-screen dimension) and is anchored on the top left corner
@@ -715,7 +736,7 @@ int main(int argc, char* argv[]) {
 		ImGui::Begin("UI", (bool*)0, textWindowFlags);
 		ImGui::SetWindowFontScale(2.f);
 		ImGui::PushFont(CabalBold);
-		ImGui::TextColored(ImVec4(1.0f, 1.0f, 1.0f, 1.0f), "Rank: %d/%d", raceSystem.getRanking(car_e.guid), 1 + aiSpawnPoints.size() );
+		ImGui::TextColored(ImVec4(1.0f, 1.0f, 1.0f, 1.0f), "Rank: %d/%d", raceSystem.getRanking(car_e.guid), spawnPoints.size() );
 		ImGui::PopFont();
 		ImGui::End();
 

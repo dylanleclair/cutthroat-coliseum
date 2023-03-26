@@ -44,7 +44,6 @@ Guid spawnAIEntity(ecs::Scene& scene, physics::PhysicsSystem* physicsSystem, Gui
 	RenderLine aiVehicleDirection = RenderLine(forward);
 	aiVehicleDirection.setColor({0.0f,1.f,0.f});
 	scene.AddComponent(aiDriver_e.guid, aiVehicleDirection);
-	scene.AddComponent(aiDriver_e.guid, PathfindingComponent{entityToFollow});
 	// ecs::Entity aiDirRenderer = scene.CreateEntity();
 	// scene.AddComponent(aiDirRenderer.guid, aiVehicleDirection);
 	// scene.AddComponent(aiDirRenderer.guid, TransformComponent{});
