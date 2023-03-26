@@ -13,7 +13,7 @@ void setupTireTrackVisuals(ecs::Scene& mainScene, int number_of_vehicles) {
 		//front tire
 		ecs::Entity frontTireTrack = mainScene.CreateEntity();
 		VFXTextureStrip frontTireTrack_r = VFXTextureStrip("textures/MotercycleTireTread.png", 0.07, 2);
-		frontTireTrack_r.maxLength = 35;
+		frontTireTrack_r.maxLength = 115;
 		TransformComponent frontTireTrack_t = TransformComponent();
 		mainScene.AddComponent(frontTireTrack.guid, frontTireTrack_r);
 		mainScene.AddComponent(frontTireTrack.guid, frontTireTrack_t);
@@ -21,7 +21,7 @@ void setupTireTrackVisuals(ecs::Scene& mainScene, int number_of_vehicles) {
 		//right tire
 		ecs::Entity rightTireTrack = mainScene.CreateEntity();
 		VFXTextureStrip rightTireTrack_r = VFXTextureStrip("textures/MotercycleTireTread.png", 0.07, 1);
-		rightTireTrack_r.maxLength = 25;
+		rightTireTrack_r.maxLength = 100;
 		TransformComponent rightTireTrack_t = TransformComponent();
 		mainScene.AddComponent(rightTireTrack.guid, rightTireTrack_r);
 		mainScene.AddComponent(rightTireTrack.guid, rightTireTrack_t);
@@ -29,7 +29,7 @@ void setupTireTrackVisuals(ecs::Scene& mainScene, int number_of_vehicles) {
 		//left tire
 		ecs::Entity leftTireTrack = mainScene.CreateEntity();
 		VFXTextureStrip leftTireTrack_r = VFXTextureStrip("textures/MotercycleTireTread.png", 0.07, 1);
-		leftTireTrack_r.maxLength = 25;
+		leftTireTrack_r.maxLength = 100;
 		TransformComponent leftTireTrack_t = TransformComponent();
 		mainScene.AddComponent(leftTireTrack.guid, leftTireTrack_r);
 		mainScene.AddComponent(leftTireTrack.guid, leftTireTrack_t);
@@ -134,7 +134,7 @@ void TireTracks(Car& car, std::vector<Guid> &AIGuids, ecs::Scene mainScene) {
 
 		if (AIcar.m_Vehicle.mBaseState.roadGeomStates[0].hitState && AIcar.m_Vehicle.mBaseState.roadGeomStates[1].hitState) {
 			previousStates.at(i+1).at(0) = true;
-			glm::vec3 frontTirePosition = PxtoGLM(AIcar.getVehicleRigidBody()->getGlobalPose().p) + glm::vec3(PxtoGLM(AIcar.getVehicleRigidBody()->getGlobalPose().q) * glm::vec4(0, -.3, 4, 1));
+			glm::vec3 frontTirePosition = PxtoGLM(AIcar.getVehicleRigidBody()->getGlobalPose().p) + glm::vec3(PxtoGLM(AIcar.getVehicleRigidBody()->getGlobalPose().q) * glm::vec4(0, 0, 4, 1));
 			if (glm::length(frontTirePosition - frontTireTracks.g_previousPosition()) > 1) {
 				frontTireTracks.extrude(frontTirePosition, glm::vec3(0, 1, 0));
 			}
@@ -151,7 +151,7 @@ void TireTracks(Car& car, std::vector<Guid> &AIGuids, ecs::Scene mainScene) {
 		//right tire
 		if (AIcar.m_Vehicle.mBaseState.roadGeomStates[2].hitState) {
 			previousStates.at(i+1).at(1) = true;
-			glm::vec3 rightTirePosition = PxtoGLM(AIcar.getVehicleRigidBody()->getGlobalPose().p) + glm::vec3(PxtoGLM(AIcar.getVehicleRigidBody()->getGlobalPose().q) * glm::vec4(1, -.3, 1, 1));
+			glm::vec3 rightTirePosition = PxtoGLM(AIcar.getVehicleRigidBody()->getGlobalPose().p) + glm::vec3(PxtoGLM(AIcar.getVehicleRigidBody()->getGlobalPose().q) * glm::vec4(1, 0, 1, 1));
 			if (glm::length(rightTirePosition - rightTireTracks.g_previousPosition()) > 1) {
 				rightTireTracks.extrude(rightTirePosition, glm::vec3(0, 1, 0));
 			}
@@ -168,7 +168,7 @@ void TireTracks(Car& car, std::vector<Guid> &AIGuids, ecs::Scene mainScene) {
 		//left tire
 		if (AIcar.m_Vehicle.mBaseState.roadGeomStates[3].hitState) {
 			previousStates.at(i+1).at(2) = true;
-			glm::vec3 leftTirePosition = PxtoGLM(AIcar.getVehicleRigidBody()->getGlobalPose().p) + glm::vec3(PxtoGLM(AIcar.getVehicleRigidBody()->getGlobalPose().q) * glm::vec4(-1, -.3, 1, 1));
+			glm::vec3 leftTirePosition = PxtoGLM(AIcar.getVehicleRigidBody()->getGlobalPose().p) + glm::vec3(PxtoGLM(AIcar.getVehicleRigidBody()->getGlobalPose().q) * glm::vec4(-1, 0, 1, 1));
 			if (glm::length(leftTirePosition - leftTireTracks.g_previousPosition()) > 1) {
 				leftTireTracks.extrude(leftTirePosition, glm::vec3(0, 1, 0));
 			}
