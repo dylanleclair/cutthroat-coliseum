@@ -14,8 +14,6 @@
 #include "systems/GraphicsSystem.h"
 #include "systems/components.h"
 
-#include "GRAPHICS_TESTBENCH.h"
-
 #include "FrameCounter.h"
 #include "systems/ai.h"
 
@@ -226,6 +224,7 @@ int main(int argc, char* argv[]) {
 		Guid aiCarGuid = spawnAIEntity(mainScene, &physicsSystem, car_e.guid, spawnPoint, &navPath);
 		AICar& aiCarInstance = mainScene.GetComponent<AICar>(aiCarGuid);
 		AIGuids.push_back(aiCarGuid);
+		setupCarVFX(mainScene, aiCarGuid);
 		// idk why we get the car instance tbh
 	}
 	// NavPath aiPath{zzPathGeom.verts};
@@ -238,9 +237,6 @@ int main(int argc, char* argv[]) {
 	navPathRender.setColor(glm::vec3{1.0f,0.f,1.0f});
 	mainScene.AddComponent(navRenderer_e.guid,navPathRender);
 
-	// Sets up tire track ecs entities
-	setupTireTrackVisuals(mainScene, driverCount);
-
 	// Car Entity
 	RenderModel car_r = RenderModel();
 	GraphicsSystem::importOBJ(car_r, "alpha_cart.obj");
@@ -250,7 +246,7 @@ int main(int argc, char* argv[]) {
 	car_t.setPosition(glm::vec3(0, -0.3f, 0.5f));
 	car_t.setScale(glm::vec3(3.2f, 3.2f, 3.2f));
 	mainScene.AddComponent(car_e.guid, car_t);
-	
+	setupCarVFX(mainScene, car_e.guid);
 
 
 	
@@ -600,7 +596,7 @@ int main(int argc, char* argv[]) {
 		// }
 
 		// Tire track renders
-		TireTracks(testCar, AIGuids, mainScene);
+		updateCarVFX(mainScene);
 
 		// Timestep accumulate for proper physics stepping
 		auto current_time = (float)SDL_GetTicks()/1000.f;
