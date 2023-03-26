@@ -578,9 +578,7 @@ int main(int argc, char* argv[]) {
 		// the angular dampening on the ground
 		if (testCar.isGroundedDelay(testCar)) {
 			testCar.resetModifications();
-		}
-
-		gs.follow_cam_z = original_z_follow_dist -length(PxtoGLM(testCar.getVehicleRigidBody()->getAngularVelocity()));
+		}	
 
 		// Used to toggle the nav path rendering 
 		if (navPathToggle) {
