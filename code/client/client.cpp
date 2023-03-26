@@ -669,13 +669,29 @@ int main(int argc, char* argv[]) {
 							loadLevelMesh = true;
 							navPathToggle = false;
 							gs.cam_mode = 3; // follow cam
-							gs.back_face = false;
+
+							// Turns off the direction line for all AI
+							for (int i = 0; i < aiCars.size(); i++) {
+								RenderLine &AIDirection = mainScene.GetComponent<RenderLine>(aiCars.at(i));
+								CPU_Geometry blank = CPU_Geometry();
+								AIDirection.setGeometry(blank);
+							}						
+
+							showImgui = false;
 						}
 						else {
 							loadLevelMesh = false;
 							navPathToggle = true;
 							gs.cam_mode = 1; // free cam
-							gs.back_face = true;
+
+							// Restores the forward lines for the AI cars
+							for (int i = 0; i < aiCars.size(); i++) {
+								RenderLine& AIDirection = mainScene.GetComponent<RenderLine>(aiCars.at(i));
+								CPU_Geometry forward = CPU_Geometry();
+								forward.verts.push_back({ 0.f, 0.f, 0.f });
+								forward.verts.push_back({ 0.f, 0.f, 5.f });
+								AIDirection.setGeometry(forward);
+							}
 						}
 					}
 
