@@ -297,7 +297,6 @@ void Car::TetherSteer(PxTransform _loc) {
 }
 
 bool Car::TetherJump() {
-    auto v_pos = m_Vehicle.mPhysXState.physxActor.rigidBody->getGlobalPose();
     // For modes
     //eIMPULSE
     // or
@@ -305,7 +304,7 @@ bool Car::TetherJump() {
 
     // if v_pos.p.y is to prevent jumping if the car is already in the air
     // This is a very messy way of doing this - there might be a flag for if the car is in the air
-    if (v_pos.p.y < 2.0f) {
+    if (m_Vehicle.mBaseState.roadGeomStates->hitState) {
         // Caution force is proportional to the mass of the car, the lower the mass, the harder the force will be applied
         // TODO:: Make a function to calculate approriate force to be passed based on vehicle mass
         m_Vehicle.mPhysXState.physxActor.rigidBody->addForce(PxVec3(0.f, 4000.f, 0.f), PxForceMode::eIMPULSE, true);
