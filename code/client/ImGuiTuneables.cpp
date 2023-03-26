@@ -151,8 +151,6 @@ void dampeningRatioPrint(int i) {
 }
 
 void vehicleTuning(EngineDriveVehicle &m_Vehicle, physics::PhysicsSystem &m_Physics) {
-	ImGui::Begin("Vehicle Tuning");
-
 	// PhysX material 
 	// TODO : (right now affects all objects, will need to assign different materials to different objects)
 	if (ImGui::TreeNode("PhysX")) {
@@ -602,12 +600,9 @@ void vehicleTuning(EngineDriveVehicle &m_Vehicle, physics::PhysicsSystem &m_Phys
 
 		ImGui::TreePop();
 	}
-
-	ImGui::End();
 }
 
 void engineTuning(EngineDriveVehicle &m_Vehicle) {
-	ImGui::Begin("Engine Tuning");
 
 	if (ImGui::TreeNode("Engine Params:")) {
 
@@ -811,10 +806,6 @@ void engineTuning(EngineDriveVehicle &m_Vehicle) {
 
 		ImGui::TreePop();
 	}
-
-	
-
-	ImGui::End();
 }
 
 void reloadVehicleJSON(EngineDriveVehicle &m_Vehicle) {

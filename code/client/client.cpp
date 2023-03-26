@@ -24,6 +24,7 @@
 #include "utils/Time.h"
 #include "Input.h"
 #include "utils/PxConversionUtils.h"
+#include "glm/gtx/string_cast.hpp"
 
 #include "systems/PhysicsSystem.h"
 
@@ -31,7 +32,7 @@
 #include "entities/car/AICar.h"
 #include "entities/car/AIEntity.h"
 
-
+#include "entities/car/TireTracks.h"
 #include "TetherGraphics.h"
 #include "entities/physics/Obstacles.h"
 
@@ -146,10 +147,10 @@ int main(int argc, char* argv[]) {
 
 	// init ecs 
 
- 	static float levelMaterial[3] = { 0.10f, 0.730f, 0.135f};
+	// Static Friction, Dynamic Friction, Restitution
+ 	static float levelMaterial[3] = { 0.5f, 1.0f, 0.10f};
 
 	std::cout << "Component initalization finished\n";
-
 
 	//make an entity
 	ecs::Entity car_e = mainScene.CreateEntity();
@@ -212,6 +213,7 @@ int main(int argc, char* argv[]) {
 			vert.y = 0.f;
 	}
 
+	std::vector<Guid> AIGuids;
 	std::vector<NavPath> aiPaths;
 	aiPaths.reserve(aiSpawnPoints.size());
 
@@ -221,11 +223,10 @@ int main(int argc, char* argv[]) {
 		auto& navPath = aiPaths[aiPaths.size() - 1];
 		Guid aiCarGuid = spawnAIEntity(mainScene, &physicsSystem, car_e.guid, spawnPoint, &navPath);
 		AICar& aiCarInstance = mainScene.GetComponent<AICar>(aiCarGuid);
+		AIGuids.push_back(aiCarGuid);
 		// idk why we get the car instance tbh
 	}
-
 	// NavPath aiPath{zzPathGeom.verts};
-
 
 	// NavPath aiPath{aiPathGeom.verts};
 
@@ -235,14 +236,13 @@ int main(int argc, char* argv[]) {
 	navPathRender.setColor(glm::vec3{1.0f,0.f,1.0f});
 	mainScene.AddComponent(navRenderer_e.guid,navPathRender);
 
-
-
+	// Sets up tire track ecs entities
+	setupTireTrackVisuals(mainScene, driverCount);
 
 	// Car Entity
 	RenderModel car_r = RenderModel();
 	GraphicsSystem::importOBJ(car_r, "alpha_cart.obj");
 	car_r.setModelColor(glm::vec3(0.5f, 0.5f, 0.f));
-	car_r.isShadowed(true);
 	mainScene.AddComponent(car_e.guid, car_r);
 	TransformComponent car_t = TransformComponent(testCar.getVehicleRigidBody());
 	car_t.setPosition(glm::vec3(0, -0.3f, 0.5f));
@@ -356,28 +356,6 @@ int main(int argc, char* argv[]) {
 	// tether_t.setScale(glm::vec3(1.f, 2.f, 2.f));
 	// mainScene.AddComponent(tether_e.guid, tether_t);
 
-	//tire tracks for the main player cart
-	//front tire
-	ecs::Entity frontTireTrack = mainScene.CreateEntity();
-	VFXTextureStrip frontTireTrack_r = VFXTextureStrip("textures/MotercycleTireTread.png", 0.07, 2);
-	frontTireTrack_r.maxLength = 25;
-	TransformComponent frontTireTrack_t = TransformComponent();
-	mainScene.AddComponent(frontTireTrack.guid, frontTireTrack_r);
-	mainScene.AddComponent(frontTireTrack.guid, frontTireTrack_t);
-	//right tire
-	ecs::Entity rightTireTrack = mainScene.CreateEntity();
-	VFXTextureStrip rightTireTrack_r = VFXTextureStrip("textures/MotercycleTireTread.png", 0.07, 1);
-	rightTireTrack_r.maxLength = 15;
-	TransformComponent rightTireTrack_t = TransformComponent();
-	mainScene.AddComponent(rightTireTrack.guid, rightTireTrack_r);
-	mainScene.AddComponent(rightTireTrack.guid, rightTireTrack_t);
-	//left tire
-	ecs::Entity leftTireTrack = mainScene.CreateEntity();
-	VFXTextureStrip leftTireTrack_r = VFXTextureStrip("textures/MotercycleTireTread.png", 0.07, 1);
-	leftTireTrack_r.maxLength = 15;
-	TransformComponent leftTireTrack_t = TransformComponent();
-	mainScene.AddComponent(leftTireTrack.guid, leftTireTrack_r);
-	mainScene.AddComponent(leftTireTrack.guid, leftTireTrack_t);
 
 	/*
 	* Demonstration of the Billboard Component. It always expects a texture to be used and an optinal locking axis can be used
@@ -620,68 +598,8 @@ int main(int argc, char* argv[]) {
 		// 	isFinished = false;
 		// }
 
-		// Stuff to check engine rotation speed and steering response
-		// Used for debugging and tuning the vehicle 
-		// CAN DELETE LATER
-		float percent_rot = testCar.m_Vehicle.mEngineDriveState.engineState.rotationSpeed / testCar.m_Vehicle.mEngineDriveParams.engineParams.maxOmega;
-		percent_rot = 1.f - percent_rot;
-		//testCar.m_Vehicle.mBaseParams.steerResponseParams.maxResponse = percent_rot * 1.52;
-
-		//tire track logic
-		static bool previousState[3] = { false, false, false };
-		VFXTextureStrip& frontTireTracks = mainScene.GetComponent<VFXTextureStrip>(frontTireTrack.guid);
-		VFXTextureStrip& rightTireTracks = mainScene.GetComponent<VFXTextureStrip>(rightTireTrack.guid);
-		VFXTextureStrip& leftTireTracks = mainScene.GetComponent<VFXTextureStrip>(leftTireTrack.guid);
-		//front tire
-		if (testCar.m_Vehicle.mBaseState.roadGeomStates[0].hitState && testCar.m_Vehicle.mBaseState.roadGeomStates[1].hitState) {
-			previousState[0] = true;
-			glm::vec3 frontTirePosition = PxtoGLM(testCar.getVehicleRigidBody()->getGlobalPose().p) + glm::vec3(PxtoGLM(testCar.getVehicleRigidBody()->getGlobalPose().q) * glm::vec4(0, 0, 4, 1));
-			if (glm::length(frontTirePosition - frontTireTracks.g_previousPosition()) > 1) {
-				frontTireTracks.extrude(frontTirePosition, glm::vec3(0, 1, 0));
-			}
-			else {
-				//frontTireTracks.moveEndPoint(frontTirePosition, glm::vec3(0, 1, 0));
-			}
-		}
-		else {
-			if (previousState[0] == true)
-				frontTireTracks.cut();
-			previousState[0] = false;
-		}
-		
-		//right tire
-		if (testCar.m_Vehicle.mBaseState.roadGeomStates[2].hitState) {
-			previousState[1] = true;
-			glm::vec3 rightTirePosition = PxtoGLM(testCar.getVehicleRigidBody()->getGlobalPose().p) + glm::vec3(PxtoGLM(testCar.getVehicleRigidBody()->getGlobalPose().q) * glm::vec4(1, 0, 0, 1));
-			if (glm::length(rightTirePosition - rightTireTracks.g_previousPosition()) > 1) {
-				rightTireTracks.extrude(rightTirePosition, glm::vec3(0, 1, 0));
-			}
-			else {
-				//rightTireTracks.moveEndPoint(rightTirePosition, glm::vec3(0, 1, 0));
-			}
-		}
-		else {
-			if (previousState[1] == true)
-				rightTireTracks.cut();
-			previousState[1] = false;
-		}
-
-		//left tire
-		if (testCar.m_Vehicle.mBaseState.roadGeomStates[3].hitState) {
-			previousState[2] = true;
-			glm::vec3 leftTirePosition = PxtoGLM(testCar.getVehicleRigidBody()->getGlobalPose().p) + glm::vec3(PxtoGLM(testCar.getVehicleRigidBody()->getGlobalPose().q) * glm::vec4(-1, 0, 0, 1));
-			if (glm::length(leftTirePosition - leftTireTracks.g_previousPosition()) > 1) {
-				leftTireTracks.extrude(leftTirePosition, glm::vec3(0, 1, 0));
-			}
-			else {
-				//leftTireTracks.moveEndPoint(leftTirePosition, glm::vec3(0, 1, 0));
-			}
-		}
-		else {
-			if (previousState[2] == true)
-				leftTireTracks.cut();
-			previousState[2] = false;
-		}
+		// Tire track renders
+		TireTracks(testCar, AIGuids, mainScene);
 
 		// Timestep accumulate for proper physics stepping
 		auto current_time = (float)SDL_GetTicks()/1000.f;
@@ -709,33 +627,44 @@ int main(int argc, char* argv[]) {
 		ImGui_ImplSDL2_NewFrame();
 		ImGui::NewFrame();
 		if (showImgui) {
-			// BEGIN FRAMERATE COUNTER
-			framerate.update(time_diff * 1000.f);
-			ImGui::SetNextWindowSize(ImVec2(500, 100));
-			ImGui::Begin("Milestone 4");
-			ImGui::Text("framerate: %d", (int)framerate.framerate());
-			ImGui::PlotLines("Frametime plot (ms)", framerate.m_time_queue_ms.data(), framerate.m_time_queue_ms.size());
-			ImGui::PlotLines("Framerate plot (hz)", framerate.m_rate_queue.data(), framerate.m_rate_queue.size());
-			ImGui::SliderFloat3("Level material params", levelMaterial, 0.0f, 5.0f);
+			ImGui::Begin("Milestone 4 debug panel");
+			if (ImGui::BeginTabBar("Debug Tab Bar")) {
+				if (ImGui::BeginTabItem("Performance")) {
+					// BEGIN FRAMERATE COUNTER
+					framerate.update(time_diff * 1000.f);
+					ImGui::SetNextWindowSize(ImVec2(500, 100));
+					ImGui::Text("framerate: %d", (int)framerate.framerate());
+					ImGui::PlotLines("Frametime plot (ms)", framerate.m_time_queue_ms.data(), framerate.m_time_queue_ms.size());
+					ImGui::PlotLines("Framerate plot (hz)", framerate.m_rate_queue.data(), framerate.m_rate_queue.size());
+					ImGui::SliderFloat3("Level material params", levelMaterial, 0.0f, 5.0f);
+					// END FRAMERATE COUNTER
+					ImGui::EndTabItem();
+				}
+				if (ImGui::BeginTabItem("Vehicle")) {
+					// Car PhysX variable panels
+					testCar.carImGui();
+					//ImGui Panels for tuning
+					//reloadVehicleJSON();
+					if(ImGui::CollapsingHeader("Vehicle Tuning"))
+						vehicleTuning(testCar.m_Vehicle, physicsSystem);
+					if (ImGui::CollapsingHeader("Engine Tuning"))
+						engineTuning(testCar.m_Vehicle);
+					ImGui::EndTabItem();
+				}
+				if (ImGui::BeginTabItem("Graphics")) {
+					// Graphics imgui panel for graphics tuneables
+					gs.ImGuiPanel();
+					ImGui::EndTabItem();
+				}
+				if (ImGui::BeginTabItem("Obstacles")) {
+					// Obstacles ImGui
+					obstaclesImGui(mainScene, physicsSystem);
+					ImGui::EndTabItem();
+				}
+				ImGui::EndTabBar();
+			}
 			ImGui::End();
-			// END FRAMERATE COUNTER
 
-			// Car PhysX variable panels
-			testCar.carImGui();
-
-			// NOTE: the imgui bible - beau
-			//ImGui::ShowDemoWindow();
-
-			// Graphics imgui panel for graphics tuneables
-			gs.ImGuiPanel();
-
-			//ImGui Panels for tuning
-			//reloadVehicleJSON();
-			vehicleTuning(testCar.m_Vehicle, physicsSystem);
-			engineTuning(testCar.m_Vehicle);
-
-			// Obstacles ImGui
-			obstaclesImGui(mainScene, physicsSystem);
 		}
 		/*
 		* Render the UI. I am doing this here for now but I might move it.

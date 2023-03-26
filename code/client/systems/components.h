@@ -97,13 +97,15 @@ struct Mesh {
 	GPU_Geometry* geometry = new GPU_Geometry;
 	int textureIndex = -1;
 	glm::vec3 meshColor = glm::vec3(1);
+	std::string name = "";
+	glm::mat4 localTransformation = glm::mat4(1);
 	
 	//using GLuint HAS_TEX = 1;
 	enum meshProperties {
 		m_hasTexture = 1,
-		m_useShadow = 2
+		m_hasNormals = 2
 	};
-	GLuint properties = 0; //texCoords | normals
+	GLuint properties = 0;
 };
 
 /*
@@ -116,10 +118,10 @@ public:
 	//accessors
 	int g_numberOfVerts() {return numberOfVerts;};
 	int g_numberOfVerts(int _meshID) { int i = getMeshIndex(_meshID); if (i != -1) { return meshes[i].numberOfVerticies; } else { return -1; } }
-	bool g_hasNormals(int _meshID) { int i = getMeshIndex(_meshID); if (i != -1) { return (meshes[i].properties & 1) != 0; } else { return -1; } }
-	bool g_hasTextureCoords(int _meshID) { int i = getMeshIndex(_meshID); if (i != -1) { return (meshes[i].properties & 2) != 0; } else { return -1; } }
+	bool g_hasNormals(int _meshID) { int i = getMeshIndex(_meshID); if (i != -1) { return (meshes[i].properties & 2) != 0; } else { return false; } }
+	bool g_hasTextureCoords(int _meshID) { int i = getMeshIndex(_meshID); if (i != -1) { return (meshes[i].properties & 1) != 0; } else { return false; } }
 	std::string g_name() { return std::string(name); }
-
+	int g_meshIDbyName(std::string _name);
 	//modifiers
 	/*
 	* Attaches a mesh to the render.
@@ -131,11 +133,12 @@ public:
 	* returns: true if successful, false otherwise
 	*/
 	bool attachTexture(std::string _texturePath, unsigned int _meshID);
+	bool attachTexture(std::string _texturePath, std::string _meshName);
 	/*
 	* Updates the color of all meshes in the model
 	*/
 	void setModelColor(const glm::vec3 _color);
-	void isShadowed(bool);
+	bool setMeshLocalTransformation(glm::mat4 _transformation, std::string _meshName);
 //private functions
 private:
 	int getMeshIndex(int _meshID) {

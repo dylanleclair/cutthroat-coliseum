@@ -3,6 +3,11 @@
 #include "glm/glm.hpp"
 #include "../../utils/PxConversionUtils.h"
 
+#include "imgui.h"
+#include "imgui_impl_sdl.h"
+#include "imgui_impl_opengl3.h"
+
+#include <iostream>
 
 const char* gVehicleDataPath = "vehicledata";
 
@@ -130,7 +135,7 @@ PxRigidBody* Car::getVehicleRigidBody()
 }
 
 void Car::carImGui() {
-    ImGui::Begin("Car");
+    //ImGui::Begin("Car");
     if (ImGui::TreeNode("Debug Readouts")) {        
         ImGui::Text("left stick horizontal tilt: %f", carAxis);
         //ImGui::Text("Car Throttle: %f", controller_throttle);
@@ -162,7 +167,7 @@ void Car::carImGui() {
         ImGui::TreePop();
     }
 
-    ImGui::End();
+   // ImGui::End();
 }
 
 void Car::baseSetup() {

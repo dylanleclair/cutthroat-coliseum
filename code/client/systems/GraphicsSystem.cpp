@@ -11,7 +11,6 @@
 #include <glm/gtx/quaternion.hpp>
 #define GLM_ENABLE_EXPERIMENTAL
 #include <glm/gtx/string_cast.hpp>
-#include "components.h"
 
 #include <assimp/Importer.hpp>
 #include <assimp/scene.h>
@@ -22,6 +21,11 @@
 #include "stb_image.h"
 #include <cstring>
 #include <fstream>
+#include <iostream>
+#include <ctype.h>
+
+
+#include "graphics/Texture.h"
 
 //DEBUG IMPORTS
 #include "graphics/snippetrender/SnippetRender.h"
@@ -67,9 +71,9 @@ GraphicsSystem::GraphicsSystem(Window& _window) :
 	windowSize = _window.getSize();
 	follow_cam_x = 0.f;
 	follow_cam_y = 6.f;
-	follow_cam_z = -20.f;
+	follow_cam_z = -16.f;
 	follow_correction_strength = 40.f;
-	maximum_follow_distance = 5;
+	maximum_follow_distance = 10;
 	front_face = false;
 	back_face = true;
 
@@ -128,9 +132,9 @@ GraphicsSystem::GraphicsSystem(Window& _window) :
 	// light depth texture
 	glGenTextures(1, &gLightDepth);
 	glBindTexture(GL_TEXTURE_2D, gLightDepth);
-	glTexImage2D(GL_TEXTURE_2D, 0, GL_DEPTH_COMPONENT, 1024, 1024, 0, GL_DEPTH_COMPONENT, GL_FLOAT, NULL);
-	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
-	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+	glTexImage2D(GL_TEXTURE_2D, 0, GL_DEPTH_COMPONENT, 4096, 4096, 0, GL_DEPTH_COMPONENT, GL_HALF_FLOAT, NULL);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_BORDER);
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_BORDER);
 	float borderColor[] = { 1, 1, 1, 1 };
@@ -224,6 +228,7 @@ GraphicsSystem::GraphicsSystem(Window& _window) :
 	
 	gShader.use();
 	glUniform1i(glGetUniformLocation(GLuint(gShader), "gShadowDepth"), 0);
+	glUniform1i(glGetUniformLocation(GLuint(gShader), "diffTexture"), 1);
 
 	//generate the data for the full screen render quad
 	const GLfloat g_quad_vertex_buffer_data[] = {
@@ -331,32 +336,29 @@ GraphicsSystem::~GraphicsSystem() {
 
 // Panel to controls the cameras
 void GraphicsSystem::ImGuiPanel() {
-	ImGui::Begin("Camera States");
-	ImGui::Checkbox("Culling: Front Face", &front_face);
-	ImGui::Checkbox("Culling: Back Face", &back_face);
+	if (ImGui::CollapsingHeader("Camera")) {
+		ImGui::Checkbox("Culling: Front Face", &front_face);
+		ImGui::Checkbox("Culling: Back Face", &back_face);
 
-	if (ImGui::Button("Free Camera")) {
-		cam_mode = 1;
-	}
-	if (ImGui::Button("Fixed Camera")) {
-		cam_mode = 2;
-	}
-	if (ImGui::Button("Follow Camera")) {
-		cam_mode = 3;
-	}
+		if (ImGui::Button("Free Camera")) {
+			cam_mode = 1;
+		}
+		if (ImGui::Button("Fixed Camera")) {
+			cam_mode = 2;
+		}
+		if (ImGui::Button("Follow Camera")) {
+			cam_mode = 3;
+		}
 
-	if (cam_mode == 3) {
-		ImGui::InputFloat("X Distance: ", &follow_cam_x);
-		ImGui::InputFloat("Y Distance: ", &follow_cam_y);
-		ImGui::InputFloat("Z Distance: ", &follow_cam_z);
-		ImGui::InputFloat("Correction Strength", &follow_correction_strength);
-		ImGui::InputFloat("max follow distance", &maximum_follow_distance);
+		if (cam_mode == 3) {
+			ImGui::InputFloat("X Distance: ", &follow_cam_x);
+			ImGui::InputFloat("Y Distance: ", &follow_cam_y);
+			ImGui::InputFloat("Z Distance: ", &follow_cam_z);
+			ImGui::InputFloat("Correction Strength", &follow_correction_strength);
+			ImGui::InputFloat("max follow distance", &maximum_follow_distance);
+		}
 	}
-
-	ImGui::End();
-
-	ImGui::Begin("Debug Rendering");
-	if (ImGui::CollapsingHeader("Visuals")) {		
+	if (ImGui::CollapsingHeader("Rendering")) {
 		ImGui::SliderFloat3("Light Direction", &(lightDirection.x), -50, 50);
 		ImGui::SliderFloat("diffuse strength", &diffuseWeight, 0, 1);
 		ImGui::SliderFloat("ambiant strength", &ambiantStrength, 0, 1);
@@ -367,7 +369,6 @@ void GraphicsSystem::ImGuiPanel() {
 		ImGui::ColorPicker3("gooch cool", &(goochCool[0]));
 		ImGui::ColorPicker3("gooch warm", &(goochWarm[0]));
 	}
-
 	if (ImGui::CollapsingHeader("Transforms")) {
 		ImGui::Checkbox("Collider Meshes", &showColliders);
 		//show all renderables in a list
@@ -413,8 +414,6 @@ void GraphicsSystem::ImGuiPanel() {
 			entityTransforms.read_write[item_current_idx] = 2;
 		}
 	}
-
-	ImGui::End();
 }
 
 glm::mat4 getViewMatrix(const glm::vec3& position, const glm::vec3& direction, const glm::vec3& up) {
@@ -560,9 +559,9 @@ void GraphicsSystem::Update(ecs::Scene& scene, float deltaTime) {
 		glClear(GL_DEPTH_BUFFER_BIT);
 		glEnable(GL_DEPTH_TEST);
 		glEnable(GL_CULL_FACE);
-		glCullFace(GL_BACK);
-		glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
-		glViewport(0, 0, 1024, 1024);
+		glCullFace(GL_FRONT);
+		glPolygonMode(GL_BACK, GL_FILL);
+		glViewport(0, 0, 4096, 4096);
 		GLuint modelUniform = glGetUniformLocation(GLuint(shadowGShader), "M");
 		GLuint viewUniform = glGetUniformLocation(GLuint(shadowGShader), "V");
 		GLuint perspectiveUniform = glGetUniformLocation(GLuint(shadowGShader), "P");
@@ -574,11 +573,11 @@ void GraphicsSystem::Update(ecs::Scene& scene, float deltaTime) {
 			TransformComponent& trans = scene.GetComponent<TransformComponent>(entityGuid);
 
 			glm::mat4 M = glm::translate(glm::mat4(1), trans.getTranslation()) * toMat4(trans.getRotation()) * glm::scale(glm::mat4(1), trans.getScale());
-			glUniformMatrix4fv(modelUniform, 1, GL_FALSE, glm::value_ptr(M));
 
 			//loop through each mesh in the renderComponent
 			for each (Mesh mesh in comp.meshes) {
 				mesh.geometry->bind();
+				glUniformMatrix4fv(modelUniform, 1, GL_FALSE, glm::value_ptr(M * mesh.localTransformation));
 				glDrawElements(GL_TRIANGLES, mesh.numberOfIndicies, GL_UNSIGNED_INT, 0);
 			}
 		}
@@ -645,9 +644,8 @@ void GraphicsSystem::Update(ecs::Scene& scene, float deltaTime) {
 		glUniformMatrix4fv(viewUniform, 1, GL_FALSE, glm::value_ptr(V));
 		glUniformMatrix4fv(lightSpaceMatixUniform, 1, GL_FALSE, glm::value_ptr(shadowP * shadowV));
 
-		//bind the light depth texture
-		glActiveTexture(GL_TEXTURE0);
-		glBindTexture(GL_TEXTURE_2D, gLightDepth);
+
+		
 		
 
 		for (Guid entityGuid : ecs::EntitiesInScene<RenderModel,TransformComponent>(scene)) {
@@ -656,23 +654,27 @@ void GraphicsSystem::Update(ecs::Scene& scene, float deltaTime) {
 
 			//properties the geometry is ALWAYS going to have
 			glm::mat4 M = glm::translate(glm::mat4(1), trans.getTranslation()) * toMat4(trans.getRotation()) * glm::scale(glm::mat4(1), trans.getScale());
-			glUniformMatrix4fv(modelUniform, 1, GL_FALSE, glm::value_ptr(M));
-			glm::mat3 normalsMatrix = glm::mat3(glm::transpose(glm::inverse(M)));
-			glUniformMatrix3fv(normalMatUniform, 1, GL_FALSE, glm::value_ptr(normalsMatrix));
+
+			//bind the light depth texture
+			glActiveTexture(GL_TEXTURE0);
+			glBindTexture(GL_TEXTURE_2D, gLightDepth);
 
 			//loop through each mesh in the renderComponent
 			for each (Mesh mesh in comp.meshes) {
 				mesh.geometry->bind();
-				//I've disabled textures for now since they aren't being used
-				//if ((mesh.properties & Mesh::meshProperties::m_hasTexture) != 0 && mesh.textureIndex != -1) {
-					//comp.textures[mesh.textureIndex]->bind();
-					//glUniform1ui(shaderStateUniform, 1);
-				//}
-				//else {
+				glUniformMatrix4fv(modelUniform, 1, GL_FALSE, glm::value_ptr(M * mesh.localTransformation));
+				glm::mat3 normalsMatrix = glm::mat3(glm::transpose(glm::inverse(M * mesh.localTransformation)));
+				glUniformMatrix3fv(normalMatUniform, 1, GL_FALSE, glm::value_ptr(normalsMatrix));
+				if ((mesh.properties & Mesh::meshProperties::m_hasTexture) != 0 && mesh.textureIndex != -1) {
+					glActiveTexture(GL_TEXTURE1);
+					comp.textures[mesh.textureIndex]->bind();
+					glUniform1ui(shaderStateUniform, 1);
+				}
+				else {
 					glUniform3fv(userColorUniform, 1, glm::value_ptr(mesh.meshColor));
 					glDisableVertexAttribArray(2);
 					glUniform1ui(shaderStateUniform, 0);
-				//}
+				}
 				
 				glDrawElements(GL_TRIANGLES, mesh.numberOfIndicies, GL_UNSIGNED_INT, 0);
 			}
@@ -884,9 +886,7 @@ void GraphicsSystem::processNode(aiNode* node, const aiScene* scene, RenderModel
 			geometry.norms.push_back(glm::vec3(mesh->mNormals[i].x, mesh->mNormals[i].y, mesh->mNormals[i].z));
 			if (mesh->mTextureCoords[0]) // does the mesh contain texture coordinates?
 				geometry.texs.push_back(glm::vec2(mesh->mTextureCoords[0][i].x, mesh->mTextureCoords[0][i].y));
-			//TODO If disabling layouts isn't possible then uncomment this code!!!
-			//else
-				//geometry.texs.push_back(glm::vec2(0));
+
 		}
 		// process indices
 		for (unsigned int i = 0; i < mesh->mNumFaces; i++)
@@ -898,8 +898,9 @@ void GraphicsSystem::processNode(aiNode* node, const aiScene* scene, RenderModel
 		}
 		
 		int ID = _component.attachMesh(geometry);
+		_component.meshes[_component.getMeshIndex(ID)].name = mesh->mName.C_Str();
 		// process material
-		//SAM TODO. Quite frankly this breaks my mind rn with the fact a material can have MULTIPLE textures SOMEHOW
+
 
 		if (mesh->mMaterialIndex >= 0) //if the mesh has a material attached
 		{

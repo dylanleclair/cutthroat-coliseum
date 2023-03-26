@@ -72,6 +72,9 @@ void main()
 
 		float outline = (depthDiff * depthDiffWeight + normalDiff * normalDiffWeight);
 
+		//dither the shadow
+
+
 		//calculate Gooch shading
 		vec3 gooch = mix(goochCool, goochWarm, (1 + dot(nlightDir, tnormal))/2.0);
 
@@ -84,8 +87,6 @@ void main()
 		color = mix(vec4(mix(quantized, gooch, goochWeight), 1),vec4(0,0,0,1),outline) * ((1-shadow) + (shadow * 0.4));
 		if(tdepth - VFXdepth > 0) 
 			color = vec4(texture(gVFXColor, tc).xyz, 1);
-		//color = vec4(tcolor, 1) * ((1-shadow) + (shadow * 0.8));
-		//color = vec4(shadow, 0, 0, 1);
 	
 
 }

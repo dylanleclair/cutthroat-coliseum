@@ -1,5 +1,12 @@
 #include "Obstacles.h"
 
+#include "PxPhysicsAPI.h"
+
+#include "imgui.h"
+#include "imgui_impl_sdl.h"
+#include "imgui_impl_opengl3.h"
+
+
 bool obstaclesOn = true;
 std::vector<PxRigidStatic*> actors;
 std::vector<int> guids;
@@ -491,8 +498,6 @@ void setUpLogs(ecs::Scene &mainScene) {
 }
 
 void obstaclesImGui(ecs::Scene& mainScene, physics::PhysicsSystem physicsSystem) {
-	ImGui::Begin("Obstacles");
-
 	if (ImGui::Checkbox("Obstacles", &obstaclesOn)) {
 		if (obstaclesOn) {
 			//setUpLogs(mainScene);
@@ -503,6 +508,4 @@ void obstaclesImGui(ecs::Scene& mainScene, physics::PhysicsSystem physicsSystem)
 			clearObstacles(physicsSystem, mainScene);
 		}
 	}
-
-	ImGui::End();
 }

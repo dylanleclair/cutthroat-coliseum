@@ -1,12 +1,8 @@
 #pragma once
 
-#include <ctype.h>
-#include <iostream>
 
 #include "core/ecs.h"
 #include "../utils/Time.h"
-#include "SDL.h"
-#include <limits>
 
 #include "PxPhysicsAPI.h"
 #include "../physx/snippetcommon/SnippetPVD.h"
