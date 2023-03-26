@@ -243,7 +243,7 @@ int main(int argc, char* argv[]) {
 	car_r.setModelColor(glm::vec3(0.5f, 0.5f, 0.f));
 	mainScene.AddComponent(car_e.guid, car_r);
 	TransformComponent car_t = TransformComponent(testCar.getVehicleRigidBody());
-	car_t.setPosition(glm::vec3(0, -0.3f, 0.5f));
+	car_t.setPosition(glm::vec3(0, -0.34f, 0.5f));
 	car_t.setScale(glm::vec3(3.2f, 3.2f, 3.2f));
 	mainScene.AddComponent(car_e.guid, car_t);
 	setupCarVFX(mainScene, car_e.guid);
