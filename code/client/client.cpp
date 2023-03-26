@@ -306,7 +306,26 @@ int main(int argc, char* argv[]) {
 	new_level_collider.initLevelRigidBody(new_level_collider_mesh, lMaterial);
 
 
+	CPU_Geometry obstacle_geom = CPU_Geometry();
+	GraphicsSystem::importOBJ(obstacle_geom, "obstacles-mesh.obj");
 
+	// give obstacles a collider
+	Guid obstacle_collider_e = mainScene.CreateEntity().guid;
+	mainScene.AddComponent(obstacle_collider_e, ObstacleCollider());
+	ObstacleCollider& new_obstacle_collider = mainScene.GetComponent<ObstacleCollider>(obstacle_collider_e);
+	new_obstacle_collider.Initialize(obstacle_geom, physicsSystem);
+	physx::PxTriangleMesh* new_obstacle_collider_mesh = new_obstacle_collider.cookLevel(glm::scale(glm::mat4(1), glm::vec3(1.0)));
+	new_obstacle_collider.initLevelRigidBody(new_obstacle_collider_mesh, lMaterial);
+
+	// we'll have to programmatically read the obstacles file ._.
+
+	// render the obstacles
+
+	TransformComponent obs_t = TransformComponent();
+	RenderModel obs_r = RenderModel();
+	GraphicsSystem::importOBJ(obs_r,"obstacles-mesh.obj");
+	mainScene.AddComponent(obstacle_collider_e, obs_t);
+	mainScene.AddComponent(obstacle_collider_e, obs_r);
 
 	ecs::Entity road_e = mainScene.CreateEntity();
 	TransformComponent road_t = TransformComponent();

@@ -4,3 +4,5 @@
 using namespace physics;
 
 struct LevelCollider : MeshCollider {};
+
+struct ObstacleCollider : MeshCollider{};

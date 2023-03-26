@@ -85,6 +85,7 @@ Command AICar::pathfind(glm::vec3 currentPosition, ecs::Scene& scene, float delt
     // - if stuck, reverse out
 
     LevelCollider* level_c;
+    ObstacleCollider* obs_c;
 
     for (Guid entity : ecs::EntitiesInScene<LevelCollider>(scene))
     {
@@ -94,10 +95,19 @@ Command AICar::pathfind(glm::vec3 currentPosition, ecs::Scene& scene, float delt
         break;
     }
 
+    // for (Guid entity : ecs::EntitiesInScene<MeshCollider>(scene))
+    // {
+    //     // get the level collider
+    //     ObstacleCollider& oc = scene.GetComponent<ObstacleCollider>(entity);
+    //     obs_c = &oc;
+    //     break;
+    // }
+
 
     bool forced_turn_left{false};
     bool forced_turn_right{false};
     bool hitting_wall{false};
+    bool obstacle_ahead{false};
 
     // split into left and right
     bool hit = castRay(physicsSystem->m_Scene, carPose.p, GLMtoPx(steering_rays[0]), 10.f, level_c->getShape());
@@ -119,6 +129,14 @@ Command AICar::pathfind(glm::vec3 currentPosition, ecs::Scene& scene, float delt
     {
         m_stuckTimer += deltaTime;
     }
+
+
+    // obstacle_ahead = castRay(physicsSystem->m_Scene, carPose.p, GLMtoPx(headingDir), 7.f, obs_c->getShape());
+    // if (obstacle_ahead)
+    // {
+
+    // }
+
 
     // PxVec3 targetDir = ( collided_rays.size() == 0 ) ? GLMtoPx(m_navPath->getDirectionVector(PxtoGLM(carPose.p))) : GLMtoPx(compute_target_dir(collided_rays));
     // PxVec3 targetDir = GLMtoPx(m_navPath->getDirectionVector(PxtoGLM(carPose.p)));
