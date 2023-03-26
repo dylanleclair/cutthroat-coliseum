@@ -32,7 +32,7 @@
 #include "entities/car/AICar.h"
 #include "entities/car/AIEntity.h"
 
-
+#include "entities/car/TireTracks.h"
 #include "TetherGraphics.h"
 #include "entities/physics/Obstacles.h"
 
@@ -149,7 +149,8 @@ int main(int argc, char* argv[]) {
 
 	// init ecs 
 
- 	static float levelMaterial[3] = { 0.10f, 0.730f, 0.135f};
+	// Static Friction, Dynamic Friction, Restitution
+ 	static float levelMaterial[3] = { 0.5f, 1.0f, 0.10f};
 
 	std::cout << "Component initalization finished\n";
 
@@ -214,6 +215,7 @@ int main(int argc, char* argv[]) {
 			vert.y = 0.f;
 	}
 
+	std::vector<Guid> AIGuids;
 	std::vector<NavPath> aiPaths;
 	aiPaths.reserve(aiSpawnPoints.size());
 
@@ -223,11 +225,10 @@ int main(int argc, char* argv[]) {
 		auto& navPath = aiPaths[aiPaths.size() - 1];
 		Guid aiCarGuid = spawnAIEntity(mainScene, &physicsSystem, car_e.guid, spawnPoint, &navPath);
 		AICar& aiCarInstance = mainScene.GetComponent<AICar>(aiCarGuid);
+		AIGuids.push_back(aiCarGuid);
 		// idk why we get the car instance tbh
 	}
-
 	// NavPath aiPath{zzPathGeom.verts};
-
 
 	// NavPath aiPath{aiPathGeom.verts};
 
@@ -237,8 +238,8 @@ int main(int argc, char* argv[]) {
 	navPathRender.setColor(glm::vec3{1.0f,0.f,1.0f});
 	mainScene.AddComponent(navRenderer_e.guid,navPathRender);
 
-
-
+	// Sets up tire track ecs entities
+	setupTireTrackVisuals(mainScene, driverCount);
 
 	// Car Entity
 	RenderModel car_r = RenderModel();
@@ -357,28 +358,6 @@ int main(int argc, char* argv[]) {
 	// tether_t.setScale(glm::vec3(1.f, 2.f, 2.f));
 	// mainScene.AddComponent(tether_e.guid, tether_t);
 
-	//tire tracks for the main player cart
-	//front tire
-	ecs::Entity frontTireTrack = mainScene.CreateEntity();
-	VFXTextureStrip frontTireTrack_r = VFXTextureStrip("textures/MotercycleTireTread.png", 0.07, 2);
-	frontTireTrack_r.maxLength = 25;
-	TransformComponent frontTireTrack_t = TransformComponent();
-	mainScene.AddComponent(frontTireTrack.guid, frontTireTrack_r);
-	mainScene.AddComponent(frontTireTrack.guid, frontTireTrack_t);
-	//right tire
-	ecs::Entity rightTireTrack = mainScene.CreateEntity();
-	VFXTextureStrip rightTireTrack_r = VFXTextureStrip("textures/MotercycleTireTread.png", 0.07, 1);
-	rightTireTrack_r.maxLength = 15;
-	TransformComponent rightTireTrack_t = TransformComponent();
-	mainScene.AddComponent(rightTireTrack.guid, rightTireTrack_r);
-	mainScene.AddComponent(rightTireTrack.guid, rightTireTrack_t);
-	//left tire
-	ecs::Entity leftTireTrack = mainScene.CreateEntity();
-	VFXTextureStrip leftTireTrack_r = VFXTextureStrip("textures/MotercycleTireTread.png", 0.07, 1);
-	leftTireTrack_r.maxLength = 15;
-	TransformComponent leftTireTrack_t = TransformComponent();
-	mainScene.AddComponent(leftTireTrack.guid, leftTireTrack_r);
-	mainScene.AddComponent(leftTireTrack.guid, leftTireTrack_t);
 
 	/*
 	* Demonstration of the Billboard Component. It always expects a texture to be used and an optinal locking axis can be used
@@ -620,83 +599,8 @@ int main(int argc, char* argv[]) {
 		// 	isFinished = false;
 		// }
 
-		// Stuff to check engine rotation speed and steering response
-		// Used for debugging and tuning the vehicle 
-		// CAN DELETE LATER
-		float percent_rot = testCar.m_Vehicle.mEngineDriveState.engineState.rotationSpeed / testCar.m_Vehicle.mEngineDriveParams.engineParams.maxOmega;
-		percent_rot = 1.f - percent_rot;
-		//testCar.m_Vehicle.mBaseParams.steerResponseParams.maxResponse = percent_rot * 1.52;
-		//std::cout << glm::to_string(PxtoGLM(testCar.m_Vehicle.mBaseState.wheelLocalPoses[2].localPose.q)) << '\n';
-		//tire animation logic
-		RenderModel& rightTireModel = mainScene.GetComponent<RenderModel>(car_e.guid);
-		glm::mat4 rightWheelRotation = glm::toMat4(PxtoGLM(testCar.m_Vehicle.mBaseState.wheelLocalPoses[2].localPose.q));
-		glm::mat4 rightWheelTranslation = glm::translate(glm::mat4(1), glm::vec3(0.31741, -0.18433, 0.28755));
-		rightTireModel.setMeshLocalTransformation(glm::inverse(rightWheelTranslation) * rightWheelRotation * rightWheelTranslation, "rightWheel");
-
-		RenderModel& leftTireModel = mainScene.GetComponent<RenderModel>(car_e.guid);
-		glm::mat4 leftWheelRotation = glm::toMat4(PxtoGLM(testCar.m_Vehicle.mBaseState.wheelLocalPoses[3].localPose.q));
-		glm::mat4 leftWheelTranslation = glm::translate(glm::mat4(1), glm::vec3(-0.31741, -0.18433, 0.28755));
-		leftTireModel.setMeshLocalTransformation(glm::inverse(leftWheelTranslation)* leftWheelRotation* leftWheelTranslation, "leftWheel");
-
-		RenderModel& frontTireModel = mainScene.GetComponent<RenderModel>(car_e.guid);
-		glm::mat4 frontWheelRotation = glm::toMat4(PxtoGLM(testCar.m_Vehicle.mBaseState.wheelLocalPoses[0].localPose.q));
-		glm::mat4 frontWheelTranslation = glm::translate(glm::mat4(1), glm::vec3(-0.026044, -0.18433, -0.92589));
-		frontTireModel.setMeshLocalTransformation(glm::inverse(frontWheelTranslation)* frontWheelRotation* frontWheelTranslation, "frontWheel");
-		//tire track logic
-		static bool previousState[3] = { false, false, false };
-		VFXTextureStrip& frontTireTracks = mainScene.GetComponent<VFXTextureStrip>(frontTireTrack.guid);
-		VFXTextureStrip& rightTireTracks = mainScene.GetComponent<VFXTextureStrip>(rightTireTrack.guid);
-		VFXTextureStrip& leftTireTracks = mainScene.GetComponent<VFXTextureStrip>(leftTireTrack.guid);
-		//front tire
-		if (testCar.m_Vehicle.mBaseState.roadGeomStates[0].hitState && testCar.m_Vehicle.mBaseState.roadGeomStates[1].hitState) {
-			previousState[0] = true;
-			glm::vec3 frontTirePosition = PxtoGLM(testCar.getVehicleRigidBody()->getGlobalPose().p) + glm::vec3(PxtoGLM(testCar.getVehicleRigidBody()->getGlobalPose().q) * glm::vec4(0, 0, 4, 1));
-			if (glm::length(frontTirePosition - frontTireTracks.g_previousPosition()) > 1) {
-				frontTireTracks.extrude(frontTirePosition, glm::vec3(0, 1, 0));
-			}
-			else {
-				//frontTireTracks.moveEndPoint(frontTirePosition, glm::vec3(0, 1, 0));
-			}
-		}
-		else {
-			if (previousState[0] == true)
-				frontTireTracks.cut();
-			previousState[0] = false;
-		}
-		
-		//right tire
-		if (testCar.m_Vehicle.mBaseState.roadGeomStates[2].hitState) {
-			previousState[1] = true;
-			glm::vec3 rightTirePosition = PxtoGLM(testCar.getVehicleRigidBody()->getGlobalPose().p) + glm::vec3(PxtoGLM(testCar.getVehicleRigidBody()->getGlobalPose().q) * glm::vec4(1, 0, 0, 1));
-			if (glm::length(rightTirePosition - rightTireTracks.g_previousPosition()) > 1) {
-				rightTireTracks.extrude(rightTirePosition, glm::vec3(0, 1, 0));
-			}
-			else {
-				//rightTireTracks.moveEndPoint(rightTirePosition, glm::vec3(0, 1, 0));
-			}
-		}
-		else {
-			if (previousState[1] == true)
-				rightTireTracks.cut();
-			previousState[1] = false;
-		}
-
-		//left tire
-		if (testCar.m_Vehicle.mBaseState.roadGeomStates[3].hitState) {
-			previousState[2] = true;
-			glm::vec3 leftTirePosition = PxtoGLM(testCar.getVehicleRigidBody()->getGlobalPose().p) + glm::vec3(PxtoGLM(testCar.getVehicleRigidBody()->getGlobalPose().q) * glm::vec4(-1, 0, 0, 1));
-			if (glm::length(leftTirePosition - leftTireTracks.g_previousPosition()) > 1) {
-				leftTireTracks.extrude(leftTirePosition, glm::vec3(0, 1, 0));
-			}
-			else {
-				//leftTireTracks.moveEndPoint(leftTirePosition, glm::vec3(0, 1, 0));
-			}
-		}
-		else {
-			if (previousState[2] == true)
-				leftTireTracks.cut();
-			previousState[2] = false;
-		}
+		// Tire track renders
+		TireTracks(testCar, AIGuids, mainScene);
 
 		// Timestep accumulate for proper physics stepping
 		auto current_time = (float)SDL_GetTicks()/1000.f;
