@@ -438,6 +438,12 @@ int main(int argc, char* argv[]) {
 		testCar.m_Vehicle.mPhysXState.physxActor.rigidBody->setLinearDamping(default_lin_damp);
 		testCar.m_Vehicle.mPhysXState.physxActor.rigidBody->setAngularDamping(default_ang_damp);
 
+		for (int i = 0; i < aiCars.size(); i++) {
+			AICar& aiCar = mainScene.GetComponent<AICar>(aiCars.at(i));
+			aiCar.m_Vehicle.mPhysXState.physxActor.rigidBody->setLinearDamping(default_lin_damp);
+			aiCar.m_Vehicle.mPhysXState.physxActor.rigidBody->setAngularDamping(default_ang_damp);
+		}
+
 		// Update the Imgui every frame (Might cause performance issues) 
 		baseVariablesInit(testCar.m_Vehicle, physicsSystem);
 		engineVariablesInit(testCar.m_Vehicle);
@@ -464,14 +470,20 @@ int main(int argc, char* argv[]) {
 
 					case SDLK_r:
 						//TODO recompile the shader
-						// Rudementary car reset (will keep using the velocity and rotation of the car through the rest).
-						testCar.m_Vehicle.mPhysXState.physxActor.rigidBody->setGlobalPose(PxTransform(PxVec3(-4.108957, 3.397303, -43.794819)));
+						 
+						// Player reset
+						testCar.m_Vehicle.mPhysXState.physxActor.rigidBody->setGlobalPose(PxTransform(GLMtoPx(spawnPoints[0])));
 						testCar.m_Vehicle.mPhysXState.physxActor.rigidBody->setLinearDamping(10000.f);
 						testCar.m_Vehicle.mPhysXState.physxActor.rigidBody->setAngularDamping(10000.f);
 						lapCount = 1;
-						// TODO: apply the dampening to ai when resetting the ai
-						// Will need to for loop all ai cars
-						//aiCarInstance.m_Vehicle.mPhysXState.physxActor.rigidBody->setGlobalPose(PxTransform(10.f, 2.f, 10.f));
+
+						// Ai Reset
+						for (int i = 0; i < aiCars.size(); i++) {
+							AICar& aiCar = mainScene.GetComponent<AICar>(aiCars.at(i));
+							aiCar.m_Vehicle.mPhysXState.physxActor.rigidBody->setGlobalPose(PxTransform(GLMtoPx(spawnPoints[i+1])));
+							aiCar.m_Vehicle.mPhysXState.physxActor.rigidBody->setLinearDamping(10000.f);
+							aiCar.m_Vehicle.mPhysXState.physxActor.rigidBody->setAngularDamping(10000.f);
+						}
 
 						// Resets the accumulator
 						acc_t = 0;
