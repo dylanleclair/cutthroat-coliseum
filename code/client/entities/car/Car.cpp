@@ -305,12 +305,30 @@ bool Car::TetherJump() {
     // or
     //eVELOCITY_CHANGE
 
-    // if v_pos.p.y is to prevent jumping if the car is already in the air
-    // This is a very messy way of doing this - there might be a flag for if the car is in the air
     if (m_Vehicle.mBaseState.roadGeomStates->hitState) {
         // Caution force is proportional to the mass of the car, the lower the mass, the harder the force will be applied
         // TODO:: Make a function to calculate approriate force to be passed based on vehicle mass
         m_Vehicle.mPhysXState.physxActor.rigidBody->addForce(PxVec3(0.f, 4000.f, 0.f), PxForceMode::eIMPULSE, true);
+        // applying angular dampening prevents the car from rotating while in the air
+        // Prevents the car from spinning around the y axis while in the air
+        m_Vehicle.mPhysXState.physxActor.rigidBody->setAngularDamping(10000.f);
+        //m_Vehicle.mPhysXState.physxActor.rigidBody->addTorque(PxVec3(0.f, 10.f, 0.f), PxForceMode::eVELOCITY_CHANGE, true);
+    }
+    return true;
+}
+
+// Made a different jump for the ai because it was going too high using the player function
+// not sure why, this is a quick workaround
+bool Car::AiTetherJump() {
+    // For modes
+    //eIMPULSE
+    // or
+    //eVELOCITY_CHANGE
+
+    if (m_Vehicle.mBaseState.roadGeomStates->hitState) {
+        // Caution force is proportional to the mass of the car, the lower the mass, the harder the force will be applied
+        // TODO:: Make a function to calculate approriate force to be passed based on vehicle mass
+        m_Vehicle.mPhysXState.physxActor.rigidBody->addForce(PxVec3(0.f, 2500.f, 0.f), PxForceMode::eIMPULSE, true);
         // applying angular dampening prevents the car from rotating while in the air
         // Prevents the car from spinning around the y axis while in the air
         m_Vehicle.mPhysXState.physxActor.rigidBody->setAngularDamping(10000.f);
@@ -350,17 +368,17 @@ void Car::Update(Guid carGuid, ecs::Scene& scene, float deltaTime)
 
   // The behaviour of this is - when you hold down the button it will steer you around corners
   // Until you release the button to reset and give control back to you
-  if (SDL_GameControllerGetButton(ControllerInput::controller, SDL_CONTROLLER_BUTTON_B) && !previous_b_press) {
-      if (!c_tethered) {
-          c_tethered = true;
-          previous_b_press = true;
-          TetherSteer(closest_tether_point);
-      }
-  }
-  else if (!SDL_GameControllerGetButton(ControllerInput::controller, SDL_CONTROLLER_BUTTON_B) && previous_b_press) {
-      resetModifications();
-      previous_b_press = false;
-  }
+  //if (SDL_GameControllerGetButton(ControllerInput::controller, SDL_CONTROLLER_BUTTON_B) && !previous_b_press) {
+  //    if (!c_tethered) {
+  //        c_tethered = true;
+  //        previous_b_press = true;
+  //        TetherSteer(closest_tether_point);
+  //    }
+  //}
+  //else if (!SDL_GameControllerGetButton(ControllerInput::controller, SDL_CONTROLLER_BUTTON_B) && previous_b_press) {
+  //    resetModifications();
+  //    previous_b_press = false;
+  //}
 
   // Normalize controller axis
   // BUG: max positive is 1 less in magnitude than max min meaning full negative will be slightly above 1

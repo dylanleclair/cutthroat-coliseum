@@ -135,7 +135,7 @@ Command AICar::pathfind(glm::vec3 currentPosition, ecs::Scene& scene, float delt
     if (obstacle_ahead)
     {
         // std::cout << "ai needs to jump!" << std::endl;
-        TetherJump();
+        AiTetherJump();
     }
 
 
