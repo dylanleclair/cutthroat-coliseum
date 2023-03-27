@@ -81,7 +81,7 @@ void SoundUpdater::Initialize(ecs::Scene &scene)
         scene.AddComponent(id, emitter);
     }
 
-   for (auto id : ecs::EntitiesInScene<Car>(scene))
+    for (auto id : ecs::EntitiesInScene<Car>(scene))
     {
         scene.AddComponent(id, emitter);
     }
@@ -140,12 +140,18 @@ void SoundUpdater::Update(ecs::Scene &scene, float deltaTime)
         auto & brake = channel.brakechannel;
         // auto & collision = channel.collisionchannel;
 
+        {
+            const float playervolume = 0.25f;
+            engine->setVolume(playervolume);
+            brake->setVolume(playervolume);
+        }
+
         bool isPlaying = false;
         engine->isPlaying(&isPlaying);
         if (!isPlaying && is_car_throttling(car))
         {
-            // result = soundsystem.system->playSound(soundsystem.enginesound, 0, false, &engine);
-            // handle_fmod_error();
+            result = soundsystem.system->playSound(soundsystem.enginesound, 0, false, &engine);
+            handle_fmod_error();
 
             brake->stop();
         }
@@ -154,8 +160,8 @@ void SoundUpdater::Update(ecs::Scene &scene, float deltaTime)
         brake->isPlaying(&isPlaying);
         if (!isPlaying && is_car_braking(car)) {
 
-            // result = soundsystem.system->playSound(soundsystem.brakesound, 0, false, &brake);
-            // handle_fmod_error();
+            result = soundsystem.system->playSound(soundsystem.brakesound, 0, false, &brake);
+            handle_fmod_error();
 
             // also turn off the engine sound
             engine->stop();
@@ -194,8 +200,8 @@ void init_sound_system() {
 
     // create sounds
 
-	// result = soundsystem.system->createSound("audio/beep.ogg", FMOD_3D, 0, &soundsystem.beepsound);
-	// handle_fmod_error();
+	result = soundsystem.system->createSound("audio/beep.ogg", FMOD_3D, 0, &soundsystem.beepsound);
+	handle_fmod_error();
 
 	result = soundsystem.system->createSound("audio/brake-6315.mp3", FMOD_3D, 0, &soundsystem.brakesound);
 	handle_fmod_error();
@@ -206,8 +212,12 @@ void init_sound_system() {
 	result = soundsystem.system->createSound("audio/dark_pit_theme.mp3", FMOD_LOOP_NORMAL, 0, &soundsystem.musicsound);
 	handle_fmod_error();
 
- //    result = soundsystem.system->playSound(soundsystem.musicsound, 0, false, &soundsystem.musicchannel);
-	// handle_fmod_error();
+    result = soundsystem.system->playSound(soundsystem.musicsound, 0, false, &soundsystem.musicchannel);
+	handle_fmod_error();
+
+    // make music quiet
+    result = soundsystem.musicchannel->setVolume(0.1f);
+    handle_fmod_error();
 
     // fix attenuation
 
