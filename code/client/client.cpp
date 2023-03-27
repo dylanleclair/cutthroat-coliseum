@@ -625,9 +625,6 @@ int main(int argc, char* argv[]) {
 		// 	isFinished = false;
 		// }
 
-		// Tire track renders
-		updateCarVFX(mainScene);
-
 		// Timestep accumulate for proper physics stepping
 		auto current_time = (float)SDL_GetTicks()/1000.f;
 		auto time_diff = current_time - previous_time;
@@ -642,6 +639,8 @@ int main(int argc, char* argv[]) {
 			physicsSystem.Update(mainScene, delta_t);
 		}
 
+		// Tire track renders
+		updateCarVFX(mainScene, time_diff);
 		gs.Update(mainScene, time_diff);
 		raceSystem.Update(mainScene,time_diff);
 

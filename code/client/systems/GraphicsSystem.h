@@ -48,7 +48,6 @@ private:
 	//uniforms
 	int numCamerasActive = 1;
 
-	
 	glm::mat4 V = glm::mat4(1.f); // Had to declare this variable here for the rest of the program to work
 
 	//debug panel variables
@@ -78,6 +77,11 @@ private:
 	GLuint billboard_vertexArray;
 	GLuint billboard_vertexBuffer;
 
+	//instanced particle buffer
+	GLuint particles_vertexArray;
+	GLuint particles_instanceTransformBuffer;
+	GLuint particles_quadVertexBuffer;
+
 	//shader variables
 	ShaderProgram modelShader;
 	ShaderProgram lineShader;
@@ -87,6 +91,7 @@ private:
 	ShaderProgram shadowGShader;
 	ShaderProgram VFXshader;
 	ShaderProgram skyboxShader;
+	ShaderProgram particleShader;
 	//buffer for offscreen rendering
 	//buffers
 	GLuint gBuffer;
@@ -114,5 +119,4 @@ private:
 	glm::ivec2 windowSize;
 	static void processNode(aiNode* node, const aiScene* scene, RenderModel& _component);
 	static void processNode(aiNode* node, const aiScene* scene, CPU_Geometry& _geometry);
-
 };

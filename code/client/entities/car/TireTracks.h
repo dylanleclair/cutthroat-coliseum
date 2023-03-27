@@ -5,5 +5,5 @@
 #include "Car.h"
 
 void setupCarVFX(ecs::Scene& mainScene, Guid _ID);
-void updateCarVFX(ecs::Scene mainScene);
+void updateCarVFX(ecs::Scene mainScene, float _dt);
 
