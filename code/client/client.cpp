@@ -188,8 +188,8 @@ int main(int argc, char* argv[]) {
 	// generate spawnpoints along the axis!
 
 
-	int spawnRows = 3;
-	int spawnCols = 3;
+	int spawnRows = 2;
+	int spawnCols = 2;
 	std::vector<glm::vec3> spawnPoints = spawnpointsAlongAxis(spawnRows,spawnCols, 7.f, forward, zzPathGeom.verts[zzSpawnIndex]);
 
 	int numCars = spawnPoints.size();
@@ -329,7 +329,53 @@ int main(int argc, char* argv[]) {
 	new_level_collider.initLevelRigidBody(new_level_collider_mesh, lMaterial);
 
 
+	CPU_Geometry obstacle_geom = CPU_Geometry();
+	GraphicsSystem::importOBJ(obstacle_geom, "obstacles-mesh.obj");
 
+
+	std::vector<Guid> obstacles;
+	for (int i = 1; i <= 11; i++)
+	{
+		char buffer[50];
+
+		sprintf(buffer, "obstacles/Pillar_%03d.obj", i);
+		// load in obstacle collider & send it for rendering
+
+		CPU_Geometry obstacle_geom = CPU_Geometry();
+		GraphicsSystem::importOBJ(obstacle_geom, buffer);
+
+		Guid obstacle_collider_e = mainScene.CreateEntity().guid;
+		mainScene.AddComponent(obstacle_collider_e, ObstacleCollider());
+		ObstacleCollider& new_obstacle_collider = mainScene.GetComponent<ObstacleCollider>(obstacle_collider_e);
+		new_obstacle_collider.Initialize(obstacle_geom, physicsSystem);
+		physx::PxTriangleMesh* new_obstacle_collider_mesh = new_obstacle_collider.cookLevel(glm::scale(glm::mat4(1), glm::vec3(1.0)));
+		new_obstacle_collider.initLevelRigidBody(new_obstacle_collider_mesh, lMaterial);
+		
+	
+		TransformComponent obs_t = TransformComponent();
+		RenderModel obs_r = RenderModel();
+		GraphicsSystem::importOBJ(obs_r,buffer);
+		mainScene.AddComponent(obstacle_collider_e, obs_t);
+		mainScene.AddComponent(obstacle_collider_e, obs_r);
+	}
+
+	// // give obstacles a collider
+	// Guid obstacle_collider_e = mainScene.CreateEntity().guid;
+	// mainScene.AddComponent(obstacle_collider_e, ObstacleCollider());
+	// ObstacleCollider& new_obstacle_collider = mainScene.GetComponent<ObstacleCollider>(obstacle_collider_e);
+	// new_obstacle_collider.Initialize(obstacle_geom, physicsSystem);
+	// physx::PxTriangleMesh* new_obstacle_collider_mesh = new_obstacle_collider.cookLevel(glm::scale(glm::mat4(1), glm::vec3(1.0)));
+	// new_obstacle_collider.initLevelRigidBody(new_obstacle_collider_mesh, lMaterial);
+
+	// // we'll have to programmatically read the obstacles file ._.
+
+	// // render the obstacles
+
+	// TransformComponent obs_t = TransformComponent();
+	// RenderModel obs_r = RenderModel();
+	// GraphicsSystem::importOBJ(obs_r,"obstacles-mesh.obj");
+	// mainScene.AddComponent(obstacle_collider_e, obs_t);
+	// mainScene.AddComponent(obstacle_collider_e, obs_r);
 
 	ecs::Entity road_e = mainScene.CreateEntity();
 	TransformComponent road_t = TransformComponent();
