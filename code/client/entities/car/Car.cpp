@@ -488,43 +488,35 @@ glm::vec3 headingDir = glm::vec3{vehicleRotM * glm::vec4{0.f, 0.f, 1.f, 1.f}};
 
 
     // CODE FOR AI
-    // glm::vec3 up{0.f,1.f,0.f};
-    // std::vector<glm::vec3> steering_rays;
-    // glm::vec4 carLocalForward{0.f, 0.f, 1.f, 1.f};
 
-    // float rot_angle = M_PI_4;
-    // auto M = glm::rotate(glm::mat4{1.f}, -rot_angle, up);
-    // steering_rays.push_back(glm::vec3{vehicleRotM * M * carLocalForward});
+    glm::vec3 up{0.f,1.f,0.f};
+    std::vector<glm::vec3> steering_rays;
+    glm::vec4 carLocalForward{0.f, 0.f, 1.f, 1.f};
 
-    // M = glm::rotate(glm::mat4{1.f}, rot_angle, up);
-    // steering_rays.push_back(glm::vec3{vehicleRotM * M * carLocalForward});
+    float rot_angle = M_PI_4;
+    auto M = glm::rotate(glm::mat4{1.f}, -rot_angle, up);
+    steering_rays.push_back(glm::vec3{vehicleRotM * M * carLocalForward});
+
+    M = glm::rotate(glm::mat4{1.f}, rot_angle, up);
+    steering_rays.push_back(glm::vec3{vehicleRotM * M * carLocalForward});
 
 
-    // LevelCollider* level_c;
+    bool obstacle_ahead{false};
+    // check for obstacles in front of the ai    
+    for (Guid entity : ecs::EntitiesInScene<ObstacleCollider>(scene))
+    {
+        // get the level collider
+        ObstacleCollider& oc = scene.GetComponent<ObstacleCollider>(entity);
 
-    // for (Guid entity : ecs::EntitiesInScene<LevelCollider>(scene))
-    // {
-    //     // get the level collider
-    //     LevelCollider& lc = scene.GetComponent<LevelCollider>(entity);
-    //     level_c = &lc;
-    //     break;
-    // }
+        obstacle_ahead = obstacle_ahead || castRayCar(physicsSystem->m_Scene, carPose.p, GLMtoPx(headingDir), 15.f, oc.getShape());
+    }
 
-    // // split into left and right
-    // bool hit = castRay(physicsSystem->m_Scene, carPose.p, GLMtoPx(steering_rays[0]), 10.f, level_c->getShape());
-    // if (hit)
-    // {
-    //     // collided_rays.push_back(steering_rays[0]);
-    //     std::cout << "hit right!\n";
-    // }
+    if (obstacle_ahead)
+    {
+        std::cout << "ai needs to jump!" << std::endl;
+    }
 
-    // hit = castRay(physicsSystem->m_Scene, carPose.p, GLMtoPx(steering_rays[1]), 10.f, level_c->getShape());
-    // if (hit)
-    // {
-    //     // collided_rays.push_back(steering_rays[1]);
-    //     std::cout << "hit left!\n";
-    
-    // }
+
 
     // end
 

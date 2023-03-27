@@ -85,7 +85,6 @@ Command AICar::pathfind(glm::vec3 currentPosition, ecs::Scene& scene, float delt
     // - if stuck, reverse out
 
     LevelCollider* level_c;
-    ObstacleCollider* obs_c;
 
     for (Guid entity : ecs::EntitiesInScene<LevelCollider>(scene))
     {
@@ -95,13 +94,6 @@ Command AICar::pathfind(glm::vec3 currentPosition, ecs::Scene& scene, float delt
         break;
     }
 
-    // for (Guid entity : ecs::EntitiesInScene<MeshCollider>(scene))
-    // {
-    //     // get the level collider
-    //     ObstacleCollider& oc = scene.GetComponent<ObstacleCollider>(entity);
-    //     obs_c = &oc;
-    //     break;
-    // }
 
 
     bool forced_turn_left{false};
@@ -124,18 +116,27 @@ Command AICar::pathfind(glm::vec3 currentPosition, ecs::Scene& scene, float delt
         forced_turn_left = true;
     }
 
-    hitting_wall = castRay(physicsSystem->m_Scene, carPose.p, GLMtoPx(headingDir), 7.f, level_c->getShape());
+    hitting_wall = castRay(physicsSystem->m_Scene, carPose.p + PxVec3(0.f,2.5f,0.f), GLMtoPx(headingDir), 7.f, level_c->getShape());
     if (hitting_wall)
     {
         m_stuckTimer += deltaTime;
     }
 
 
-    // obstacle_ahead = castRay(physicsSystem->m_Scene, carPose.p, GLMtoPx(headingDir), 7.f, obs_c->getShape());
-    // if (obstacle_ahead)
-    // {
+    // check for obstacles in front of the ai    
+    for (Guid entity : ecs::EntitiesInScene<ObstacleCollider>(scene))
+    {
+        // get the level collider
+        ObstacleCollider& oc = scene.GetComponent<ObstacleCollider>(entity);
 
-    // }
+        obstacle_ahead = obstacle_ahead ||  castRay(physicsSystem->m_Scene, carPose.p, GLMtoPx(headingDir), 25.f, oc.getShape());
+    }
+
+    if (obstacle_ahead)
+    {
+        std::cout << "ai needs to jump!" << std::endl;
+        TetherJump();
+    }
 
 
     // PxVec3 targetDir = ( collided_rays.size() == 0 ) ? GLMtoPx(m_navPath->getDirectionVector(PxtoGLM(carPose.p))) : GLMtoPx(compute_target_dir(collided_rays));
@@ -190,10 +191,28 @@ Command AICar::pathfind(glm::vec3 currentPosition, ecs::Scene& scene, float delt
         } else {
             command.throttle = 1.f;
             // normal turning logic
-            if (actualAngle < M_PI_4) // if the turning angle is more gentle
+
+            float maxAngle = M_PI_2; 
+
+            if (actualAngle > maxAngle) // if the turning angle is more gentle
             {
-                // if close to steering the right direction, make steering less powerful
-                command.steer = turn_dir * (actualAngle / M_PI_4);
+
+                // use the heading direction as the target direction instead 
+                {
+                    auto targetDir = GLMtoPx(m_navPath->getDirectionVector(glm_carPose));
+
+                    PxVec3 cross = GLMtoPx(headingDir).cross(targetDir);
+                    float turn_dir = (cross.y < 0) ? -1.f : 1.f;
+
+                    command.steer = -turn_dir; // flip the turn direction in reverse!
+
+                    // if close to steering the right direction, make steering less powerful
+                    command.steer = turn_dir * (actualAngle / maxAngle);
+                    // command.throttle *= clamp((1-(actualAngle / maxAngle)), 0.8f,1.f);
+
+                }        
+
+
             } else {
                 command.steer = turn_dir;
             }
