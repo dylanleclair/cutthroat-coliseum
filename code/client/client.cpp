@@ -778,10 +778,11 @@ int main(int argc, char* argv[]) {
 					gs.ImGuiPanel();
 					ImGui::EndTabItem();
 				}
-				if (ImGui::BeginTabItem("Obstacles")) {
+				if (ImGui::BeginTabItem("Misc")) {
 					// Obstacles ImGui
 					obstaclesImGui(mainScene, physicsSystem);
 					ImGui::Checkbox("Nav Path Render", &navPathToggle);
+					tireTrackImgui();
 					ImGui::EndTabItem();
 				}
 				ImGui::EndTabBar();

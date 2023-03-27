@@ -2,6 +2,10 @@
 #include "AICar.h"
 #include <iostream>
 
+#include "imgui.h"
+#include "imgui_impl_sdl.h"
+#include "imgui_impl_opengl3.h"
+
 /*
 * put them in a struct for easier code readability and easier expandability for future effects
 */
@@ -13,6 +17,15 @@ struct attachedVFX {
 
 std::vector<std::array<bool, 3>> previousStates;
 std::vector<attachedVFX> VFXGuids;
+
+// Set this value for how much slip must happen for the tire tracks to render
+// lower happens more frequently
+float maxSlip = 0.6f;
+
+void tireTrackImgui() {
+	ImGui::Text("Value for how much the car needs to slip for the tire tracks to render");
+	ImGui::InputFloat("Max Slip Threshold: %f", &maxSlip);
+}
 
 // Sets up tire tracks ecs entities
 // Needs a unique one for each driver
@@ -117,8 +130,9 @@ void updateCarVFX(ecs::Scene mainScene, float dt) {
 		TransformComponent& frontTireTransform = mainScene.GetComponent<TransformComponent>(vfx.trackGuids[0]);
 		TransformComponent& rightTireTransform = mainScene.GetComponent<TransformComponent>(vfx.trackGuids[1]);
 		TransformComponent& leftTireTransform = mainScene.GetComponent<TransformComponent>(vfx.trackGuids[2]);
-
-		if (car->m_Vehicle.mBaseState.roadGeomStates[0].hitState && car->m_Vehicle.mBaseState.roadGeomStates[1].hitState) {
+		
+		if (car->m_Vehicle.mBaseState.roadGeomStates[0].hitState && car->m_Vehicle.mBaseState.roadGeomStates[1].hitState
+			&& (car->m_Vehicle.mBaseState.tireSlipStates->slips[1] > maxSlip || car->m_Vehicle.mBaseState.tireSlipStates->slips[1] < -maxSlip)) {
 			previousStates.at(i).at(0) = true;
 			glm::vec3 frontTirePosition = frontTireTransform.getTransformationMatrix() * glm::vec4(0, y_offset, 0, 1);
 			if (glm::length(frontTirePosition - frontTireTracks.g_previousPosition()) > 1) {
@@ -135,7 +149,7 @@ void updateCarVFX(ecs::Scene mainScene, float dt) {
 		}
 
 		//right tire
-		if (car->m_Vehicle.mBaseState.roadGeomStates[2].hitState) {
+		if (car->m_Vehicle.mBaseState.roadGeomStates[2].hitState && (car->m_Vehicle.mBaseState.tireSlipStates->slips[1] > maxSlip || car->m_Vehicle.mBaseState.tireSlipStates->slips[1] < -maxSlip)) {
 			previousStates.at(i).at(1) = true;
 			glm::vec3 rightTirePosition = rightTireTransform.getTransformationMatrix() * glm::vec4(0, y_offset, 0, 1);
 			if (glm::length(rightTirePosition - rightTireTracks.g_previousPosition()) > 1) {
@@ -152,7 +166,7 @@ void updateCarVFX(ecs::Scene mainScene, float dt) {
 		}
 
 		//left tire
-		if (car->m_Vehicle.mBaseState.roadGeomStates[3].hitState) {
+		if (car->m_Vehicle.mBaseState.roadGeomStates[3].hitState && (car->m_Vehicle.mBaseState.tireSlipStates->slips[1] > maxSlip || car->m_Vehicle.mBaseState.tireSlipStates->slips[1] < -maxSlip)) {
 			previousStates.at(i).at(2) = true;
 			glm::vec3 leftTirePosition = leftTireTransform.getTransformationMatrix() * glm::vec4(0, y_offset, 0, 1);
 			if (glm::length(leftTirePosition - leftTireTracks.g_previousPosition()) > 1) {
@@ -190,17 +204,17 @@ void updateCarVFX(ecs::Scene mainScene, float dt) {
 		VFXParticleSystem& rightTireParticle = mainScene.GetComponent<VFXParticleSystem>(vfx.trackGuids[1]);
 		VFXParticleSystem& leftTireParticle = mainScene.GetComponent<VFXParticleSystem>(vfx.trackGuids[2]);
 
-		if (!previousStates[i][0])
+		if (!car->m_Vehicle.mBaseState.roadGeomStates[0].hitState && car->m_Vehicle.mBaseState.roadGeomStates[1].hitState)
 			frontTireParticle.active = false;
 		else
 			frontTireParticle.active = true;
 
-		if (!previousStates[i][1])
+		if (!car->m_Vehicle.mBaseState.roadGeomStates[2].hitState)
 			rightTireParticle.active = false;
 		else
 			rightTireParticle.active = true;
 
-		if (!previousStates[i][2])
+		if (!car->m_Vehicle.mBaseState.roadGeomStates[3].hitState)
 			leftTireParticle.active = false;
 		else
 			leftTireParticle.active = true;

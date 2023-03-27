@@ -156,7 +156,7 @@ PxRigidBody* Car::getVehicleRigidBody()
 }
 
 void Car::carImGui() {
-    ImGui::Begin("Car");
+    //ImGui::Begin("Car");
     if (ImGui::TreeNode("Debug Readouts")) {        
         ImGui::Text("left stick horizontal tilt: %f", carAxis);
         //ImGui::Text("Car Throttle: %f", controller_throttle);
@@ -177,6 +177,9 @@ void Car::carImGui() {
         ImGui::Text("Steer Response: %f", m_Vehicle.mBaseParams.steerResponseParams.maxResponse);
         ImGui::Text("Linear Velocity: %f, %f, %f", m_Vehicle.mPhysXState.physxActor.rigidBody->getLinearVelocity().x, m_Vehicle.mPhysXState.physxActor.rigidBody->getLinearVelocity().y,
             m_Vehicle.mPhysXState.physxActor.rigidBody->getLinearVelocity().z);
+        auto vehicleRot = m_Vehicle.mPhysXState.physxActor.rigidBody->getGlobalPose().q;
+        ImGui::Text("Car rotation: %f, %f, %f, %f", vehicleRot.w, vehicleRot.x, vehicleRot.y, vehicleRot.z);
+        ImGui::Text("Friction? %f, %f", m_Vehicle.mBaseState.tireSlipStates->slips[0], m_Vehicle.mBaseState.tireSlipStates->slips[1]);
         ImGui::TreePop();
     }
     if (ImGui::TreeNode("Parameter Switching")) {
@@ -190,7 +193,7 @@ void Car::carImGui() {
         ImGui::TreePop();
     }
 
-    ImGui::End();
+    //ImGui::End();
 }
 
 void Car::baseSetup() {

@@ -7,3 +7,4 @@
 void setupCarVFX(ecs::Scene& mainScene, Guid _ID);
 void updateCarVFX(ecs::Scene mainScene, float _dt);
 
+void tireTrackImgui();
