@@ -79,8 +79,6 @@ void SoundUpdater::Initialize(ecs::Scene &scene)
 
 void SoundUpdater::Update(ecs::Scene &scene, float deltaTime)
 {
-    // NOTE(beau): this is almost a complete duplilcate of the player update below,
-    // however its not so easy to factor everything out believe it or not
     for (auto id : ecs::EntitiesInScene<AICar>(scene))
     {
         auto & car = scene.GetComponent<AICar>(id);
