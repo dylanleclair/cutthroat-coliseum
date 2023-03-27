@@ -42,6 +42,7 @@ struct RaceTracker : ecs::ISystem {
 
   int getRanking(Guid contestantGuid);
   int getLapCount(Guid contestantGuid);
+  bool getRaceStatus() {return m_raceFinished; }
 
   std::map<Guid,int>& getRankings() { return m_rankings; };
 private: 
@@ -54,6 +55,7 @@ private:
   std::map<Guid,int> m_rankings;
   std::vector<int> m_checkpoints;
   std::vector<Contestant> m_contestants;
+  bool m_raceFinished{false};
 
 };
 

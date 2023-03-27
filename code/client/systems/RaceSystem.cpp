@@ -31,6 +31,11 @@ void RaceTracker::Initialize(ecs::Scene& scene)
 
 void RaceTracker::Update(ecs::Scene& scene, float deltaTime) {
 
+
+  if (m_raceFinished)
+  {
+    return;
+  }
   // every tick, update the curve index of the car. check if it is near a checkpoint.
   // if it has completed all the checkpoints and is close to the initial checkpoint,
   // it's completed a lap!
@@ -62,6 +67,10 @@ void RaceTracker::Update(ecs::Scene& scene, float deltaTime) {
     {
       std::cout << "completed a lap!";
       car.lapCount++;
+      if (car.lapCount == 1)
+      {
+        m_raceFinished = true;
+      }
       car.checkpoints = 0;
     }
 

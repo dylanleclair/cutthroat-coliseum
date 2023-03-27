@@ -108,11 +108,6 @@ int main(int argc, char* argv[]) {
 	//RUN_GRAPHICS_TEST_BENCH();
 	printf("Starting main");
 
-
-	const int driverCount = 8;
-
-
-
 	SDL_Init(SDL_INIT_EVERYTHING); // initialize all sdl systems
 	Window window(1200, 800, "Maximus Overdrive");
 
@@ -805,6 +800,8 @@ int main(int argc, char* argv[]) {
 								forward.verts.push_back({ 0.f, 0.f, 5.f });
 								AIDirection.setGeometry(forward);
 							}
+
+
 						}
 					}
 
@@ -889,18 +886,21 @@ int main(int argc, char* argv[]) {
 		static int counter = 0;
 		const float delayInSeconds = 0.5;
 		static bool display = true;
-		if (raceSystem.getLapCount(car_e.guid) >= 3) {
+		if (raceSystem.getRaceStatus()) {
 			counter += timestep.getMilliseconds();
 			if (counter >= delayInSeconds * 1000) {
 				counter = 0;
 				display = !display;
 			}
+
+			const char * winner = (raceSystem.getRanking(car_e.guid) == 1) ? "VICTORY!" : "AI WON!";
+
 			if (display) {
 				ImGui::SetNextWindowPos(ImVec2(200, 200));
 				ImGui::Begin("UI2", (bool*)0, textWindowFlags);
 				ImGui::SetWindowFontScale(5.f);
 				ImGui::PushFont(CabalBold);
-				ImGui::TextColored(ImVec4(1.0f, 1.0f, 1.0f, 1.0f), "VICTORY");
+				ImGui::TextColored(ImVec4(1.0f, 1.0f, 1.0f, 1.0f), winner);
 				ImGui::PopFont();
 				ImGui::End();
 			}
@@ -927,6 +927,7 @@ int main(int argc, char* argv[]) {
 		glViewport(0, 0, (int)io.DisplaySize.x, (int)io.DisplaySize.y);
 		ImGui_ImplOpenGL3_RenderDrawData(ImGui::GetDrawData());
 		window.swapBuffers();
+
 	}
 
 	ImGui_ImplOpenGL3_Shutdown();
