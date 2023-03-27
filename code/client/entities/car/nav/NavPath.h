@@ -16,6 +16,8 @@ struct NavPath {
     glm::vec3 getDirectionVector(glm::vec3 currentPos);
     glm::vec3 getNextPoint(glm::vec3 currentPos, bool& outDidLap);
 
+    void resetNav();
+
     CheckPoint currentCheckpoint;
     std::vector<glm::vec3> checkpoints;
 
