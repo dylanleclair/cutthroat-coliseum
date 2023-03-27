@@ -589,6 +589,7 @@ int main(int argc, char* argv[]) {
 							aiCar.m_Vehicle.mPhysXState.physxActor.rigidBody->setGlobalPose(PxTransform(GLMtoPx(spawnPoints[i+1])));
 							aiCar.m_Vehicle.mPhysXState.physxActor.rigidBody->setLinearDamping(10000.f);
 							aiCar.m_Vehicle.mPhysXState.physxActor.rigidBody->setAngularDamping(10000.f);
+							aiCar.m_navPath->resetNav();
 						}
 
 						// Resets the accumulator

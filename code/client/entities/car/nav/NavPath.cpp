@@ -37,3 +37,8 @@
         }
         return nextCP.position;
     }
+
+    void NavPath::resetNav()
+    {
+        currentCheckpoint = CheckPoint{0,checkpoints[0]};
+    }
