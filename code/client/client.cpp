@@ -65,9 +65,11 @@ bool showImgui = true;
 int lapCount = 0;
 bool isFinished = false;
 
+bool navPathToggle = true;
+
 // Boolean to toggle gameplay mode
 // (follow cam, full level mesh, navmesh off, backface culling off)
-bool gameplayMode = false;
+bool gameplayMode = true;
 
 uint32_t lastTime_millisecs;
 
@@ -104,14 +106,40 @@ std::vector<glm::vec3> spawnpointsAlongAxis(int rows, int cols,float spread, glm
 
 }
 
+void gamePlayToggle(bool toggle, ecs::Scene &mainScene, std::vector<Guid> aiCars, GraphicsSystem &gs) {
+	if (toggle) {
+		loadLevelMesh = true;
+		navPathToggle = false;
+		gs.cam_mode = 3; // follow cam
+
+		// Turns off the direction line for all AI
+		for (int i = 0; i < aiCars.size(); i++) {
+			RenderLine& AIDirection = mainScene.GetComponent<RenderLine>(aiCars.at(i));
+			CPU_Geometry blank = CPU_Geometry();
+			AIDirection.setGeometry(blank);
+		}
+
+		showImgui = false;
+	}
+	else {
+		loadLevelMesh = false;
+		navPathToggle = true;
+		gs.cam_mode = 1; // free cam
+
+		// Restores the forward lines for the AI cars
+		for (int i = 0; i < aiCars.size(); i++) {
+			RenderLine& AIDirection = mainScene.GetComponent<RenderLine>(aiCars.at(i));
+			CPU_Geometry forward = CPU_Geometry();
+			forward.verts.push_back({ 0.f, 0.f, 0.f });
+			forward.verts.push_back({ 0.f, 0.f, 5.f });
+			AIDirection.setGeometry(forward);
+		}
+	}
+}
+
 int main(int argc, char* argv[]) {
 	//RUN_GRAPHICS_TEST_BENCH();
 	printf("Starting main");
-
-
-	const int driverCount = 8;
-
-
 
 	SDL_Init(SDL_INIT_EVERYTHING); // initialize all sdl systems
 	Window window(1200, 800, "Maximus Overdrive");
@@ -188,8 +216,8 @@ int main(int argc, char* argv[]) {
 	// generate spawnpoints along the axis!
 
 
-	int spawnRows = 2;
-	int spawnCols = 2;
+	int spawnRows = 3;
+	int spawnCols = 3;
 	std::vector<glm::vec3> spawnPoints = spawnpointsAlongAxis(spawnRows,spawnCols, 7.f, forward, zzPathGeom.verts[zzSpawnIndex]);
 
 	int numCars = spawnPoints.size();
@@ -245,7 +273,6 @@ int main(int argc, char* argv[]) {
 	// Transform component used for toggling the rendering
 	auto& navRender = mainScene.GetComponent<TransformComponent>(navRenderer_e.guid);
 	auto navDefaultScale = navRender.getScale();
-	bool navPathToggle = true;
 
 	// Car Entity
 	RenderModel car_r = RenderModel();
@@ -332,6 +359,7 @@ int main(int argc, char* argv[]) {
 	CPU_Geometry obstacle_geom = CPU_Geometry();
 	GraphicsSystem::importOBJ(obstacle_geom, "obstacles-mesh.obj");
 
+	gamePlayToggle(gameplayMode, mainScene, aiCars, gs);
 
 	std::vector<Guid> obstacles;
 	for (int i = 1; i <= 11; i++)
@@ -778,34 +806,7 @@ int main(int argc, char* argv[]) {
 					
 					// Used to toggle a bunch of stuff at the same time for gameplay
 					if (ImGui::Checkbox("Gameplay Mode", &gameplayMode)) {
-						if (gameplayMode) {
-							loadLevelMesh = true;
-							navPathToggle = false;
-							gs.cam_mode = 3; // follow cam
-
-							// Turns off the direction line for all AI
-							for (int i = 0; i < aiCars.size(); i++) {
-								RenderLine &AIDirection = mainScene.GetComponent<RenderLine>(aiCars.at(i));
-								CPU_Geometry blank = CPU_Geometry();
-								AIDirection.setGeometry(blank);
-							}						
-
-							showImgui = false;
-						}
-						else {
-							loadLevelMesh = false;
-							navPathToggle = true;
-							gs.cam_mode = 1; // free cam
-
-							// Restores the forward lines for the AI cars
-							for (int i = 0; i < aiCars.size(); i++) {
-								RenderLine& AIDirection = mainScene.GetComponent<RenderLine>(aiCars.at(i));
-								CPU_Geometry forward = CPU_Geometry();
-								forward.verts.push_back({ 0.f, 0.f, 0.f });
-								forward.verts.push_back({ 0.f, 0.f, 5.f });
-								AIDirection.setGeometry(forward);
-							}
-						}
+						gamePlayToggle(gameplayMode, mainScene, aiCars, gs);
 					}
 
 					ImGui::EndTabItem();
@@ -889,18 +890,21 @@ int main(int argc, char* argv[]) {
 		static int counter = 0;
 		const float delayInSeconds = 0.5;
 		static bool display = true;
-		if (raceSystem.getLapCount(car_e.guid) >= 3) {
+		if (raceSystem.getRaceStatus()) {
 			counter += timestep.getMilliseconds();
 			if (counter >= delayInSeconds * 1000) {
 				counter = 0;
 				display = !display;
 			}
+
+			const char * winner = (raceSystem.getRanking(car_e.guid) == 1) ? "VICTORY!" : "AI WON!";
+
 			if (display) {
 				ImGui::SetNextWindowPos(ImVec2(200, 200));
 				ImGui::Begin("UI2", (bool*)0, textWindowFlags);
 				ImGui::SetWindowFontScale(5.f);
 				ImGui::PushFont(CabalBold);
-				ImGui::TextColored(ImVec4(1.0f, 1.0f, 1.0f, 1.0f), "VICTORY");
+				ImGui::TextColored(ImVec4(1.0f, 1.0f, 1.0f, 1.0f), winner);
 				ImGui::PopFont();
 				ImGui::End();
 			}
@@ -927,6 +931,7 @@ int main(int argc, char* argv[]) {
 		glViewport(0, 0, (int)io.DisplaySize.x, (int)io.DisplaySize.y);
 		ImGui_ImplOpenGL3_RenderDrawData(ImGui::GetDrawData());
 		window.swapBuffers();
+
 	}
 
 	ImGui_ImplOpenGL3_Shutdown();
