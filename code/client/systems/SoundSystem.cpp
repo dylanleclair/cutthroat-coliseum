@@ -206,8 +206,8 @@ void init_sound_system() {
 	result = soundsystem.system->createSound("audio/dark_pit_theme.mp3", FMOD_LOOP_NORMAL, 0, &soundsystem.musicsound);
 	handle_fmod_error();
 
-    result = soundsystem.system->playSound(soundsystem.musicsound, 0, false, &soundsystem.musicchannel);
-	handle_fmod_error();
+ //    result = soundsystem.system->playSound(soundsystem.musicsound, 0, false, &soundsystem.musicchannel);
+	// handle_fmod_error();
 
     // fix attenuation
 
