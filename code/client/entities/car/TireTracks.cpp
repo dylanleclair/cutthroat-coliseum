@@ -2,6 +2,10 @@
 #include "AICar.h"
 #include <iostream>
 
+#include "imgui.h"
+#include "imgui_impl_sdl.h"
+#include "imgui_impl_opengl3.h"
+
 /*
 * put them in a struct for easier code readability and easier expandability for future effects
 */
@@ -13,6 +17,15 @@ struct attachedVFX {
 
 std::vector<std::array<bool, 3>> previousStates;
 std::vector<attachedVFX> VFXGuids;
+
+// Set this value for how much slip must happen for the tire tracks to render
+// lower happens more frequently
+float maxSlip = 0.6f;
+
+void tireTrackImgui() {
+	ImGui::Text("Value for how much the car needs to slip for the tire tracks to render");
+	ImGui::InputFloat("Max Slip Threshold: %f", &maxSlip);
+}
 
 // Sets up tire tracks ecs entities
 // Needs a unique one for each driver
@@ -117,8 +130,6 @@ void updateCarVFX(ecs::Scene mainScene, float dt) {
 		TransformComponent& frontTireTransform = mainScene.GetComponent<TransformComponent>(vfx.trackGuids[0]);
 		TransformComponent& rightTireTransform = mainScene.GetComponent<TransformComponent>(vfx.trackGuids[1]);
 		TransformComponent& leftTireTransform = mainScene.GetComponent<TransformComponent>(vfx.trackGuids[2]);
-
-		float maxSlip = 0.6f;
 		
 		if (car->m_Vehicle.mBaseState.roadGeomStates[0].hitState && car->m_Vehicle.mBaseState.roadGeomStates[1].hitState
 			&& (car->m_Vehicle.mBaseState.tireSlipStates->slips[1] > maxSlip || car->m_Vehicle.mBaseState.tireSlipStates->slips[1] < -maxSlip)) {
