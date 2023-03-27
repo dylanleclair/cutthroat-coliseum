@@ -121,8 +121,8 @@ void SoundUpdater::Update(ecs::Scene &scene, float deltaTime)
             engine->stop();
         }
 
-        auto body = car.getVehicleRigidBody();
-        auto pose = body->getGlobalPose();
+        auto body     = car.getVehicleRigidBody();
+        auto pose     = body->getGlobalPose();
         auto velocity = body->getLinearVelocity();
         auto fmod_vel = px_to_fmod_vec3(velocity);
         auto position = px_to_fmod_vec3(pose.p);
@@ -144,8 +144,8 @@ void SoundUpdater::Update(ecs::Scene &scene, float deltaTime)
         engine->isPlaying(&isPlaying);
         if (!isPlaying && is_car_throttling(car))
         {
-            result = soundsystem.system->playSound(soundsystem.enginesound, 0, false, &engine);
-            handle_fmod_error();
+            // result = soundsystem.system->playSound(soundsystem.enginesound, 0, false, &engine);
+            // handle_fmod_error();
 
             brake->stop();
         }
@@ -154,15 +154,15 @@ void SoundUpdater::Update(ecs::Scene &scene, float deltaTime)
         brake->isPlaying(&isPlaying);
         if (!isPlaying && is_car_braking(car)) {
 
-            result = soundsystem.system->playSound(soundsystem.brakesound, 0, false, &brake);
-            handle_fmod_error();
+            // result = soundsystem.system->playSound(soundsystem.brakesound, 0, false, &brake);
+            // handle_fmod_error();
 
             // also turn off the engine sound
             engine->stop();
         }
 
-        auto body = car.getVehicleRigidBody();
-        auto pose = body->getGlobalPose();
+        auto body     = car.getVehicleRigidBody();
+        auto pose     = body->getGlobalPose();
         auto velocity = body->getLinearVelocity();
         auto fmod_vel = px_to_fmod_vec3(velocity);
         auto position = px_to_fmod_vec3(pose.p);
