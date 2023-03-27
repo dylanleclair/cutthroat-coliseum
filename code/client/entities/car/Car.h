@@ -101,12 +101,13 @@ struct Car {
 
     void carImGui();
     void baseSetup();
-    void Car::setup1();
+    void setup1();
 
     void resetModifications();
     bool isGroundedDelay(Car& car);
     void TetherSteer(PxTransform _loc);
     bool TetherJump();
+    bool AiTetherJump();
 
     PxRigidBody* getVehicleRigidBody();
 
