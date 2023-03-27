@@ -297,7 +297,6 @@ void Car::TetherSteer(PxTransform _loc) {
 }
 
 bool Car::TetherJump() {
-    auto v_pos = m_Vehicle.mPhysXState.physxActor.rigidBody->getGlobalPose();
     // For modes
     //eIMPULSE
     // or
@@ -305,13 +304,11 @@ bool Car::TetherJump() {
 
     // if v_pos.p.y is to prevent jumping if the car is already in the air
     // This is a very messy way of doing this - there might be a flag for if the car is in the air
-    if (v_pos.p.y < 2.0f) {
+    if (m_Vehicle.mBaseState.roadGeomStates->hitState) {
         // Caution force is proportional to the mass of the car, the lower the mass, the harder the force will be applied
         // TODO:: Make a function to calculate approriate force to be passed based on vehicle mass
         m_Vehicle.mPhysXState.physxActor.rigidBody->addForce(PxVec3(0.f, 4000.f, 0.f), PxForceMode::eIMPULSE, true);
         // applying angular dampening prevents the car from rotating while in the air
-        // it will prevent the car from turning when landing however
-        m_Vehicle.mPhysXState.physxActor.rigidBody->setAngularDamping(20.f); 
         // Prevents the car from spinning around the y axis while in the air
         m_Vehicle.mPhysXState.physxActor.rigidBody->setAngularDamping(10000.f);
         //m_Vehicle.mPhysXState.physxActor.rigidBody->addTorque(PxVec3(0.f, 10.f, 0.f), PxForceMode::eVELOCITY_CHANGE, true);
@@ -573,6 +570,9 @@ void Car::checkFlipped(PxTransform carPose)
         carPose.q = PxQuat(physx::PxIDENTITY::PxIdentity);
         // need to subtract y components
         m_Vehicle.mPhysXState.physxActor.rigidBody->setGlobalPose(carPose);
+
+        // Dampens the angular momentum so you don't keep flipping during reset
+        m_Vehicle.mPhysXState.physxActor.rigidBody->setAngularDamping(10000.f);
     }
 }
 

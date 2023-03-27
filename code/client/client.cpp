@@ -23,6 +23,7 @@
 #include "utils/PxConversionUtils.h"
 #include "glm/gtx/string_cast.hpp"
 
+#include "CenterMass.h"
 #include "systems/PhysicsSystem.h"
 
 #include "entities/car/Car.h"
@@ -54,6 +55,8 @@ glm::vec3 calculateSpherePoint(float s, float t)
 	return(glm::vec3(x, y, z));
 }
 
+
+
 // CarPhysics carPhysics;
 // CarPhysicsSerde carConfig(carPhysics);
 
@@ -61,6 +64,10 @@ bool showImgui = true;
 
 int lapCount = 0;
 bool isFinished = false;
+
+// Boolean to toggle gameplay mode
+// (follow cam, full level mesh, navmesh off, backface culling off)
+bool gameplayMode = false;
 
 uint32_t lastTime_millisecs;
 
@@ -71,18 +78,6 @@ void finishLinePrint() {
 		std::cout << "You win !" << std::endl;
 	}
 }
-
-// Provides a target (ideally the center of mass of a moving object)
-// Renders the sphere where the transform for that object is
-// This is the transform component version
-void renderCMassSphere(TransformComponent &_target, TransformComponent& sphere_transform) {
-	sphere_transform.setPosition(glm::vec3(_target.getTranslation().x, _target.getTranslation().y, _target.getTranslation().z));
-}
-// This is the PxTransform version as vehicle PhysX models use PxTransforms for their center of mass
-void renderCMassSphere(PxTransform & _target, TransformComponent& sphere_transform) {
-	sphere_transform.setPosition(glm::vec3(_target.p.x, _target.p.y, _target.p.z));
-}
-
 
 std::vector<glm::vec3> spawnpointsAlongAxis(int rows, int cols,float spread, glm::vec3 axis, glm::vec3 start)
 {
@@ -176,7 +171,6 @@ int main(int argc, char* argv[]) {
 	ecs::Entity finish_e = mainScene.CreateEntity();
 	ecs::Entity tetherPole1_e = mainScene.CreateEntity();
 	ecs::Entity tetherPole2_e = mainScene.CreateEntity();
-	ecs::Entity sphere_e = mainScene.CreateEntity();
 	ecs::Entity tether_e = mainScene.CreateEntity();
 
 
@@ -457,6 +451,8 @@ int main(int argc, char* argv[]) {
 	baseVariablesInit(testCar.m_Vehicle, physicsSystem);
 	engineVariablesInit(testCar.m_Vehicle);
 
+	float original_z_follow_dist = gs.follow_cam_z;
+
 	// GAME LOOP
 	while (!quit) {
 		Timestep timestep; // Time since last frame
@@ -488,6 +484,12 @@ int main(int argc, char* argv[]) {
 		testCar.m_Vehicle.mPhysXState.physxActor.rigidBody->setLinearDamping(default_lin_damp);
 		testCar.m_Vehicle.mPhysXState.physxActor.rigidBody->setAngularDamping(default_ang_damp);
 
+		for (int i = 0; i < aiCars.size(); i++) {
+			AICar& aiCar = mainScene.GetComponent<AICar>(aiCars.at(i));
+			aiCar.m_Vehicle.mPhysXState.physxActor.rigidBody->setLinearDamping(default_lin_damp);
+			aiCar.m_Vehicle.mPhysXState.physxActor.rigidBody->setAngularDamping(default_ang_damp);
+		}
+
 		// Update the Imgui every frame (Might cause performance issues) 
 		baseVariablesInit(testCar.m_Vehicle, physicsSystem);
 		engineVariablesInit(testCar.m_Vehicle);
@@ -514,14 +516,20 @@ int main(int argc, char* argv[]) {
 
 					case SDLK_r:
 						//TODO recompile the shader
-						// Rudementary car reset (will keep using the velocity and rotation of the car through the rest).
-						testCar.m_Vehicle.mPhysXState.physxActor.rigidBody->setGlobalPose(PxTransform(PxVec3(-4.108957, 3.397303, -43.794819)));
+						 
+						// Player reset
+						testCar.m_Vehicle.mPhysXState.physxActor.rigidBody->setGlobalPose(PxTransform(GLMtoPx(spawnPoints[0])));
 						testCar.m_Vehicle.mPhysXState.physxActor.rigidBody->setLinearDamping(10000.f);
 						testCar.m_Vehicle.mPhysXState.physxActor.rigidBody->setAngularDamping(10000.f);
 						lapCount = 1;
-						// TODO: apply the dampening to ai when resetting the ai
-						// Will need to for loop all ai cars
-						//aiCarInstance.m_Vehicle.mPhysXState.physxActor.rigidBody->setGlobalPose(PxTransform(10.f, 2.f, 10.f));
+
+						// Ai Reset
+						for (int i = 0; i < aiCars.size(); i++) {
+							AICar& aiCar = mainScene.GetComponent<AICar>(aiCars.at(i));
+							aiCar.m_Vehicle.mPhysXState.physxActor.rigidBody->setGlobalPose(PxTransform(GLMtoPx(spawnPoints[i+1])));
+							aiCar.m_Vehicle.mPhysXState.physxActor.rigidBody->setLinearDamping(10000.f);
+							aiCar.m_Vehicle.mPhysXState.physxActor.rigidBody->setAngularDamping(10000.f);
+						}
 
 						// Resets the accumulator
 						acc_t = 0;
@@ -628,16 +636,15 @@ int main(int argc, char* argv[]) {
 		// the angular dampening on the ground
 		if (testCar.isGroundedDelay(testCar)) {
 			testCar.resetModifications();
-		}
-		PxTransform c_mass_f;
+		}	
 
+		// Used to toggle the nav path rendering 
 		if (navPathToggle) {
 			navRender.setScale(navDefaultScale);
 		}
 		else {
 			navRender.setScale(vec3(0));
 		}
-		
 
 		// auto& center_of_mass = testCar.m_Vehicle.mPhysXParams.physxActorCMassLocalPose;
 		// renderCMassSphere(center_of_mass, sphere_transform);
@@ -664,9 +671,6 @@ int main(int argc, char* argv[]) {
 		// 	isFinished = false;
 		// }
 
-		// Tire track renders
-		updateCarVFX(mainScene);
-
 		// Timestep accumulate for proper physics stepping
 		auto current_time = (float)SDL_GetTicks()/1000.f;
 		auto time_diff = current_time - previous_time;
@@ -681,6 +685,8 @@ int main(int argc, char* argv[]) {
 			physicsSystem.Update(mainScene, delta_t);
 		}
 
+		// Tire track renders
+		updateCarVFX(mainScene, time_diff);
 		gs.Update(mainScene, time_diff);
 		raceSystem.Update(mainScene,time_diff);
 
@@ -704,11 +710,44 @@ int main(int argc, char* argv[]) {
 					ImGui::PlotLines("Frametime plot (ms)", framerate.m_time_queue_ms.data(), framerate.m_time_queue_ms.size());
 					ImGui::PlotLines("Framerate plot (hz)", framerate.m_rate_queue.data(), framerate.m_rate_queue.size());
 					ImGui::SliderFloat3("Level material params", levelMaterial, 0.0f, 5.0f);
+
 					// END FRAMERATE COUNTER
 
 					if (!loadLevelMesh)
 					{
 						ImGui::Checkbox("Load level mesh", &loadLevelMesh);
+					}
+					
+					// Used to toggle a bunch of stuff at the same time for gameplay
+					if (ImGui::Checkbox("Gameplay Mode", &gameplayMode)) {
+						if (gameplayMode) {
+							loadLevelMesh = true;
+							navPathToggle = false;
+							gs.cam_mode = 3; // follow cam
+
+							// Turns off the direction line for all AI
+							for (int i = 0; i < aiCars.size(); i++) {
+								RenderLine &AIDirection = mainScene.GetComponent<RenderLine>(aiCars.at(i));
+								CPU_Geometry blank = CPU_Geometry();
+								AIDirection.setGeometry(blank);
+							}						
+
+							showImgui = false;
+						}
+						else {
+							loadLevelMesh = false;
+							navPathToggle = true;
+							gs.cam_mode = 1; // free cam
+
+							// Restores the forward lines for the AI cars
+							for (int i = 0; i < aiCars.size(); i++) {
+								RenderLine& AIDirection = mainScene.GetComponent<RenderLine>(aiCars.at(i));
+								CPU_Geometry forward = CPU_Geometry();
+								forward.verts.push_back({ 0.f, 0.f, 0.f });
+								forward.verts.push_back({ 0.f, 0.f, 5.f });
+								AIDirection.setGeometry(forward);
+							}
+						}
 					}
 
 					ImGui::EndTabItem();
