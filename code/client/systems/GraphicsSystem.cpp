@@ -71,8 +71,8 @@ GraphicsSystem::GraphicsSystem(Window& _window) :
 {
 	windowSize = _window.getSize();
 	follow_cam_x = 0.f;
-	follow_cam_y = 6.f;
-	follow_cam_z = -16.f;
+	follow_cam_y = 4.f;
+	follow_cam_z = -22.f;
 	follow_correction_strength = 40.f;
 	maximum_follow_distance = 10;
 	front_face = false;

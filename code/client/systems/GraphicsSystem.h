@@ -30,13 +30,24 @@ public:
 	static void importOBJ(CPU_Geometry& _geometry, const std::string _fileName);
 	static void importOBJ(RenderModel& _component, const std::string _fileName);
 	static void importSplineFromOBJ(CPU_Geometry& _geometry, std::string filename);
+
+	//follow camera variables
+	float follow_cam_x;
+	float follow_cam_y;
+	float follow_cam_z;
+	float follow_correction_strength;
+	float maximum_follow_distance;
+	bool faceCulling;
+	bool front_face;
+	bool back_face;
+
+	int cam_mode = 1; // Used to determine what mode the camera should use (free, fixed, follow)
 private:
 
 	Camera cameras[4];
 	//uniforms
 	int numCamerasActive = 1;
 
-	int cam_mode = 1; // Used to determine what mode the camera should use (free, fixed, follow)
 	glm::mat4 V = glm::mat4(1.f); // Had to declare this variable here for the rest of the program to work
 
 	//debug panel variables
@@ -108,14 +119,4 @@ private:
 	glm::ivec2 windowSize;
 	static void processNode(aiNode* node, const aiScene* scene, RenderModel& _component);
 	static void processNode(aiNode* node, const aiScene* scene, CPU_Geometry& _geometry);
-
-	//follo camera variables
-	float follow_cam_x;
-	float follow_cam_y;
-	float follow_cam_z;
-	float follow_correction_strength;
-	float maximum_follow_distance;
-	bool faceCulling;
-	bool front_face;
-	bool back_face;
 };

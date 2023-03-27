@@ -96,13 +96,19 @@ void setupCarVFX(ecs::Scene& mainScene, Guid _ID) {
 }
 
 void updateCarVFX(ecs::Scene mainScene, float dt) {
+	float y_offset = -0.32; // offset needs to be different for Player and AI cars
+	// if same offset is used the AI car tracks will be inside the ground
 	for (int i = 0; i < VFXGuids.size(); i++) {
 		attachedVFX vfx = VFXGuids[i];
 		Car* car;
-		if(vfx.isAI)
+		if (vfx.isAI) {
 			car = &mainScene.GetComponent<AICar>(vfx.ownerGuid);
-		else 
+			y_offset = 0.0f;
+		}
+		else {
 			car = &mainScene.GetComponent<Car>(vfx.ownerGuid);
+			y_offset = -0.32f;
+		}
 
 		VFXTextureStrip& frontTireTracks = mainScene.GetComponent<VFXTextureStrip>(vfx.trackGuids[0]);
 		VFXTextureStrip& rightTireTracks = mainScene.GetComponent<VFXTextureStrip>(vfx.trackGuids[1]);
@@ -114,7 +120,7 @@ void updateCarVFX(ecs::Scene mainScene, float dt) {
 
 		if (car->m_Vehicle.mBaseState.roadGeomStates[0].hitState && car->m_Vehicle.mBaseState.roadGeomStates[1].hitState) {
 			previousStates.at(i).at(0) = true;
-			glm::vec3 frontTirePosition = frontTireTransform.getTransformationMatrix() * glm::vec4(0, 0, 0, 1);
+			glm::vec3 frontTirePosition = frontTireTransform.getTransformationMatrix() * glm::vec4(0, y_offset, 0, 1);
 			if (glm::length(frontTirePosition - frontTireTracks.g_previousPosition()) > 1) {
 				frontTireTracks.extrude(frontTirePosition, glm::vec3(0, 1, 0));
 			}
@@ -131,7 +137,7 @@ void updateCarVFX(ecs::Scene mainScene, float dt) {
 		//right tire
 		if (car->m_Vehicle.mBaseState.roadGeomStates[2].hitState) {
 			previousStates.at(i).at(1) = true;
-			glm::vec3 rightTirePosition = rightTireTransform.getTransformationMatrix() * glm::vec4(0, 0, 0, 1);
+			glm::vec3 rightTirePosition = rightTireTransform.getTransformationMatrix() * glm::vec4(0, y_offset, 0, 1);
 			if (glm::length(rightTirePosition - rightTireTracks.g_previousPosition()) > 1) {
 				rightTireTracks.extrude(rightTirePosition, glm::vec3(0, 1, 0));
 			}
@@ -148,7 +154,7 @@ void updateCarVFX(ecs::Scene mainScene, float dt) {
 		//left tire
 		if (car->m_Vehicle.mBaseState.roadGeomStates[3].hitState) {
 			previousStates.at(i).at(2) = true;
-			glm::vec3 leftTirePosition = leftTireTransform.getTransformationMatrix() * glm::vec4(0, 0, 0, 1);
+			glm::vec3 leftTirePosition = leftTireTransform.getTransformationMatrix() * glm::vec4(0, y_offset, 0, 1);
 			if (glm::length(leftTirePosition - leftTireTracks.g_previousPosition()) > 1) {
 				leftTireTracks.extrude(leftTirePosition, glm::vec3(0, 1, 0));
 			}
