@@ -4,6 +4,7 @@
 #include "PxPhysicsAPI.h"
 
 #include "../utils/PxConversionUtils.h"
+#include <glm/gtc/random.hpp>
 
 /*
 * Transform describes the objects position in 3D space.
@@ -71,11 +72,11 @@ public:
 
 	glm::mat4 getTransformationMatrix()
 	{	
-		glm::mat4 rotationM = glm::toMat4(this->getRotation());
-		glm::mat4 scalingM = glm::scale(rotationM,this->getScale());
-		glm::mat4 translationM = glm::translate(scalingM,this->getTranslation());
+		//glm::mat4 rotationM = glm::toMat4(this->getRotation());
+		//glm::mat4 scalingM = glm::scale(rotationM,this->getScale());
+		//glm::mat4 translationM = glm::translate(scalingM,this->getTranslation());
 
-		return translationM;
+		return glm::translate(glm::mat4(1), getTranslation()) * toMat4(getRotation()) * glm::scale(glm::mat4(1), getScale()); //translationM;
 	}	
 
 private:
@@ -217,4 +218,71 @@ private:
 	std::vector<glm::vec2> texCoords = std::vector<glm::vec2>();
 	std::vector<glm::vec3> verticies = std::vector<glm::vec3>();
 	std::vector<GLuint> indicies = std::vector<GLuint>();
+};
+
+struct VFXParticleSystem {
+public:
+	VFXParticleSystem(std::string _textureName, size_t maxParticles = 10);
+	void stepSystem(float dt, glm::mat4 transformationMatrix);
+	void setMaxParticles(size_t count);
+
+	bool active = true;
+	glm::vec3 gravity = glm::vec3(0, -9.81, 0);
+	float particleFrequency = 0.1; //seconds per particle spawn (lower = more frequent)
+	float airResistance = 0.02;
+	//velocity
+	glm::vec3 initialVelocityMin = { -1, 15, -1 };
+	glm::vec3 initialVelocityMax = { 1, 30, 1 };
+	//position
+	glm::vec3 initialPositionMin = { -1,-1,-1 };
+	glm::vec3 initialPositionMax = { 1,1,1 };
+	//mass
+	float initialMassMin = 1;
+	float initialMassMax = 1.5;
+	//scale
+	float initialScaleMin = 1;
+	float initialScaleMax = 1;
+	float scaleSpeedMin = 0;
+	float scaleSpeedMax = 0;
+	float scaleMaxsizeMin = 1;
+	float scaleMaxsizeMax = 1;
+	//rotation
+	float initialRotationMin = 0;
+	float initialRotationMax = 0;
+	float rotationSpeedMin = 0;
+	float rotationSpeedMax = 0;
+	//alpha
+	float initalAlphaMin = 1;
+	float initalAlphaMax = 1;
+	float alphaChangeMin = 0;
+	float alphaChangeMax = 0;
+	//lifespan
+	float particleLife = 5;
+
+private:
+	friend class GraphicsSystem;
+	struct Particle {
+		glm::vec3 velocity = glm::vec3(0);
+		float mass = 0;
+		float rotationSpeed = 0; //radians/second
+		float currentRotation = 0;
+		float scaleSpeed = 0;
+		float maxScale = 1;
+		float alphaChange = 0;
+		float lifespan = 0;
+	};
+	struct PositionData {
+		glm::vec4 pos_scale = glm::vec4(0);	//x, y, z, scale
+		glm::vec3 rotation = glm::vec3(1, 0, 1);	//cos, sin, alpha
+	};
+	std::vector<Particle> particles = std::vector<Particle>();
+	std::vector<PositionData> positions = std::vector<PositionData>();
+	//we need to make the vectors circular
+	size_t frontIndex = 0;
+	size_t backIndex = 0;
+
+	size_t maxParticles = 0;
+	float timeAccumulator = 0;
+	Texture* texture = Texture::getNoTextureTexture();
+	size_t particleCount = 0;
 };
