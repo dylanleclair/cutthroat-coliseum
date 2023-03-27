@@ -1,6 +1,5 @@
 #version 410 core
 layout (location = 0) in vec3 vertPos;
-layout (location = 2) in vec2 texCoord;
 
 uniform mat4 P;
 uniform mat4 V;
@@ -27,11 +26,11 @@ void main()
 
         vec3 vertexPosition_worldspace = centrePos + cameraRight * vertPos.x * scale.x + cameraUp * vertPos.y * scale.y;
         gl_Position = P * V * vec4(vertexPosition_worldspace, 1);
-        tc = texCoord;
+        tc = vertPos.xy + 0.5;
     //texture strip
     } else {
         //reusing the centrePos uniform as the model transform
         gl_Position = P * V * vec4(centrePos + vertPos, 1);
-        tc = texCoord;
+        tc = vertPos.xy + 0.5;
     }
 }

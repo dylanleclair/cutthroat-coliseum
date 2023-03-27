@@ -251,13 +251,13 @@ GraphicsSystem::GraphicsSystem(Window& _window) :
 
 	//generate the data for the billboard effect
 	const GLfloat billboard_vertex_buffer_data[] = {
-		//x, y, z
-	-.5f, -.5f, 0, 0, 0,
-	.5f, -.5f, 0, 1, 0,
-	-.5f,  .5f, 0, 0, 1,
-	-.5f,  .5f, 0, 0, 1,
-	.5f, -.5f, 0, 1, 0,
-	.5f,  .5f, 0, 1, 1
+		//x, y, z, u, v
+	-.5f, -.5f, 0,
+	.5f, -.5f, 0,
+	-.5f,  .5f, 0,
+	-.5f,  .5f, 0,
+	.5f, -.5f, 0,
+	.5f,  .5f, 0
 	};
 	glGenBuffers(1, &billboard_vertexBuffer);
 	glBindBuffer(GL_ARRAY_BUFFER, billboard_vertexBuffer);
@@ -265,10 +265,9 @@ GraphicsSystem::GraphicsSystem(Window& _window) :
 
 	glGenVertexArrays(1, &billboard_vertexArray);
 	glBindVertexArray(billboard_vertexArray);
-	glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 5 * sizeof(float), (void*)0);
+	glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 0, (void*)0);
 	glEnableVertexAttribArray(0);
-	glVertexAttribPointer(1, 2, GL_FLOAT, GL_FALSE, 5 * sizeof(float), (void*)(sizeof(float)*3));
-	glEnableVertexAttribArray(1);
+
 
 	//generate the data for the skybox
 	const float skyboxVertices[] = {
@@ -641,7 +640,6 @@ void GraphicsSystem::Update(ecs::Scene& scene, float deltaTime) {
 		perspectiveUniform = glGetUniformLocation(GLuint(skyboxShader), "P");
 		glUniformMatrix4fv(perspectiveUniform, 1, GL_FALSE, glm::value_ptr(P));
 		glUniformMatrix4fv(viewUniform, 1, GL_FALSE, glm::value_ptr(glm::mat4(glm::mat3(V))));
-		//glUniformMatrix4fv(viewUniform, 1, GL_FALSE, glm::value_ptr(V));
 		glDrawArrays(GL_TRIANGLES, 0, 36);
 		glDepthMask(GL_TRUE);
 		glEnable(GL_DEPTH_TEST);
@@ -693,11 +691,13 @@ void GraphicsSystem::Update(ecs::Scene& scene, float deltaTime) {
 
 			//loop through each mesh in the renderComponent
 			for each (Mesh mesh in comp.meshes) {
-				mesh.geometry->bind();
+				
 				glUniformMatrix4fv(modelUniform, 1, GL_FALSE, glm::value_ptr(M * mesh.localTransformation));
 				glm::mat3 normalsMatrix = glm::mat3(glm::transpose(glm::inverse(M * mesh.localTransformation)));
 				glUniformMatrix3fv(normalMatUniform, 1, GL_FALSE, glm::value_ptr(normalsMatrix));
-				if ((mesh.properties & Mesh::meshProperties::m_hasTexture) != 0 && mesh.textureIndex != -1) {
+				
+				mesh.geometry->bind();
+				if ((mesh.properties & Mesh::meshProperties::m_hasTextureCoords) != 0 && mesh.textureIndex != -1) {
 					glActiveTexture(GL_TEXTURE1);
 					comp.textures[mesh.textureIndex]->bind();
 					glUniform1ui(shaderStateUniform, 1);
@@ -948,7 +948,7 @@ void GraphicsSystem::processNode(aiNode* node, const aiScene* scene, RenderModel
 	for (int m = 0; m < node->mNumMeshes; m++) {
 		const aiMesh* mesh = scene->mMeshes[node->mMeshes[m]];
 		CPU_Geometry geometry;
-
+		std::cout << "\tprocessing mesh " << mesh->mName.C_Str() << ":\n";
 		//process the aiMess into a CPU_Geometry to pass to the render component to create a new mesh
 		for (unsigned int i = 0; i < mesh->mNumVertices; i++)
 		{
@@ -974,6 +974,7 @@ void GraphicsSystem::processNode(aiNode* node, const aiScene* scene, RenderModel
 
 		if (mesh->mMaterialIndex >= 0) //if the mesh has a material attached
 		{
+			std::cout << "\t\tmaterial attached\n";
 			aiMaterial* material = scene->mMaterials[mesh->mMaterialIndex];
 			aiColor3D color(0.f, 0.f, 0.f);
 			material->Get(AI_MATKEY_COLOR_DIFFUSE, color);

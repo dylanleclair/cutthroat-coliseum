@@ -251,16 +251,47 @@ int main(int argc, char* argv[]) {
 
 	// Car Entity
 	RenderModel car_r = RenderModel();
-	GraphicsSystem::importOBJ(car_r, "alpha_cart.obj");
-	car_r.setModelColor(glm::vec3(0.5f, 0.5f, 0.f));
+	GraphicsSystem::importOBJ(car_r, "beta_cart.obj");
+	//car_r.setModelColor(glm::vec3(0.5f, 0.5f, 0.f));
 	mainScene.AddComponent(car_e.guid, car_r);
 	TransformComponent car_t = TransformComponent(testCar.getVehicleRigidBody());
 	car_t.setPosition(glm::vec3(0, -0.34f, 0.5f));
 	car_t.setScale(glm::vec3(3.2f, 3.2f, 3.2f));
 	mainScene.AddComponent(car_e.guid, car_t);
 	setupCarVFX(mainScene, car_e.guid);
-
-
+	//add the flames
+	ecs::Entity exhausePipes[4] = { mainScene.CreateEntity(), mainScene.CreateEntity(), mainScene.CreateEntity(), mainScene.CreateEntity() };
+	for (int i = 0; i < 4; i++) {
+		TransformComponent pipe_t = TransformComponent(testCar.getVehicleRigidBody());
+		if (i == 0) 
+			pipe_t.setPosition(glm::vec3(0.65, 1.54, 1.85));
+		else if (i == 1)
+			pipe_t.setPosition(glm::vec3(0.65, 1.54, 2.1));
+		else if (i == 2)
+			pipe_t.setPosition(glm::vec3(-0.65, 1.54, 1.85));
+		else if (i == 3)
+			pipe_t.setPosition(glm::vec3(-0.65, 1.54, 2.1));
+		pipe_t.setScale(glm::vec3(1));
+		VFXBillboard flame_b = VFXBillboard("textures/Fire.png", glm::vec3(1, 1, 0));
+		/*
+		VFXParticleSystem flame_p = VFXParticleSystem("textures/blackSmoke.png", 25);
+		flame_p.initialVelocityMin = glm::vec3(-0.1, 0, -0.1);
+		flame_p.initialVelocityMax = glm::vec3(0.1, 0.3, 0.1);
+		flame_p.gravity = glm::vec3(0, 5, 0);
+		flame_p.particleFrequency = 0.2;
+		flame_p.initialScaleMin = 0.5;
+		flame_p.initialScaleMax = 0.8;
+		flame_p.particleLife = 0.3;
+		flame_p.alphaChangeMin = -0.4;
+		flame_p.alphaChangeMax = -0.6;
+		flame_p.scaleSpeedMin = 0.3;
+		flame_p.scaleSpeedMax = 0.5;
+		*/
+		mainScene.AddComponent(exhausePipes[i].guid, flame_b);
+		mainScene.AddComponent(exhausePipes[i].guid, pipe_t);
+		//mainScene.AddComponent(exhausePipes[i].guid, flame_p);
+		
+	}
 	
 	// Finish line components
 	// RenderModel finish = RenderModel();
@@ -639,6 +670,31 @@ int main(int argc, char* argv[]) {
 			physicsSystem.Update(mainScene, delta_t);
 		}
 
+		//flame effects for ONLY the player car
+		{
+			static float acc = 0;
+			acc += time_diff;
+			if (acc > 0.01) {
+				acc = 0;
+				for (int i = 0; i < 4; i++) {
+					const float scaleWindow = 0.15; //how much it can vary to make the changes less abrupt
+					const float minScale = 0.3;
+					const float maxScale = 1.7;
+					const float velocity = glm::length(PxtoGLM(testCar.getVehicleRigidBody()->getLinearVelocity()));
+
+					const float windowPosition = (velocity / (velocity + 15)) + minScale;
+					const float scale = glm::linearRand(max(windowPosition - scaleWindow, 0.f), min(maxScale, windowPosition + scaleWindow));
+					TransformComponent& trans = mainScene.GetComponent<TransformComponent>(exhausePipes[i].guid);
+					glm::vec3 position = trans.getLocalTranslation();
+					position.y = 0.44 * scale + 1.1;
+					trans.setPosition(position);
+					trans.setScale(glm::vec3(scale));
+					//VFXParticleSystem& part = mainScene.GetComponent<VFXParticleSystem>(exhausePipes[i].guid);
+					//part.stepSystem(delta_t, trans.getTransformationMatrix());
+				}
+			}
+		}
+		
 		// Tire track renders
 		updateCarVFX(mainScene, time_diff);
 		gs.Update(mainScene, time_diff);

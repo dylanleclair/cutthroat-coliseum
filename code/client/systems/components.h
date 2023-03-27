@@ -40,6 +40,10 @@ public:
 			return PxtoGLM(actor->getGlobalPose().p) + glm::rotate(PxtoGLM(actor->getGlobalPose().q), position);
 	}
 
+	glm::vec3 getLocalTranslation() {
+		return glm::vec3(position);
+	}
+
 	glm::quat getRotation() {
 		glm::quat local = glm::angleAxis(rotationAngle, rotationAxis);
 		if (actor == nullptr)
@@ -103,7 +107,7 @@ struct Mesh {
 	
 	//using GLuint HAS_TEX = 1;
 	enum meshProperties {
-		m_hasTexture = 1,
+		m_hasTextureCoords = 1,
 		m_hasNormals = 2
 	};
 	GLuint properties = 0;

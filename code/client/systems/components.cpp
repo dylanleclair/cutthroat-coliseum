@@ -23,13 +23,13 @@ int RenderModel::attachMesh(CPU_Geometry& _geometry)
 	//load the normals
 	if (_geometry.norms.size() == _geometry.verts.size()) {
 		mesh.geometry->setNorms(_geometry.norms);
-		mesh.properties |= 0x1;
+		mesh.properties |= Mesh::m_hasNormals;
 	}
 
 	//load the texture coordinates
 	if (_geometry.texs.size() == _geometry.verts.size()) {
 		mesh.geometry->setTexCoords(_geometry.texs);
-		mesh.properties |= 0x2;
+		mesh.properties |= Mesh::m_hasTextureCoords;
 	}
 
 	//update the total vertex count of the component
@@ -46,28 +46,33 @@ int RenderModel::attachMesh(CPU_Geometry& _geometry)
 bool RenderModel::attachTexture(std::string _textureName, unsigned int _meshID)
 {
 	_textureName = "textures/" + _textureName;
+	std::cout << "attaching texture " << _textureName << '\n';
 	//find the mesh with the corresponding ID
 	for (Mesh& mesh : meshes) {
 		if (mesh.ID == _meshID) {
-			if (mesh.textureIndex != -1)
+			if (mesh.textureIndex != -1) {
 				return false;
+				std::cout << "FAIL: Mesh already has an attached texture\n";
+			}
 			//determine if the model already contains the texture in its memory
 			for (unsigned int i = 0; i < textures.size(); i++) {
-				if (textures[i]->getPath().compare(_textureName)) {
+				if (textures[i]->getPath().compare(_textureName) == 0) {
 					//if it already exists then set the meshes textureIndex to the right value
 					//check that the mesh doesn't already have a texture attached
 					mesh.textureIndex = i;
+					std::cout << "SUCCESS: Texture already existed in model\n";
+					return true;
 				}
 			}
 			//if no texture already exists then make a new one and attach it
 			textures.push_back(new Texture(_textureName, GL_LINEAR));
 			mesh.textureIndex = textures.size() - 1;
 			//std::sort(meshes.begin(), meshes.end(), [](const Mesh a, const Mesh b) -> bool {return a.textureIndex < b.textureIndex; });
-			for each (auto t in meshes)
-				std::cout << t.textureIndex << '\n';
+			std::cout << "SUCCESS: New texture created\n";
 			return true;
 		}
 	}
+	std::cout << "FAIL: No mesh found in model with ID " << _meshID << '\n';
 	return false;
 }
 

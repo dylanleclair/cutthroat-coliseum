@@ -49,7 +49,6 @@ Texture::Texture(std::string path, GLint interpolation)
 		unbind();
 		glPixelStorei(GL_UNPACK_ALIGNMENT, 4);	//Return to default alignment
 		stbi_image_free(data);
-		std::cout << "finished loading texture\n";
 
 	}
 	else {
