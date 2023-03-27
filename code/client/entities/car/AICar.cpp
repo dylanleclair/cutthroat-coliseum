@@ -1,54 +1,38 @@
 
 #include "AICar.h"
-#include "../../systems/ai.h"
 #include "core/pathfinding.h"
 #include "../../systems/GraphicsSystem.h"
 #include "../../utils/PxConversionUtils.h"
 #include "glm/glm.hpp"
-#include <ctype.h>
+#include "../physics/LevelCollider.h"
 #include <iostream>
-
-
-NavPath generateCirclePath(int radius) {
-
-    // generate a circle
-    std::vector<glm::vec3> circle;
-
-    float step{0.4f};
-    for (float i =0; i < 2 * 3.14; i += step)
-    {
-        float x = std::cos(i);
-        float z = std::sin(i);
-        circle.push_back({radius * x, 0.f, radius * z});
-    }
-
-    return NavPath{circle};
-
-}
 
 void AICar::Initialize(NavPath* pathToFollow)
 {
     m_navPath = pathToFollow;
 }
 
-glm::vec3 roundPositionToGraph(glm::vec3 pos)
+/** 
+ * Will cast a ray from the origin and direction to a maximum dist, returning true
+ * iff the shape it collides with is the provided shape. 
+*/
+bool castRay(PxScene* scene, PxVec3 origin, PxVec3 dir, float dist, physx::PxShape* target_shape)
 {
-    return glm::vec3(floor(pos.x), 0.f, floor(pos.z));
+    PxRaycastBuffer hit;
+
+    bool status = scene->raycast(origin, dir, dist, hit);
+    if (status)
+    {
+        if (hit.block.shape == target_shape)
+        {
+            return true;
+        }
+
+    }
+    return false;
 }
 
-float euclideanBasic(glm::vec3 a, glm::vec3 b)
-{
-    float deltaX = b.x - a.x;
-    float deltaZ = b.z - a.z;
-
-    float dist = pow(deltaX, 2) + pow(deltaZ, 2);
-    return sqrt(dist);
-}
-
-
-
-
-Command AICar::pathfind(glm::vec3 currentPosition)
+Command AICar::pathfind(glm::vec3 currentPosition, ecs::Scene& scene, float deltaTime)
 {
 
     assert(m_navPath != nullptr);
@@ -59,206 +43,191 @@ Command AICar::pathfind(glm::vec3 currentPosition)
 
     glm::vec3 targetPos = m_navPath->getNextPoint(currentPosition,didLap);
 
-    if (didLap)
-    {
-        m_lapCount++;
-        std::cout << "AI completed a lap!" << std::endl;
-        std::cout << "AI starting lap: " << m_lapCount << std::endl;
-    }
-
-    // Commenting this out because we have GUID in the render loop for this
-    //if (m_lapCount == 3)
-    //{
-    //    std::cout << "AI wins!" << std::endl;
-    //}
-
-    std::vector<glm::vec3> path = pathfinding::AStar<glm::vec3>(roundPositionToGraph(currentPosition), roundPositionToGraph(targetPos), euclideanBasic, AISystem::generateNearby);
-
     // find rotation matrix of car
     PxTransform carPose = this->m_Vehicle.mPhysXState.physxActor.rigidBody->getGlobalPose();
+
+    glm::vec3 glm_carPose = PxtoGLM(carPose.p);
+
+    glm::vec4 carLocalForward{0.f, 0.f, -1.f, 1.f};
 
     // find the direction vector of the vehicle
     glm::quat vehicleQuat = PxtoGLM(carPose.q);
     glm::mat4 vehicleRotM = glm::toMat4(vehicleQuat);
-    glm::vec3 headingDir = glm::vec3{vehicleRotM * glm::vec4{0.f, 0.f, -1.f, 1.f}};
+    glm::vec3 headingDir = glm::vec3{vehicleRotM * glm::vec4{0.f, 0.f, 1.f, 1.f}};
     
+    // const int num_rays{15};
+    std::vector<glm::vec3> steering_rays;
+
+    // for (int i = 0; i < num_rays; i++)
+    // {
+    //     // rotate pi / numrays around y axis
+    //     float rot_angle = M_PI / num_rays;
+    //     auto M = glm::rotate(glm::mat4{1.f}, rot_angle, headingDir);
+    //     steering_rays.push_back(glm::vec3{vehicleRotM * M * carLocalForward});
+    // }
+
+    // need to generate a whole array of raycasts to determine which way to turn?
+    // or compute direction vector on the track // via waypoints!
+
+    // cast a ray for each steering_ray
+
+    glm::vec3 up{0.f,1.f,0.f};
+
+    float rot_angle = M_PI / 5;
+    auto M = glm::rotate(glm::mat4{1.f}, -rot_angle, up);
+    steering_rays.push_back(glm::vec3{vehicleRotM * M * carLocalForward});
+
+    M = glm::rotate(glm::mat4{1.f}, rot_angle, up);
+    steering_rays.push_back(glm::vec3{vehicleRotM * M * carLocalForward});
+
+    // look into behaviour tree
+    // - if by wall, steer away
+    // - if stuck, reverse out
+
+    LevelCollider* level_c;
+
+    for (Guid entity : ecs::EntitiesInScene<LevelCollider>(scene))
+    {
+        // get the level collider
+        LevelCollider& lc = scene.GetComponent<LevelCollider>(entity);
+        level_c = &lc;
+        break;
+    }
+
+
+    bool forced_turn_left{false};
+    bool forced_turn_right{false};
+    bool hitting_wall{false};
+
+    // split into left and right
+    bool hit = castRay(physicsSystem->m_Scene, carPose.p, GLMtoPx(steering_rays[0]), 10.f, level_c->getShape());
+    if (hit)
+    {
+        // ray hit forward left
+        forced_turn_right = true;
+    }
+
+    hit = castRay(physicsSystem->m_Scene, carPose.p, GLMtoPx(steering_rays[1]), 10.f, level_c->getShape());
+    if (hit)
+    {
+        // ray hit forward right
+        forced_turn_left = true;
+    }
+
+    hitting_wall = castRay(physicsSystem->m_Scene, carPose.p, GLMtoPx(headingDir), 7.f, level_c->getShape());
+    if (hitting_wall)
+    {
+        m_stuckTimer += deltaTime;
+    }
+
+    // PxVec3 targetDir = ( collided_rays.size() == 0 ) ? GLMtoPx(m_navPath->getDirectionVector(PxtoGLM(carPose.p))) : GLMtoPx(compute_target_dir(collided_rays));
+    // PxVec3 targetDir = GLMtoPx(m_navPath->getDirectionVector(PxtoGLM(carPose.p)));
+
     // target direction vector
     PxVec3 targetDir = GLMtoPx(targetPos) - carPose.p;
-    
     // only drive to the target if it's far enough away (for now)
 
-    command.throttle = .7f;
+    // need to scale down throttle based on the angle we're trying to turn
+    // this will help the AI turn!
 
+    // get the track direction, slow and turn until we are parallel with track dir!
+
+    command.throttle = 1.f;
 
     targetDir.normalize();
 
+    // radians!!
+
     float angleBetween = targetDir.dot(GLMtoPx(headingDir));
 
+    float actualAngle = acos(angleBetween);
+
     // if almost parallel, don't worry about steering
-    if (abs(angleBetween) > 0.95f)
+    if (abs(actualAngle) < 0.08f)
     {
         command.steer = 0.0f;
     } else {
+        
+        // want to scale steering more gently based on the actual angle
+
+        // compute direction to turn
         PxVec3 cross = GLMtoPx(headingDir).cross(targetDir);
-        if (cross.y < 0)
+        float turn_dir = (cross.y < 0) ? -1.f : 1.f;
+
+        // float normalized "turning" angle
+
+
+        if (forced_turn_left || forced_turn_right)
         {
-            command.steer = 1.0f;
+            command.throttle = 0.5f;
+            
+            // scale steering based on distance to wall?
+
+            if (forced_turn_left)
+            {
+                command.steer = 0.45f;
+            } else {
+                command.steer = -0.45f;
+            }
         } else {
-            command.steer = -1.0f;
+            command.throttle = 1.f;
+            // normal turning logic
+            if (actualAngle < M_PI_4) // if the turning angle is more gentle
+            {
+                // if close to steering the right direction, make steering less powerful
+                command.steer = turn_dir * (actualAngle / M_PI_4);
+            } else {
+                command.steer = turn_dir;
+            }
         }
+
+    }
+
+    if (m_stuckTimer > 0.8f && hitting_wall)
+    {
+        // reverse
+        m_TargetGearCommand = 0; // put in reverse
+        command.throttle = 0.5f;
+
+        // calulate the way they want to steer to be in line with the track!
+        {
+            auto targetDir = GLMtoPx(m_navPath->getDirectionVector(glm_carPose));
+
+            PxVec3 cross = GLMtoPx(headingDir).cross(targetDir);
+            float turn_dir = (cross.y < 0) ? -1.f : 1.f;
+
+            command.steer = -turn_dir; // flip the turn direction in reverse!
+        }        
+
+    }
+
+    if (!hitting_wall)
+    {
+        // if not hitting wall, reset stuck timer
+        m_stuckTimer = 0;
+        this->m_TargetGearCommand = 255;
+
     }
 
     checkFlipped(carPose);
 
-
-    // CHECK IF GOING TO RUN INTO AN OBSTACLE
-    // SEE IF OBSTACLE UP AHEAD
-
-    // INSTEAD OF CASTING FROM VEHICLE
-    // FOR EACH VERTEX, SEE IF OBSTACLE IN UP DIRECTION
-    // 
-
     return command;
 }
-
-Command AICar::pathfind(glm::vec3 currentPosition, ecs::Scene& scene, Guid targetEntity)
-{
-    assert(m_navPath != nullptr);
-
-    Command command = {0.f, 0.f, 0.f, m_TargetGearCommand};
-
-    if (scene.HasComponent<PathfindingComponent>(targetEntity))
-    {
-        // the car has a pathfinder !!
-        // must move according to path. 
-
-        // foil out the nodes !
-        CPU_Geometry pathGeom;
-
-        PathfindingComponent& p = scene.GetComponent<PathfindingComponent>(targetEntity);
-        // get the pathfinding component
-        TransformComponent& position = scene.GetComponent<TransformComponent>(targetEntity);
-        // find the target
-        Guid targetEntity = p.targetEntity;
-
-        if (scene.HasComponent<TransformComponent>(targetEntity))
-        {
-            TransformComponent targetPosition = scene.GetComponent<TransformComponent>(targetEntity);
-            std::vector<glm::vec3> path = pathfinding::AStar<glm::vec3>(roundPositionToGraph(position.getTranslation()), roundPositionToGraph(targetPosition.getTranslation()), euclideanBasic, AISystem::generateNearby);
-
-            for (auto& pos : path)
-            {
-                pathGeom.verts.push_back(glm::vec3{ pos });
-            }
-            // TODO: attempt to smooth the path with chaikin
-            // -> this only makes sense for large graphs so chill for now
-        
-        // hook into a renderer so we can see if it's correct...
-
-        // goal for now: have AI car simply follow the player-driven car
-        // 
-        // find rotation matrix of car
-        PxTransform carPose = this->m_Vehicle.mPhysXState.physxActor.rigidBody->getGlobalPose();
-
-        // find the direction vector of the vehicle
-        glm::quat vehicleQuat = PxtoGLM(carPose.q);
-        glm::mat4 vehicleRotM = glm::toMat4(vehicleQuat);
-        glm::vec3 headingDir = glm::vec3{vehicleRotM * glm::vec4{0.f, 0.f, -1.f, 1.f}};
-        
-        // target direction vector
-        PxVec3 targetDir = GLMtoPx(targetPosition.getTranslation()) - carPose.p;
-        
-        // only drive to the target if it's far enough away (for now)
-        if (targetDir.magnitude() < 8.f)
-        {
-            command.throttle = 0.f;
-        } else {
-            command.throttle = 1.f;
-        }
-
-        targetDir.normalize();
-
-        float angleBetween = targetDir.dot(GLMtoPx(headingDir));
-
-        // if almost parallel, don't worry about steering
-        if (abs(angleBetween) > 0.95f)
-        {
-            command.steer = 0.0f;
-        } else {
-            PxVec3 cross = GLMtoPx(headingDir).cross(targetDir);
-            if (cross.y < 0)
-            {
-             command.steer = 1.0f;
-            } else {
-             command.steer = -1.0f;
-            }
-        }
-
-        }
-
-    }
-
-    return command;
-}
-
 
 void AICar::Update(Guid carGuid,ecs::Scene& scene, float deltaTime) 
 {
 
-
   Command command = {0.f, 0.f, 0.f, m_TargetGearCommand};
-
-    // need to get access to the pathfinding system....
-
-    // so the job of the pathfinding system is to:
-    //  - calculate the path to the opponent
-    //  - after that, the physics system will update the car (by calling this function)
-    //      - this should make the car follow the path
 
     if (scene.HasComponent<TransformComponent>(carGuid))
     {
         TransformComponent& tComponent = scene.GetComponent<TransformComponent>(carGuid);
         auto currentPos = tComponent.getTranslation();
-        command = pathfind(currentPos);
+        command = pathfind(currentPos, scene, deltaTime);
     }   
 
   float delta_seconds = deltaTime;
   assert(delta_seconds > 0.f && delta_seconds < 0.2000001f);
-  // Apply the brake, throttle and steer to the command state of the vehicle.
-  // const Command &command = gCommands[gCommandProgress];
-
-  // command.duration = timestep;
-
-  // Throttle to 2.f will cause weird behaviour
-//   if (SDL_GameControllerGetButton(ControllerInput::controller, SDL_CONTROLLER_BUTTON_A) || w_key)
-//   {
-//       command.throttle = carThrottle;
-//       // goto end; // so we don't attempt to throttle and break
-//   }
-//   else if (SDL_GameControllerGetButton(ControllerInput::controller, SDL_CONTROLLER_BUTTON_B) || s_key)
-//   {
-//       command.brake = carBrake;
-//       // goto end;????
-//   }
-  // end:
-
-  // Normalize controller axis
-  // BUG: max positive is 1 less in magnitude than max min meaning full negative will be slightly above 1
-//   carAxis = (float)-SDL_GameControllerGetAxis(ControllerInput::controller, SDL_CONTROLLER_AXIS_LEFTX) / SHRT_MAX;
-//   // std::cout << axis << std::endl;
-//   if (a_key)
-//   {
-//       command.steer = 1.f;
-//   }
-//   else if (d_key)
-//   {
-//       command.steer = -1.f;
-//   }
-//   else
-//   {
-//       command.steer = carAxis * carAxisScale;
-//   }  
-
 
   m_Vehicle.mCommandState.brakes[0] = command.brake;
   m_Vehicle.mCommandState.nbBrakes = 1;
@@ -278,3 +247,28 @@ void AICar::Update(Guid carGuid,ecs::Scene& scene, float deltaTime)
 
 }
 
+
+
+
+
+
+
+
+// UNUSED, keeping for later
+glm::vec3 compute_target_dir(std::vector<glm::vec3>& collidedRays)
+{
+    // compute the average of the collided rays
+    glm::vec3 average = {0.f,0.f,0.f};
+    for (int i = 0; i < collidedRays.size(); i++)
+    {
+        average += collidedRays[i];
+    }
+    average /= collidedRays.size();
+
+    // the average vector now completed. flip x and z axis.
+    average.x *= -1;
+    average.z *= -1;
+    // maybe y?
+
+    return average;
+}

@@ -3,13 +3,34 @@
 #include "glm/glm.hpp"
 #include "../../utils/PxConversionUtils.h"
 
+#include "../physics/LevelCollider.h"
+
 #include "imgui.h"
 #include "imgui_impl_sdl.h"
 #include "imgui_impl_opengl3.h"
-
 #include <iostream>
 
 const char* gVehicleDataPath = "vehicledata";
+
+
+bool castRayCar(PxScene* scene, PxVec3 origin, PxVec3 dir, float dist, physx::PxShape* target_shape)
+{
+    PxRaycastBuffer hit;
+
+    bool status = scene->raycast(origin, dir, dist, hit);
+    if (status)
+    {
+        if (hit.block.shape == target_shape)
+        {
+            std::cout << "collision with wall detected!" << std::endl;
+            return true;
+        }
+
+    }
+    return false;
+}
+
+
 
 // // HACK(beau): make these visible to tuning imgui panel
 float carThrottle = 1.f;
@@ -135,7 +156,7 @@ PxRigidBody* Car::getVehicleRigidBody()
 }
 
 void Car::carImGui() {
-    //ImGui::Begin("Car");
+    ImGui::Begin("Car");
     if (ImGui::TreeNode("Debug Readouts")) {        
         ImGui::Text("left stick horizontal tilt: %f", carAxis);
         //ImGui::Text("Car Throttle: %f", controller_throttle);
@@ -154,6 +175,8 @@ void Car::carImGui() {
         ImGui::Text("On the ground ?: %s", m_Vehicle.mBaseState.roadGeomStates->hitState ? "true" : "false");
         ImGui::Text("Percent Rot: %f", 1.f - m_Vehicle.mEngineDriveState.engineState.rotationSpeed / m_Vehicle.mEngineDriveParams.engineParams.maxOmega);
         ImGui::Text("Steer Response: %f", m_Vehicle.mBaseParams.steerResponseParams.maxResponse);
+        ImGui::Text("Linear Velocity: %f, %f, %f", m_Vehicle.mPhysXState.physxActor.rigidBody->getLinearVelocity().x, m_Vehicle.mPhysXState.physxActor.rigidBody->getLinearVelocity().y,
+            m_Vehicle.mPhysXState.physxActor.rigidBody->getLinearVelocity().z);
         ImGui::TreePop();
     }
     if (ImGui::TreeNode("Parameter Switching")) {
@@ -167,7 +190,7 @@ void Car::carImGui() {
         ImGui::TreePop();
     }
 
-   // ImGui::End();
+    ImGui::End();
 }
 
 void Car::baseSetup() {
@@ -274,7 +297,6 @@ void Car::TetherSteer(PxTransform _loc) {
 }
 
 bool Car::TetherJump() {
-    auto v_pos = m_Vehicle.mPhysXState.physxActor.rigidBody->getGlobalPose();
     // For modes
     //eIMPULSE
     // or
@@ -285,10 +307,8 @@ bool Car::TetherJump() {
     if (m_Vehicle.mBaseState.roadGeomStates->hitState) {
         // Caution force is proportional to the mass of the car, the lower the mass, the harder the force will be applied
         // TODO:: Make a function to calculate approriate force to be passed based on vehicle mass
-        m_Vehicle.mPhysXState.physxActor.rigidBody->addForce(PxVec3(0.f, 8.f, 0.f), PxForceMode::eVELOCITY_CHANGE, true);
+        m_Vehicle.mPhysXState.physxActor.rigidBody->addForce(PxVec3(0.f, 4000.f, 0.f), PxForceMode::eIMPULSE, true);
         // applying angular dampening prevents the car from rotating while in the air
-        // it will prevent the car from turning when landing however
-        m_Vehicle.mPhysXState.physxActor.rigidBody->setAngularDamping(20.f); 
         // Prevents the car from spinning around the y axis while in the air
         m_Vehicle.mPhysXState.physxActor.rigidBody->setAngularDamping(10000.f);
         //m_Vehicle.mPhysXState.physxActor.rigidBody->addTorque(PxVec3(0.f, 10.f, 0.f), PxForceMode::eVELOCITY_CHANGE, true);
@@ -351,9 +371,15 @@ void Car::Update(Guid carGuid, ecs::Scene& scene, float deltaTime)
       }
   }
   
+  // Calculate the magnitude of the linear velocity
+  // Used to clamp the gear shift to reverse only when below a certain magnitude
+  // If not using clamp - it would cause the car to go into reverse when hitting the brake, which would not
+  // have the proper braking behaviour
+  float linVelMagnitude = length(PxtoGLM(m_Vehicle.mPhysXState.physxActor.rigidBody->getLinearVelocity()));
+
   // Code for going in reverse
-  // If the brake key is pressed, while the engine is idle, and the current gear is first gear, switch to reverse
-  if (s_key && this->m_Vehicle.mEngineDriveState.engineState.rotationSpeed == 0) {
+  // If the brake key is pressed, while you are going slow, switch to reverse
+  if (s_key && m_Vehicle.mEngineDriveState.gearboxState.currentGear != 0 && linVelMagnitude < 10.f) {
       this->m_TargetGearCommand = 0;
   }
   // While the gearbox is in reverse holding s goes backwards, hold w brakes
@@ -361,8 +387,8 @@ void Car::Update(Guid carGuid, ecs::Scene& scene, float deltaTime)
       if (s_key) {
           command.throttle = carThrottle;
       }
-      // If the engine is idle and the w key is pressed switch to normal driving
-      else if (w_key && this->m_Vehicle.mEngineDriveState.engineState.rotationSpeed == 0) {
+      // If you are going slow and the w key is pressed switch to normal driving
+      else if (w_key && linVelMagnitude < 10.f) {
           // 255 is eAUTOMATIC_GEAR 
            this->m_TargetGearCommand = 255;
       }
@@ -371,8 +397,7 @@ void Car::Update(Guid carGuid, ecs::Scene& scene, float deltaTime)
       }
   }
   // If the engine in neutral or above, drive normally
-  else if (this->m_Vehicle.mEngineDriveState.gearboxState.currentGear >= 1 && 
-      this->m_Vehicle.mEngineDriveState.engineState.rotationSpeed >= 0) {
+  else if (this->m_Vehicle.mEngineDriveState.gearboxState.currentGear >= 1) {
 
        if (w_key) {
           command.throttle = carThrottle;
@@ -386,7 +411,7 @@ void Car::Update(Guid carGuid, ecs::Scene& scene, float deltaTime)
   // doing keyboard or controller input do x - did not work great
   // So I separated them, there may be a cleaner way to do this
   if (SDL_GameControllerGetAxis(ControllerInput::controller, SDL_CONTROLLER_AXIS_TRIGGERLEFT)
-      && this->m_Vehicle.mEngineDriveState.engineState.rotationSpeed == 0) {
+      && m_Vehicle.mEngineDriveState.gearboxState.currentGear != 0 && linVelMagnitude < 10.f) {
       this->m_TargetGearCommand = 0;
   }
   else if (this->m_Vehicle.mEngineDriveState.gearboxState.currentGear == 0) {
@@ -394,8 +419,7 @@ void Car::Update(Guid carGuid, ecs::Scene& scene, float deltaTime)
           command.throttle = (float)SDL_GameControllerGetAxis(ControllerInput::controller, SDL_CONTROLLER_AXIS_TRIGGERLEFT) / SHRT_MAX;
       }
       // If the engine is idle and the w key is pressed switch to normal driving
-      else if (SDL_GameControllerGetAxis(ControllerInput::controller, SDL_CONTROLLER_AXIS_TRIGGERRIGHT)
-          && this->m_Vehicle.mEngineDriveState.engineState.rotationSpeed == 0) {
+      else if (SDL_GameControllerGetAxis(ControllerInput::controller, SDL_CONTROLLER_AXIS_TRIGGERRIGHT) && linVelMagnitude < 10.f) {
           // 255 is eAUTOMATIC_GEAR 
           this->m_TargetGearCommand = 255;
       }
@@ -403,8 +427,7 @@ void Car::Update(Guid carGuid, ecs::Scene& scene, float deltaTime)
           command.brake = (float)SDL_GameControllerGetAxis(ControllerInput::controller, SDL_CONTROLLER_AXIS_TRIGGERRIGHT) / SHRT_MAX;
       }
   }
-  else if (this->m_Vehicle.mEngineDriveState.gearboxState.currentGear >= 1 &&
-      this->m_Vehicle.mEngineDriveState.engineState.rotationSpeed >= 0) {
+  else if (this->m_Vehicle.mEngineDriveState.gearboxState.currentGear >= 1) {
 
       if (SDL_GameControllerGetAxis(ControllerInput::controller, SDL_CONTROLLER_AXIS_TRIGGERRIGHT)) {
           command.throttle = (float)SDL_GameControllerGetAxis(ControllerInput::controller, SDL_CONTROLLER_AXIS_TRIGGERRIGHT) / SHRT_MAX;
@@ -414,7 +437,7 @@ void Car::Update(Guid carGuid, ecs::Scene& scene, float deltaTime)
       }
   }
 
-
+    auto carPose = m_Vehicle.mPhysXState.physxActor.rigidBody->getGlobalPose();
 
   // Keyboard Controls
   if (a_key && !c_tethered)
@@ -432,7 +455,7 @@ void Car::Update(Guid carGuid, ecs::Scene& scene, float deltaTime)
   }
 
   if (f_key || SDL_GameControllerGetButton(ControllerInput::controller, SDL_CONTROLLER_BUTTON_Y)) {
-      checkFlipped(m_Vehicle.mPhysXState.physxActor.rigidBody->getGlobalPose());
+    checkFlipped(carPose);
   }
 
   // An attempt at replicating the b face button function
@@ -451,6 +474,57 @@ void Car::Update(Guid carGuid, ecs::Scene& scene, float deltaTime)
   //   previous_b_press = false;
   //}
   
+
+// testing some logic !!
+
+// find the direction vector of the vehicle
+glm::quat vehicleQuat = PxtoGLM(carPose.q);
+glm::mat4 vehicleRotM = glm::toMat4(vehicleQuat);
+glm::vec3 headingDir = glm::vec3{vehicleRotM * glm::vec4{0.f, 0.f, 1.f, 1.f}};
+
+
+
+    // CODE FOR AI
+    // glm::vec3 up{0.f,1.f,0.f};
+    // std::vector<glm::vec3> steering_rays;
+    // glm::vec4 carLocalForward{0.f, 0.f, 1.f, 1.f};
+
+    // float rot_angle = M_PI_4;
+    // auto M = glm::rotate(glm::mat4{1.f}, -rot_angle, up);
+    // steering_rays.push_back(glm::vec3{vehicleRotM * M * carLocalForward});
+
+    // M = glm::rotate(glm::mat4{1.f}, rot_angle, up);
+    // steering_rays.push_back(glm::vec3{vehicleRotM * M * carLocalForward});
+
+
+    // LevelCollider* level_c;
+
+    // for (Guid entity : ecs::EntitiesInScene<LevelCollider>(scene))
+    // {
+    //     // get the level collider
+    //     LevelCollider& lc = scene.GetComponent<LevelCollider>(entity);
+    //     level_c = &lc;
+    //     break;
+    // }
+
+    // // split into left and right
+    // bool hit = castRay(physicsSystem->m_Scene, carPose.p, GLMtoPx(steering_rays[0]), 10.f, level_c->getShape());
+    // if (hit)
+    // {
+    //     // collided_rays.push_back(steering_rays[0]);
+    //     std::cout << "hit right!\n";
+    // }
+
+    // hit = castRay(physicsSystem->m_Scene, carPose.p, GLMtoPx(steering_rays[1]), 10.f, level_c->getShape());
+    // if (hit)
+    // {
+    //     // collided_rays.push_back(steering_rays[1]);
+    //     std::cout << "hit left!\n";
+    
+    // }
+
+    // end
+
 
   m_Vehicle.mCommandState.brakes[0] = command.brake;
   m_Vehicle.mCommandState.nbBrakes = 1;
@@ -483,6 +557,7 @@ glm::vec3 Car::getForwardDir()
     return headingDir;
 }
 
+
 void Car::checkFlipped(PxTransform carPose)
 {
 
@@ -503,6 +578,9 @@ void Car::checkFlipped(PxTransform carPose)
         carPose.q = PxQuat(physx::PxIDENTITY::PxIdentity);
         // need to subtract y components
         m_Vehicle.mPhysXState.physxActor.rigidBody->setGlobalPose(carPose);
+
+        // Dampens the angular momentum so you don't keep flipping during reset
+        m_Vehicle.mPhysXState.physxActor.rigidBody->setAngularDamping(10000.f);
     }
 }
 

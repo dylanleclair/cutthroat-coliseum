@@ -66,12 +66,13 @@ GraphicsSystem::GraphicsSystem(Window& _window) :
 	celShader("shaders/cel.vert", "shaders/cel.frag"),
 	shadowGShader("shaders/shadowMap.vert", "shaders/shadowMap.frag"),
 	VFXshader("shaders/VFX.vert", "shaders/VFX.frag"),
-	skyboxShader("shaders/skybox.vert", "shaders/skybox.frag")
+	skyboxShader("shaders/skybox.vert", "shaders/skybox.frag"),
+	particleShader("shaders/particle.vert", "shaders/particle.frag")
 {
 	windowSize = _window.getSize();
 	follow_cam_x = 0.f;
-	follow_cam_y = 6.f;
-	follow_cam_z = -16.f;
+	follow_cam_y = 4.f;
+	follow_cam_z = -22.f;
 	follow_correction_strength = 40.f;
 	maximum_follow_distance = 10;
 	front_face = false;
@@ -264,7 +265,7 @@ GraphicsSystem::GraphicsSystem(Window& _window) :
 
 	glGenVertexArrays(1, &billboard_vertexArray);
 	glBindVertexArray(billboard_vertexArray);
-	glVertexAttribPointer(0, 2, GL_FLOAT, GL_FALSE, 5 * sizeof(float), (void*)0);
+	glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 5 * sizeof(float), (void*)0);
 	glEnableVertexAttribArray(0);
 	glVertexAttribPointer(1, 2, GL_FLOAT, GL_FALSE, 5 * sizeof(float), (void*)(sizeof(float)*3));
 	glEnableVertexAttribArray(1);
@@ -322,6 +323,37 @@ GraphicsSystem::GraphicsSystem(Window& _window) :
 	glBindVertexArray(skybox_vertexArray);
 	glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 3 * sizeof(float), (void*)0);
 	glEnableVertexAttribArray(0);
+
+	//instanced particle data
+	const GLfloat particle_vertex_buffer_data[] = {
+		//x, y
+	-.5f, -.5f,
+	.5f, -.5f,
+	-.5f,  .5f,
+	-.5f,  .5f,
+	.5f, -.5f,
+	.5f,  .5f
+	};
+	glGenVertexArrays(1, &particles_vertexArray);
+	glBindVertexArray(particles_vertexArray);
+	glGenBuffers(1, &particles_quadVertexBuffer);
+
+	glBindBuffer(GL_ARRAY_BUFFER, particles_quadVertexBuffer);
+	glVertexAttribPointer(0, 2, GL_FLOAT, GL_FALSE, 0, (void*)0);
+	glEnableVertexAttribArray(0);
+
+	glGenBuffers(1, &particles_instanceTransformBuffer);
+	glBindBuffer(GL_ARRAY_BUFFER, particles_instanceTransformBuffer);
+	glEnableVertexAttribArray(1);
+	glVertexAttribPointer(1, 4, GL_FLOAT, GL_FALSE, sizeof(float) * 7, (void*)(0));
+	glVertexAttribDivisor(1, 1);
+
+	glEnableVertexAttribArray(2);
+	glVertexAttribPointer(2, 3, GL_FLOAT, GL_FALSE, sizeof(float) * 7, (void*)(sizeof(float) * 4));
+	glVertexAttribDivisor(2, 1);
+
+	glBindBuffer(GL_ARRAY_BUFFER, particles_quadVertexBuffer);
+	glBufferData(GL_ARRAY_BUFFER, sizeof(particle_vertex_buffer_data), particle_vertex_buffer_data, GL_STATIC_DRAW);
 }
 
 GraphicsSystem::~GraphicsSystem() {
@@ -706,31 +738,69 @@ void GraphicsSystem::Update(ecs::Scene& scene, float deltaTime) {
 		GLuint typeUniform = glGetUniformLocation(GLuint(VFXshader), "type");
 		//Billboards
 		glUniform1ui(typeUniform, 0);
+		glUniform3fv(cameraPositionUniform, 1, glm::value_ptr(cameras[0].cameraPos));
 		for (Guid entityGuid : ecs::EntitiesInScene<VFXBillboard, TransformComponent>(scene)) {
 			VFXBillboard& comp = scene.GetComponent<VFXBillboard>(entityGuid);
 			TransformComponent& trans = scene.GetComponent<TransformComponent>(entityGuid);
 
-			glUniform3fv(cameraPositionUniform, 1, glm::value_ptr(cameras[0].cameraPos));
 			glUniform3fv(centrePosUniform, 1, glm::value_ptr(trans.getTranslation()));
 			glUniform3fv(lockingAxisUniform, 1, glm::value_ptr(glm::vec3(0, 1, 0)));
 			glUniform2fv(scaleUniform, 1, glm::value_ptr(glm::vec2(trans.getScale().x, trans.getScale().y)));
 			comp.texture->bind();
 			glDrawArrays(GL_TRIANGLES, 0, 6);
 		}
+
 		//textureStrips
 		glUniform1ui(typeUniform, 1);
+		glUniform3fv(centrePosUniform, 1, glm::value_ptr(glm::vec3(0, 0, 0)));
 		for (Guid entityGuid : ecs::EntitiesInScene<VFXTextureStrip, TransformComponent>(scene)) {
 			VFXTextureStrip& comp = scene.GetComponent<VFXTextureStrip>(entityGuid);
 			TransformComponent& trans = scene.GetComponent<TransformComponent>(entityGuid);
 
-			glUniform3fv(centrePosUniform, 1, glm::value_ptr(trans.getTranslation()));
+			//glUniform3fv(centrePosUniform, 1, glm::value_ptr(trans.getTranslation()));
 			
+
 			comp.texture->bind();
 			comp.GPUline->bind();
 			glDisableVertexAttribArray(1);
 			glDrawElements(GL_TRIANGLES, comp.indicies.size(), GL_UNSIGNED_INT, 0);
 		}
 
+		//particles
+		particleShader.use();
+		viewUniform = glGetUniformLocation(GLuint(particleShader), "V");
+		perspectiveUniform = glGetUniformLocation(GLuint(particleShader), "P");
+		cameraPositionUniform = glGetUniformLocation(GLuint(particleShader), "cameraPos");
+		glUniformMatrix4fv(perspectiveUniform, 1, GL_FALSE, glm::value_ptr(P));
+		glUniformMatrix4fv(viewUniform, 1, GL_FALSE, glm::value_ptr(V));
+		glUniform3fv(cameraPositionUniform, 1, glm::value_ptr(cameras[0].cameraPos));
+		
+		
+		glBindVertexArray(particles_vertexArray);
+		glBindBuffer(GL_ARRAY_BUFFER, particles_instanceTransformBuffer);
+		glEnable(GL_BLEND);
+		glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+		for (Guid entityGuid : ecs::EntitiesInScene<VFXParticleSystem, TransformComponent>(scene)) {
+			VFXParticleSystem& comp = scene.GetComponent<VFXParticleSystem>(entityGuid);
+			TransformComponent& trans = scene.GetComponent<TransformComponent>(entityGuid);
+			comp.texture->bind();
+			const size_t maxBatchSize = 500;
+			/*
+			* render in batches of up to 500
+			* start at the front index and go until either the end of the array or the max batch size. If the end is reached before the endIndex
+			* then make a second call from the start of the array and work until the endIndex is reached
+			*/
+			size_t index = comp.frontIndex;
+			size_t toRender = comp.backIndex <= comp.frontIndex && comp.particleCount != 0 ? (comp.backIndex + comp.maxParticles) - comp.frontIndex : comp.backIndex - comp.frontIndex;
+			while (toRender != 0) {
+				size_t rendering = comp.backIndex <= index ? comp.maxParticles - index : comp.backIndex - index;
+				toRender -= rendering;
+				glBufferData(GL_ARRAY_BUFFER, sizeof(float) * 7 * rendering, &(comp.positions[index]), GL_DYNAMIC_DRAW);
+				glDrawArraysInstanced(GL_TRIANGLES, 0, 6, rendering);
+				index = index + rendering >= comp.maxParticles ? index = 0 : index = index + rendering;
+			}
+		}
+		glDisable(GL_BLEND);
 		/*
 		* APPLY SHADING EFFECTS AND DRAW TO gColor buffer
 		*/
@@ -801,7 +871,7 @@ void GraphicsSystem::Update(ecs::Scene& scene, float deltaTime) {
 			RenderLine& comp = scene.GetComponent<RenderLine>(entityGuid);
 			TransformComponent& trans = scene.GetComponent<TransformComponent>(entityGuid);
 			
-			glm::mat4 M = glm::translate(glm::mat4(1), trans.getTranslation()) * toMat4(trans.getRotation());
+			glm::mat4 M = glm::translate(glm::mat4(1), trans.getTranslation()) * toMat4(trans.getRotation()) * glm::scale(glm::mat4(1), trans.getScale());
 			glUniformMatrix4fv(modelUniform, 1, GL_FALSE, glm::value_ptr(M));
 
 			glUniform3fv(colorUniform, 1, glm::value_ptr(comp.color));

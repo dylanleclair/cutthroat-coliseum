@@ -255,10 +255,10 @@ void VFXTextureStrip::moveEndPoint(glm::vec3 _position, glm::vec3 _normal)
 	if (state == 3) {
 		glm::vec3 angle = glm::normalize(previousRight + right) * width;
 		//transform the verticies
-		verticies[verticies.size() - 3] = -angle + previousPoint;
-		verticies[verticies.size() - 4] = angle + previousPoint;
-		verticies[verticies.size() - 5] = -angle + previousPoint;
-		verticies[verticies.size() - 6] = angle + previousPoint;
+		//verticies[verticies.size() - 3] = -angle + previousPoint;
+		//verticies[verticies.size() - 4] = angle + previousPoint;
+		//verticies[verticies.size() - 5] = -angle + previousPoint;
+		//verticies[verticies.size() - 6] = angle + previousPoint;
 	}
 
 	GPUline->setVerts(verticies);
@@ -274,4 +274,79 @@ void VFXTextureStrip::cut()
 glm::vec3 VFXTextureStrip::g_previousPosition()
 {
 	return previousPoint;
+}
+
+VFXParticleSystem::VFXParticleSystem(std::string _textureName, size_t _maxParticles) {
+	texture = new Texture(_textureName, GL_LINEAR);
+	positions.resize(_maxParticles, { glm::vec4(INFINITY), glm::vec3(1, 0, 1)});
+	particles.resize(_maxParticles);
+	maxParticles = _maxParticles;
+}
+
+void VFXParticleSystem::stepSystem(float dt, glm::mat4 transformationMatrix) {
+	//determine if any new particles need to be made
+	if (active) {
+		timeAccumulator += dt;
+		while (timeAccumulator >= particleFrequency) {
+			timeAccumulator -= particleFrequency;
+			if (particleCount == maxParticles) {
+				timeAccumulator = 0;
+				break;
+			}
+			//spawn the particle
+			glm::vec3 position = transformationMatrix * glm::vec4(glm::linearRand(initialPositionMin, initialPositionMax), 1);
+			float scale = glm::linearRand(initialScaleMin, initialScaleMax);
+			float rotation = glm::linearRand(initialRotationMin, initialRotationMax);
+			float rotationSpeed = glm::linearRand(rotationSpeedMin, rotationSpeedMax);
+			float alpha = glm::linearRand(initalAlphaMin, initalAlphaMax);
+			glm::vec3 velocity = glm::linearRand(initialVelocityMin, initialVelocityMax);
+			float mass = glm::linearRand(initialMassMin, initialMassMax);
+			float scaleSpeed = glm::linearRand(scaleSpeedMin, scaleSpeedMax);
+			float maxScale = glm::linearRand(scaleMaxsizeMin, scaleMaxsizeMax);
+			float alphaChange = glm::linearRand(alphaChangeMin, alphaChangeMax);
+
+			
+			positions[backIndex] = { glm::vec4(position, scale), glm::vec3(cos(rotation), sin(rotation), alpha) };
+			particles[backIndex] = { velocity, mass, rotationSpeed, rotation, scaleSpeed, maxScale, alphaChange, particleLife };
+			backIndex = backIndex == maxParticles - 1 ? 0 : backIndex + 1;
+			particleCount++;
+		}
+	}
+
+	
+	// Iterate over particles that are active
+	if (particleCount == 0)
+		return;
+	size_t i = frontIndex;
+	do {
+		Particle& particle = particles[i];
+		//check if the particle should die
+		if (particle.lifespan <= 0) {
+			positions[i].pos_scale = glm::vec4(INFINITY);
+			frontIndex = i == maxParticles - 1 ? 0 : i + 1;
+			particleCount--;
+		}
+		//update particle values
+		particle.lifespan -= dt;
+		particle.velocity += (((airResistance * -particle.velocity) / particle.mass) + gravity) * dt;
+		particle.currentRotation += particle.rotationSpeed * dt;
+
+		//update position data
+		glm::vec3 position = glm::vec3(positions[i].pos_scale) + particle.velocity * dt;
+		float scale = std::min(positions[i].pos_scale[3] + particle.scaleSpeed * dt, particle.maxScale);
+		positions[i].pos_scale = glm::vec4(position, scale);
+
+		float alpha = std::max(0.f, positions[i].rotation[2] + particle.alphaChange * dt);
+		positions[i].rotation = glm::vec3(cos(particle.currentRotation), sin(particle.currentRotation), alpha);
+		
+		i++;
+		i = i == maxParticles ? 0 : i;
+	} while (i != backIndex);
+}
+
+void VFXParticleSystem::setMaxParticles(size_t count) {
+	return;
+	maxParticles = count;
+	//need to move all particles so that they start at 0 index
+	//FUCK THIS FOR NOW!
 }
