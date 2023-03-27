@@ -112,8 +112,6 @@ int main(int argc, char* argv[]) {
 	const int driverCount = 8;
 
 
-	init_sound_system();
-
 
 	SDL_Init(SDL_INIT_EVERYTHING); // initialize all sdl systems
 	Window window(1200, 800, "Maximus Overdrive");
@@ -413,13 +411,11 @@ int main(int argc, char* argv[]) {
 	int controlledCamera = 0;
 	
 
-	bool playSounds = true;
 
 	// Find the default values of movement dampening
 	// This will be used to reset changes to dampening
 	auto default_lin_damp = testCar.m_Vehicle.mPhysXState.physxActor.rigidBody->getLinearDamping();
 	auto default_ang_damp = testCar.m_Vehicle.mPhysXState.physxActor.rigidBody->getAngularDamping();
-
 
 	raceSystem.Initialize(mainScene);
 	// Stuff for the physics timestep accumualtor
@@ -437,6 +433,11 @@ int main(int argc, char* argv[]) {
 	engineVariablesInit(testCar.m_Vehicle);
 
 	float original_z_follow_dist = gs.follow_cam_z;
+
+	bool playSounds = true;
+	init_sound_system();
+    SoundUpdater soundUpdater;
+    soundUpdater.Initialize(mainScene);
 
 	// GAME LOOP
 	while (!quit) {
@@ -701,6 +702,7 @@ int main(int argc, char* argv[]) {
 		raceSystem.Update(mainScene,time_diff);
 
 		//update_sounds(testCar, aiCarInstance, playSounds);
+        soundUpdater.Update(mainScene, time_diff);
 
 		// END__ ECS SYSTEMS UPDATES
 
