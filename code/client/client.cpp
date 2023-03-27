@@ -65,9 +65,11 @@ bool showImgui = true;
 int lapCount = 0;
 bool isFinished = false;
 
+bool navPathToggle = true;
+
 // Boolean to toggle gameplay mode
 // (follow cam, full level mesh, navmesh off, backface culling off)
-bool gameplayMode = false;
+bool gameplayMode = true;
 
 uint32_t lastTime_millisecs;
 
@@ -102,6 +104,37 @@ std::vector<glm::vec3> spawnpointsAlongAxis(int rows, int cols,float spread, glm
 
 	return result;
 
+}
+
+void gamePlayToggle(bool toggle, ecs::Scene &mainScene, std::vector<Guid> aiCars, GraphicsSystem &gs) {
+	if (toggle) {
+		loadLevelMesh = true;
+		navPathToggle = false;
+		gs.cam_mode = 3; // follow cam
+
+		// Turns off the direction line for all AI
+		for (int i = 0; i < aiCars.size(); i++) {
+			RenderLine& AIDirection = mainScene.GetComponent<RenderLine>(aiCars.at(i));
+			CPU_Geometry blank = CPU_Geometry();
+			AIDirection.setGeometry(blank);
+		}
+
+		showImgui = false;
+	}
+	else {
+		loadLevelMesh = false;
+		navPathToggle = true;
+		gs.cam_mode = 1; // free cam
+
+		// Restores the forward lines for the AI cars
+		for (int i = 0; i < aiCars.size(); i++) {
+			RenderLine& AIDirection = mainScene.GetComponent<RenderLine>(aiCars.at(i));
+			CPU_Geometry forward = CPU_Geometry();
+			forward.verts.push_back({ 0.f, 0.f, 0.f });
+			forward.verts.push_back({ 0.f, 0.f, 5.f });
+			AIDirection.setGeometry(forward);
+		}
+	}
 }
 
 int main(int argc, char* argv[]) {
@@ -183,8 +216,8 @@ int main(int argc, char* argv[]) {
 	// generate spawnpoints along the axis!
 
 
-	int spawnRows = 2;
-	int spawnCols = 2;
+	int spawnRows = 3;
+	int spawnCols = 3;
 	std::vector<glm::vec3> spawnPoints = spawnpointsAlongAxis(spawnRows,spawnCols, 7.f, forward, zzPathGeom.verts[zzSpawnIndex]);
 
 	int numCars = spawnPoints.size();
@@ -240,7 +273,6 @@ int main(int argc, char* argv[]) {
 	// Transform component used for toggling the rendering
 	auto& navRender = mainScene.GetComponent<TransformComponent>(navRenderer_e.guid);
 	auto navDefaultScale = navRender.getScale();
-	bool navPathToggle = true;
 
 	// Car Entity
 	RenderModel car_r = RenderModel();
@@ -327,6 +359,7 @@ int main(int argc, char* argv[]) {
 	CPU_Geometry obstacle_geom = CPU_Geometry();
 	GraphicsSystem::importOBJ(obstacle_geom, "obstacles-mesh.obj");
 
+	gamePlayToggle(gameplayMode, mainScene, aiCars, gs);
 
 	std::vector<Guid> obstacles;
 	for (int i = 1; i <= 11; i++)
@@ -773,36 +806,7 @@ int main(int argc, char* argv[]) {
 					
 					// Used to toggle a bunch of stuff at the same time for gameplay
 					if (ImGui::Checkbox("Gameplay Mode", &gameplayMode)) {
-						if (gameplayMode) {
-							loadLevelMesh = true;
-							navPathToggle = false;
-							gs.cam_mode = 3; // follow cam
-
-							// Turns off the direction line for all AI
-							for (int i = 0; i < aiCars.size(); i++) {
-								RenderLine &AIDirection = mainScene.GetComponent<RenderLine>(aiCars.at(i));
-								CPU_Geometry blank = CPU_Geometry();
-								AIDirection.setGeometry(blank);
-							}						
-
-							showImgui = false;
-						}
-						else {
-							loadLevelMesh = false;
-							navPathToggle = true;
-							gs.cam_mode = 1; // free cam
-
-							// Restores the forward lines for the AI cars
-							for (int i = 0; i < aiCars.size(); i++) {
-								RenderLine& AIDirection = mainScene.GetComponent<RenderLine>(aiCars.at(i));
-								CPU_Geometry forward = CPU_Geometry();
-								forward.verts.push_back({ 0.f, 0.f, 0.f });
-								forward.verts.push_back({ 0.f, 0.f, 5.f });
-								AIDirection.setGeometry(forward);
-							}
-
-
-						}
+						gamePlayToggle(gameplayMode, mainScene, aiCars, gs);
 					}
 
 					ImGui::EndTabItem();
