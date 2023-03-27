@@ -116,7 +116,7 @@ Command AICar::pathfind(glm::vec3 currentPosition, ecs::Scene& scene, float delt
         forced_turn_left = true;
     }
 
-    hitting_wall = castRay(physicsSystem->m_Scene, carPose.p + PxVec3(0.f,2.5f,0.f), GLMtoPx(headingDir), 7.f, level_c->getShape());
+    hitting_wall = castRay(physicsSystem->m_Scene, carPose.p, GLMtoPx(headingDir), 7.f, level_c->getShape());
     if (hitting_wall)
     {
         m_stuckTimer += deltaTime;
@@ -129,12 +129,12 @@ Command AICar::pathfind(glm::vec3 currentPosition, ecs::Scene& scene, float delt
         // get the level collider
         ObstacleCollider& oc = scene.GetComponent<ObstacleCollider>(entity);
 
-        obstacle_ahead = obstacle_ahead ||  castRay(physicsSystem->m_Scene, carPose.p, GLMtoPx(headingDir), 25.f, oc.getShape());
+        obstacle_ahead = obstacle_ahead ||  castRay(physicsSystem->m_Scene, carPose.p, GLMtoPx(headingDir), 20.f, oc.getShape());
     }
 
     if (obstacle_ahead)
     {
-        std::cout << "ai needs to jump!" << std::endl;
+        // std::cout << "ai needs to jump!" << std::endl;
         TetherJump();
     }
 
@@ -192,9 +192,9 @@ Command AICar::pathfind(glm::vec3 currentPosition, ecs::Scene& scene, float delt
             command.throttle = 1.f;
             // normal turning logic
 
-            float maxAngle = M_PI_2; 
+            float maxAngle = M_PI / 3.f; 
 
-            if (actualAngle > maxAngle) // if the turning angle is more gentle
+            if (abs(actualAngle) > maxAngle) // if the turning angle is more gentle
             {
 
                 // use the heading direction as the target direction instead 

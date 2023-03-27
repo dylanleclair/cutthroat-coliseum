@@ -37,12 +37,26 @@ void RaceTracker::Update(ecs::Scene& scene, float deltaTime) {
   for (Contestant& car : m_contestants)
   {
     car.curveIndex = findClosestPointOnCurve(car.car->getPosition()); 
+
+    // prevent reverse hack
+    if (car.checkpoints == 0)
+    {
+      if (car.curveIndex > m_checkpoints[1])
+      {
+        car.curveIndex = 0;
+      }
+    }
+
   }
 
   correctIndices(m_contestants);
 
+
+  // the bug is happening because the curveindex suddenly becomes much higher than all of the other!
+
   for (Contestant& car : m_contestants)
   {
+
     // first see if the car's completed a lap
     if ((car.checkpoints == m_checkpoints.size() - 1) && abs(car.curveIndex - m_checkpoints[0]) == 0)
     {
@@ -52,6 +66,11 @@ void RaceTracker::Update(ecs::Scene& scene, float deltaTime) {
     }
 
     int next_checkpoint = (car.checkpoints + 1 == m_checkpoints.size()) ? 0 : car.checkpoints + 1; 
+
+    if (abs(car.curveIndex - m_checkpoints[next_checkpoint]) == 0)
+    {
+      std::cout << "found the bug!\n";
+    }
 
     if (abs(car.curveIndex - m_checkpoints[next_checkpoint]) < 3)
     {
