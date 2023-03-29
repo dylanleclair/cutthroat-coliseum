@@ -95,6 +95,8 @@ void RaceTracker::resetRace() {
     for (auto& contestant : m_contestants) {
         contestant.lapCount = 1;
     }
+
+    m_raceFinished = false;
 }
 
 int RaceTracker::findClosestPointOnCurve(glm::vec3 position)
