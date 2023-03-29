@@ -581,7 +581,6 @@ int main(int argc, char* argv[]) {
 						testCar.m_Vehicle.mPhysXState.physxActor.rigidBody->setGlobalPose(PxTransform(GLMtoPx(spawnPoints[0])));
 						testCar.m_Vehicle.mPhysXState.physxActor.rigidBody->setLinearDamping(10000.f);
 						testCar.m_Vehicle.mPhysXState.physxActor.rigidBody->setAngularDamping(10000.f);
-						lapCount = 1;
 
 						// Ai Reset
 						for (int i = 0; i < aiCars.size(); i++) {
@@ -590,6 +589,9 @@ int main(int argc, char* argv[]) {
 							aiCar.m_Vehicle.mPhysXState.physxActor.rigidBody->setLinearDamping(10000.f);
 							aiCar.m_Vehicle.mPhysXState.physxActor.rigidBody->setAngularDamping(10000.f);
 						}
+
+						// Resets the lap count for all racers
+						raceSystem.resetRace();
 
 						// Resets the accumulator
 						acc_t = 0;

@@ -91,6 +91,11 @@ void RaceTracker::Update(ecs::Scene& scene, float deltaTime) {
 
 }
 
+void RaceTracker::resetRace() {
+    for (auto& contestant : m_contestants) {
+        contestant.lapCount = 1;
+    }
+}
 
 int RaceTracker::findClosestPointOnCurve(glm::vec3 position)
 {
