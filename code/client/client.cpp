@@ -43,6 +43,10 @@
 #include <chrono>  // chrono::system_clock
 #include <ctime>   // localtime
 
+#define RMLUI_STATIC_LIB
+#include <RmlUi/Core.h>
+#include "systems/UI/RmlUi_Backend.h"
+#include <RmlUi/Debugger.h>
 
 bool loadLevelMesh{false};
 bool levelMeshLoaded{false};
@@ -141,12 +145,43 @@ int main(int argc, char* argv[]) {
 	//RUN_GRAPHICS_TEST_BENCH();
 	printf("Starting main");
 
+
+	bool ok{ false };
+	ok = Backend::Initialize("Maximus Overdrive", 1200, 800, false);
+	if (!ok)
+	{
+		std::cout << "failed to init backend";
+		return -1;
+	}
+
+	Rml::SetSystemInterface(Backend::GetSystemInterface());
+	Rml::SetRenderInterface(Backend::GetRenderInterface());
+
+	Rml::Initialise();
+
 	SDL_Init(SDL_INIT_EVERYTHING); // initialize all sdl systems
 	Window window(1200, 800, "Maximus Overdrive");
+
+	// Create the main RmlUi context.
+	Rml::Context* context = Rml::CreateContext("main", Rml::Vector2i(1200, 800));
+	if (!context)
+	{
+		Rml::Shutdown();
+		Backend::Shutdown();
+		return -1;
+	}
+
+	Rml::Debugger::Initialise(context);
+
+
+	std::cin.get();
+	return 1;
 
 	lastTime_millisecs = SDL_GetTicks();
 
 	ImGuiIO& io = ImGui::GetIO(); (void)io;
+
+
 
 	/**
 	 * Begin initialization of ECS systems, entities, etc.

@@ -69,7 +69,7 @@ GraphicsSystem::GraphicsSystem(Window& _window) :
 	skyboxShader("shaders/skybox.vert", "shaders/skybox.frag"),
 	particleShader("shaders/particle.vert", "shaders/particle.frag")
 {
-	windowSize = _window.getSize();
+	windowSize = glm::vec2(1200, 800);//_window.getSize();
 	follow_cam_x = 0.f;
 	follow_cam_y = 4.f;
 	follow_cam_z = -22.f;
