@@ -22,6 +22,7 @@ struct Contestant {
 struct RaceTracker : ecs::ISystem {
 
   const int NUM_CHECKPOINTS = 10;
+  const int MAX_LAPS = 2;
 
   std::vector<glm::vec3>& m_racepath;
   int startIndex = 0;

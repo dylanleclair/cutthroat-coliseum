@@ -67,7 +67,7 @@ void RaceTracker::Update(ecs::Scene& scene, float deltaTime) {
     {
       std::cout << "completed a lap!";
       car.lapCount++;
-      if (car.lapCount == 3)
+      if (car.lapCount == MAX_LAPS+1)
       {
         m_raceFinished = true;
       }
