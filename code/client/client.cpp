@@ -70,6 +70,7 @@ bool navPathToggle = true;
 // Boolean to toggle gameplay mode
 // (follow cam, full level mesh, navmesh off, backface culling off)
 bool gameplayMode = true;
+bool gamePaused = false;
 
 uint32_t lastTime_millisecs;
 
@@ -498,7 +499,7 @@ int main(int argc, char* argv[]) {
 	auto previous_time = (float)SDL_GetTicks()/1000.f;
 
 	float acc_t = 0.f;
-	const float delta_t = 1.f/60.f;
+	float delta_t = 1.f/60.f;
 
 	// Sets up the better handling model on runtime 
 	testCar.setup1();
@@ -604,7 +605,13 @@ int main(int argc, char* argv[]) {
 						break;
 					case SDLK_o:// o means out
 						break;
-
+					case SDLK_F1 || SDL_CONTROLLER_BUTTON_START:
+						if (gamePaused) {
+							gamePaused = false;
+						}
+						else {
+							gamePaused = true;
+						}
 					case SDLK_0:
 						controlledCamera = 0;
 						break;
@@ -734,19 +741,24 @@ int main(int argc, char* argv[]) {
 		// 	isFinished = false;
 		// }
 
+
 		// Timestep accumulate for proper physics stepping
-		auto current_time = (float)SDL_GetTicks()/1000.f;
+		auto current_time = (float)SDL_GetTicks() / 1000.f;
 		auto time_diff = current_time - previous_time;
 		if (time_diff > 0.25f) {
 			time_diff = 0.25f;
 		}
 		previous_time = current_time;
 
-		acc_t = acc_t + (time_diff);
-		while (acc_t >= delta_t) {
-			acc_t = acc_t - delta_t;
-			physicsSystem.Update(mainScene, delta_t);
+		// If the game isn't paused - update physics 
+		if (!gamePaused) {
+			acc_t = acc_t + (time_diff);
+			while (acc_t >= delta_t) {
+				acc_t = acc_t - delta_t;
+				physicsSystem.Update(mainScene, delta_t);
+			}
 		}
+
 
 		//flame effects for ONLY the player car
 		{
