@@ -605,7 +605,7 @@ int main(int argc, char* argv[]) {
 						break;
 					case SDLK_o:// o means out
 						break;
-					case SDLK_F1 || SDL_CONTROLLER_BUTTON_START:
+					case SDLK_F1:
 						if (gamePaused) {
 							gamePaused = false;
 						}
@@ -741,6 +741,7 @@ int main(int argc, char* argv[]) {
 		// 	isFinished = false;
 		// }
 
+		testCar.checkFlipped(testCar.getVehicleRigidBody()->getGlobalPose());
 
 		// Timestep accumulate for proper physics stepping
 		auto current_time = (float)SDL_GetTicks() / 1000.f;
