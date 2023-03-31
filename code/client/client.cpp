@@ -346,8 +346,12 @@ int main(int argc, char* argv[]) {
 
 	physx::PxMaterial* lMaterial = physicsSystem.m_Physics->createMaterial(0.10f, 0.730f, 0.135f);
 
+
+	// LOAD COLLIDERS
+
+	// load the road 
 	CPU_Geometry new_level_geom = CPU_Geometry();
-	GraphicsSystem::importOBJ(new_level_geom, "zz-track-collider.obj");
+	GraphicsSystem::importOBJ(new_level_geom, "zz-track-collider-road.obj");
 
 	Guid level_collider_e = mainScene.CreateEntity().guid;
 	mainScene.AddComponent(level_collider_e, LevelCollider());
@@ -356,12 +360,23 @@ int main(int argc, char* argv[]) {
 	physx::PxTriangleMesh* new_level_collider_mesh = new_level_collider.cookLevel(glm::scale(glm::mat4(1), glm::vec3(1.0)));
 	new_level_collider.initLevelRigidBody(new_level_collider_mesh, lMaterial);
 
+	// load the walls
+	CPU_Geometry level_wall_geom = CPU_Geometry();
+	GraphicsSystem::importOBJ(level_wall_geom, "zz-track-collider-wall.obj");
 
+	Guid level_wall_e = mainScene.CreateEntity().guid;
+	mainScene.AddComponent(level_wall_e, LevelCollider());
+	LevelCollider& level_wall_collider = mainScene.GetComponent<LevelCollider>(level_wall_e);
+	level_wall_collider.Initialize(level_wall_geom, physicsSystem);
+	physx::PxTriangleMesh* level_wall_collider_mesh = level_wall_collider.cookLevel(glm::scale(glm::mat4(1), glm::vec3(1.0)));
+	level_wall_collider.initLevelRigidBody(level_wall_collider_mesh, lMaterial);
 	CPU_Geometry obstacle_geom = CPU_Geometry();
 	GraphicsSystem::importOBJ(obstacle_geom, "obstacles-mesh.obj");
 
 	gamePlayToggle(gameplayMode, mainScene, aiCars, gs);
 
+
+	// load the obstacles
 	std::vector<Guid> obstacles;
 	for (int i = 1; i <= 11; i++)
 	{
