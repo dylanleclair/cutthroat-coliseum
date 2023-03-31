@@ -122,7 +122,7 @@ protected:
 
     void keepRigidbodyUpright(PxRigidBody* rigidbody);
 
-    float STRENGTH_UP_CORRECTION{20000.f};
+    float STRENGTH_UP_CORRECTION{8000.f};
 
 };
 

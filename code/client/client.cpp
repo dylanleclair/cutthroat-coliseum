@@ -357,8 +357,8 @@ int main(int argc, char* argv[]) {
 	GraphicsSystem::importOBJ(new_level_geom, "zz-track-collider-road.obj");
 
 	Guid level_collider_e = mainScene.CreateEntity().guid;
-	mainScene.AddComponent(level_collider_e, LevelCollider());
-	LevelCollider& new_level_collider = mainScene.GetComponent<LevelCollider>(level_collider_e);
+	mainScene.AddComponent(level_collider_e, RoadCollider());
+	RoadCollider& new_level_collider = mainScene.GetComponent<RoadCollider>(level_collider_e);
 	new_level_collider.Initialize(new_level_geom, physicsSystem);
 	physx::PxTriangleMesh* new_level_collider_mesh = new_level_collider.cookLevel(glm::scale(glm::mat4(1), glm::vec3(1.0)));
 	new_level_collider.initLevelRigidBody(new_level_collider_mesh, lMaterial);

@@ -100,6 +100,7 @@ void Car::keepRigidbodyUpright(PxRigidBody* rigidbody)
 
             m_Vehicle.mPhysXState.physxActor.rigidBody->setAngularDamping(10.f);
             PxTransform transform = rigidbody->getGlobalPose();
+
             PxVec3 upVector = transform.q.getBasisVector1(); // get the up vector from the rigidbody's orientation
 
             upVector.normalize();
@@ -114,9 +115,12 @@ void Car::keepRigidbodyUpright(PxRigidBody* rigidbody)
             PxVec3 axis = upVector.cross(desiredUpVector);
             PxReal angle = acos(upVector.dot(desiredUpVector));
 
-            // Apply a torque to the rigidbody to rotate it towards the desired orientation
+            // // Apply a torque to the rigidbody to rotate it towards the desired orientation
             PxVec3 torque = axis * angle * rigidbody->getMass() * STRENGTH_UP_CORRECTION; // adjust the torque magnitude as needed
             rigidbody->addTorque(torque, PxForceMode::eFORCE);
+
+            // transform.rotate(axis * angle * STRENGTH_UP_CORRECTION);
+            // rigidbody->setGlobalPose(transform);
 
             
         } else {
@@ -254,7 +258,7 @@ void Car::carImGui() {
         ImGui::Text("Friction? %f, %f", m_Vehicle.mBaseState.tireSlipStates->slips[0], m_Vehicle.mBaseState.tireSlipStates->slips[1]);
         ImGui::TreePop();
 
-        ImGui::SliderFloat("Strength of UP:", &STRENGTH_UP_CORRECTION, 1.0f, 2000000);
+        ImGui::SliderFloat("Strength of UP:", &STRENGTH_UP_CORRECTION, 1.0f, 20000);
 
 
     }
