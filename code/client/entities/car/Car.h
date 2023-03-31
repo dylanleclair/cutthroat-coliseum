@@ -40,7 +40,7 @@ struct Car {
     
 
     physics::PhysicsSystem* physicsSystem;
-
+    std::vector<glm::vec3>* m_track;
     char* m_vehicleName = "Player";
 
     // The vehicle with engine drivetrain
@@ -118,6 +118,11 @@ struct Car {
 protected: 
     void Car::checkFlipped(PxTransform carPose);
 
+    glm::vec3 getTrackNormal();
+
+    void keepRigidbodyUpright(PxRigidBody* rigidbody);
+
+    float STRENGTH_UP_CORRECTION{20000.f};
 
 };
 
