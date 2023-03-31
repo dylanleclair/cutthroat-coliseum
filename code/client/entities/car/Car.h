@@ -118,7 +118,7 @@ struct Car {
 
     void Car::checkFlipped(PxTransform carPose);
 
-    bool isWrongWay() { return m_isWrongWay; };
+    bool isWrongWay();
 
 protected:
     glm::vec3 getTrackNormal();
@@ -126,9 +126,6 @@ protected:
     void keepRigidbodyUpright(PxRigidBody* rigidbody);
 
     float STRENGTH_UP_CORRECTION{8000.f};
-
-    bool m_isWrongWay{false};
-
 };
 
 

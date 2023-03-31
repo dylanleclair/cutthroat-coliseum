@@ -213,6 +213,8 @@ void Car::carImGui() {
         auto vehicleRot = m_Vehicle.mPhysXState.physxActor.rigidBody->getGlobalPose().q;
         ImGui::Text("Car rotation: %f, %f, %f, %f", vehicleRot.w, vehicleRot.x, vehicleRot.y, vehicleRot.z);
         ImGui::Text("Friction? %f, %f", m_Vehicle.mBaseState.tireSlipStates->slips[0], m_Vehicle.mBaseState.tireSlipStates->slips[1]);
+        ImGui::Text("Is wrong way?: %s", isWrongWay() ? "true" : "false");
+        
         ImGui::TreePop();
 
         ImGui::SliderFloat("Strength of UP:", &STRENGTH_UP_CORRECTION, 1.0f, 20000);
@@ -606,11 +608,26 @@ glm::vec3 Car::getForwardDir()
     // find the direction vector of the vehicle
     glm::quat vehicleQuat = PxtoGLM(carPose.q);
     glm::mat4 vehicleRotM = glm::toMat4(vehicleQuat);
-    glm::vec3 headingDir = glm::vec3{vehicleRotM * glm::vec4{0.f, 0.f, -1.f, 1.f}};
+    glm::vec3 headingDir = glm::vec3{vehicleRotM * glm::vec4{0.f, 0.f, 1.f, 1.f}};
     
     return headingDir;
 }
 
+
+bool Car::isWrongWay()
+{
+    glm::vec3 forward = getForwardDir();
+    glm::vec3 trackForward = m_track->forward(getPosition());
+
+    float angle = acos(glm::dot(forward, trackForward));
+
+    if (angle > M_PI_2)
+    {
+        std::cout << "CAR IS WRONG WAY!\n";
+        return true;
+    }
+    return false;
+}
 
 void Car::checkFlipped(PxTransform carPose)
 {

@@ -20,11 +20,5 @@ struct Curve {
   int closestIndex(glm::vec3 position);
 
 private: 
-
-
-
-
   std::vector<glm::vec3>& m_geometry;
-
-
 };
