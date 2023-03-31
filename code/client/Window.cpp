@@ -11,6 +11,9 @@
 
 #include <iostream>
 
+#include "systems/UI/RmlUi_Renderer_GL3.h"
+#include "systems/UI/RmlUi_Platform_SDL.h"
+
 void sdl_error_handler(int sdl_return) {
 	if (!sdl_return) return;
 	printf("SDL error: ", SDL_GetError());
@@ -22,6 +25,7 @@ void sdl_error_handler(int sdl_return) {
 Window::Window(int width, int height, const char* title)
 	: window(nullptr)
 {
+	SDL_Init(SDL_INIT_EVERYTHING);
 	// specify OpenGL version
 	// XXX(beau): handle errors?
 	SDL_GL_SetAttribute(SDL_GL_CONTEXT_MAJOR_VERSION, 4);
@@ -39,10 +43,10 @@ Window::Window(int width, int height, const char* title)
 	SDL_GLContext context = SDL_GL_CreateContext(window.get());
 	if (!context)
 		sdl_error_handler(1);
-
+	SDL_GL_MakeCurrent(window.get(), context);
 	// vsync
 	sdl_error_handler(SDL_GL_SetSwapInterval(1));
-
+	
 	// initialize OpenGL extensions for the current context (this window)
 	GLenum err = glewInit();
 	if (err != GLEW_OK) {
@@ -60,6 +64,39 @@ Window::Window(int width, int height, const char* title)
 
 	// VOLATILE: must match version specified in shaders!
 	ImGui_ImplOpenGL3_Init("#version 410 core");
+
+	/*
+	bool ok{ false };
+	ok = Backend::Initialize("Maximus Overdrive", 1200, 800, false);
+	if (!ok)
+	{
+		std::cout << "failed to init backend";
+		return;
+	}*/
+	
+	if (!RmlGL3::Initialize())
+	{
+		fprintf(stderr, "Could not initialize OpenGL");
+		return;
+	}
+
+	//mySystemInterface systemInterface;
+	Rml::SetSystemInterface(new SystemInterface_SDL);
+	Rml::SetRenderInterface(new RenderInterface_GL3);
+
+	Rml::Initialise();
+	
+	// Create the main RmlUi context.
+	Rml::Context* rml_context = Rml::CreateContext("main", Rml::Vector2i(1200, 800));
+	if (!rml_context)
+	{
+		std::cout << "Failed to create rml context\n";
+		Rml::Shutdown();
+		Backend::Shutdown();
+		return;
+	}
+
+	Rml::Debugger::Initialise(rml_context);
 }
 
 

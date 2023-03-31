@@ -16,6 +16,11 @@
 #include "imgui_impl_sdl.h"
 #include "imgui_impl_opengl3.h"
 
+#define RMLUI_STATIC_LIB
+#include <RmlUi/Core.h>
+#include "systems/UI/RmlUi_Backend.h"
+#include <RmlUi/Debugger.h>
+
 #include <memory>
 
 
@@ -29,7 +34,6 @@ struct WindowDeleter {
 		SDL_DestroyWindow(window);
 	}
 };
-
 
 // Main class for creating and interacting with a SDL window.
 // Only wraps the most fundamental parts of the API

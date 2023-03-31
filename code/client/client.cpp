@@ -43,11 +43,6 @@
 #include <chrono>  // chrono::system_clock
 #include <ctime>   // localtime
 
-#define RMLUI_STATIC_LIB
-#include <RmlUi/Core.h>
-#include "systems/UI/RmlUi_Backend.h"
-#include <RmlUi/Debugger.h>
-
 bool loadLevelMesh{false};
 bool levelMeshLoaded{false};
 
@@ -145,34 +140,7 @@ int main(int argc, char* argv[]) {
 	//RUN_GRAPHICS_TEST_BENCH();
 	printf("Starting main");
 
-
-	bool ok{ false };
-	ok = Backend::Initialize("Maximus Overdrive", 1200, 800, false);
-	if (!ok)
-	{
-		std::cout << "failed to init backend";
-		return -1;
-	}
-
-	Rml::SetSystemInterface(Backend::GetSystemInterface());
-	Rml::SetRenderInterface(Backend::GetRenderInterface());
-
-	Rml::Initialise();
-
-	SDL_Init(SDL_INIT_EVERYTHING); // initialize all sdl systems
 	Window window(1200, 800, "Maximus Overdrive");
-
-	// Create the main RmlUi context.
-	Rml::Context* context = Rml::CreateContext("main", Rml::Vector2i(1200, 800));
-	if (!context)
-	{
-		Rml::Shutdown();
-		Backend::Shutdown();
-		return -1;
-	}
-
-	Rml::Debugger::Initialise(context);
-
 
 	std::cin.get();
 	return 1;
@@ -193,7 +161,7 @@ int main(int argc, char* argv[]) {
 	// first and foremost, create a scene.
 	ecs::Scene mainScene;
 
-	GraphicsSystem gs(window);
+	GraphicsSystem gs = GraphicsSystem();
 
 	physics::PhysicsSystem physicsSystem{};
 	physicsSystem.Initialize();
@@ -590,24 +558,25 @@ int main(int argc, char* argv[]) {
 		engineVariablesInit(testCar.m_Vehicle);
 
 		//polls all pending input events until there are none left in the queue
-		while (SDL_PollEvent(&window.event)) {
-			ImGui_ImplSDL2_ProcessEvent(&window.event);
+		SDL_Event windowEvent;
+		while (SDL_PollEvent(&windowEvent)) {
+			ImGui_ImplSDL2_ProcessEvent(&windowEvent);
 
-			if (window.event.type == SDL_CONTROLLERDEVICEADDED) {
+			if (windowEvent.type == SDL_CONTROLLERDEVICEADDED) {
 				std::cout << "Adding controller\n";
 				ControllerInput::init_controller();
 			}
 
-			if (window.event.type == SDL_CONTROLLERDEVICEREMOVED) {
+			if (windowEvent.type == SDL_CONTROLLERDEVICEREMOVED) {
 				std::cout << "removing controller\n";
 				ControllerInput::deinit_controller();
 			}
 
-			if (window.event.type == SDL_QUIT)
+			if (windowEvent.type == SDL_QUIT)
 				quit = true;
 
-			if (window.event.type == SDL_KEYDOWN) {
-				switch (window.event.key.keysym.sym) {
+			if (windowEvent.type == SDL_KEYDOWN) {
+				switch (windowEvent.key.keysym.sym) {
 
 					case SDLK_r:
 						//TODO recompile the shader
@@ -722,7 +691,7 @@ int main(int argc, char* argv[]) {
 			}
 
 			//pass the event to the camera
-			gs.input(window.event, controlledCamera);
+			gs.input(windowEvent, controlledCamera);
 		}
 
 		// Check for the car grounded state, and if grounded after being in the air
