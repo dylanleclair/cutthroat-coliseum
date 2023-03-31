@@ -56,38 +56,7 @@ bool Car::getCTethered() {
 
 glm::vec3 Car::getTrackNormal()
 {
-
-    glm::vec3 position =  getPosition();
-    float distance{std::numeric_limits<float>::max()};
-    int closestPoint{0};
-    for (int i = 0; i < m_track->size(); i++)
-    {
-        glm::vec3 pointOnCurve = (*m_track)[i];
-
-
-        float distToCurve = glm::distance(pointOnCurve,position);
-
-        if (glm::distance(pointOnCurve, position) < distance)
-        {
-        distance = distToCurve;
-        closestPoint = i;
-        }
-    }
-
-    // closestPoint now stores the closest index of the track's path.
-    // need to compute the normal now !!
-
-    int nextIndex = (closestPoint == m_track->size()) ? 0 : closestPoint + 1; 
-
-    glm::vec3 track_forward = ((*m_track)[nextIndex] - (*m_track)[closestPoint]);
-
-    glm::vec3 up{0.f,1.f,0.f};
-
-    glm::vec3 binormal = glm::cross(track_forward,up);
-
-    glm::vec3 estimated_normal = glm::cross(track_forward, binormal);
-
-    return glm::normalize(-estimated_normal);
+    return m_track->normal(getPosition());
 }
 
 /** chat gpt + dylan wizardy */
@@ -139,18 +108,6 @@ bool Car::initVehicle(PxVec3 initialPosition)
   {
     std::cerr << "no physics system initialized.";
   }
-    // // Check that we can read from the json file before continuing.
-    // BaseVehicleParams baseParams;
-    // if (!readBaseParamsFromJsonFile(gVehicleDataPath, "Base.json", baseParams))
-    //     return false;
-
-    // // Check that we can read from the json file before continuing.
-    // EngineDrivetrainParams engineDrivetrainParams;
-    // if (!readEngineDrivetrainParamsFromJsonFile(gVehicleDataPath, "EngineDrive.json",
-    //                                             engineDrivetrainParams))
-    // {
-    //     return false;
-    // }
 
   bool result;
 
@@ -585,7 +542,8 @@ glm::quat vehicleQuat = PxtoGLM(carPose.q);
 glm::mat4 vehicleRotM = glm::toMat4(vehicleQuat);
 glm::vec3 headingDir = glm::vec3{vehicleRotM * glm::vec4{0.f, 0.f, 1.f, 1.f}};
 
-
+    // get the angle between the heading direction
+    
 
     // CODE FOR AI
 

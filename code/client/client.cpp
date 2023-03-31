@@ -233,7 +233,7 @@ int main(int argc, char* argv[]) {
 	mainScene.AddComponent(car_e.guid, Car{});
 	Car& testCar = mainScene.GetComponent<Car>(car_e.guid);
 	testCar.physicsSystem = &physicsSystem;
-	testCar.m_track = &zzPathGeom.verts; // pass in the verts for the track
+	testCar.m_track = &raceTrackingCurve;
 	if (!testCar.initVehicle(GLMtoPx(spawnPoints[0])))
 	{
 		std::cout << "ERROR: could not initialize vehicle";

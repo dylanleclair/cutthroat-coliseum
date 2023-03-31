@@ -6,6 +6,7 @@
 #include <glm/glm.hpp>
 
 #include "../../systems/PhysicsSystem.h"
+#include "../../curve/Curve.h"
 
 using namespace physx;
 using namespace physx::vehicle2;
@@ -40,7 +41,7 @@ struct Car {
     
 
     physics::PhysicsSystem* physicsSystem;
-    std::vector<glm::vec3>* m_track;
+    Curve* m_track;
     char* m_vehicleName = "Player";
 
     // The vehicle with engine drivetrain
@@ -117,12 +118,16 @@ struct Car {
 
     void Car::checkFlipped(PxTransform carPose);
 
+    bool isWrongWay() { return m_isWrongWay; };
+
 protected:
     glm::vec3 getTrackNormal();
 
     void keepRigidbodyUpright(PxRigidBody* rigidbody);
 
     float STRENGTH_UP_CORRECTION{8000.f};
+
+    bool m_isWrongWay{false};
 
 };
 
