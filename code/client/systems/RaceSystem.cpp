@@ -67,7 +67,7 @@ void RaceTracker::Update(ecs::Scene& scene, float deltaTime) {
     {
       std::cout << "completed a lap!";
       car.lapCount++;
-      if (car.lapCount == 3)
+      if (car.lapCount == MAX_LAPS+1)
       {
         m_raceFinished = true;
       }
@@ -91,6 +91,13 @@ void RaceTracker::Update(ecs::Scene& scene, float deltaTime) {
 
 }
 
+void RaceTracker::resetRace() {
+    for (auto& contestant : m_contestants) {
+        contestant.lapCount = 1;
+    }
+
+    m_raceFinished = false;
+}
 
 int RaceTracker::findClosestPointOnCurve(glm::vec3 position)
 {
