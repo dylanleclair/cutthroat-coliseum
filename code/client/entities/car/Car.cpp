@@ -54,6 +54,83 @@ bool Car::getCTethered() {
     return c_tethered;
 }
 
+glm::vec3 Car::getTrackNormal()
+{
+
+    glm::vec3 position =  getPosition();
+    float distance{std::numeric_limits<float>::max()};
+    int closestPoint{0};
+    for (int i = 0; i < m_track->size(); i++)
+    {
+        glm::vec3 pointOnCurve = (*m_track)[i];
+
+
+        float distToCurve = glm::distance(pointOnCurve,position);
+
+        if (glm::distance(pointOnCurve, position) < distance)
+        {
+        distance = distToCurve;
+        closestPoint = i;
+        }
+    }
+
+    // closestPoint now stores the closest index of the track's path.
+    // need to compute the normal now !!
+
+    int nextIndex = (closestPoint == m_track->size()) ? 0 : closestPoint + 1; 
+
+    glm::vec3 track_forward = ((*m_track)[nextIndex] - (*m_track)[closestPoint]);
+
+    glm::vec3 up{0.f,1.f,0.f};
+
+    glm::vec3 binormal = glm::cross(track_forward,up);
+
+    glm::vec3 estimated_normal = glm::cross(track_forward, binormal);
+
+    return glm::normalize(-estimated_normal);
+}
+
+/** chat gpt + dylan wizardy */
+void Car::keepRigidbodyUpright(PxRigidBody* rigidbody)
+{
+
+        if ( m_Vehicle.mBaseState.tireSlipStates->slips[0] > 50.f)
+        {
+            // correct the vehicles orientation
+
+            m_Vehicle.mPhysXState.physxActor.rigidBody->setAngularDamping(10.f);
+            PxTransform transform = rigidbody->getGlobalPose();
+
+            PxVec3 upVector = transform.q.getBasisVector1(); // get the up vector from the rigidbody's orientation
+
+            upVector.normalize();
+
+            // Calculate the vector that points upwards relative to the rigidbody's orientation
+            PxVec3 desiredUpVector = PxVec3(0.0f, 1.0f, 0.0f); // assuming that we want the rigidbody to stay upright in the world Y-axis direction
+
+            // make the desired up vector the normal of the track
+            // get the direction vector of track closest to car
+            desiredUpVector = GLMtoPx(getTrackNormal());
+            
+            PxVec3 axis = upVector.cross(desiredUpVector);
+            PxReal angle = acos(upVector.dot(desiredUpVector));
+
+            // // Apply a torque to the rigidbody to rotate it towards the desired orientation
+            PxVec3 torque = axis * angle * rigidbody->getMass() * STRENGTH_UP_CORRECTION; // adjust the torque magnitude as needed
+            rigidbody->addTorque(torque, PxForceMode::eFORCE);
+
+            // transform.rotate(axis * angle * STRENGTH_UP_CORRECTION);
+            // rigidbody->setGlobalPose(transform);
+
+            
+        } else {
+            m_Vehicle.mPhysXState.physxActor.rigidBody->setAngularDamping(angular_damp_init_v);
+        }
+
+
+}
+
+
 bool Car::initVehicle(PxVec3 initialPosition)
 
 {
@@ -130,7 +207,6 @@ bool Car::initVehicle(PxVec3 initialPosition)
   c_mass_init_v = m_Vehicle.mPhysXParams.physxActorCMassLocalPose;
   angular_damp_init_v = m_Vehicle.mPhysXState.physxActor.rigidBody->getAngularDamping();
 
-
   PxU32 vehicle_shapes = m_Vehicle.mPhysXState.physxActor.rigidBody->getNbShapes();
   for (PxU32 i = 0; i < vehicle_shapes; i++)
   {
@@ -181,6 +257,10 @@ void Car::carImGui() {
         ImGui::Text("Car rotation: %f, %f, %f, %f", vehicleRot.w, vehicleRot.x, vehicleRot.y, vehicleRot.z);
         ImGui::Text("Friction? %f, %f", m_Vehicle.mBaseState.tireSlipStates->slips[0], m_Vehicle.mBaseState.tireSlipStates->slips[1]);
         ImGui::TreePop();
+
+        ImGui::SliderFloat("Strength of UP:", &STRENGTH_UP_CORRECTION, 1.0f, 20000);
+
+
     }
     if (ImGui::TreeNode("Parameter Switching")) {
         if (ImGui::Button("Default parameters")) {
@@ -460,6 +540,8 @@ void Car::Update(Guid carGuid, ecs::Scene& scene, float deltaTime)
 
     auto carPose = m_Vehicle.mPhysXState.physxActor.rigidBody->getGlobalPose();
 
+    keepRigidbodyUpright(m_Vehicle.mPhysXState.physxActor.rigidBody);
+
   // Keyboard Controls
   if (a_key && !c_tethered)
   {
@@ -548,6 +630,7 @@ glm::vec3 headingDir = glm::vec3{vehicleRotM * glm::vec4{0.f, 0.f, 1.f, 1.f}};
   // Forward integrate the vehicle by a single timestep.
   // Apply substepping at low forward speed to improve simulation fidelity.
   const PxVec3 linVel = m_Vehicle.mPhysXState.physxActor.rigidBody->getLinearVelocity();
+  
   const PxVec3 forwardDir = m_Vehicle.mPhysXState.physxActor.rigidBody->getGlobalPose().q.getBasisVector2();
   const PxReal forwardSpeed = linVel.dot(forwardDir);
   const PxU8 nbSubsteps = (forwardSpeed < 5.0f ? 3 : 1);

@@ -69,7 +69,7 @@ bool navPathToggle = true;
 
 // Boolean to toggle gameplay mode
 // (follow cam, full level mesh, navmesh off, backface culling off)
-bool gameplayMode = true;
+bool gameplayMode = false;
 bool gamePaused = false;
 
 uint32_t lastTime_millisecs;
@@ -164,9 +164,11 @@ int main(int argc, char* argv[]) {
 	physics::PhysicsSystem physicsSystem{};
 	physicsSystem.Initialize();
 
+
+
 	CPU_Geometry zzPathGeom;
 	GraphicsSystem::importSplineFromOBJ(zzPathGeom, "zz-track-nav.obj");
-
+	
 	glm::vec3 desiredSpawnLocation = {-4.108957, 3.397303, -43.794819}; // hardcoded value near the straight strip of the track
 
 	RaceTracker raceSystem{zzPathGeom.verts, desiredSpawnLocation};	
@@ -216,6 +218,7 @@ int main(int argc, char* argv[]) {
 	glm::vec3 forward = (zzSpawnIndex == zzPathGeom.verts.size() - 1) ? zzPathGeom.verts[0] - zzPathGeom.verts[zzSpawnIndex] : zzPathGeom.verts[zzSpawnIndex + 1] - zzPathGeom.verts[zzSpawnIndex];
 	// generate spawnpoints along the axis!
 
+	// need to pass the track spline to the car so it can compute the track normal...
 
 	int spawnRows = 3;
 	int spawnCols = 3;
@@ -229,7 +232,7 @@ int main(int argc, char* argv[]) {
 	mainScene.AddComponent(car_e.guid, Car{});
 	Car& testCar = mainScene.GetComponent<Car>(car_e.guid);
 	testCar.physicsSystem = &physicsSystem;
-	
+	testCar.m_track = &zzPathGeom.verts; // pass in the verts for the track
 	if (!testCar.initVehicle(GLMtoPx(spawnPoints[0])))
 	{
 		std::cout << "ERROR: could not initialize vehicle";
@@ -354,8 +357,8 @@ int main(int argc, char* argv[]) {
 	GraphicsSystem::importOBJ(new_level_geom, "zz-track-collider-road.obj");
 
 	Guid level_collider_e = mainScene.CreateEntity().guid;
-	mainScene.AddComponent(level_collider_e, LevelCollider());
-	LevelCollider& new_level_collider = mainScene.GetComponent<LevelCollider>(level_collider_e);
+	mainScene.AddComponent(level_collider_e, RoadCollider());
+	RoadCollider& new_level_collider = mainScene.GetComponent<RoadCollider>(level_collider_e);
 	new_level_collider.Initialize(new_level_geom, physicsSystem);
 	physx::PxTriangleMesh* new_level_collider_mesh = new_level_collider.cookLevel(glm::scale(glm::mat4(1), glm::vec3(1.0)));
 	new_level_collider.initLevelRigidBody(new_level_collider_mesh, lMaterial);
