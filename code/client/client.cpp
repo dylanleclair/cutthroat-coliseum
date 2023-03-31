@@ -170,8 +170,9 @@ int main(int argc, char* argv[]) {
 	GraphicsSystem::importSplineFromOBJ(zzPathGeom, "zz-track-nav.obj");
 	
 	glm::vec3 desiredSpawnLocation = {-4.108957, 3.397303, -43.794819}; // hardcoded value near the straight strip of the track
+	Curve raceTrackingCurve(zzPathGeom.verts);
 
-	RaceTracker raceSystem{zzPathGeom.verts, desiredSpawnLocation};	
+	RaceTracker raceSystem{raceTrackingCurve, desiredSpawnLocation};	
 	//load fonts into ImGui
 	io.Fonts->AddFontDefault();
 	ImFont* Debrosee = io.Fonts->AddFontFromFileTTF("fonts/Debrosee-ALPnL.ttf", 18.5f);
@@ -252,12 +253,13 @@ int main(int argc, char* argv[]) {
 	CPU_Geometry nav_geom;
 	GraphicsSystem::importSplineFromOBJ(nav_geom, "zz-track-ai-nav.obj");
 
+	Curve aiNavigationPath{nav_geom.verts};
 	std::vector<Guid> aiCars;
 	// skip the first spot (player driven vehicle) 
 	for (int i = 1; i < spawnPoints.size(); i++)
 	{		
 		auto& spawnPoint = spawnPoints[i];
-		aiPaths.emplace_back(nav_geom.verts);
+		aiPaths.emplace_back(&aiNavigationPath);
 		auto& navPath = aiPaths[aiPaths.size() - 1];
 		Guid aiCarGuid = spawnAIEntity(mainScene, &physicsSystem, car_e.guid, spawnPoint, &navPath);
 		aiCars.push_back(aiCarGuid);

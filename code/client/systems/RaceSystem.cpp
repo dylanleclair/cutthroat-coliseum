@@ -9,6 +9,8 @@ void RaceTracker::Initialize() {}
 void RaceTracker::Initialize(ecs::Scene& scene)
 {
 
+  // search for all cars in the scene and add them as a contestant in the race
+
   for (auto entityGuid : ecs::EntitiesInScene<AICar>(scene))
   {
       AICar& aicar = scene.GetComponent<AICar>(entityGuid);
@@ -31,17 +33,18 @@ void RaceTracker::Initialize(ecs::Scene& scene)
 
 void RaceTracker::Update(ecs::Scene& scene, float deltaTime) {
 
-
+  // rankings should not change after the race is finished.
   if (m_raceFinished)
   {
     return;
   }
+
   // every tick, update the curve index of the car. check if it is near a checkpoint.
   // if it has completed all the checkpoints and is close to the initial checkpoint,
   // it's completed a lap!
   for (Contestant& car : m_contestants)
   {
-    car.curveIndex = findClosestPointOnCurve(car.car->getPosition()); 
+    car.curveIndex = m_racepath.closestIndex(car.car->getPosition()); 
 
     // prevent reverse hack
     if (car.checkpoints == 0)
@@ -56,16 +59,12 @@ void RaceTracker::Update(ecs::Scene& scene, float deltaTime) {
 
   correctIndices(m_contestants);
 
-
-  // the bug is happening because the curveindex suddenly becomes much higher than all of the other!
-
   for (Contestant& car : m_contestants)
   {
 
     // first see if the car's completed a lap
     if ((car.checkpoints == m_checkpoints.size() - 1) && abs(car.curveIndex - m_checkpoints[0]) == 0)
     {
-      std::cout << "completed a lap!";
       car.lapCount++;
       if (car.lapCount == MAX_LAPS+1)
       {
@@ -76,15 +75,9 @@ void RaceTracker::Update(ecs::Scene& scene, float deltaTime) {
 
     int next_checkpoint = (car.checkpoints + 1 == m_checkpoints.size()) ? 0 : car.checkpoints + 1; 
 
-    if (abs(car.curveIndex - m_checkpoints[next_checkpoint]) == 0)
-    {
-      std::cout << "found the bug!\n";
-    }
-
     if (abs(car.curveIndex - m_checkpoints[next_checkpoint]) < 3)
     {
       car.checkpoints++;
-      std::cout << "reached the next checkpoint!";
     }
   }
   computeRankings(m_contestants);
@@ -99,32 +92,12 @@ void RaceTracker::resetRace() {
     m_raceFinished = false;
 }
 
-int RaceTracker::findClosestPointOnCurve(glm::vec3 position)
-{
-  float distance{std::numeric_limits<float>::max()};
-  int closestPoint{0};
-  for (int i = 0; i < m_racepath.size(); i++)
-  {
-    glm::vec3 pointOnCurve = m_racepath[i];
-    float distToCurve = glm::distance(pointOnCurve, position);
-    
-    if (glm::distance(pointOnCurve, position) < distance)
-    {
-      distance = distToCurve;
-      closestPoint = i;
-    }
-  }
-    return closestPoint;
-}
-
-
 void RaceTracker::correctIndices(std::vector<Contestant> contestants)
 {
   for (auto& contestant : contestants)
   {
     int index = contestant.curveIndex;
     int diffy = index - startIndex;
-
 
     contestant.curveIndex = (index < startIndex) ? m_racepath.size() - diffy : index;  
 
@@ -149,12 +122,8 @@ int RaceTracker::getLapCount(Guid contestantGuid)
 }
 
 
-// idea: use the navigationcomponent to track laps since it tracks a racer's progress anyways?
 void RaceTracker::computeRankings(std::vector<Contestant> contestants)
 {
-  
-  // iterate over every point on the curve. 
-  // for each car
   auto cmp = [](Contestant a, Contestant b) {return a.curveIndex > b.curveIndex; };
 
   for (auto& contestant : m_contestants)
