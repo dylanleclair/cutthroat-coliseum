@@ -9,7 +9,7 @@ struct Contestant {
   Car* car;
   Guid guid;
   int curveIndex = 0;
-  int lapCount = 0;
+  int lapCount = 1;
   int checkpoints = 0;
   // other data if needed I guess
 
@@ -22,6 +22,7 @@ struct Contestant {
 struct RaceTracker : ecs::ISystem {
 
   const int NUM_CHECKPOINTS = 10;
+  const int MAX_LAPS = 2;
 
   std::vector<glm::vec3>& m_racepath;
   int startIndex = 0;
@@ -39,6 +40,7 @@ struct RaceTracker : ecs::ISystem {
   void Initialize();
   void Initialize(ecs::Scene& scene);
   void Update(ecs::Scene& scene, float deltaTime);
+  void resetRace();
 
   int getRanking(Guid contestantGuid);
   int getLapCount(Guid contestantGuid);
