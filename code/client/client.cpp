@@ -290,7 +290,6 @@ int main(int argc, char* argv[]) {
 	RaceTracker raceSystem{raceTrackingCurve, desiredSpawnLocation};	
 
 	//make an entity
-	ecs::Entity car_e = mainScene.CreateEntity();
 	ecs::Entity level_e = mainScene.CreateEntity();
 	ecs::Entity outWall_e = mainScene.CreateEntity();
 	ecs::Entity inWall_e = mainScene.CreateEntity();
