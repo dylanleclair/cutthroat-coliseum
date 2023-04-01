@@ -28,7 +28,15 @@ Guid spawnCar(DriverType type, ecs::Scene& scene, physics::PhysicsSystem* physic
 
   // renderer
 	RenderModel aiDriver_r = RenderModel();
-	GraphicsSystem::importOBJ(aiDriver_r, "AI_beta_cart.obj");
+
+
+	if (type == DriverType::COMPUTER)
+	{
+			GraphicsSystem::importOBJ(aiDriver_r, "AI_beta_cart.obj");
+	} else {
+			GraphicsSystem::importOBJ(aiDriver_r, "beta_cart.obj");
+	}
+
 	aiDriver_r.setModelColor(glm::linearRand(glm::vec3(0), glm::vec3(1)));
 	scene.AddComponent(aiDriver_e.guid, aiDriver_r);
 	TransformComponent aiDriver_t = TransformComponent(aiCar.getVehicleRigidBody());

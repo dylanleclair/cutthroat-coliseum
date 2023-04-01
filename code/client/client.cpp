@@ -238,8 +238,9 @@ int main(int argc, char* argv[]) {
 	// SPAWN THE HUMAN VEHICLE
 	auto driverNavPath = NavPath(&aiNavigationPath);
 	Guid carGuid = spawnCar(DriverType::HUMAN, mainScene,&physicsSystem,spawnPoints[0],&raceTrackingCurve, &driverNavPath);
-
 	Car& testCar = mainScene.GetComponent<Car>(carGuid);
+	setupCarVFX(mainScene, carGuid);
+
 
 	// SPAWN THE AI CARS
 	// skip the first spot (player driven vehicle) 
