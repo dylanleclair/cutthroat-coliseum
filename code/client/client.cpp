@@ -54,11 +54,6 @@ glm::vec3 calculateSpherePoint(float s, float t)
 	return(glm::vec3(x, y, z));
 }
 
-
-
-// CarPhysics carPhysics;
-// CarPhysicsSerde carConfig(carPhysics);
-
 bool showImgui = true;
 
 int lapCount = 0;
@@ -72,14 +67,6 @@ bool gameplayMode = false;
 bool gamePaused = false;
 
 uint32_t lastTime_millisecs;
-
-void finishLinePrint() {
-	lapCount++;
-	std::cout << "Lap: " << lapCount << std::endl;
-	if (lapCount == 2) {
-		std::cout << "You win !" << std::endl;
-	}
-}
 
 std::vector<glm::vec3> spawnpointsAlongAxis(int rows, int cols,float spread, glm::vec3 axis, glm::vec3 start)
 {
