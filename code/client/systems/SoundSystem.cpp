@@ -117,60 +117,58 @@ void SoundUpdater::Update(ecs::Scene &scene, float deltaTime)
             engine->set3DAttributes(&position, &fmod_vel);
             brake->set3DAttributes(&position, &fmod_vel);
             // collision->set3DAttributes(&position, &fmod_vel);
-        }
-    }
-    for (auto id : ecs::EntitiesInScene<Car>(scene))
-    {
-        auto & car = scene.GetComponent<Car>(id);
-        auto & channel = scene.GetComponent<CarSoundEmitter>(id);
+        } else {
+                auto & car = scene.GetComponent<Car>(id);
+            auto & channel = scene.GetComponent<CarSoundEmitter>(id);
 
-        auto & engine = channel.enginechannel;
-        auto & brake = channel.brakechannel;
-        // auto & collision = channel.collisionchannel;
+            auto & engine = channel.enginechannel;
+            auto & brake = channel.brakechannel;
+            // auto & collision = channel.collisionchannel;
 
-        {
-            const float playervolume = 0.25f;
-            engine->setVolume(playervolume);
-            brake->setVolume(playervolume);
-        }
+            {
+                const float playervolume = 0.25f;
+                engine->setVolume(playervolume);
+                brake->setVolume(playervolume);
+            }
 
-        bool isPlaying = false;
-        engine->isPlaying(&isPlaying);
-        if (!isPlaying && is_car_throttling(car))
-        {
-            result = soundsystem.system->playSound(soundsystem.enginesound, 0, false, &engine);
+            bool isPlaying = false;
+            engine->isPlaying(&isPlaying);
+            if (!isPlaying && is_car_throttling(car))
+            {
+                result = soundsystem.system->playSound(soundsystem.enginesound, 0, false, &engine);
+                handle_fmod_error();
+
+                brake->stop();
+            }
+
+            isPlaying = false;
+            brake->isPlaying(&isPlaying);
+            if (!isPlaying && is_car_braking(car)) {
+
+                result = soundsystem.system->playSound(soundsystem.brakesound, 0, false, &brake);
+                handle_fmod_error();
+
+                // also turn off the engine sound
+                engine->stop();
+            }
+
+            auto body     = car.getVehicleRigidBody();
+            auto pose     = body->getGlobalPose();
+            auto velocity = body->getLinearVelocity();
+            auto fmod_vel = px_to_fmod_vec3(velocity);
+            auto position = px_to_fmod_vec3(pose.p);
+
+            // set listener position
+            PxMat33 rotation(pose.q);
+            auto forward = px_to_fmod_vec3(rotation * PxVec3{0,0,1});
+            auto up = px_to_fmod_vec3(rotation * PxVec3{0,1,0});
+            result = soundsystem.system->set3DListenerAttributes(0, &position, &fmod_vel, &forward, &up);
             handle_fmod_error();
 
-            brake->stop();
+            engine->set3DAttributes(&position, &fmod_vel);
+            brake->set3DAttributes(&position, &fmod_vel);
+            // collision->set3DAttributes(&position, &fmod_vel);
         }
-
-        isPlaying = false;
-        brake->isPlaying(&isPlaying);
-        if (!isPlaying && is_car_braking(car)) {
-
-            result = soundsystem.system->playSound(soundsystem.brakesound, 0, false, &brake);
-            handle_fmod_error();
-
-            // also turn off the engine sound
-            engine->stop();
-        }
-
-        auto body     = car.getVehicleRigidBody();
-        auto pose     = body->getGlobalPose();
-        auto velocity = body->getLinearVelocity();
-        auto fmod_vel = px_to_fmod_vec3(velocity);
-        auto position = px_to_fmod_vec3(pose.p);
-
-        // set listener position
-        PxMat33 rotation(pose.q);
-        auto forward = px_to_fmod_vec3(rotation * PxVec3{0,0,1});
-        auto up = px_to_fmod_vec3(rotation * PxVec3{0,1,0});
-        result = soundsystem.system->set3DListenerAttributes(0, &position, &fmod_vel, &forward, &up);
-        handle_fmod_error();
-
-        engine->set3DAttributes(&position, &fmod_vel);
-        brake->set3DAttributes(&position, &fmod_vel);
-        // collision->set3DAttributes(&position, &fmod_vel);
     }
 
 	result = soundsystem.system->update();
