@@ -27,8 +27,7 @@
 #include "systems/PhysicsSystem.h"
 
 #include "entities/car/Car.h"
-#include "entities/car/AICar.h"
-#include "entities/car/AIEntity.h"
+#include "entities/car/CarUtils.h"
 
 #include "entities/car/TireTracks.h"
 #include "TetherGraphics.h"
@@ -172,7 +171,6 @@ int main(int argc, char* argv[]) {
 	glm::vec3 desiredSpawnLocation = {-4.108957, 3.397303, -43.794819}; // hardcoded value near the straight strip of the track
 	Curve raceTrackingCurve(zzPathGeom.verts);
 
-	RaceTracker raceSystem{raceTrackingCurve, desiredSpawnLocation};	
 	//load fonts into ImGui
 	io.Fonts->AddFontDefault();
 	ImFont* Debrosee = io.Fonts->AddFontFromFileTTF("fonts/Debrosee-ALPnL.ttf", 18.5f);
@@ -192,16 +190,7 @@ int main(int argc, char* argv[]) {
 
 	std::cout << "Component initalization finished\n";
 
-	//make an entity
-	ecs::Entity car_e = mainScene.CreateEntity();
-	ecs::Entity level_e = mainScene.CreateEntity();
-	ecs::Entity outWall_e = mainScene.CreateEntity();
-	ecs::Entity inWall_e = mainScene.CreateEntity();
-	ecs::Entity ground_e = mainScene.CreateEntity();
-	ecs::Entity finish_e = mainScene.CreateEntity();
-	ecs::Entity tetherPole1_e = mainScene.CreateEntity();
-	ecs::Entity tetherPole2_e = mainScene.CreateEntity();
-	ecs::Entity tether_e = mainScene.CreateEntity();
+
 
 
 	// FIND SPAWNPOINTS FOR VEHICLES (player car is first)
@@ -229,22 +218,9 @@ int main(int argc, char* argv[]) {
 
 	std::cout << "Starting race with " << numCars << " drivers!";
 
-	// SPAWN CARS
-	mainScene.AddComponent(car_e.guid, Car{});
-	Car& testCar = mainScene.GetComponent<Car>(car_e.guid);
-	testCar.physicsSystem = &physicsSystem;
-	testCar.m_track = &raceTrackingCurve;
-	if (!testCar.initVehicle(GLMtoPx(spawnPoints[0])))
-	{
-		std::cout << "ERROR: could not initialize vehicle";
-	}
-
-	// find the point on the track to desired spawn location
-
-	// SPAWN THE AI CARS
-	std::vector<Guid> AIGuids;
-	std::vector<NavPath> aiPaths;
-	aiPaths.reserve(spawnPoints.size());
+	/* --------------------------- */
+	/* 	Spawn the cars						 */
+	/* --------------------------- */
 
 	// need to load the path for each ai
 	// ai path is lower resolution curve to help prevent ai from "overcorrecting"
@@ -252,22 +228,31 @@ int main(int argc, char* argv[]) {
 	// in steering code
 	CPU_Geometry nav_geom;
 	GraphicsSystem::importSplineFromOBJ(nav_geom, "zz-track-ai-nav.obj");
-
 	Curve aiNavigationPath{nav_geom.verts};
-	std::vector<Guid> aiCars;
+
+
+	std::vector<Guid> AIGuids;
+	std::vector<NavPath> aiPaths;
+	aiPaths.reserve(spawnPoints.size());
+
+	// SPAWN THE HUMAN VEHICLE
+	auto driverNavPath = NavPath(&aiNavigationPath);
+	Guid carGuid = spawnCar(DriverType::HUMAN, mainScene,&physicsSystem,spawnPoints[0],&raceTrackingCurve, &driverNavPath);
+
+	Car& testCar = mainScene.GetComponent<Car>(carGuid);
+
+	// SPAWN THE AI CARS
 	// skip the first spot (player driven vehicle) 
 	for (int i = 1; i < spawnPoints.size(); i++)
 	{		
 		auto& spawnPoint = spawnPoints[i];
 		aiPaths.emplace_back(&aiNavigationPath);
 		auto& navPath = aiPaths[aiPaths.size() - 1];
-		Guid aiCarGuid = spawnAIEntity(mainScene, &physicsSystem, car_e.guid, spawnPoint, &navPath);
-		aiCars.push_back(aiCarGuid);
-		AICar& aiCarInstance = mainScene.GetComponent<AICar>(aiCarGuid);
-		aiCarInstance.setup1();
+		// Guid aiCarGuid = spawnAIEntity(mainScene, &physicsSystem, car_e.guid, spawnPoint, &navPath);
+		Guid aiCarGuid = spawnCar(DriverType::COMPUTER, mainScene,&physicsSystem,spawnPoint,&raceTrackingCurve, &navPath);
+
 		AIGuids.push_back(aiCarGuid);
 		setupCarVFX(mainScene, aiCarGuid);
-		// idk why we get the car instance tbh
 	}
 
 	ecs::Entity navRenderer_e = mainScene.CreateEntity();
@@ -281,15 +266,15 @@ int main(int argc, char* argv[]) {
 	auto navDefaultScale = navRender.getScale();
 
 	// Car Entity
-	RenderModel car_r = RenderModel();
-	GraphicsSystem::importOBJ(car_r, "beta_cart.obj");
-	//car_r.setModelColor(glm::vec3(0.5f, 0.5f, 0.f));
-	mainScene.AddComponent(car_e.guid, car_r);
-	TransformComponent car_t = TransformComponent(testCar.getVehicleRigidBody());
-	car_t.setPosition(glm::vec3(0, -0.34f, 0.5f));
-	car_t.setScale(glm::vec3(3.2f, 3.2f, 3.2f));
-	mainScene.AddComponent(car_e.guid, car_t);
-	setupCarVFX(mainScene, car_e.guid);
+	// RenderModel car_r = RenderModel();
+	// GraphicsSystem::importOBJ(car_r, "beta_cart.obj");
+	// //car_r.setModelColor(glm::vec3(0.5f, 0.5f, 0.f));
+	// mainScene.AddComponent(car_e.guid, car_r);
+	// TransformComponent car_t = TransformComponent(testCar.getVehicleRigidBody());
+	// car_t.setPosition(glm::vec3(0, -0.34f, 0.5f));
+	// car_t.setScale(glm::vec3(3.2f, 3.2f, 3.2f));
+	// mainScene.AddComponent(car_e.guid, car_t);
+	// setupCarVFX(mainScene, car_e.guid);
 	//add the flames
 	ecs::Entity exhausePipes[4] = { mainScene.CreateEntity(), mainScene.CreateEntity(), mainScene.CreateEntity(), mainScene.CreateEntity() };
 	for (int i = 0; i < 4; i++) {
@@ -324,6 +309,19 @@ int main(int argc, char* argv[]) {
 		
 	}
 	
+	RaceTracker raceSystem{raceTrackingCurve, desiredSpawnLocation};	
+
+	//make an entity
+	ecs::Entity car_e = mainScene.CreateEntity();
+	ecs::Entity level_e = mainScene.CreateEntity();
+	ecs::Entity outWall_e = mainScene.CreateEntity();
+	ecs::Entity inWall_e = mainScene.CreateEntity();
+	ecs::Entity ground_e = mainScene.CreateEntity();
+	ecs::Entity finish_e = mainScene.CreateEntity();
+	ecs::Entity tetherPole1_e = mainScene.CreateEntity();
+	ecs::Entity tetherPole2_e = mainScene.CreateEntity();
+	ecs::Entity tether_e = mainScene.CreateEntity();
+
 	// Finish line components
 	// RenderModel finish = RenderModel();
 	// GraphicsSystem::importOBJ(finish, "basic_finish.obj");
@@ -378,7 +376,7 @@ int main(int argc, char* argv[]) {
 	CPU_Geometry obstacle_geom = CPU_Geometry();
 	GraphicsSystem::importOBJ(obstacle_geom, "obstacles-mesh.obj");
 
-	gamePlayToggle(gameplayMode, mainScene, aiCars, gs);
+	gamePlayToggle(gameplayMode, mainScene, AIGuids, gs);
 
 
 	// load the obstacles
@@ -565,8 +563,8 @@ int main(int argc, char* argv[]) {
 		testCar.m_Vehicle.mPhysXState.physxActor.rigidBody->setLinearDamping(default_lin_damp);
 		testCar.m_Vehicle.mPhysXState.physxActor.rigidBody->setAngularDamping(default_ang_damp);
 
-		for (int i = 0; i < aiCars.size(); i++) {
-			AICar& aiCar = mainScene.GetComponent<AICar>(aiCars.at(i));
+		for (int i = 0; i < AIGuids.size(); i++) {
+			Car& aiCar = mainScene.GetComponent<Car>(AIGuids.at(i));
 			aiCar.m_Vehicle.mPhysXState.physxActor.rigidBody->setLinearDamping(default_lin_damp);
 			aiCar.m_Vehicle.mPhysXState.physxActor.rigidBody->setAngularDamping(default_ang_damp);
 		}
@@ -604,8 +602,8 @@ int main(int argc, char* argv[]) {
 						testCar.m_Vehicle.mPhysXState.physxActor.rigidBody->setAngularDamping(10000.f);
 
 						// Ai Reset
-						for (int i = 0; i < aiCars.size(); i++) {
-							AICar& aiCar = mainScene.GetComponent<AICar>(aiCars.at(i));
+						for (int i = 0; i < AIGuids.size(); i++) {
+							Car& aiCar = mainScene.GetComponent<Car>(AIGuids.at(i));
 							aiCar.m_Vehicle.mPhysXState.physxActor.rigidBody->setGlobalPose(PxTransform(GLMtoPx(spawnPoints[i+1])));
 							aiCar.m_Vehicle.mPhysXState.physxActor.rigidBody->setLinearDamping(10000.f);
 							aiCar.m_Vehicle.mPhysXState.physxActor.rigidBody->setAngularDamping(10000.f);
@@ -761,7 +759,6 @@ int main(int argc, char* argv[]) {
 		// 	isFinished = false;
 		// }
 
-		testCar.checkFlipped(testCar.getVehicleRigidBody()->getGlobalPose());
 
 		// Timestep accumulate for proper physics stepping
 		auto current_time = (float)SDL_GetTicks() / 1000.f;
@@ -842,7 +839,7 @@ int main(int argc, char* argv[]) {
 					
 					// Used to toggle a bunch of stuff at the same time for gameplay
 					if (ImGui::Checkbox("Gameplay Mode", &gameplayMode)) {
-						gamePlayToggle(gameplayMode, mainScene, aiCars, gs);
+						gamePlayToggle(gameplayMode, mainScene, AIGuids, gs);
 					}
 
 					ImGui::EndTabItem();
@@ -898,7 +895,7 @@ int main(int argc, char* argv[]) {
 		ImGui::Begin("UI", (bool*)0, textWindowFlags);
 		ImGui::SetWindowFontScale(2.f);
 		ImGui::PushFont(CabalBold);
-		ImGui::TextColored(ImVec4(1.0f, 1.0f, 1.0f, 1.0f), "Lap: %d/%d", raceSystem.getLapCount(car_e.guid), raceSystem.MAX_LAPS);
+		ImGui::TextColored(ImVec4(1.0f, 1.0f, 1.0f, 1.0f), "Lap: %d/%d", raceSystem.getLapCount(carGuid), raceSystem.MAX_LAPS);
 		ImGui::PopFont();
 		ImGui::End();
 
@@ -917,7 +914,7 @@ int main(int argc, char* argv[]) {
 		ImGui::Begin("UI", (bool*)0, textWindowFlags);
 		ImGui::SetWindowFontScale(2.f);
 		ImGui::PushFont(CabalBold);
-		ImGui::TextColored(ImVec4(1.0f, 1.0f, 1.0f, 1.0f), "Rank: %d/%d", raceSystem.getRanking(car_e.guid), spawnPoints.size() );
+		ImGui::TextColored(ImVec4(1.0f, 1.0f, 1.0f, 1.0f), "Rank: %d/%d", raceSystem.getRanking(carGuid), spawnPoints.size() );
 		ImGui::PopFont();
 		ImGui::End();
 
@@ -933,7 +930,7 @@ int main(int argc, char* argv[]) {
 				display = !display;
 			}
 
-			const char * winner = (raceSystem.getRanking(car_e.guid) == 1) ? "VICTORY!" : "AI WON!";
+			const char * winner = (raceSystem.getRanking(carGuid) == 1) ? "VICTORY!" : "AI WON!";
 
 			if (display) {
 				ImGui::SetNextWindowPos(ImVec2(200, 200));

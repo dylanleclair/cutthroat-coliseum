@@ -1,6 +1,5 @@
 #include "RaceSystem.h"
 #include "../entities/car/Car.h"
-#include "../entities/car/AICar.h"
 #include <algorithm>
 #include <iostream> 
 
@@ -11,19 +10,10 @@ void RaceTracker::Initialize(ecs::Scene& scene)
 
   // search for all cars in the scene and add them as a contestant in the race
 
-  for (auto entityGuid : ecs::EntitiesInScene<AICar>(scene))
-  {
-      AICar& aicar = scene.GetComponent<AICar>(entityGuid);
-      // push back incomplete Ranking to m_rankings
-      
-      Contestant c{&aicar, entityGuid};
-      m_contestants.push_back(c);
-  }
-
   for (auto entityGuid : ecs::EntitiesInScene<Car>(scene))
   {
       Car& car = scene.GetComponent<Car>(entityGuid);
-      // push back incomplete Ranking to m_rankings
+      // push back incomplete ranking to m_rankings
       
       Contestant c{&car, entityGuid};
       m_contestants.push_back(c);

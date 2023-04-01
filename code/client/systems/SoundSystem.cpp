@@ -66,11 +66,6 @@ void SoundUpdater::Initialize(ecs::Scene &scene)
 {
     CarSoundEmitter emitter = {};
 
-    for (auto id : ecs::EntitiesInScene<AICar>(scene))
-    {
-        scene.AddComponent(id, emitter);
-    }
-
     for (auto id : ecs::EntitiesInScene<Car>(scene))
     {
         scene.AddComponent(id, emitter);
@@ -79,45 +74,50 @@ void SoundUpdater::Initialize(ecs::Scene &scene)
 
 void SoundUpdater::Update(ecs::Scene &scene, float deltaTime)
 {
-    for (auto id : ecs::EntitiesInScene<AICar>(scene))
+    for (auto id : ecs::EntitiesInScene<Car>(scene))
     {
-        auto & car = scene.GetComponent<AICar>(id);
-        auto & channel = scene.GetComponent<CarSoundEmitter>(id);
-
-        auto & engine = channel.enginechannel;
-        auto & brake = channel.brakechannel;
-        // auto & collision = channel.collisionchannel;
-
-        bool isPlaying = false;
-        engine->isPlaying(&isPlaying);
-        if (!isPlaying && is_car_throttling(car))
+        
+        auto & car = scene.GetComponent<Car>(id);
+        
+        if (car.m_driverType == DriverType::COMPUTER)
         {
-            result = soundsystem.system->playSound(soundsystem.enginesound, 0, false, &engine);
-            handle_fmod_error();
+            auto & channel = scene.GetComponent<CarSoundEmitter>(id);
 
-            brake->stop();
+            auto & engine = channel.enginechannel;
+            auto & brake = channel.brakechannel;
+            // auto & collision = channel.collisionchannel;
+
+            bool isPlaying = false;
+            engine->isPlaying(&isPlaying);
+            if (!isPlaying && is_car_throttling(car))
+            {
+                result = soundsystem.system->playSound(soundsystem.enginesound, 0, false, &engine);
+                handle_fmod_error();
+
+                brake->stop();
+            }
+
+            isPlaying = false;
+            brake->isPlaying(&isPlaying);
+            if (!isPlaying && is_car_braking(car)) {
+
+                result = soundsystem.system->playSound(soundsystem.brakesound, 0, false, &brake);
+                handle_fmod_error();
+
+                // also turn off the engine sound
+                engine->stop();
+            }
+
+            auto body     = car.getVehicleRigidBody();
+            auto pose     = body->getGlobalPose();
+            auto velocity = body->getLinearVelocity();
+            auto fmod_vel = px_to_fmod_vec3(velocity);
+            auto position = px_to_fmod_vec3(pose.p);
+
+            engine->set3DAttributes(&position, &fmod_vel);
+            brake->set3DAttributes(&position, &fmod_vel);
+            // collision->set3DAttributes(&position, &fmod_vel);
         }
-
-        isPlaying = false;
-        brake->isPlaying(&isPlaying);
-        if (!isPlaying && is_car_braking(car)) {
-
-            result = soundsystem.system->playSound(soundsystem.brakesound, 0, false, &brake);
-            handle_fmod_error();
-
-            // also turn off the engine sound
-            engine->stop();
-        }
-
-        auto body     = car.getVehicleRigidBody();
-        auto pose     = body->getGlobalPose();
-        auto velocity = body->getLinearVelocity();
-        auto fmod_vel = px_to_fmod_vec3(velocity);
-        auto position = px_to_fmod_vec3(pose.p);
-
-        engine->set3DAttributes(&position, &fmod_vel);
-        brake->set3DAttributes(&position, &fmod_vel);
-        // collision->set3DAttributes(&position, &fmod_vel);
     }
     for (auto id : ecs::EntitiesInScene<Car>(scene))
     {
