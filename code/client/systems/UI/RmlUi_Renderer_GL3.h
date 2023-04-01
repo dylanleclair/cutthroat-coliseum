@@ -94,7 +94,7 @@ private:
 };
 
 /**
-	Helper functions for the OpenGL 3 renderer.
+		Helper functions for the OpenGL 3 renderer.
  */
 namespace RmlGL3 {
 

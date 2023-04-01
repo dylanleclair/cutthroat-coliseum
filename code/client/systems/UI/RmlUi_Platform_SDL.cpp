@@ -83,7 +83,7 @@ void SystemInterface_SDL::SetMouseCursor(const Rml::String& cursor_name)
 		cursor = cursor_text;
 	else if (cursor_name == "unavailable")
 		cursor = cursor_unavailable;
-//	else if (Rml::StringUtilities::StartsWith(cursor_name, "rmlui-scroll"))
+	//else if (Rml::StringUtilities::StartsWith(cursor_name, "rmlui-scroll"))
 		//cursor = cursor_move;
 
 	if (cursor)
@@ -270,10 +270,10 @@ Rml::Input::KeyIdentifier RmlSDL::ConvertKey(int sdlkey)
 	case SDLK_RALT:         return Rml::Input::KI_RMENU;
 	case SDLK_LGUI:         return Rml::Input::KI_LMETA;
 	case SDLK_RGUI:         return Rml::Input::KI_RMETA;
-	/*
-	case SDLK_LSUPER:       return Rml::Input::KI_LWIN;
-	case SDLK_RSUPER:       return Rml::Input::KI_RWIN;
-	*/
+		/*
+		case SDLK_LSUPER:       return Rml::Input::KI_LWIN;
+		case SDLK_RSUPER:       return Rml::Input::KI_RWIN;
+		*/
 	default: break;
 	}
 	// clang-format on

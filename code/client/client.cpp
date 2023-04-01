@@ -138,16 +138,18 @@ void gamePlayToggle(bool toggle, ecs::Scene &mainScene, std::vector<Guid> aiCars
 
 int main(int argc, char* argv[]) {
 	//RUN_GRAPHICS_TEST_BENCH();
-	printf("Starting main");
+	printf("Starting main\n");
 
 	Window window(1200, 800, "Maximus Overdrive");
 
-	std::cin.get();
-	return 1;
+	//TEST LOOP
+	while (true) {
+		window.RenderAndSwap();
+	}
 
 	lastTime_millisecs = SDL_GetTicks();
 
-	ImGuiIO& io = ImGui::GetIO(); (void)io;
+	//ImGuiIO& io = ImGui::GetIO(); (void)io;
 
 
 
@@ -173,6 +175,7 @@ int main(int argc, char* argv[]) {
 
 	RaceTracker raceSystem{zzPathGeom.verts, desiredSpawnLocation};	
 	//load fonts into ImGui
+	/*
 	io.Fonts->AddFontDefault();
 	ImFont* Debrosee = io.Fonts->AddFontFromFileTTF("fonts/Debrosee-ALPnL.ttf", 18.5f);
 	IM_ASSERT(Debrosee != NULL);
@@ -182,7 +185,7 @@ int main(int argc, char* argv[]) {
 	IM_ASSERT(CabalBold != NULL);
 	ImFont* ExtraLarge = io.Fonts->AddFontFromFileTTF("fonts/EXTRA LARGE.ttf", 18.5f);
 	IM_ASSERT(ExtraLarge != NULL);
-
+	*/
 
 	// init ecs 
 
@@ -516,6 +519,8 @@ int main(int argc, char* argv[]) {
     SoundUpdater soundUpdater;
     soundUpdater.Initialize(mainScene);
 
+		std::cout << "initalization finished, beginning game\n";
+
 	// GAME LOOP
 	while (!quit) {
 		Timestep timestep; // Time since last frame
@@ -777,7 +782,7 @@ int main(int argc, char* argv[]) {
 		
 		// Tire track renders
 		updateCarVFX(mainScene, time_diff);
-		gs.Update(mainScene, time_diff);
+		//gs.Update(mainScene, time_diff);
 		raceSystem.Update(mainScene,time_diff);
 
 		//update_sounds(testCar, aiCarInstance, playSounds);
@@ -787,6 +792,7 @@ int main(int argc, char* argv[]) {
 
 		glDisable(GL_FRAMEBUFFER_SRGB); // disable sRGB for things like imgui
 
+		/*
 		ImGui_ImplOpenGL3_NewFrame();
 		ImGui_ImplSDL2_NewFrame();
 		ImGui::NewFrame();
@@ -844,13 +850,14 @@ int main(int argc, char* argv[]) {
 			ImGui::End();
 
 		}		
-		
+		*/
 		/*
 		* Render the UI. I am doing this here for now but I might move it.
 		* ImGui uses coordinates in screen space (0-screen dimension) and is anchored on the top left corner
 		*/
 		//render the UI
 		// Setting flags
+		/*
 		ImGuiWindowFlags textWindowFlags =
 			ImGuiWindowFlags_NoBringToFrontOnFocus |
 			ImGuiWindowFlags_NoMove |				// text "window" should not move
@@ -861,7 +868,7 @@ int main(int argc, char* argv[]) {
 			ImGuiWindowFlags_NoBackground |			// window should be transparent; only the text should be visible
 			ImGuiWindowFlags_NoDecoration |			// no decoration; only the text should be visible
 			ImGuiWindowFlags_NoTitleBar;			// no title; only the text should be visible
-
+		
 		//Lap counter
 		ImGui::SetNextWindowPos(ImVec2(10, 10));
 		ImGui::Begin("UI", (bool*)0, textWindowFlags);
@@ -932,13 +939,12 @@ int main(int argc, char* argv[]) {
 		// 	}
 		// }
 
-		ImGui::Render();
-		glViewport(0, 0, (int)io.DisplaySize.x, (int)io.DisplaySize.y);
-		ImGui_ImplOpenGL3_RenderDrawData(ImGui::GetDrawData());
-		window.swapBuffers();
-
+		*/
+		glEnable(GL_FRAMEBUFFER_SRGB);
+		//glViewport(0, 0, (int)io.DisplaySize.x, (int)io.DisplaySize.y);
+		window.RenderAndSwap();
 	}
-
+	
 	ImGui_ImplOpenGL3_Shutdown();
 	ImGui_ImplSDL2_Shutdown();
 	ImGui::DestroyContext();

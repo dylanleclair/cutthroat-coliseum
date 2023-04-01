@@ -11,9 +11,6 @@
 
 #include <iostream>
 
-#include "systems/UI/RmlUi_Renderer_GL3.h"
-#include "systems/UI/RmlUi_Platform_SDL.h"
-
 void sdl_error_handler(int sdl_return) {
 	if (!sdl_return) return;
 	printf("SDL error: ", SDL_GetError());
@@ -23,92 +20,124 @@ void sdl_error_handler(int sdl_return) {
 
 
 Window::Window(int width, int height, const char* title)
-	: window(nullptr)
 {
-	SDL_Init(SDL_INIT_EVERYTHING);
-	// specify OpenGL version
-	// XXX(beau): handle errors?
-	SDL_GL_SetAttribute(SDL_GL_CONTEXT_MAJOR_VERSION, 4);
-	SDL_GL_SetAttribute(SDL_GL_CONTEXT_MINOR_VERSION, 1);
-	SDL_GL_SetAttribute(SDL_GL_CONTEXT_PROFILE_MASK, SDL_GL_CONTEXT_PROFILE_CORE);
-	SDL_GL_SetAttribute(SDL_GL_DOUBLEBUFFER, 1);
-	SDL_GL_SetAttribute(SDL_GL_CONTEXT_FLAGS, SDL_GL_CONTEXT_DEBUG_FLAG);
-	SDL_GL_SetAttribute(SDL_GL_CONTEXT_FLAGS, SDL_GL_CONTEXT_FORWARD_COMPATIBLE_FLAG);
-
-
-	window = std::unique_ptr<SDL_Window, WindowDeleter>(SDL_CreateWindow(title, SDL_WINDOWPOS_CENTERED, SDL_WINDOWPOS_CENTERED, width, height, SDL_WINDOW_OPENGL));
-	if (!window)
-		sdl_error_handler(1);
-
-	SDL_GLContext context = SDL_GL_CreateContext(window.get());
-	if (!context)
-		sdl_error_handler(1);
-	SDL_GL_MakeCurrent(window.get(), context);
-	// vsync
-	sdl_error_handler(SDL_GL_SetSwapInterval(1));
-	
-	// initialize OpenGL extensions for the current context (this window)
-	GLenum err = glewInit();
-	if (err != GLEW_OK) {
-		printf("WINDOW glewInit error:{}", glewGetErrorString(err));
-		throw std::runtime_error("Failed to initialize GLEW");
-	}
-
-	// TODO(beau): put this somewhere obvious
-	IMGUI_CHECKVERSION();
-	ImGui::CreateContext();
-
-	ImGui::StyleColorsDark();
-
-	ImGui_ImplSDL2_InitForOpenGL(window.get(), context);
-
-	// VOLATILE: must match version specified in shaders!
-	ImGui_ImplOpenGL3_Init("#version 410 core");
-
-	/*
-	bool ok{ false };
-	ok = Backend::Initialize("Maximus Overdrive", 1200, 800, false);
-	if (!ok)
-	{
-		std::cout << "failed to init backend";
-		return;
-	}*/
-	
-	if (!RmlGL3::Initialize())
-	{
-		fprintf(stderr, "Could not initialize OpenGL");
-		return;
-	}
-
-	//mySystemInterface systemInterface;
-	Rml::SetSystemInterface(new SystemInterface_SDL);
-	Rml::SetRenderInterface(new RenderInterface_GL3);
-
+	if (!Backend::Initialize("Maximus Overdrive", 1200, 800, false))
+		std::cout << "Failed to initalize backend\n";
+	Rml::SetSystemInterface(Backend::GetSystemInterface());
+	Rml::SetRenderInterface(Backend::GetRenderInterface());
 	Rml::Initialise();
-	
-	// Create the main RmlUi context.
-	Rml::Context* rml_context = Rml::CreateContext("main", Rml::Vector2i(1200, 800));
-	if (!rml_context)
-	{
-		std::cout << "Failed to create rml context\n";
+	rmlContext = Rml::CreateContext("main", Rml::Vector2i(1200, 800));
+	if (!rmlContext) {
 		Rml::Shutdown();
 		Backend::Shutdown();
-		return;
+		std::cout << "Failed to create RmlUI context\n";
 	}
+	Rml::Debugger::Initialise(rmlContext);
+	//load the sample document
+	if (!Rml::LoadFontFace("fonts/Cabal-w5j3.ttf"))
+		std::cout << "failed to load font\n";
+	document = rmlContext->LoadDocument("Rml/demo.rml");
+	if (document)
+		document->Show();
+	else
+		std::cout << "Failed to load document\n";
 
-	Rml::Debugger::Initialise(rml_context);
+	Rml::Log::Message(Rml::Log::LT_DEBUG, "Test warning.");
+
+	std::cout << "finished initalizing window\n\n";
 }
 
 
 glm::ivec2 Window::getPos() const {
-	int x, y;
-	SDL_GetWindowPosition(window.get(), &x, &y);
+	int x, y = 0;
+	//SDL_GetWindowPosition(window.get(), &x, &y);
 	return glm::ivec2(x, y);
 }
 
 
 glm::ivec2 Window::getSize() const {
-	int w, h;
-	SDL_GetWindowSize(window.get(), &w, &h);
+	int w, h = 0;
+	//SDL_GetWindowSize(window.get(), &w, &h);
 	return glm::ivec2(w, h);
+}
+
+void Window::RenderAndSwap()
+{
+	//ImGui::Render();
+	//ImGui_ImplOpenGL3_RenderDrawData(ImGui::GetDrawData());
+	Backend::ProcessEvents(rmlContext, static_cast<KeyDownCallback>(&Window::ProcessKeyDownShortcuts));
+	
+	rmlContext->Update();
+	Backend::BeginFrame();
+	rmlContext->Render();
+	Backend::PresentFrame();
+	//glDisable(GL_BLEND);
+}
+
+bool Window::ProcessKeyDownShortcuts(Rml::Context* context, Rml::Input::KeyIdentifier key, int key_modifier, float native_dp_ratio, bool priority)
+{
+	if (!context)
+		return true;
+
+	// Result should return true to allow the event to propagate to the next handler.
+	bool result = false;
+
+	// This function is intended to be called twice by the backend, before and after submitting the key event to the context. This way we can
+	// intercept shortcuts that should take priority over the context, and then handle any shortcuts of lower priority if the context did not
+	// intercept it.
+	if (priority)
+	{
+		// Priority shortcuts are handled before submitting the key to the context.
+
+		// Toggle debugger and set dp-ratio using Ctrl +/-/0 keys.
+		if (key == Rml::Input::KI_F8)
+		{
+			Rml::Debugger::SetVisible(!Rml::Debugger::IsVisible());
+		}
+		else if (key == Rml::Input::KI_0 && key_modifier & Rml::Input::KM_CTRL)
+		{
+			context->SetDensityIndependentPixelRatio(native_dp_ratio);
+		}
+		else if (key == Rml::Input::KI_1 && key_modifier & Rml::Input::KM_CTRL)
+		{
+			context->SetDensityIndependentPixelRatio(1.f);
+		}
+		else if ((key == Rml::Input::KI_OEM_MINUS || key == Rml::Input::KI_SUBTRACT) && key_modifier & Rml::Input::KM_CTRL)
+		{
+			const float new_dp_ratio = Rml::Math::Max(context->GetDensityIndependentPixelRatio() / 1.2f, 0.5f);
+			context->SetDensityIndependentPixelRatio(new_dp_ratio);
+		}
+		else if ((key == Rml::Input::KI_OEM_PLUS || key == Rml::Input::KI_ADD) && key_modifier & Rml::Input::KM_CTRL)
+		{
+			const float new_dp_ratio = Rml::Math::Min(context->GetDensityIndependentPixelRatio() * 1.2f, 2.5f);
+			context->SetDensityIndependentPixelRatio(new_dp_ratio);
+		}
+		else
+		{
+			// Propagate the key down event to the context.
+			result = true;
+		}
+	}
+	else
+	{
+		// We arrive here when no priority keys are detected and the key was not consumed by the context. Check for shortcuts of lower priority.
+		if (key == Rml::Input::KI_R && key_modifier & Rml::Input::KM_CTRL)
+		{
+			for (int i = 0; i < context->GetNumDocuments(); i++)
+			{
+				Rml::ElementDocument* document = context->GetDocument(i);
+				const Rml::String& src = document->GetSourceURL();
+				if (src.size() > 4 && src.substr(src.size() - 4) == ".rml")
+				{
+					document->ReloadStyleSheet();
+				}
+			}
+		}
+		else
+		{
+			result = true;
+		}
+	}
+
+	return result;
 }

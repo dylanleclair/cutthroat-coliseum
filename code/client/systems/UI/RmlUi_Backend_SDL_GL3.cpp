@@ -44,10 +44,10 @@
 #endif
 
  /**
-	 Custom render interface example for the SDL/GL3 backend.
+		 Custom render interface example for the SDL/GL3 backend.
 
-	 Overloads the OpenGL3 render interface to load textures through SDL_image's built-in texture loading functionality.
-  */
+		 Overloads the OpenGL3 render interface to load textures through SDL_image's built-in texture loading functionality.
+	*/
 class RenderInterface_GL3_SDL : public RenderInterface_GL3 {
 public:
 	RenderInterface_GL3_SDL() {}
@@ -104,9 +104,9 @@ public:
 };
 
 /**
-	Global data used by this backend.
+		Global data used by this backend.
 
-	Lifetime governed by the calls to Backend::Initialize() and Backend::Shutdown().
+		Lifetime governed by the calls to Backend::Initialize() and Backend::Shutdown().
  */
 struct BackendData {
 	SystemInterface_SDL system_interface;
@@ -218,7 +218,7 @@ Rml::RenderInterface* Backend::GetRenderInterface()
 	return &data->render_interface;
 }
 
-bool Backend::ProcessEvents(Rml::Context* context, KeyDownCallback key_down_callback)
+bool Backend::ProcessEvents(Rml::Context* context, KeyDownCallback key_down_callback, bool power_save)
 {
 	RMLUI_ASSERT(data && context);
 
@@ -240,7 +240,11 @@ bool Backend::ProcessEvents(Rml::Context* context, KeyDownCallback key_down_call
 	data->running = true;
 
 	SDL_Event ev;
-	while (SDL_PollEvent(&ev))
+	int has_event = 0;
+	//if (power_save)
+		//has_event = SDL_WaitEventTimeout(&ev, static_cast<int>(Rml::Math::Min(context->GetNextUpdateDelay(), 10.0) * 1000));
+	has_event = SDL_PollEvent(&ev);
+	while (has_event)
 	{
 		switch (ev.type)
 		{
@@ -286,6 +290,7 @@ bool Backend::ProcessEvents(Rml::Context* context, KeyDownCallback key_down_call
 		}
 		break;
 		}
+		has_event = SDL_PollEvent(&ev);
 	}
 
 	return result;
