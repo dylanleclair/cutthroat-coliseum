@@ -1,6 +1,7 @@
 #include "TireTracks.h"
-#include "AICar.h"
 #include <iostream>
+
+#include "Car.h"
 
 #include "imgui.h"
 #include "imgui_impl_sdl.h"
@@ -30,15 +31,10 @@ void tireTrackImgui() {
 // Sets up tire tracks ecs entities
 // Needs a unique one for each driver
 void setupCarVFX(ecs::Scene& mainScene, Guid _ID) {
-	bool isAI = false;
-	if (mainScene.HasComponent<AICar>(_ID))
-		isAI = true;
-	Car* car;
-	if (isAI)
-		car = &mainScene.GetComponent<AICar>(_ID);
-	else
-		car = &mainScene.GetComponent<Car>(_ID);
 
+	Car* car;
+	car = &mainScene.GetComponent<Car>(_ID);
+	bool isAI = (car->m_driverType == DriverType::COMPUTER) ? true : false; 
 
 	//front tire
 	ecs::Entity frontTireTrack = mainScene.CreateEntity();
@@ -113,13 +109,13 @@ void updateCarVFX(ecs::Scene mainScene, float dt) {
 	// if same offset is used the AI car tracks will be inside the ground
 	for (int i = 0; i < VFXGuids.size(); i++) {
 		attachedVFX vfx = VFXGuids[i];
-		Car* car;
-		if (vfx.isAI) {
-			car = &mainScene.GetComponent<AICar>(vfx.ownerGuid);
+		Car* car = &mainScene.GetComponent<Car>(vfx.ownerGuid);
+
+		bool isAI = (car->m_driverType == DriverType::COMPUTER) ? true : false;
+
+		if (isAI) {
 			y_offset = 0.0f;
-		}
-		else {
-			car = &mainScene.GetComponent<Car>(vfx.ownerGuid);
+		} else {
 			y_offset = -0.32f;
 		}
 

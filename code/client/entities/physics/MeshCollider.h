@@ -32,3 +32,6 @@ private:
   physx::PxShape *m_levelShape;
   physx::PxRigidStatic *m_level;
 };
+
+
+void spawnMeshCollider(std::string modelName, ecs::Scene& scene, PhysicsSystem& ps, PxMaterial* material);
