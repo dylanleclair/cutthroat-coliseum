@@ -70,6 +70,31 @@ bool gamePaused = false;
 
 uint32_t lastTime_millisecs;
 
+
+void resetLevel(Car& testCar, std::vector<Guid> ais, ecs::Scene& mainScene, std::vector<glm::vec3> spawnPoints, RaceTracker& raceSystem, float& acc_t)
+{
+	// Player reset
+	testCar.m_Vehicle.mPhysXState.physxActor.rigidBody->setGlobalPose(PxTransform(GLMtoPx(spawnPoints[0])));
+	testCar.m_Vehicle.mPhysXState.physxActor.rigidBody->setLinearDamping(10000.f);
+	testCar.m_Vehicle.mPhysXState.physxActor.rigidBody->setAngularDamping(10000.f);
+
+	// Ai Reset
+	for (int i = 0; i < ais.size(); i++) {
+		Car& aiCar = mainScene.GetComponent<Car>(ais.at(i));
+		aiCar.m_Vehicle.mPhysXState.physxActor.rigidBody->setGlobalPose(PxTransform(GLMtoPx(spawnPoints[i+1])));
+		aiCar.m_Vehicle.mPhysXState.physxActor.rigidBody->setLinearDamping(10000.f);
+		aiCar.m_Vehicle.mPhysXState.physxActor.rigidBody->setAngularDamping(10000.f);
+		aiCar.m_navPath->resetNav();
+	}
+
+	// Resets the lap count for all racers
+	raceSystem.resetRace();
+
+	// Resets the accumulator
+	acc_t = 0;
+
+}
+
 void gamePlayToggle(bool toggle, ecs::Scene &mainScene, std::vector<Guid> aiCars, GraphicsSystem &gs) {
 	if (toggle) {
 		loadLevelMesh = true;
@@ -465,27 +490,8 @@ int main(int argc, char* argv[]) {
 
 					case SDLK_r:
 						//TODO recompile the shader
-						 
-						// Player reset
-						testCar.m_Vehicle.mPhysXState.physxActor.rigidBody->setGlobalPose(PxTransform(GLMtoPx(spawnPoints[0])));
-						testCar.m_Vehicle.mPhysXState.physxActor.rigidBody->setLinearDamping(10000.f);
-						testCar.m_Vehicle.mPhysXState.physxActor.rigidBody->setAngularDamping(10000.f);
-
-						// Ai Reset
-						for (int i = 0; i < AIGuids.size(); i++) {
-							Car& aiCar = mainScene.GetComponent<Car>(AIGuids.at(i));
-							aiCar.m_Vehicle.mPhysXState.physxActor.rigidBody->setGlobalPose(PxTransform(GLMtoPx(spawnPoints[i+1])));
-							aiCar.m_Vehicle.mPhysXState.physxActor.rigidBody->setLinearDamping(10000.f);
-							aiCar.m_Vehicle.mPhysXState.physxActor.rigidBody->setAngularDamping(10000.f);
-							aiCar.m_navPath->resetNav();
-						}
-
-						// Resets the lap count for all racers
-						raceSystem.resetRace();
-
-						// Resets the accumulator
-						acc_t = 0;
-
+						
+						resetLevel(testCar, AIGuids,mainScene,spawnPoints, raceSystem, acc_t);
 						break;
 						
 					// TODO: change the file that is serializes (Want to do base.json and enginedrive.json)
