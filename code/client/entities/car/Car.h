@@ -107,8 +107,8 @@ struct Car {
     void setClosestTetherPoint(glm::vec3 _loc);
     bool getCTethered();
     bool isGroundedDelay(Car& car);
-    bool TetherJump();
-    bool AiTetherJump();
+    bool Jump();
+    bool AiJump();
     void Car::checkFlipped(PxTransform carPose);
 
     // navigation

@@ -545,7 +545,7 @@ int main(int argc, char* argv[]) {
 
 						break;
 					case SDLK_SPACE:
-						testCar.TetherJump();
+						testCar.Jump();
 						break;
 				case SDLK_c:
 					break;

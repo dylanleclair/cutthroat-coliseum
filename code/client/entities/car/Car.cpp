@@ -23,16 +23,11 @@ float controller_brake = 0.f;
 
 int time_elapsed = 0;
 bool has_jumped = false;
-bool c_tethered = false;
 bool previous_b_press = false;
-PxTransform closest_tether_point;
 
 PxTransform c_mass_init_v;
 PxReal angular_damp_init_v;
 
-bool Car::getCTethered() {
-    return c_tethered;
-}
 
 glm::vec3 Car::getTrackNormal()
 {
@@ -278,6 +273,13 @@ void Car::setup1() {
     m_Vehicle.mEngineDriveParams.gearBoxParams.switchTime = 0.2f;
 }
 
+void Car::resetModifications() {
+    // ORIGINALLY MEANT TO RESET THE CENTER OF GRAVITY, BUT WORKS BETTER WITHOUT CHANGING ?
+    m_Vehicle.mPhysXParams.physxActorCMassLocalPose.p = c_mass_init_v.p;
+    m_Vehicle.mPhysXState.physxActor.rigidBody->setAngularDamping(angular_damp_init_v);
+}
+
+PxTransform closest_tether_point;
 void Car::setClosestTetherPoint(PxTransform _loc) {
     closest_tether_point = _loc;
 }
@@ -285,13 +287,6 @@ void Car::setClosestTetherPoint(glm::vec3 _loc) {
     closest_tether_point.p.x = _loc.x;
     closest_tether_point.p.y = _loc.y;
     closest_tether_point.p.z = _loc.z;
-}
-
-void Car::resetModifications() {
-    // ORIGINALLY MEANT TO RESET THE CENTER OF GRAVITY, BUT WORKS BETTER WITHOUT CHANGING ?
-    m_Vehicle.mPhysXParams.physxActorCMassLocalPose.p = c_mass_init_v.p;
-    m_Vehicle.mPhysXState.physxActor.rigidBody->setAngularDamping(angular_damp_init_v);
-    c_tethered = false;
 }
 
 // Used to reset the modifications done to the car in the air after a few moments
@@ -314,17 +309,7 @@ bool Car::isGroundedDelay(Car &car) {
     }
 }
 
-// Very jank right now as you can spam it
-void Car::TetherSteer(PxTransform _loc) {
-    c_tethered = true;
-    carAxis = 0.f;
-    m_Vehicle.mPhysXParams.physxActorCMassLocalPose = _loc;
-
-    //m_Vehicle.mPhysXState.physxActor.rigidBody->addForce(PxVec3(0.f, 0.f, 10.f), PxForceMode::eVELOCITY_CHANGE, true);
-    m_Vehicle.mPhysXState.physxActor.rigidBody->addTorque(PxVec3(0.f, -1.5f, 0.f), PxForceMode::eVELOCITY_CHANGE, true);
-}
-
-bool Car::TetherJump() {
+bool Car::Jump() {
     // For modes
     //eIMPULSE
     // or
@@ -344,7 +329,7 @@ bool Car::TetherJump() {
 
 // Made a different jump for the ai because it was going too high using the player function
 // not sure why, this is a quick workaround
-bool Car::AiTetherJump() {
+bool Car::AiJump() {
     // For modes
     //eIMPULSE
     // or
@@ -458,7 +443,7 @@ Command Car::drive(ecs::Scene& scene, float deltaTime)
 {
 
 
-
+    Command command = {0.f, 0.f, 0.f, m_TargetGearCommand};
 
     if (m_driverType == DriverType::COMPUTER)
     {
@@ -479,14 +464,11 @@ Command Car::drive(ecs::Scene& scene, float deltaTime)
         auto m_key = keys_arr[SDL_SCANCODE_M];
         auto f_key = keys_arr[SDL_SCANCODE_F];
 
-        Command command = {0.f, 0.f, 0.f, m_TargetGearCommand};
-        // command.duration = timestep;
-
-        // Jump tether
+        // Jump
         // Checks if the previous frame was a jump, so that it does not cumulatively add impulse
         if (SDL_GameControllerGetButton(ControllerInput::controller, SDL_CONTROLLER_BUTTON_A) && this->m_Vehicle.mBaseState.roadGeomStates->hitState && !has_jumped)
         {
-            if (TetherJump())
+            if (Jump())
             {
                 has_jumped = true;
             }
@@ -494,16 +476,14 @@ Command Car::drive(ecs::Scene& scene, float deltaTime)
 
         // Normalize controller axis
         // BUG: max positive is 1 less in magnitude than max min meaning full negative will be slightly above 1
-        if (!c_tethered)
-        {
-            carAxis = (float)-SDL_GameControllerGetAxis(ControllerInput::controller, SDL_CONTROLLER_AXIS_LEFTX) / SHRT_MAX;
 
-            // Controller deadzone to avoid controller drift when
-            // stick is at rest
-            if (carAxis < 0.2f && carAxis > -0.2f)
-            {
-                carAxis = 0.f;
-            }
+        carAxis = (float)-SDL_GameControllerGetAxis(ControllerInput::controller, SDL_CONTROLLER_AXIS_LEFTX) / SHRT_MAX;
+
+        // Controller deadzone to avoid controller drift when
+        // stick is at rest
+        if (carAxis < 0.2f && carAxis > -0.2f)
+        {
+            carAxis = 0.f;
         }
 
         // Calculate the magnitude of the linear velocity
@@ -589,11 +569,11 @@ Command Car::drive(ecs::Scene& scene, float deltaTime)
 
 
         // Keyboard Controls
-        if (a_key && !c_tethered)
+        if (a_key)
         {
             command.steer = 1.f;
         }
-        else if (d_key && !c_tethered)
+        else if (d_key)
         {
             command.steer = -1.f;
         }
@@ -610,6 +590,8 @@ Command Car::drive(ecs::Scene& scene, float deltaTime)
 
         return command;
     }
+
+    return command;
 }
 
 // AI METHODS
@@ -724,7 +706,7 @@ Command Car::pathfind(ecs::Scene& scene, float deltaTime)
     if (obstacle_ahead)
     {
         // std::cout << "ai needs to jump!" << std::endl;
-        AiTetherJump();
+        AiJump();
     }
 
 
