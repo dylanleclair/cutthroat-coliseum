@@ -95,7 +95,7 @@ struct Car {
     Car() : physicsSystem(nullptr) {};
 
     // Initialization & updating
-    void Initialize(DriverType type, PxVec3 initialPosition, physics::PhysicsSystem* ps, Curve* track, NavPath* pathToFollow);
+    void Initialize(DriverType type, PxTransform initialPose, physics::PhysicsSystem* ps, Curve* track, NavPath* pathToFollow);
     virtual void Update(Guid carGuid, ecs::Scene& scene, float deltaTime);
     void cleanupVehicle();
     void baseSetup();
@@ -135,7 +135,7 @@ private:
     glm::vec3 getTrackNormal();
     void keepRigidbodyUpright(PxRigidBody* rigidbody);
 
-    float STRENGTH_UP_CORRECTION{8000.f};
+    float STRENGTH_UP_CORRECTION{300.f};
     float m_stuckTimer;
 
 

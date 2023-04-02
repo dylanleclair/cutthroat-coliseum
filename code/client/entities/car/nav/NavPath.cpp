@@ -22,7 +22,7 @@
 
             outDidLap = (currentCheckpoint.index == checkpoints->size() -1) ? true : false;
             
-            nextIndex = (currentCheckpoint.index == checkpoints->size() -1 ) ? 0 : currentCheckpoint.index + 1;
+            nextIndex = (currentCheckpoint.index + 1 >= checkpoints->size()) ? 0 : currentCheckpoint.index + 1;
 
             nextCP = CheckPoint{nextIndex, (*checkpoints)[nextIndex]};
             distanceToCurrent = glm::distance(currentCheckpoint.position, currentPos);

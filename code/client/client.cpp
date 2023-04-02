@@ -68,31 +68,6 @@ bool gamePaused = false;
 
 uint32_t lastTime_millisecs;
 
-std::vector<glm::vec3> spawnpointsAlongAxis(int rows, int cols,float spread, glm::vec3 axis, glm::vec3 start)
-{
-	std::vector<glm::vec3> result;
-
-	axis = glm::normalize(axis);
-	const glm::vec3 UP = {0.f, 1.f,0.f};
-	// spawn the cars along the axis
-	glm::vec3 binormal = glm::cross(axis,UP);
-	// spawn a row of cars on binormal of axis
-
-	for (int col =0; col < cols; col++)
-	{
-		glm::vec3 colStart = start + (-axis * (col * spread));
-		for (int row = 0; row < rows; row++)
-		{
-			glm::vec3 spawnPosition = colStart + (binormal * (row * spread));
-			result.push_back(spawnPosition);
-		}
-	}
-
-
-	return result;
-
-}
-
 void gamePlayToggle(bool toggle, ecs::Scene &mainScene, std::vector<Guid> aiCars, GraphicsSystem &gs) {
 	if (toggle) {
 		loadLevelMesh = true;
@@ -194,12 +169,12 @@ int main(int argc, char* argv[]) {
 	}
 	glm::vec3 forward = (zzSpawnIndex == zzPathGeom.verts.size() - 1) ? zzPathGeom.verts[0] - zzPathGeom.verts[zzSpawnIndex] : zzPathGeom.verts[zzSpawnIndex + 1] - zzPathGeom.verts[zzSpawnIndex];
 	// generate spawnpoints along the axis!
-
+	forward = -glm::normalize(forward);
 	// need to pass the track spline to the car so it can compute the track normal...
 
 	int spawnRows = 3;
 	int spawnCols = 3;
-	std::vector<glm::vec3> spawnPoints = spawnpointsAlongAxis(spawnRows,spawnCols, 7.f, forward, zzPathGeom.verts[zzSpawnIndex]);
+	std::vector<glm::vec3> spawnPoints = spawnpointsAlongAxis(spawnRows,spawnCols, 10.f, forward, zzPathGeom.verts[zzSpawnIndex]);
 
 	int numCars = spawnPoints.size();
 
@@ -224,7 +199,7 @@ int main(int argc, char* argv[]) {
 
 	// SPAWN THE HUMAN VEHICLE
 	auto driverNavPath = NavPath(&aiNavigationPath);
-	Guid carGuid = spawnCar(DriverType::HUMAN, mainScene,&physicsSystem,spawnPoints[0],&raceTrackingCurve, &driverNavPath);
+	Guid carGuid = spawnCar(DriverType::HUMAN, mainScene,&physicsSystem,spawnPoints[0], forward, &raceTrackingCurve, &driverNavPath);
 	Car& testCar = mainScene.GetComponent<Car>(carGuid);
 	setupCarVFX(mainScene, carGuid);
 
@@ -237,7 +212,7 @@ int main(int argc, char* argv[]) {
 		aiPaths.emplace_back(&aiNavigationPath);
 		auto& navPath = aiPaths[aiPaths.size() - 1];
 		// Guid aiCarGuid = spawnAIEntity(mainScene, &physicsSystem, car_e.guid, spawnPoint, &navPath);
-		Guid aiCarGuid = spawnCar(DriverType::COMPUTER, mainScene,&physicsSystem,spawnPoint,&raceTrackingCurve, &navPath);
+		Guid aiCarGuid = spawnCar(DriverType::COMPUTER, mainScene,&physicsSystem,spawnPoint, forward, &raceTrackingCurve, &navPath);
 
 		AIGuids.push_back(aiCarGuid);
 		setupCarVFX(mainScene, aiCarGuid);
