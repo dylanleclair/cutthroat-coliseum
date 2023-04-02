@@ -695,16 +695,6 @@ int main(int argc, char* argv[]) {
 		ImGui::TextColored(ImVec4(1.0f, 1.0f, 1.0f, 1.0f), "Lap: %d/%d", raceSystem.getLapCount(carGuid), raceSystem.MAX_LAPS);
 		ImGui::PopFont();
 		ImGui::End();
-
-		//Lap counter
-		ImGui::SetNextWindowPos(ImVec2(10, 20));
-		ImGui::Begin("UI", (bool*)0, textWindowFlags);
-		ImGui::SetWindowFontScale(2.f);
-		ImGui::PushFont(CabalBold);
-		//ImGui::TextColored(ImVec4(1.0f, 1.0f, 1.0f, 1.0f), "AI Lap: %d/3", aiCarInstance.m_lapCount);
-		ImGui::PopFont();
-		ImGui::End();
-
 		
 		//Lap counter
 		ImGui::SetNextWindowPos(ImVec2(10, 30));
@@ -721,12 +711,19 @@ int main(int argc, char* argv[]) {
 		const float delayInSeconds = 0.5;
 		static bool display = true;
 		if (raceSystem.getRaceStatus()) {
+			// the race is finished!!
+			
+			// make the AI take over after the driver has finished (UI will take precedence)
+			testCar.m_driverType = DriverType::COMPUTER;
+
+			// see if the message should be displayed
 			counter += timestep.getMilliseconds();
 			if (counter >= delayInSeconds * 1000) {
 				counter = 0;
 				display = !display;
 			}
 
+			// check who the winner was
 			const char * winner = (raceSystem.getRanking(carGuid) == 1) ? "VICTORY!" : "AI WON!";
 
 			if (display) {
@@ -738,6 +735,7 @@ int main(int argc, char* argv[]) {
 				ImGui::PopFont();
 				ImGui::End();
 			}
+
 		}
 
 		ImGui::Render();

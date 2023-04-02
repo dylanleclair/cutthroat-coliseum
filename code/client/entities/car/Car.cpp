@@ -830,3 +830,4 @@ Command Car::pathfind(ecs::Scene& scene, float deltaTime)
 
     return command;
 }
+
