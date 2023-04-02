@@ -6,9 +6,9 @@
 #include "../../systems/PhysicsSystem.h"
 #include <iostream>
 #include "Car.h"
-
+#include "../../utils/PxConversionUtils.h"
 // will instantiate an AI car
-Guid spawnCar(DriverType type, ecs::Scene& scene, physics::PhysicsSystem* physicsSystem, glm::vec3 position, Curve* track, NavPath* navPath)
+Guid spawnCar(DriverType type, ecs::Scene& scene, physics::PhysicsSystem* physicsSystem, glm::vec3 position, glm::vec3 forward, Curve* track, NavPath* navPath)
 {
 
 	// all vehicles are entities that consists of the following components
@@ -19,13 +19,22 @@ Guid spawnCar(DriverType type, ecs::Scene& scene, physics::PhysicsSystem* physic
 	// - a LineRender that renders the direction of the vehicle
 
 	ecs::Entity aiDriver_e = scene.CreateEntity();
-    
+  
   scene.AddComponent(aiDriver_e.guid, Car());
 	Car& aiCar = scene.GetComponent<Car>(aiDriver_e.guid);
 
-  // initialize the physx vehicle, associated data.
-  aiCar.Initialize(type, GLMtoPx(position), physicsSystem, track, navPath);
 
+
+	// set rotation of the car.
+	glm::quat q = quatLookAt(forward, {0,1.f,0});
+	PxQuat initialRotation = GLMtoPx(q);
+	PxVec3 initialPosition = GLMtoPx(position);
+
+  PxTransform pose(initialPosition,initialRotation);
+
+  // initialize the physx vehicle, associated data.
+  aiCar.Initialize(type, pose, physicsSystem, track, navPath);
+	
   // renderer
 	RenderModel aiDriver_r = RenderModel();
 
@@ -60,5 +69,37 @@ Guid spawnCar(DriverType type, ecs::Scene& scene, physics::PhysicsSystem* physic
   }
 
   return aiDriver_e.guid; 
+
+}
+
+
+
+std::vector<glm::vec3> spawnpointsAlongAxis(int rows, int cols,float spread, glm::vec3 axis, glm::vec3 start)
+{
+	std::vector<glm::vec3> result;
+
+	axis = glm::normalize(axis);
+	const glm::vec3 UP = {0.f, 1.f,0.f};
+	// spawn the cars along the axis
+	glm::vec3 binormal = glm::cross(axis,UP);
+	// spawn a row of cars on binormal of axis
+
+	float width = static_cast<float>(rows) * spread;
+	float height = static_cast<float>(cols) * spread; 
+
+
+	glm::vec3 offset = binormal * ((width / 2) - (spread / 2) );
+
+	for (int col =0; col < cols; col++)
+	{
+		glm::vec3 colStart = offset + start + (-axis * (col * spread));
+		for (int row = 0; row < rows; row++)
+		{
+			glm::vec3 spawnPosition = colStart + (-binormal * (row * spread));
+			result.push_back(spawnPosition);
+		}
+	}
+
+	return result;
 
 }

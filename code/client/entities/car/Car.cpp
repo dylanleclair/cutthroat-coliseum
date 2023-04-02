@@ -49,13 +49,9 @@ void Car::keepRigidbodyUpright(PxRigidBody* rigidbody)
 
             upVector.normalize();
 
-            // Calculate the vector that points upwards relative to the rigidbody's orientation
-            PxVec3 desiredUpVector = PxVec3(0.0f, 1.0f, 0.0f); // assuming that we want the rigidbody to stay upright in the world Y-axis direction
+            // make the desired up vector the normal of the track (closest to the car)
+            PxVec3 desiredUpVector =GLMtoPx(getTrackNormal()); 
 
-            // make the desired up vector the normal of the track
-            // get the direction vector of track closest to car
-            desiredUpVector = GLMtoPx(getTrackNormal());
-            
             PxVec3 axis = upVector.cross(desiredUpVector);
             PxReal angle = acos(upVector.dot(desiredUpVector));
 
@@ -63,10 +59,24 @@ void Car::keepRigidbodyUpright(PxRigidBody* rigidbody)
             PxVec3 torque = axis * angle * rigidbody->getMass() * STRENGTH_UP_CORRECTION; // adjust the torque magnitude as needed
             rigidbody->addTorque(torque, PxForceMode::eFORCE);
 
-            // transform.rotate(axis * angle * STRENGTH_UP_CORRECTION);
-            // rigidbody->setGlobalPose(transform);
+            // now do it for the other axis
 
+            // forward dir is z
+            // so now we need to straighten X out too (if we can)
+
+            glm::vec3 forwardCar = getForwardDir();
+            PxVec3 xDir = transform.q.getBasisVector0();
+            PxVec3 binormalCar = desiredUpVector.cross(GLMtoPx(forwardCar));
+
+            axis = xDir.cross(binormalCar);
+            angle = acos(xDir.dot(binormalCar));
+
+            // Apply a torque to the rigidbody to rotate it towards the desired orientation
+            torque = axis * angle * rigidbody->getMass() * STRENGTH_UP_CORRECTION; // adjust the torque magnitude as needed
+            rigidbody->addTorque(torque, PxForceMode::eFORCE);
             
+            // the combined effect of these two changes it to lock the yaw and roll of the car. 
+
         } else {
             m_Vehicle.mPhysXState.physxActor.rigidBody->setAngularDamping(angular_damp_init_v);
         }
@@ -76,7 +86,7 @@ void Car::keepRigidbodyUpright(PxRigidBody* rigidbody)
 
 
 
-void Car::Initialize(DriverType type, PxVec3 initialPosition, physics::PhysicsSystem* ps, Curve* track, NavPath* pathToFollow)
+void Car::Initialize(DriverType type, PxTransform initialPose, physics::PhysicsSystem* ps, Curve* track, NavPath* pathToFollow)
 {
 
   if (!ps)
@@ -128,8 +138,7 @@ void Car::Initialize(DriverType type, PxVec3 initialPosition, physics::PhysicsSy
 
   // Apply a start pose to the physx actor and add it to the physx scene.
   //this is where the name of the car is applied to the actor
-  PxTransform pose(initialPosition, PxQuat(PxIdentity));
-  m_Vehicle.setUpActor(*physicsSystem->m_Scene, pose, m_vehicleName);
+  m_Vehicle.setUpActor(*physicsSystem->m_Scene, initialPose, m_vehicleName);
 
   // Set the vehicle in 1st gear.
   m_Vehicle.mEngineDriveState.gearboxState.currentGear = m_Vehicle.mEngineDriveParams.gearBoxParams.neutralGear + 1;
@@ -198,7 +207,7 @@ void Car::carImGui() {
         
         ImGui::TreePop();
 
-        ImGui::SliderFloat("Strength of UP:", &STRENGTH_UP_CORRECTION, 1.0f, 20000);
+        ImGui::SliderFloat("Strength of UP:", &STRENGTH_UP_CORRECTION, 1.0f, 10000);
 
 
     }
@@ -388,7 +397,7 @@ glm::vec3 Car::getForwardDir()
     glm::mat4 vehicleRotM = glm::toMat4(vehicleQuat);
     glm::vec3 headingDir = glm::vec3{vehicleRotM * glm::vec4{0.f, 0.f, 1.f, 1.f}};
     
-    return headingDir;
+    return glm::normalize(headingDir);
 }
 
 
