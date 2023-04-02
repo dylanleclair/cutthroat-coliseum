@@ -13,7 +13,7 @@ struct Contestant {
   int lapCount = 1;
   int checkpoints = 0;
   // other data if needed I guess
-
+  bool isFinished{false};
   Contestant(Car* car, Guid g) : guid(g), car(car) {}
 };
 
@@ -47,6 +47,7 @@ struct RaceTracker : ecs::ISystem {
   int getRanking(Guid contestantGuid);
   int getLapCount(Guid contestantGuid);
   bool getRaceStatus() {return m_raceFinished; }
+  bool isRacerFinished(Guid contestantGuid);
 
   std::map<Guid,int>& getRankings() { return m_rankings; };
 private: 

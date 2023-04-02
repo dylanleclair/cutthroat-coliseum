@@ -42,6 +42,7 @@
 #include <chrono>  // chrono::system_clock
 #include <ctime>   // localtime
 
+float startCountdown{5.0f};
 
 bool loadLevelMesh{false};
 bool levelMeshLoaded{false};
@@ -64,15 +65,44 @@ bool navPathToggle = true;
 // Boolean to toggle gameplay mode
 // (follow cam, full level mesh, navmesh off, backface culling off)
 bool gameplayMode = false;
+bool raceCountdown = false;
 bool gamePaused = false;
 
 uint32_t lastTime_millisecs;
+
+
+void resetLevel(Car& testCar, std::vector<Guid> ais, ecs::Scene& mainScene, std::vector<glm::vec3> spawnPoints, RaceTracker& raceSystem, float& acc_t)
+{
+	// Player reset
+	testCar.m_Vehicle.mPhysXState.physxActor.rigidBody->setGlobalPose(PxTransform(GLMtoPx(spawnPoints[0])));
+	testCar.m_Vehicle.mPhysXState.physxActor.rigidBody->setLinearDamping(10000.f);
+	testCar.m_Vehicle.mPhysXState.physxActor.rigidBody->setAngularDamping(10000.f);
+
+	// Ai Reset
+	for (int i = 0; i < ais.size(); i++) {
+		Car& aiCar = mainScene.GetComponent<Car>(ais.at(i));
+		aiCar.m_Vehicle.mPhysXState.physxActor.rigidBody->setGlobalPose(PxTransform(GLMtoPx(spawnPoints[i+1])));
+		aiCar.m_Vehicle.mPhysXState.physxActor.rigidBody->setLinearDamping(10000.f);
+		aiCar.m_Vehicle.mPhysXState.physxActor.rigidBody->setAngularDamping(10000.f);
+		aiCar.m_navPath->resetNav();
+	}
+
+	// Resets the lap count for all racers
+	raceSystem.resetRace();
+
+	// Resets the accumulator
+	acc_t = 0;
+
+}
 
 void gamePlayToggle(bool toggle, ecs::Scene &mainScene, std::vector<Guid> aiCars, GraphicsSystem &gs) {
 	if (toggle) {
 		loadLevelMesh = true;
 		navPathToggle = false;
 		gs.cam_mode = 3; // follow cam
+
+		raceCountdown = true;
+		startCountdown = 5.0f;
 
 		// Turns off the direction line for all AI
 		for (int i = 0; i < aiCars.size(); i++) {
@@ -87,6 +117,9 @@ void gamePlayToggle(bool toggle, ecs::Scene &mainScene, std::vector<Guid> aiCars
 		loadLevelMesh = false;
 		navPathToggle = true;
 		gs.cam_mode = 1; // free cam
+
+		raceCountdown = false;
+		startCountdown = 0.f;
 
 		// Restores the forward lines for the AI cars
 		for (int i = 0; i < aiCars.size(); i++) {
@@ -457,27 +490,8 @@ int main(int argc, char* argv[]) {
 
 					case SDLK_r:
 						//TODO recompile the shader
-						 
-						// Player reset
-						testCar.m_Vehicle.mPhysXState.physxActor.rigidBody->setGlobalPose(PxTransform(GLMtoPx(spawnPoints[0])));
-						testCar.m_Vehicle.mPhysXState.physxActor.rigidBody->setLinearDamping(10000.f);
-						testCar.m_Vehicle.mPhysXState.physxActor.rigidBody->setAngularDamping(10000.f);
-
-						// Ai Reset
-						for (int i = 0; i < AIGuids.size(); i++) {
-							Car& aiCar = mainScene.GetComponent<Car>(AIGuids.at(i));
-							aiCar.m_Vehicle.mPhysXState.physxActor.rigidBody->setGlobalPose(PxTransform(GLMtoPx(spawnPoints[i+1])));
-							aiCar.m_Vehicle.mPhysXState.physxActor.rigidBody->setLinearDamping(10000.f);
-							aiCar.m_Vehicle.mPhysXState.physxActor.rigidBody->setAngularDamping(10000.f);
-							aiCar.m_navPath->resetNav();
-						}
-
-						// Resets the lap count for all racers
-						raceSystem.resetRace();
-
-						// Resets the accumulator
-						acc_t = 0;
-
+						
+						resetLevel(testCar, AIGuids,mainScene,spawnPoints, raceSystem, acc_t);
 						break;
 						
 					// TODO: change the file that is serializes (Want to do base.json and enginedrive.json)
@@ -695,16 +709,6 @@ int main(int argc, char* argv[]) {
 		ImGui::TextColored(ImVec4(1.0f, 1.0f, 1.0f, 1.0f), "Lap: %d/%d", raceSystem.getLapCount(carGuid), raceSystem.MAX_LAPS);
 		ImGui::PopFont();
 		ImGui::End();
-
-		//Lap counter
-		ImGui::SetNextWindowPos(ImVec2(10, 20));
-		ImGui::Begin("UI", (bool*)0, textWindowFlags);
-		ImGui::SetWindowFontScale(2.f);
-		ImGui::PushFont(CabalBold);
-		//ImGui::TextColored(ImVec4(1.0f, 1.0f, 1.0f, 1.0f), "AI Lap: %d/3", aiCarInstance.m_lapCount);
-		ImGui::PopFont();
-		ImGui::End();
-
 		
 		//Lap counter
 		ImGui::SetNextWindowPos(ImVec2(10, 30));
@@ -721,12 +725,19 @@ int main(int argc, char* argv[]) {
 		const float delayInSeconds = 0.5;
 		static bool display = true;
 		if (raceSystem.getRaceStatus()) {
+			// the race is finished!!
+			
+			// make the AI take over after the driver has finished (UI will take precedence)
+			testCar.m_driverType = DriverType::COMPUTER;
+
+			// see if the message should be displayed
 			counter += timestep.getMilliseconds();
 			if (counter >= delayInSeconds * 1000) {
 				counter = 0;
 				display = !display;
 			}
 
+			// check who the winner was
 			const char * winner = (raceSystem.getRanking(carGuid) == 1) ? "VICTORY!" : "AI WON!";
 
 			if (display) {
@@ -738,7 +749,30 @@ int main(int argc, char* argv[]) {
 				ImGui::PopFont();
 				ImGui::End();
 			}
+
 		}
+
+		if (raceCountdown)
+		{
+			if (startCountdown > 0.f)
+			{
+				gamePaused = true;
+				startCountdown -= timestep.getSeconds();
+			
+				ImGui::SetNextWindowPos(ImVec2(200, 200));
+				ImGui::Begin("UI2", (bool*)0, textWindowFlags);
+				ImGui::SetWindowFontScale(2.5f);
+				ImGui::PushFont(CabalBold);
+				ImGui::TextColored(ImVec4(1.0f, 1.0f, 1.0f, 1.0f), "Race starting in... %.0f", startCountdown + 1);
+				ImGui::PopFont();
+				ImGui::End();
+			
+			}else  { 
+				raceCountdown = false;
+				gamePaused = false; 
+			}
+		} 
+
 
 		ImGui::Render();
 		glViewport(0, 0, (int)io.DisplaySize.x, (int)io.DisplaySize.y);

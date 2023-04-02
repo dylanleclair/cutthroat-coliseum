@@ -58,7 +58,8 @@ void RaceTracker::Update(ecs::Scene& scene, float deltaTime) {
       car.lapCount++;
       if (car.lapCount == MAX_LAPS+1)
       {
-        m_raceFinished = true;
+        m_raceFinished = true; // the whole race
+        car.isFinished = true; // each individual racer
       }
       car.checkpoints = 0;
     }
@@ -92,6 +93,21 @@ void RaceTracker::correctIndices(std::vector<Contestant> contestants)
     contestant.curveIndex = (index < startIndex) ? m_racepath.size() - diffy : index;  
 
   }
+}
+
+// if we do want to support multiplayer, we don't want to formally end the race until all
+// players have finished, so we might need something like this eventually...
+bool RaceTracker::isRacerFinished(Guid g)
+{
+  // iterate over contestants and find the matching guid
+  for (auto& contestant : m_contestants)
+  {
+    if (contestant.guid == g && contestant.isFinished)
+    {
+      return true;
+    }
+  }
+  return false;
 }
 
 int RaceTracker::getRanking(Guid contestantGuid)
