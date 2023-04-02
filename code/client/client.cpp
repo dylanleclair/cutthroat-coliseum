@@ -42,6 +42,7 @@
 #include <chrono>  // chrono::system_clock
 #include <ctime>   // localtime
 
+float startCountdown{5.0f};
 
 bool loadLevelMesh{false};
 bool levelMeshLoaded{false};
@@ -64,6 +65,7 @@ bool navPathToggle = true;
 // Boolean to toggle gameplay mode
 // (follow cam, full level mesh, navmesh off, backface culling off)
 bool gameplayMode = false;
+bool raceCountdown = false;
 bool gamePaused = false;
 
 uint32_t lastTime_millisecs;
@@ -73,6 +75,9 @@ void gamePlayToggle(bool toggle, ecs::Scene &mainScene, std::vector<Guid> aiCars
 		loadLevelMesh = true;
 		navPathToggle = false;
 		gs.cam_mode = 3; // follow cam
+
+		raceCountdown = true;
+		startCountdown = 5.0f;
 
 		// Turns off the direction line for all AI
 		for (int i = 0; i < aiCars.size(); i++) {
@@ -87,6 +92,9 @@ void gamePlayToggle(bool toggle, ecs::Scene &mainScene, std::vector<Guid> aiCars
 		loadLevelMesh = false;
 		navPathToggle = true;
 		gs.cam_mode = 1; // free cam
+
+		raceCountdown = false;
+		startCountdown = 0.f;
 
 		// Restores the forward lines for the AI cars
 		for (int i = 0; i < aiCars.size(); i++) {
@@ -737,6 +745,28 @@ int main(int argc, char* argv[]) {
 			}
 
 		}
+
+		if (raceCountdown)
+		{
+			if (startCountdown > 0.f)
+			{
+				gamePaused = true;
+				startCountdown -= timestep.getSeconds();
+			
+				ImGui::SetNextWindowPos(ImVec2(200, 200));
+				ImGui::Begin("UI2", (bool*)0, textWindowFlags);
+				ImGui::SetWindowFontScale(2.5f);
+				ImGui::PushFont(CabalBold);
+				ImGui::TextColored(ImVec4(1.0f, 1.0f, 1.0f, 1.0f), "Race starting in... %.0f", startCountdown + 1);
+				ImGui::PopFont();
+				ImGui::End();
+			
+			}else  { 
+				raceCountdown = false;
+				gamePaused = false; 
+			}
+		} 
+
 
 		ImGui::Render();
 		glViewport(0, 0, (int)io.DisplaySize.x, (int)io.DisplaySize.y);
