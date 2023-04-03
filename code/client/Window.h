@@ -57,6 +57,6 @@ struct Window {
 	void RenderAndSwap();
 
 	Rml::Context* rmlContext;
-	Rml::ElementDocument* document;
+	static Rml::ElementDocument* document;
 	static bool ProcessKeyDownShortcuts(Rml::Context* context, Rml::Input::KeyIdentifier key, int key_modifier, float native_dp_ratio, bool priority);
-};
+}; 

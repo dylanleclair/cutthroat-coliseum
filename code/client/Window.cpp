@@ -42,6 +42,7 @@ Window::Window(int width, int height, const char* title)
 		document->Show();
 	else
 		std::cout << "Failed to load document\n";
+	document->Hide();
 
 	Rml::Log::Message(Rml::Log::LT_DEBUG, "Test warning.");
 
@@ -64,27 +65,33 @@ glm::ivec2 Window::getSize() const {
 
 void Window::RenderAndSwap()
 {
-	//glDisable(GL_FRAMEBUFFER_SRGB);
-	//ImGui::Render();
-	//ImGui_ImplOpenGL3_RenderDrawData(ImGui::GetDrawData());
-	//glEnable(GL_FRAMEBUFFER_SRGB);
-
+	
 	Backend::ProcessEvents(rmlContext, static_cast<KeyDownCallback>(&Window::ProcessKeyDownShortcuts));
 
-	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT | GL_STENCIL_BUFFER_BIT);
+	glClear(GL_DEPTH_BUFFER_BIT | GL_STENCIL_BUFFER_BIT);
 	glDisable(GL_DEPTH_TEST);
 	glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 	glEnable(GL_BLEND);
 	glEnable(GL_FRAMEBUFFER_SRGB);
 
-	//Rml::GetFontEngineInterface()->
+	glActiveTexture(GL_TEXTURE0);
 	rmlContext->Update();
 	Backend::BeginFrame();
 	rmlContext->Render();
-	Backend::PresentFrame();
 	glDisable(GL_BLEND);
+	
+	glClear(GL_DEPTH_BUFFER_BIT | GL_STENCIL_BUFFER_BIT);
+	glDisable(GL_FRAMEBUFFER_SRGB);
+	ImGui::Render();
+	glViewport(0, 0, 1200, 800);
+	ImGui_ImplOpenGL3_RenderDrawData(ImGui::GetDrawData());
+	glEnable(GL_FRAMEBUFFER_SRGB);
+
+	//swap the buffers
+	Backend::PresentFrame();
 }
 
+Rml::ElementDocument* Window::document = nullptr;
 bool Window::ProcessKeyDownShortcuts(Rml::Context* context, Rml::Input::KeyIdentifier key, int key_modifier, float native_dp_ratio, bool priority)
 {
 	if (!context)
@@ -104,6 +111,12 @@ bool Window::ProcessKeyDownShortcuts(Rml::Context* context, Rml::Input::KeyIdent
 		if (key == Rml::Input::KI_F8)
 		{
 			Rml::Debugger::SetVisible(!Rml::Debugger::IsVisible());
+		}
+		else if (key == Rml::Input::KI_F7) {
+			if (document->IsVisible())
+				document->Hide();
+			else
+				document->Show();
 		}
 		else if (key == Rml::Input::KI_0 && key_modifier & Rml::Input::KM_CTRL)
 		{

@@ -118,7 +118,7 @@ void gamePlayToggle(bool toggle, ecs::Scene &mainScene, std::vector<Guid> aiCars
 			AIDirection.setGeometry(blank);
 		}
 
-		showImgui = false;
+		showImgui = true;
 	}
 	else {
 		loadLevelMesh = false;
@@ -141,20 +141,6 @@ int main(int argc, char* argv[]) {
 	printf("Starting main\n");
 
 	Window window(1200, 800, "Maximus Overdrive");
-
-	glViewport(0, 0, 1200, 800);
-	//must be switched
-	//glEnable(GL_DEPTH_TEST);
-
-	//dont matter
-	/*
-	glEnable(GL_CULL_FACE);
-	glCullFace(GL_FRONT);
-	glPolygonMode(GL_BACK, GL_FILL);
-	*/
-
-	///while(true)
-		//window.RenderAndSwap();
 
 	lastTime_millisecs = SDL_GetTicks();
 
@@ -182,8 +168,6 @@ int main(int argc, char* argv[]) {
 
 	RaceTracker raceSystem{zzPathGeom.verts, desiredSpawnLocation};	
 	//load fonts into ImGui
-	
-	/*
 	io.Fonts->AddFontDefault();
 	ImFont* Debrosee = io.Fonts->AddFontFromFileTTF("fonts/Debrosee-ALPnL.ttf", 18.5f);
 	IM_ASSERT(Debrosee != NULL);
@@ -193,7 +177,7 @@ int main(int argc, char* argv[]) {
 	IM_ASSERT(CabalBold != NULL);
 	ImFont* ExtraLarge = io.Fonts->AddFontFromFileTTF("fonts/EXTRA LARGE.ttf", 18.5f);
 	IM_ASSERT(ExtraLarge != NULL);
-	*/
+	
 
 	// init ecs 
 
@@ -798,7 +782,7 @@ int main(int argc, char* argv[]) {
 
 		// END__ ECS SYSTEMS UPDATES
 
-		/*
+		
 		ImGui_ImplOpenGL3_NewFrame();
 		ImGui_ImplSDL2_NewFrame();
 		ImGui::NewFrame();
@@ -863,7 +847,6 @@ int main(int argc, char* argv[]) {
 		*/
 		//render the UI
 		// Setting flags
-		/*
 		ImGuiWindowFlags textWindowFlags =
 			ImGuiWindowFlags_NoBringToFrontOnFocus |
 			ImGuiWindowFlags_NoMove |				// text "window" should not move
@@ -945,7 +928,6 @@ int main(int argc, char* argv[]) {
 		// 	}
 		// }
 
-		*/
 		//glViewport(0, 0, (int)io.DisplaySize.x, (int)io.DisplaySize.y);
 		window.RenderAndSwap();
 	}
