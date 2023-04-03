@@ -32,6 +32,7 @@ Window::Window(int width, int height, const char* title)
 		Backend::Shutdown();
 		std::cout << "Failed to create RmlUI context\n";
 	}
+	
 	Rml::Debugger::Initialise(rmlContext);
 	//load the sample document
 	if (!Rml::LoadFontFace("fonts/Cabal-w5j3.ttf"))
@@ -63,15 +64,25 @@ glm::ivec2 Window::getSize() const {
 
 void Window::RenderAndSwap()
 {
+	//glDisable(GL_FRAMEBUFFER_SRGB);
 	//ImGui::Render();
 	//ImGui_ImplOpenGL3_RenderDrawData(ImGui::GetDrawData());
+	//glEnable(GL_FRAMEBUFFER_SRGB);
+
 	Backend::ProcessEvents(rmlContext, static_cast<KeyDownCallback>(&Window::ProcessKeyDownShortcuts));
-	
+
+	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT | GL_STENCIL_BUFFER_BIT);
+	glDisable(GL_DEPTH_TEST);
+	glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+	glEnable(GL_BLEND);
+	glEnable(GL_FRAMEBUFFER_SRGB);
+
+	//Rml::GetFontEngineInterface()->
 	rmlContext->Update();
 	Backend::BeginFrame();
 	rmlContext->Render();
 	Backend::PresentFrame();
-	//glDisable(GL_BLEND);
+	glDisable(GL_BLEND);
 }
 
 bool Window::ProcessKeyDownShortcuts(Rml::Context* context, Rml::Input::KeyIdentifier key, int key_modifier, float native_dp_ratio, bool priority)

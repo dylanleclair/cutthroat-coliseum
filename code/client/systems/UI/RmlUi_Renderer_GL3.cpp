@@ -47,9 +47,8 @@
 #define RMLUI_SHADER_HEADER "#version 330\n"
 #include RMLUI_GL3_CUSTOM_LOADER
 #else
-#define RMLUI_SHADER_HEADER "#version 330\n"
-#define GLAD_GL_IMPLEMENTATION
-#include "RmlUi_Include_GL3.h"
+#define RMLUI_SHADER_HEADER "#version 410 core\n"
+#include <GL/glew.h>
 #endif
 
 static const char* shader_main_vertex = RMLUI_SHADER_HEADER R"(
@@ -364,7 +363,7 @@ void RenderInterface_GL3::Clear()
 {
 	glClearStencil(0);
 	glClearColor(0, 0, 0, 1);
-	glClear(GL_COLOR_BUFFER_BIT | GL_STENCIL_BUFFER_BIT);
+	glClear(GL_STENCIL_BUFFER_BIT);
 }
 
 void RenderInterface_GL3::RenderGeometry(Rml::Vertex* vertices, int num_vertices, int* indices, int num_indices, const Rml::TextureHandle texture,
@@ -676,6 +675,7 @@ void RenderInterface_GL3::SubmitTransformUniform(ProgramId program_id, int unifo
 	}
 }
 
+/*
 bool RmlGL3::Initialize(Rml::String* out_message)
 {
 #if defined RMLUI_PLATFORM_EMSCRIPTEN
@@ -703,3 +703,4 @@ void RmlGL3::Shutdown()
 	gladLoaderUnloadGL();
 #endif
 }
+*/

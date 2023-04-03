@@ -99,10 +99,10 @@ private:
 namespace RmlGL3 {
 
 	// Loads OpenGL functions. Optionally, the out message describes the loaded GL version or an error message on failure.
-	bool Initialize(Rml::String* out_message = nullptr);
+	//bool Initialize(Rml::String* out_message = nullptr);
 
 	// Unloads OpenGL functions.
-	void Shutdown();
+	//void Shutdown();
 
 } // namespace RmlGL3
 

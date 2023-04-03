@@ -29,11 +29,16 @@
 #include "RmlUi_Backend.h"
 #include "RmlUi_Platform_SDL.h"
 #include "RmlUi_Renderer_GL3.h"
+#include <GL/glew.h>
 #include <RmlUi/Core/Context.h>
 #include <RmlUi/Core/Core.h>
 #include <RmlUi/Core/FileInterface.h>
 #include <SDL.h>
 #include <SDL_image.h>
+
+#include "imgui.h"
+#include "imgui_impl_sdl.h"
+#include "imgui_impl_opengl3.h"
 
 #if defined RMLUI_PLATFORM_EMSCRIPTEN
 #include <emscripten.h>
@@ -123,7 +128,7 @@ bool Backend::Initialize(const char* window_name, int width, int height, bool al
 {
 	RMLUI_ASSERT(!data);
 
-	if (SDL_Init(SDL_INIT_VIDEO) != 0)
+	if (SDL_Init(SDL_INIT_EVERYTHING) != 0)
 		return false;
 
 #if defined RMLUI_PLATFORM_EMSCRIPTEN
@@ -136,8 +141,8 @@ bool Backend::Initialize(const char* window_name, int width, int height, bool al
 	// GL 3.3 Core
 	SDL_GL_SetAttribute(SDL_GL_CONTEXT_FLAGS, 0);
 	SDL_GL_SetAttribute(SDL_GL_CONTEXT_PROFILE_MASK, SDL_GL_CONTEXT_PROFILE_CORE);
-	SDL_GL_SetAttribute(SDL_GL_CONTEXT_MAJOR_VERSION, 3);
-	SDL_GL_SetAttribute(SDL_GL_CONTEXT_MINOR_VERSION, 3);
+	SDL_GL_SetAttribute(SDL_GL_CONTEXT_MAJOR_VERSION, 4);
+	SDL_GL_SetAttribute(SDL_GL_CONTEXT_MINOR_VERSION, 1);
 #endif
 
 	// Request stencil buffer of at least 8-bit size to supporting clipping on transformed elements.
@@ -170,10 +175,10 @@ bool Backend::Initialize(const char* window_name, int width, int height, bool al
 	SDL_GL_MakeCurrent(window, glcontext);
 	SDL_GL_SetSwapInterval(1);
 
-	if (!RmlGL3::Initialize())
-	{
-		fprintf(stderr, "Could not initialize OpenGL");
-		return false;
+	GLenum err = glewInit();
+	if (err != GLEW_OK) {
+		printf("WINDOW glewInit error:{}", glewGetErrorString(err));
+		throw std::runtime_error("Failed to initialize GLEW");
 	}
 
 	data = Rml::MakeUnique<BackendData>();
@@ -190,6 +195,15 @@ bool Backend::Initialize(const char* window_name, int width, int height, bool al
 
 	data->system_interface.SetWindow(window);
 	data->render_interface.SetViewport(width, height);
+
+	IMGUI_CHECKVERSION();
+	ImGui::CreateContext();
+
+	ImGui::StyleColorsDark();
+
+	ImGui_ImplSDL2_InitForOpenGL(window, glcontext);
+	// VOLATILE: must match version specified in shaders!
+	ImGui_ImplOpenGL3_Init("#version 410 core");
 
 	return true;
 }

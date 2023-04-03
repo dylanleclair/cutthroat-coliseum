@@ -142,16 +142,23 @@ int main(int argc, char* argv[]) {
 
 	Window window(1200, 800, "Maximus Overdrive");
 
-	//TEST LOOP
-	while (true) {
-		window.RenderAndSwap();
-	}
+	glViewport(0, 0, 1200, 800);
+	//must be switched
+	//glEnable(GL_DEPTH_TEST);
+
+	//dont matter
+	/*
+	glEnable(GL_CULL_FACE);
+	glCullFace(GL_FRONT);
+	glPolygonMode(GL_BACK, GL_FILL);
+	*/
+
+	///while(true)
+		//window.RenderAndSwap();
 
 	lastTime_millisecs = SDL_GetTicks();
 
-	//ImGuiIO& io = ImGui::GetIO(); (void)io;
-
-
+	ImGuiIO& io = ImGui::GetIO(); (void)io;
 
 	/**
 	 * Begin initialization of ECS systems, entities, etc.
@@ -175,6 +182,7 @@ int main(int argc, char* argv[]) {
 
 	RaceTracker raceSystem{zzPathGeom.verts, desiredSpawnLocation};	
 	//load fonts into ImGui
+	
 	/*
 	io.Fonts->AddFontDefault();
 	ImFont* Debrosee = io.Fonts->AddFontFromFileTTF("fonts/Debrosee-ALPnL.ttf", 18.5f);
@@ -782,15 +790,13 @@ int main(int argc, char* argv[]) {
 		
 		// Tire track renders
 		updateCarVFX(mainScene, time_diff);
-		//gs.Update(mainScene, time_diff);
+		gs.Update(mainScene, time_diff);
 		raceSystem.Update(mainScene,time_diff);
 
 		//update_sounds(testCar, aiCarInstance, playSounds);
         soundUpdater.Update(mainScene, time_diff);
 
 		// END__ ECS SYSTEMS UPDATES
-
-		glDisable(GL_FRAMEBUFFER_SRGB); // disable sRGB for things like imgui
 
 		/*
 		ImGui_ImplOpenGL3_NewFrame();
@@ -850,7 +856,7 @@ int main(int argc, char* argv[]) {
 			ImGui::End();
 
 		}		
-		*/
+		
 		/*
 		* Render the UI. I am doing this here for now but I might move it.
 		* ImGui uses coordinates in screen space (0-screen dimension) and is anchored on the top left corner
@@ -940,7 +946,6 @@ int main(int argc, char* argv[]) {
 		// }
 
 		*/
-		glEnable(GL_FRAMEBUFFER_SRGB);
 		//glViewport(0, 0, (int)io.DisplaySize.x, (int)io.DisplaySize.y);
 		window.RenderAndSwap();
 	}

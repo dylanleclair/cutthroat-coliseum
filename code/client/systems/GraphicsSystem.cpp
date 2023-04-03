@@ -612,7 +612,7 @@ void GraphicsSystem::Update(ecs::Scene& scene, float deltaTime) {
 				glDrawElements(GL_TRIANGLES, mesh.numberOfIndicies, GL_UNSIGNED_INT, 0);
 			}
 		}
-
+		
 		/*
 		* RENDER THE DEPTH, COLOR, NORMAL AND SHADOW TEXTURES 
 		*/
@@ -812,7 +812,6 @@ void GraphicsSystem::Update(ecs::Scene& scene, float deltaTime) {
 		celShader.use();
 		glBindVertexArray(quad_vertexArray);
 		glBindBuffer(GL_ARRAY_BUFFER, quad_vertexBuffer);
-		glDisable(GL_DEPTH_TEST);
 
 		GLuint normWeightUniform = glGetUniformLocation(GLuint(celShader), "normalDiffWeight");
 		GLuint depthWeightUniform = glGetUniformLocation(GLuint(celShader), "depthDiffWeight");
