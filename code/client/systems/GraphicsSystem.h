@@ -25,28 +25,37 @@ public:
 	void Update(ecs::Scene& scene, float deltaTime);
 	void input(SDL_Event&, int _cameraID);
 	glm::mat4 getCameraView();
-	glm::vec3 GraphicsSystem::g_cameraPosition();
-	glm::vec3 GraphicsSystem::g_cameraVelocity();
+	glm::vec3 g_cameraPosition();
+	glm::vec3 g_cameraVelocity();
+	void s_cameraMode(int _mode);
+	void s_camerasActive(int number);
 	static void importOBJ(CPU_Geometry& _geometry, const std::string _fileName);
 	static void importOBJ(RenderModel& _component, const std::string _fileName);
 	static void importSplineFromOBJ(CPU_Geometry& _geometry, std::string filename);
 
 	//follow camera variables
-	float follow_cam_x;
-	float follow_cam_y;
-	float follow_cam_z;
-	float follow_correction_strength;
-	float maximum_follow_distance;
-	bool faceCulling;
-	bool front_face;
-	bool back_face;
+	static float follow_cam_x;
+	static float follow_cam_y;
+	static float follow_cam_z;
+	static float follow_correction_strength;
+	static float maximum_follow_distance;
+	static bool faceCulling;
+	static bool front_face;
+	static bool back_face;
+
+	
+private:
+	void drawCamerasElements(GLenum mode, GLsizei count, GLenum type, const void* indices);
+	void drawCamerasArrays(GLenum mode, GLint first, GLsizei count);
+	void drawCamerasInstanced(GLenum mode, GLint first, GLsizei count, GLsizei instanceCount);
 
 	int cam_mode = 1; // Used to determine what mode the camera should use (free, fixed, follow)
-private:
-
 	Camera cameras[4];
+	glm::mat4 views[4];
+	std::vector<std::array<float, 2>> viewPorts;
+	float viewportDimensions[2] = { 0,0 };
 	//uniforms
-	int numCamerasActive = 1;
+	int numCamerasActive = 4;
 
 	glm::mat4 V = glm::mat4(1.f); // Had to declare this variable here for the rest of the program to work
 

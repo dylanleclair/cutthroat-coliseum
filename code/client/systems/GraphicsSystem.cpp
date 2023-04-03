@@ -24,6 +24,7 @@
 #include <iostream>
 #include <ctype.h>
 
+#include "../entities/car/Car.h"
 
 #include "graphics/Texture.h"
 
@@ -371,14 +372,19 @@ void GraphicsSystem::ImGuiPanel() {
 		ImGui::Checkbox("Culling: Front Face", &front_face);
 		ImGui::Checkbox("Culling: Back Face", &back_face);
 
-		if (ImGui::Button("Free Camera")) {
-			cam_mode = 1;
+		if (numCamerasActive <= 1) {
+			if (ImGui::Button("Free Camera")) {
+				cam_mode = 1;
+			}
+			if (ImGui::Button("Fixed Camera")) {
+				cam_mode = 2;
+			}
+			if (ImGui::Button("Follow Camera")) {
+				cam_mode = 3;
+			}
 		}
-		if (ImGui::Button("Fixed Camera")) {
-			cam_mode = 2;
-		}
-		if (ImGui::Button("Follow Camera")) {
-			cam_mode = 3;
+		else {
+			ImGui::Text("Only follow cam allowed when multiple cameras are active");
 		}
 
 		if (cam_mode == 3) {
@@ -447,39 +453,35 @@ void GraphicsSystem::ImGuiPanel() {
 	}
 }
 
-glm::mat4 getViewMatrix(const glm::vec3& position, const glm::vec3& direction, const glm::vec3& up) {
-	// Calculate the right vector
-	glm::vec3 right = glm::normalize(glm::cross(up, direction));
-	// Recalculate the up vector
-	glm::vec3 newUp = glm::cross(direction, right);
+void GraphicsSystem::drawCamerasElements(GLenum mode, GLsizei count, GLenum type, const void* indices) {
+	for (int i = 0; i < numCamerasActive; i++) {
+		glViewport(viewPorts[i][0], viewPorts[i][1], viewportDimensions[0], viewportDimensions[1]);
+		glDrawElements(mode, count, type, indices);
+	}
+}
 
-	// Create a 4x4 view matrix
-	glm::mat4 view = glm::mat4(1.0f);
-	view[0][0] = right.x;
-	view[1][0] = right.y;
-	view[2][0] = right.z;
-	view[0][1] = newUp.x;
-	view[1][1] = newUp.y;
-	view[2][1] = newUp.z;
-	view[0][2] = -direction.x;
-	view[1][2] = -direction.y;
-	view[2][2] = -direction.z;
-	view[3][0] = -glm::dot(right, position);
-	view[3][1] = -glm::dot(newUp, position);
-	view[3][2] = glm::dot(direction, position);
+void GraphicsSystem::drawCamerasArrays(GLenum mode, GLint first, GLsizei count) {
+	for (int i = 0; i < numCamerasActive; i++) {
+		glViewport(viewPorts[i][0], viewPorts[i][1], viewportDimensions[0], viewportDimensions[1]);
+		glDrawArrays(mode, first, count);
+	}
+}
 
-	return view;
+void GraphicsSystem::drawCamerasInstanced(GLenum mode, GLint first, GLsizei count, GLsizei instanceCount) {
+	for (int i = 0; i < numCamerasActive; i++) {
+		glViewport(viewPorts[i][0], viewPorts[i][1], viewportDimensions[0], viewportDimensions[1]);
+		glDrawArraysInstanced(mode, first, count, instanceCount);
+	}
 }
 
 void GraphicsSystem::Update(ecs::Scene& scene, float deltaTime) {
-	for (int i = 0; i < numCamerasActive; i++) {
+
 		//default camera matricies
 		glm::mat4 P = glm::perspective(glm::radians(45.f), (float)windowSize.x / windowSize.y, 2.f, 1000.f);
-		glm::mat4 V = cameras[i].getView();
 
 		// If camera mode is 1 - use freecam
 		if (cam_mode == 1) {
-			V = cameras[i].getView();
+			V = cameras[0].getView();
 		}
 		// If cam mode is 2 - use fixed camera (values from milestone 2)
 		else if (cam_mode == 2) {
@@ -489,53 +491,41 @@ void GraphicsSystem::Update(ecs::Scene& scene, float deltaTime) {
 				9.27202, -0.914308, -33.4781, 1
 			};
 		}
-		// TODO: Follow camera mode
+		// follow cam view matricies
 		else {
-			//MASSIVE ASSUMPTION!!! Car is ALWAYS Guid = 0
-			//TODO: Find a clean way to pass the cars Guid to the camera. Idealy also refactor the camera class to handle this logic
-			//Main goal rn: Implement the logic...
-			static glm::vec3 previousCarPosition = glm::vec3(0);
-			TransformComponent& trans = scene.GetComponent<TransformComponent>(0);
-			/*
-			* calculate the camera position
-			*/
-			//calculate where the camera should aim to be positioned
-			glm::vec3 cameraTargetLocation = glm::translate(glm::mat4(1), trans.getTranslation()) * toMat4(trans.getRotation()) * glm::vec4(follow_cam_x, follow_cam_y, follow_cam_z, 1);
-			//calculate the speed of the car
-			float speed = glm::distance(previousCarPosition, trans.getTranslation());
-			//calculate the vector from the cameras current position to the target position
-			glm::vec3 cameraOffset = cameras[0].getPos() - cameraTargetLocation;
-			if (glm::length(cameraOffset) != 0) {
-				float followDistance = (speed / (speed + follow_correction_strength)) * maximum_follow_distance;
-				cameraOffset = glm::normalize(cameraOffset) * followDistance;
-				cameras[0].setPos(cameraTargetLocation + cameraOffset);
+			for (int i = 0; i < numCamerasActive; i++) {
+				//Main goal rn: Implement the logic...
+				TransformComponent& trans = scene.GetComponent<TransformComponent>(cameras[i].targetEntity);
+				//Car& car = scene.GetComponent<Car>(cameras[i].targetEntity);
+				cameras[i].update(trans);
+
+				//set the camera variables
+				views[i] = glm::lookAt(cameras[0].getPos(), trans.getTranslation(), glm::vec3(0.0f, 1.0f, 0.0f));
 			}
-			//set the camera variables
-			previousCarPosition = trans.getTranslation();
-			V = glm::lookAt(cameras[0].getPos(), trans.getTranslation(), glm::vec3(0.0f, 1.0f, 0.0f));
-			P = glm::perspective(glm::radians(45.f), (float)windowSize.x / windowSize.y, 2.f, 1000.f);
 		}
 
+		//if there are 2 cameras then the aspect ratio is a upright rectangle that takes half the screen
+		if(numCamerasActive == 1 || numCamerasActive >= 3)
+			P = glm::perspective(glm::radians(45.f), (float)windowSize.x / windowSize.y, 2.f, 1000.f);
+		else
+			P = glm::perspective(glm::radians(45.f), ((float)windowSize.x/2.f) / windowSize.y, 2.f, 1000.f);
 
+		//create the viewports starting at the top left and going clockwise
+		viewPorts.clear();
+		if (numCamerasActive == 1) {
+			viewPorts.push_back({ 0,0 });
+		}
+		else if (numCamerasActive == 2) {
+			viewPorts.push_back({ 0,0 });
+			viewPorts.push_back({ windowSize.x/2.f, 0 });
+		}
+		else {
+			viewPorts.push_back({ 0, windowSize.y / 2.f });
+			viewPorts.push_back({ windowSize.x / 2.f, windowSize.y / 2.f });
+			viewPorts.push_back({ 0, 0 });
+			viewPorts.push_back({ windowSize.x / 2.f, 0 });
+		}
 
-		//set the viewport
-		//if (numCamerasActive <= 1) { //there can't be 0 cameras, assume always 1 minimum
-			glViewport(0, 0, windowSize.x, windowSize.y);
-		//}
-		/*else {
-			if (i == 0) {
-				glViewport(0, windowSize.y / 2, windowSize.x / 2, windowSize.y / 2);
-			}
-			else if (i == 1) {
-				glViewport(windowSize.x / 2, windowSize.y / 2, windowSize.x / 2, windowSize.y / 2);
-			}
-			else if (i == 2) {
-				glViewport(windowSize.x / 2, 0, windowSize.x / 2, windowSize.y / 2);
-			}
-			else if (i == 3) {
-				glViewport(0, 0, windowSize.x / 2, windowSize.y / 2);
-			}
-		}*/
 
 		/*
 		* UPDATE THE TRANSFORM COMPONENTS
@@ -609,7 +599,7 @@ void GraphicsSystem::Update(ecs::Scene& scene, float deltaTime) {
 			for each (Mesh mesh in comp.meshes) {
 				mesh.geometry->bind();
 				glUniformMatrix4fv(modelUniform, 1, GL_FALSE, glm::value_ptr(M * mesh.localTransformation));
-				glDrawElements(GL_TRIANGLES, mesh.numberOfIndicies, GL_UNSIGNED_INT, 0);
+				drawCamerasElements(GL_TRIANGLES, mesh.numberOfIndicies, GL_UNSIGNED_INT, 0);
 			}
 		}
 
@@ -708,7 +698,7 @@ void GraphicsSystem::Update(ecs::Scene& scene, float deltaTime) {
 					glUniform1ui(shaderStateUniform, 0);
 				}
 				
-				glDrawElements(GL_TRIANGLES, mesh.numberOfIndicies, GL_UNSIGNED_INT, 0);
+				drawCamerasElements(GL_TRIANGLES, mesh.numberOfIndicies, GL_UNSIGNED_INT, 0);
 			}
 		}
 
@@ -747,7 +737,7 @@ void GraphicsSystem::Update(ecs::Scene& scene, float deltaTime) {
 			glUniform3fv(lockingAxisUniform, 1, glm::value_ptr(glm::vec3(0, 1, 0)));
 			glUniform2fv(scaleUniform, 1, glm::value_ptr(glm::vec2(trans.getScale().x, trans.getScale().y)));
 			comp.texture->bind();
-			glDrawArrays(GL_TRIANGLES, 0, 6);
+			drawCamerasArrays(GL_TRIANGLES, 0, 6);
 		}
 
 		//textureStrips
@@ -763,7 +753,7 @@ void GraphicsSystem::Update(ecs::Scene& scene, float deltaTime) {
 			comp.texture->bind();
 			comp.GPUline->bind();
 			glDisableVertexAttribArray(1);
-			glDrawElements(GL_TRIANGLES, comp.indicies.size(), GL_UNSIGNED_INT, 0);
+			drawCamerasElements(GL_TRIANGLES, comp.indicies.size(), GL_UNSIGNED_INT, 0);
 		}
 
 		//particles
@@ -796,7 +786,7 @@ void GraphicsSystem::Update(ecs::Scene& scene, float deltaTime) {
 				size_t rendering = comp.backIndex <= index ? comp.maxParticles - index : comp.backIndex - index;
 				toRender -= rendering;
 				glBufferData(GL_ARRAY_BUFFER, sizeof(float) * 7 * rendering, &(comp.positions[index]), GL_DYNAMIC_DRAW);
-				glDrawArraysInstanced(GL_TRIANGLES, 0, 6, rendering);
+				drawCamerasInstanced(GL_TRIANGLES, 0, 6, rendering);
 				index = index + rendering >= comp.maxParticles ? index = 0 : index = index + rendering;
 			}
 		}
@@ -904,7 +894,7 @@ void GraphicsSystem::Update(ecs::Scene& scene, float deltaTime) {
 				Snippets::renderActors(&actors[0], static_cast<PxU32>(actors.size()), modelUniform);
 			}
 		}
-	}
+	
 }
 
 // Function to return a camera view matrix (used for debug)
@@ -917,13 +907,24 @@ glm::vec3 GraphicsSystem::g_cameraPosition() {
 	return cameras[0].cameraPos;
 }
 
-glm::vec3 GraphicsSystem::g_cameraVelocity() {
-	return cameras[0].velocity;
+void GraphicsSystem::s_cameraMode(int _mode)
+{
+	if (numCamerasActive == 1)
+		cam_mode = _mode;
+	else
+		std::cout << "\n\nERROR: Only follow cam mode is allowed when there are multiple cameras active!\n\n";
+}
+
+void GraphicsSystem::s_camerasActive(int number) {
+	if (number != 1) 
+		cam_mode = 1;
+	numCamerasActive = number;
 }
 
 void GraphicsSystem::input(SDL_Event& _event, int _cameraID)
 {
-	cameras[_cameraID].input(_event);
+	if(numCamerasActive == 1)
+		cameras[_cameraID].input(_event);
 }
 
 

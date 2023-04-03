@@ -99,7 +99,7 @@ void gamePlayToggle(bool toggle, ecs::Scene &mainScene, std::vector<Guid> aiCars
 	if (toggle) {
 		loadLevelMesh = true;
 		navPathToggle = false;
-		gs.cam_mode = 3; // follow cam
+		gs.s_cameraMode(3); // follow cam
 
 		raceCountdown = true;
 		startCountdown = 5.0f;
@@ -116,7 +116,7 @@ void gamePlayToggle(bool toggle, ecs::Scene &mainScene, std::vector<Guid> aiCars
 	else {
 		loadLevelMesh = false;
 		navPathToggle = true;
-		gs.cam_mode = 1; // free cam
+		gs.s_cameraMode(1); // free cam
 
 		raceCountdown = false;
 		startCountdown = 0.f;
