@@ -1,6 +1,6 @@
 #pragma once
-#include <vector>
 #include "glm/glm.hpp"
+#include "../../../curve/Curve.h"
 
 struct CheckPoint {
     CheckPoint(int index, glm::vec3 pos) : index(index), position(pos) {}
@@ -11,7 +11,7 @@ struct CheckPoint {
 struct NavPath {
 
     // api to pass in the current path 
-    NavPath(std::vector<glm::vec3> checkpoints) : checkpoints(checkpoints), currentCheckpoint(CheckPoint{0,checkpoints[0]}) {}
+    NavPath(Curve* checkpoints) : checkpoints(checkpoints), currentCheckpoint(CheckPoint{0,checkpoints->start()}) {}
 
     glm::vec3 getDirectionVector(glm::vec3 currentPos);
     glm::vec3 getNextPoint(glm::vec3 currentPos, bool& outDidLap);
@@ -19,6 +19,5 @@ struct NavPath {
     void resetNav();
 
     CheckPoint currentCheckpoint;
-    std::vector<glm::vec3> checkpoints;
-
+    Curve* checkpoints;
 };

@@ -1,7 +1,6 @@
 #pragma once
 
 #include "../entities/car/Car.h"
-#include "../entities/car/AICar.h"
 
 #include "fmod.hpp"
 
@@ -21,6 +20,6 @@ struct SoundUpdater : ecs::ISystem
 
 void init_sound_system();
 
-void update_sounds(Car& car, AICar& opponent, bool playSounds);
+void update_sounds(Car& car, Car& opponent, bool playSounds);
 
 void handle_fmod_error();

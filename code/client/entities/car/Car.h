@@ -4,8 +4,13 @@
 #include "vehicle2/PxVehicleAPI.h"
 
 #include <glm/glm.hpp>
+#include <vector>
 
 #include "../../systems/PhysicsSystem.h"
+#include "../../curve/Curve.h"
+#include "nav/NavPath.h"
+
+#include "core/ecs.h"
 
 using namespace physx;
 using namespace physx::vehicle2;
@@ -32,24 +37,23 @@ struct Command
 
 
 // The path to the vehicle json files to be loaded.
+enum DriverType {
+    COMPUTER,
+    HUMAN
+};
 
 extern const char *gVehicleDataPath;
 
 struct Car {
 
-    
+    DriverType m_driverType = DriverType::COMPUTER;
 
     physics::PhysicsSystem* physicsSystem;
-
+    Curve* m_track;
     char* m_vehicleName = "Player";
 
     // The vehicle with engine drivetrain
     EngineDriveVehicle m_Vehicle;
-
-    // Vehicle simulation needs a simulation context
-    // to store global parameters of the simulation such as
-    // gravitational acceleration.
-    PxVehiclePhysXSimulationContext m_VehicleSimulationContext;
 
     PxU32 m_TargetGearCommand = PxVehicleEngineDriveTransmissionCommandState::eAUTOMATIC_GEAR;
     Command m_Commands[5] = 
@@ -90,33 +94,49 @@ struct Car {
 
     Car() : physicsSystem(nullptr) {};
 
-    bool initVehicle(PxVec3 initialPosition);
+    // Initialization & updating
+    void Initialize(DriverType type, PxTransform initialPose, physics::PhysicsSystem* ps, Curve* track, NavPath* pathToFollow);
+    virtual void Update(Guid carGuid, ecs::Scene& scene, float deltaTime);
     void cleanupVehicle();
-    bool getCTethered();
-    void setClosestTetherPoint(PxTransform _loc);
-    void setClosestTetherPoint(glm::vec3 _loc);
-
-    glm::vec3 getForwardDir();
-
-
-    void carImGui();
     void baseSetup();
     void setup1();
 
-    void resetModifications();
+    // movement 
+    Command drive(ecs::Scene& scene, float deltaTime);
+    void setClosestTetherPoint(PxTransform _loc);
+    void setClosestTetherPoint(glm::vec3 _loc);
+    bool getCTethered();
     bool isGroundedDelay(Car& car);
+    bool Jump();
+    bool AiJump();
+    void Car::checkFlipped(PxTransform carPose);
+
+    // navigation
+    glm::vec3 getForwardDir();
+
+    // utility
+    void carImGui();
+    void resetModifications();
     void TetherSteer(PxTransform _loc);
-    bool TetherJump();
-    bool AiTetherJump();
+    bool isWrongWay();
 
+    // position
     PxRigidBody* getVehicleRigidBody();
-
     glm::vec3 getPosition();
 
-    virtual void Update(Guid carGuid, ecs::Scene& scene, float deltaTime);
+    /////////////////////////////////////////
+    // AI methods / etc.  ///////////////////
+    /////////////////////////////////////////
+    NavPath* m_navPath;
+    Command pathfind(ecs::Scene& scene, float deltaTime);
+    /////////////////////////////////////////
 
-protected: 
-    void Car::checkFlipped(PxTransform carPose);
+private:
+    glm::vec3 getTrackNormal();
+    void keepRigidbodyUpright(PxRigidBody* rigidbody);
+
+    float STRENGTH_UP_CORRECTION{300.f};
+    float m_stuckTimer;
 
 
 };

@@ -2,7 +2,6 @@
 #include "PhysicsSystem.h"
 #include "../utils/Time.h"
 #include "../entities/car/Car.h"
-#include "../entities/car/AICar.h"
 
 #include <iostream>
 
@@ -12,12 +11,10 @@ namespace physics
     void PhysicsSystem::Initialize()
     {
 		initPhysX();
-		// initGroundPlane();
+		// initGroundPlane(); // legacy -- leaving it in for ~ nostalgia ~
 		initMaterialFrictionTable();
         initCooking(); 
-		// if (!initVehicles())
-		// 	return false;
-		// return true;
+        initVehicleSimContext();
     }
 
 
@@ -30,13 +27,6 @@ namespace physics
             // get the car, and update it.
             Car& car = scene.GetComponent<Car>(entityGuid);
             car.Update(entityGuid,scene,deltaTime);
-        }
-
-        // then, update all ai controlled vehicles
-        for (auto entityGuid : ecs::EntitiesInScene<AICar>(scene))
-        {
-            AICar& aicar = scene.GetComponent<AICar>(entityGuid);
-            aicar.Update(entityGuid,scene,deltaTime);
         }
 
         // Forward integrate the phsyx scene by a single timestep.
@@ -124,23 +114,6 @@ namespace physics
         m_NbPhysXMaterialFrictions = 1;
     }
 
-    void PhysicsSystem::initGroundPlane()
-    {
-        // Can't set PxPlane to all zero's 
-        gGroundPlane = PxCreatePlane(*m_Physics, PxPlane(0, 1, 0, 0), *m_Material);
-        //std::cout << "Material: " << gMaterial->getStaticFriction() << std::endl;
-        for (PxU32 i = 0; i < gGroundPlane->getNbShapes(); i++)
-        {
-            PxShape *shape = NULL;
-            gGroundPlane->getShapes(&shape, 1, i);
-            shape->setFlag(PxShapeFlag::eSCENE_QUERY_SHAPE, true);
-            shape->setFlag(PxShapeFlag::eSIMULATION_SHAPE, true);
-            shape->setFlag(PxShapeFlag::eTRIGGER_SHAPE, false);
-        }
-        m_Scene->addActor(*gGroundPlane);
-    }
-
-
     void PhysicsSystem::initCooking()
     {
         // Level
@@ -155,11 +128,23 @@ namespace physics
         m_CookingParams->meshPreprocessParams |= physx::PxMeshPreprocessingFlag::eDISABLE_ACTIVE_EDGES_PRECOMPUTE;
     }
 
-    // TODO(dylan): cleanup functions for level collider
 
-    void PhysicsSystem::cleanupGroundPlane()
+    void PhysicsSystem::initVehicleSimContext()
     {
-        gGroundPlane->release();
+        // Set up the simulation context.
+        // The snippet is set up with
+        // a) z as the longitudinal axis
+        // b) x as the lateral axis
+        // c) y as the vertical axis.
+        // d) metres  as the lengthscale.
+        m_VehicleSimulationContext.setToDefault();
+        m_VehicleSimulationContext.frame.lngAxis = PxVehicleAxes::ePosZ;
+        m_VehicleSimulationContext.frame.latAxis = PxVehicleAxes::ePosX;
+        m_VehicleSimulationContext.frame.vrtAxis = PxVehicleAxes::ePosY;
+        m_VehicleSimulationContext.scale.scale = 1.0f;
+        m_VehicleSimulationContext.gravity = m_Gravity;
+        m_VehicleSimulationContext.physxScene = m_Scene;
+        m_VehicleSimulationContext.physxActorUpdateMode = PxVehiclePhysXActorUpdateMode::eAPPLY_ACCELERATION;
     }
 
 }
