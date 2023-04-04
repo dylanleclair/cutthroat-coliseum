@@ -621,12 +621,13 @@ void GraphicsSystem::Update(ecs::Scene& scene, float deltaTime) {
 			* Generate the shadow map
 			*/
 			glBindFramebuffer(GL_FRAMEBUFFER, gShadowBuffer);
-			glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 			shadowGShader.use();
 			glEnable(GL_DEPTH_TEST);
 			glEnable(GL_CULL_FACE);
 			glCullFace(GL_FRONT);
 			glPolygonMode(GL_BACK, GL_FILL);
+			glDepthMask(GL_TRUE);
+			glClear(GL_DEPTH_BUFFER_BIT);
 			GLuint modelUniform = glGetUniformLocation(GLuint(shadowGShader), "M");
 			GLuint viewUniform = glGetUniformLocation(GLuint(shadowGShader), "V");
 			GLuint perspectiveUniform = glGetUniformLocation(GLuint(shadowGShader), "P");
@@ -713,13 +714,14 @@ void GraphicsSystem::Update(ecs::Scene& scene, float deltaTime) {
 			//glViewport(viewPorts[i][0], viewPorts[i][1], viewportDimensions[0], viewportDimensions[1]);
 			glEnable(GL_LINE_SMOOTH);
 			glEnable(GL_FRAMEBUFFER_SRGB);
-			glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-			glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
+			glPolygonMode(GL_FRONT, GL_FILL);
+			glCullFace(GL_BACK);
 			/*
 			* render the skybox using the same framebuffer as the generative stage
 			*/
 			skyboxShader.use();
 			glDisable(GL_CULL_FACE);
+			glDisable(GL_DEPTH_TEST);
 			glDepthMask(GL_FALSE);
 			glBindVertexArray(skybox_vertexArray);
 			glBindBuffer(GL_ARRAY_BUFFER, skybox_vertexBuffer);
@@ -729,9 +731,12 @@ void GraphicsSystem::Update(ecs::Scene& scene, float deltaTime) {
 			perspectiveUniform = glGetUniformLocation(GLuint(skyboxShader), "P");
 			glUniformMatrix4fv(perspectiveUniform, 1, GL_FALSE, glm::value_ptr(P));
 			glUniformMatrix4fv(viewUniform, 1, GL_FALSE, glm::value_ptr(glm::mat4(glm::mat3(V))));
+			glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 			glDrawArrays(GL_TRIANGLES, 0, 36);
 			glDepthMask(GL_TRUE);
 			glEnable(GL_DEPTH_TEST);
+			glEnable(GL_CULL_FACE);
+			glClear(GL_DEPTH_BUFFER_BIT);
 
 			gShader.use();
 
@@ -880,7 +885,6 @@ void GraphicsSystem::Update(ecs::Scene& scene, float deltaTime) {
 			*/
 			glBindFramebuffer(GL_FRAMEBUFFER, sceneBuffer);
 			glViewport(viewPorts[i][0], viewPorts[i][1], viewportDimensions[0], viewportDimensions[1]);
-			glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 			glDisable(GL_DEPTH_TEST);
 			glDepthMask(GL_FALSE);
 			celShader.use();
@@ -925,6 +929,7 @@ void GraphicsSystem::Update(ecs::Scene& scene, float deltaTime) {
 			glBindTexture(GL_TEXTURE_2D, gVFXColor);
 			glActiveTexture(GL_TEXTURE6);
 			glBindTexture(GL_TEXTURE_2D, gVFXDepth);
+			//glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
 			glDrawArrays(GL_TRIANGLES, 0, 6);
 
@@ -932,7 +937,6 @@ void GraphicsSystem::Update(ecs::Scene& scene, float deltaTime) {
 			//draw the scene
 			glBindFramebuffer(GL_FRAMEBUFFER, 0);
 			glViewport(0, 0, windowSize.x, windowSize.y);
-			glClear(GL_COLOR_BUFFER_BIT);
 			glActiveTexture(GL_TEXTURE0);
 			glBindTexture(GL_TEXTURE_2D, sceneColor);
 			sceneShader.use();
