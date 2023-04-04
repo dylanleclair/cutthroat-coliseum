@@ -99,11 +99,13 @@ private:
 	ShaderProgram VFXshader;
 	ShaderProgram skyboxShader;
 	ShaderProgram particleShader;
+	ShaderProgram sceneShader;
 	//buffer for offscreen rendering
 	//buffers
 	GLuint gBuffer;
 	GLuint gShadowBuffer;
 	GLuint gVFXBuffer;
+	GLuint sceneBuffer;
 	//textures used in g buffer
 	GLuint gDepth;
 	GLuint gColor;
@@ -116,6 +118,8 @@ private:
 	GLuint skyboxCubemap;
 	//texture used in shadow map calculation
 	GLuint gLightDepth;
+	//scene texture
+	GLuint sceneColor;
 	//variables for rendering whole screen quad
 	GLuint quad_vertexArray;
 	GLuint quad_vertexBuffer;

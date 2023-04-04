@@ -1,5 +1,5 @@
 #version 410 core
-out vec4 color;
+out vec3 color;
 
 uniform sampler2D gPosition;
 uniform sampler2D gNormal;
@@ -84,9 +84,9 @@ void main()
 
 		//calculate final color
 		//if shadow = 1 then the pixel is in shadow
-		color = mix(vec4(mix(quantized, gooch, goochWeight), 1),vec4(0,0,0,1),outline) * ((1-shadow) + (shadow * 0.4));
+		color = mix(mix(quantized, gooch, goochWeight),vec3(0,0,0),outline) * ((1-shadow) + (shadow * 0.4));
 		if(tdepth - VFXdepth > 0) 
-			color = vec4(texture(gVFXColor, tc).xyz, 1);
+			color = texture(gVFXColor, tc).xyz;
 	
 
 }
