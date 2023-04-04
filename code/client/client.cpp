@@ -42,7 +42,9 @@
 #include <chrono>  // chrono::system_clock
 #include <ctime>   // localtime
 
+
 float startCountdown{5.0f};
+
 
 bool loadLevelMesh{false};
 bool levelMeshLoaded{false};
@@ -111,7 +113,7 @@ void gamePlayToggle(bool toggle, ecs::Scene &mainScene, std::vector<Guid> aiCars
 			AIDirection.setGeometry(blank);
 		}
 
-		showImgui = false;
+		showImgui = true;
 	}
 	else {
 		loadLevelMesh = false;
@@ -134,9 +136,8 @@ void gamePlayToggle(bool toggle, ecs::Scene &mainScene, std::vector<Guid> aiCars
 
 int main(int argc, char* argv[]) {
 	//RUN_GRAPHICS_TEST_BENCH();
-	printf("Starting main");
+	printf("Starting main\n");
 
-	SDL_Init(SDL_INIT_EVERYTHING); // initialize all sdl systems
 	Window window(1200, 800, "Maximus Overdrive");
 
 	lastTime_millisecs = SDL_GetTicks();
@@ -153,7 +154,7 @@ int main(int argc, char* argv[]) {
 	// first and foremost, create a scene.
 	ecs::Scene mainScene;
 
-	GraphicsSystem gs(window);
+	GraphicsSystem gs = GraphicsSystem();
 
 	physics::PhysicsSystem physicsSystem{};
 	physicsSystem.Initialize();
@@ -176,7 +177,7 @@ int main(int argc, char* argv[]) {
 	IM_ASSERT(CabalBold != NULL);
 	ImFont* ExtraLarge = io.Fonts->AddFontFromFileTTF("fonts/EXTRA LARGE.ttf", 18.5f);
 	IM_ASSERT(ExtraLarge != NULL);
-
+	
 
 	// init ecs 
 
@@ -427,6 +428,8 @@ int main(int argc, char* argv[]) {
     SoundUpdater soundUpdater;
     soundUpdater.Initialize(mainScene);
 
+		std::cout << "initalization finished, beginning game\n";
+
 	// GAME LOOP
 	while (!quit) {
 		Timestep timestep; // Time since last frame
@@ -469,24 +472,25 @@ int main(int argc, char* argv[]) {
 		engineVariablesInit(testCar.m_Vehicle);
 
 		//polls all pending input events until there are none left in the queue
-		while (SDL_PollEvent(&window.event)) {
-			ImGui_ImplSDL2_ProcessEvent(&window.event);
+		SDL_Event windowEvent;
+		while (SDL_PollEvent(&windowEvent)) {
+			ImGui_ImplSDL2_ProcessEvent(&windowEvent);
 
-			if (window.event.type == SDL_CONTROLLERDEVICEADDED) {
+			if (windowEvent.type == SDL_CONTROLLERDEVICEADDED) {
 				std::cout << "Adding controller\n";
 				ControllerInput::init_controller();
 			}
 
-			if (window.event.type == SDL_CONTROLLERDEVICEREMOVED) {
+			if (windowEvent.type == SDL_CONTROLLERDEVICEREMOVED) {
 				std::cout << "removing controller\n";
 				ControllerInput::deinit_controller();
 			}
 
-			if (window.event.type == SDL_QUIT)
+			if (windowEvent.type == SDL_QUIT)
 				quit = true;
 
-			if (window.event.type == SDL_KEYDOWN) {
-				switch (window.event.key.keysym.sym) {
+			if (windowEvent.type == SDL_KEYDOWN) {
+				switch (windowEvent.key.keysym.sym) {
 
 					case SDLK_r:
 						//TODO recompile the shader
@@ -551,7 +555,7 @@ int main(int argc, char* argv[]) {
 			}
 
 			//pass the event to the camera
-			gs.input(window.event, controlledCamera);
+			gs.input(windowEvent, controlledCamera);
 		}
 
 		// Check for the car grounded state, and if grounded after being in the air
@@ -624,8 +628,7 @@ int main(int argc, char* argv[]) {
 
 		// END__ ECS SYSTEMS UPDATES
 
-		glDisable(GL_FRAMEBUFFER_SRGB); // disable sRGB for things like imgui
-
+		
 		ImGui_ImplOpenGL3_NewFrame();
 		ImGui_ImplSDL2_NewFrame();
 		ImGui::NewFrame();
@@ -700,7 +703,7 @@ int main(int argc, char* argv[]) {
 			ImGuiWindowFlags_NoBackground |			// window should be transparent; only the text should be visible
 			ImGuiWindowFlags_NoDecoration |			// no decoration; only the text should be visible
 			ImGuiWindowFlags_NoTitleBar;			// no title; only the text should be visible
-
+		
 		//Lap counter
 		ImGui::SetNextWindowPos(ImVec2(10, 10));
 		ImGui::Begin("UI", (bool*)0, textWindowFlags);
@@ -774,13 +777,10 @@ int main(int argc, char* argv[]) {
 		} 
 
 
-		ImGui::Render();
-		glViewport(0, 0, (int)io.DisplaySize.x, (int)io.DisplaySize.y);
-		ImGui_ImplOpenGL3_RenderDrawData(ImGui::GetDrawData());
-		window.swapBuffers();
-
+		//glViewport(0, 0, (int)io.DisplaySize.x, (int)io.DisplaySize.y);
+		window.RenderAndSwap();
 	}
-
+	
 	ImGui_ImplOpenGL3_Shutdown();
 	ImGui_ImplSDL2_Shutdown();
 	ImGui::DestroyContext();

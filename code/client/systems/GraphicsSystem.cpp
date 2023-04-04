@@ -58,7 +58,7 @@ void loadCubemap(std::vector<std::string> faces)
 	glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_WRAP_R, GL_CLAMP_TO_EDGE);
 }
 
-GraphicsSystem::GraphicsSystem(Window& _window) :
+GraphicsSystem::GraphicsSystem() :
 	modelShader("shaders/lighting_simple.vert", "shaders/lighting_simple.frag"),
 	lineShader("shaders/line.vert", "shaders/line.frag"),
 	wireframeShader("shaders/wireframe.vert", "shaders/wireframe.frag"),
@@ -69,7 +69,7 @@ GraphicsSystem::GraphicsSystem(Window& _window) :
 	skyboxShader("shaders/skybox.vert", "shaders/skybox.frag"),
 	particleShader("shaders/particle.vert", "shaders/particle.frag")
 {
-	windowSize = _window.getSize();
+	windowSize = glm::vec2(1200, 800);//_window.getSize();
 	follow_cam_x = 0.f;
 	follow_cam_y = 4.f;
 	follow_cam_z = -22.f;
@@ -612,7 +612,7 @@ void GraphicsSystem::Update(ecs::Scene& scene, float deltaTime) {
 				glDrawElements(GL_TRIANGLES, mesh.numberOfIndicies, GL_UNSIGNED_INT, 0);
 			}
 		}
-
+		
 		/*
 		* RENDER THE DEPTH, COLOR, NORMAL AND SHADOW TEXTURES 
 		*/
@@ -812,7 +812,6 @@ void GraphicsSystem::Update(ecs::Scene& scene, float deltaTime) {
 		celShader.use();
 		glBindVertexArray(quad_vertexArray);
 		glBindBuffer(GL_ARRAY_BUFFER, quad_vertexBuffer);
-		glDisable(GL_DEPTH_TEST);
 
 		GLuint normWeightUniform = glGetUniformLocation(GLuint(celShader), "normalDiffWeight");
 		GLuint depthWeightUniform = glGetUniformLocation(GLuint(celShader), "depthDiffWeight");
