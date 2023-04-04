@@ -50,6 +50,9 @@ add_subdirectory(tst)
 # For Windows: Prevent overriding the parent project's compiler/linker settings
 set(gtest_force_shared_crt ON CACHE BOOL "" FORCE)
 
+#enable or disable the ImGUI windows
+set(ENV{ImGUI_Enabled})
+
 #-------------------------------------------------------------------------
 # other dependencies to fetch that were required in old cpsc453 skeleton!
 include(FetchContent)

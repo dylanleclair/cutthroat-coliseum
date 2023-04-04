@@ -1,3 +1,4 @@
+#define ImGUI_Enabled
 #include <iostream>
 
 
@@ -142,7 +143,9 @@ int main(int argc, char* argv[]) {
 
 	lastTime_millisecs = SDL_GetTicks();
 
+#ifdef ImGUI_Enabled
 	ImGuiIO& io = ImGui::GetIO(); (void)io;
+#endif
 
 	/**
 	 * Begin initialization of ECS systems, entities, etc.
@@ -167,6 +170,7 @@ int main(int argc, char* argv[]) {
 	glm::vec3 desiredSpawnLocation = {-4.108957, 3.397303, -43.794819}; // hardcoded value near the straight strip of the track
 	Curve raceTrackingCurve(zzPathGeom.verts);
 
+#ifdef ImGUI_Enabled
 	//load fonts into ImGui
 	io.Fonts->AddFontDefault();
 	ImFont* Debrosee = io.Fonts->AddFontFromFileTTF("fonts/Debrosee-ALPnL.ttf", 18.5f);
@@ -177,6 +181,7 @@ int main(int argc, char* argv[]) {
 	IM_ASSERT(CabalBold != NULL);
 	ImFont* ExtraLarge = io.Fonts->AddFontFromFileTTF("fonts/EXTRA LARGE.ttf", 18.5f);
 	IM_ASSERT(ExtraLarge != NULL);
+#endif
 	
 
 	// init ecs 
@@ -474,7 +479,9 @@ int main(int argc, char* argv[]) {
 		//polls all pending input events until there are none left in the queue
 		SDL_Event windowEvent;
 		while (SDL_PollEvent(&windowEvent)) {
+#ifdef ImGUI_Enabled
 			ImGui_ImplSDL2_ProcessEvent(&windowEvent);
+#endif
 
 			if (windowEvent.type == SDL_CONTROLLERDEVICEADDED) {
 				std::cout << "Adding controller\n";
@@ -628,7 +635,7 @@ int main(int argc, char* argv[]) {
 
 		// END__ ECS SYSTEMS UPDATES
 
-		
+#ifdef ImGUI_Enabled
 		ImGui_ImplOpenGL3_NewFrame();
 		ImGui_ImplSDL2_NewFrame();
 		ImGui::NewFrame();
@@ -776,15 +783,15 @@ int main(int argc, char* argv[]) {
 			}
 		} 
 
-
+#endif
 		//glViewport(0, 0, (int)io.DisplaySize.x, (int)io.DisplaySize.y);
 		window.RenderAndSwap();
 	}
-	
+#ifdef ImGUI_Enabled
 	ImGui_ImplOpenGL3_Shutdown();
 	ImGui_ImplSDL2_Shutdown();
 	ImGui::DestroyContext();
-
+#endif
 
 	// cleanupPhysics();
 	physicsSystem.Cleanup();

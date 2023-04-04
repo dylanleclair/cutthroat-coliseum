@@ -196,6 +196,7 @@ bool Backend::Initialize(const char* window_name, int width, int height, bool al
 	data->system_interface.SetWindow(window);
 	data->render_interface.SetViewport(width, height);
 
+#ifdef ImGUI_Enabled
 	IMGUI_CHECKVERSION();
 	ImGui::CreateContext();
 
@@ -204,6 +205,7 @@ bool Backend::Initialize(const char* window_name, int width, int height, bool al
 	ImGui_ImplSDL2_InitForOpenGL(window, glcontext);
 	// VOLATILE: must match version specified in shaders!
 	ImGui_ImplOpenGL3_Init("#version 410 core");
+#endif
 
 	return true;
 }

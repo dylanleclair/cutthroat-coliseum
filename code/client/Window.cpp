@@ -80,13 +80,14 @@ void Window::RenderAndSwap()
 	rmlContext->Render();
 	glDisable(GL_BLEND);
 	
+#ifdef ImGUI_Enabled
 	glClear(GL_DEPTH_BUFFER_BIT | GL_STENCIL_BUFFER_BIT);
 	glDisable(GL_FRAMEBUFFER_SRGB);
 	ImGui::Render();
 	glViewport(0, 0, 1200, 800);
 	ImGui_ImplOpenGL3_RenderDrawData(ImGui::GetDrawData());
 	glEnable(GL_FRAMEBUFFER_SRGB);
-
+#endif
 	//swap the buffers
 	Backend::PresentFrame();
 }
