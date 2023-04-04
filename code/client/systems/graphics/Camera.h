@@ -29,5 +29,7 @@ private:
 	float fspeed = 0, hspeed = 0, panHorizontal = 90.0f, panVertical = -10.0f, lastX = 0, lastY = 0;
 	bool leftMouseButtonPressed = false, firstMouse = true;
 	const float cameraSpeed = 0.1;
+
+	glm::vec3 previousCarPosition = glm::vec3(0);
 };
 

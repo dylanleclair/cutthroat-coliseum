@@ -235,6 +235,7 @@ int main(int argc, char* argv[]) {
 	Guid carGuid = spawnCar(DriverType::HUMAN, mainScene,&physicsSystem,spawnPoints[0], forward, &raceTrackingCurve, &driverNavPath);
 	Car& testCar = mainScene.GetComponent<Car>(carGuid);
 	setupCarVFX(mainScene, carGuid);
+	gs.bindCameraToEntity(0, carGuid);
 
 
 	// SPAWN THE AI CARS
@@ -250,6 +251,9 @@ int main(int argc, char* argv[]) {
 		AIGuids.push_back(aiCarGuid);
 		setupCarVFX(mainScene, aiCarGuid);
 	}
+	gs.bindCameraToEntity(1, AIGuids[0]);
+	gs.bindCameraToEntity(2, AIGuids[1]);
+	gs.bindCameraToEntity(3, AIGuids[2]);
 
 	ecs::Entity navRenderer_e = mainScene.CreateEntity();
 	mainScene.AddComponent(navRenderer_e.guid,TransformComponent{});

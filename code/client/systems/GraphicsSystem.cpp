@@ -31,7 +31,11 @@
 //DEBUG IMPORTS
 #include "graphics/snippetrender/SnippetRender.h"
 
-
+float GraphicsSystem::follow_cam_x = 0;
+float GraphicsSystem::follow_cam_y = 4;
+float GraphicsSystem::follow_cam_z = -22;
+float GraphicsSystem::follow_correction_strength = 40;
+float GraphicsSystem::maximum_follow_distance = 10;
 
 void loadCubemap(std::vector<std::string> faces)
 {
@@ -71,13 +75,6 @@ GraphicsSystem::GraphicsSystem(Window& _window) :
 	particleShader("shaders/particle.vert", "shaders/particle.frag")
 {
 	windowSize = _window.getSize();
-	follow_cam_x = 0.f;
-	follow_cam_y = 4.f;
-	follow_cam_z = -22.f;
-	follow_correction_strength = 40.f;
-	maximum_follow_distance = 10;
-	front_face = false;
-	back_face = true;
 
 	/*
 	* create all textures
@@ -369,8 +366,6 @@ GraphicsSystem::~GraphicsSystem() {
 // Panel to controls the cameras
 void GraphicsSystem::ImGuiPanel() {
 	if (ImGui::CollapsingHeader("Camera")) {
-		ImGui::Checkbox("Culling: Front Face", &front_face);
-		ImGui::Checkbox("Culling: Back Face", &back_face);
 
 		if (numCamerasActive <= 1) {
 			if (ImGui::Button("Free Camera")) {
@@ -453,22 +448,25 @@ void GraphicsSystem::ImGuiPanel() {
 	}
 }
 
-void GraphicsSystem::drawCamerasElements(GLenum mode, GLsizei count, GLenum type, const void* indices) {
+void GraphicsSystem::drawCamerasElements(GLenum mode, GLsizei count, GLenum type, const void* indices, GLuint viewUniform) {
 	for (int i = 0; i < numCamerasActive; i++) {
+		glUniformMatrix4fv(viewUniform, 1, GL_FALSE, glm::value_ptr(views[i]));
 		glViewport(viewPorts[i][0], viewPorts[i][1], viewportDimensions[0], viewportDimensions[1]);
 		glDrawElements(mode, count, type, indices);
 	}
 }
 
-void GraphicsSystem::drawCamerasArrays(GLenum mode, GLint first, GLsizei count) {
+void GraphicsSystem::drawCamerasArrays(GLenum mode, GLint first, GLsizei count, GLuint viewUniform) {
 	for (int i = 0; i < numCamerasActive; i++) {
+		glUniformMatrix4fv(viewUniform, 1, GL_FALSE, glm::value_ptr(views[i]));
 		glViewport(viewPorts[i][0], viewPorts[i][1], viewportDimensions[0], viewportDimensions[1]);
 		glDrawArrays(mode, first, count);
 	}
 }
 
-void GraphicsSystem::drawCamerasInstanced(GLenum mode, GLint first, GLsizei count, GLsizei instanceCount) {
+void GraphicsSystem::drawCamerasInstanced(GLenum mode, GLint first, GLsizei count, GLsizei instanceCount, GLuint viewUniform) {
 	for (int i = 0; i < numCamerasActive; i++) {
+		glUniformMatrix4fv(viewUniform, 1, GL_FALSE, glm::value_ptr(views[i]));
 		glViewport(viewPorts[i][0], viewPorts[i][1], viewportDimensions[0], viewportDimensions[1]);
 		glDrawArraysInstanced(mode, first, count, instanceCount);
 	}
@@ -500,15 +498,30 @@ void GraphicsSystem::Update(ecs::Scene& scene, float deltaTime) {
 				cameras[i].update(trans);
 
 				//set the camera variables
-				views[i] = glm::lookAt(cameras[0].getPos(), trans.getTranslation(), glm::vec3(0.0f, 1.0f, 0.0f));
+				views[i] = glm::lookAt(cameras[i].getPos(), trans.getTranslation(), glm::vec3(0.0f, 1.0f, 0.0f));
 			}
 		}
 
 		//if there are 2 cameras then the aspect ratio is a upright rectangle that takes half the screen
-		if(numCamerasActive == 1 || numCamerasActive >= 3)
+		if (numCamerasActive == 1 || numCamerasActive >= 3) {
 			P = glm::perspective(glm::radians(45.f), (float)windowSize.x / windowSize.y, 2.f, 1000.f);
-		else
-			P = glm::perspective(glm::radians(45.f), ((float)windowSize.x/2.f) / windowSize.y, 2.f, 1000.f);
+		}
+		else {
+			P = glm::perspective(glm::radians(45.f), ((float)windowSize.x / 2.f) / windowSize.y, 2.f, 1000.f);
+		}
+
+		if (numCamerasActive == 1) {
+			viewportDimensions[0] = windowSize.x;
+			viewportDimensions[1] = windowSize.y;
+		}
+		else if (numCamerasActive == 2) {
+			viewportDimensions[0] = windowSize.x / 2.f;
+			viewportDimensions[1] = windowSize.y;
+		}
+		else {
+			viewportDimensions[0] = windowSize.x / 2.f;
+			viewportDimensions[1] = windowSize.y / 2.f;
+		}
 
 		//create the viewports starting at the top left and going clockwise
 		viewPorts.clear();
@@ -568,9 +581,8 @@ void GraphicsSystem::Update(ecs::Scene& scene, float deltaTime) {
 		}
 
 		//light space 'camera'
-		glm::vec3 position = scene.GetComponent<TransformComponent>(0).getTranslation() + glm::vec3(0,30,0);
 		glm::mat4 shadowP = glm::ortho(-40.f, 40.f, -40.f, 40.f, 1.f, 40.0f);
-		glm::mat4 shadowV = glm::lookAt(position, position + lightDirection, glm::vec3(1, 0, 0));//glm::lookAt(-lightDirection, glm::vec3(0.0f, 0.0f, 0.0f), glm::vec3(0.0f, 1.0f, 0.0f));
+
 
 		/*
 		* Generate the shadow map
@@ -582,13 +594,11 @@ void GraphicsSystem::Update(ecs::Scene& scene, float deltaTime) {
 		glEnable(GL_CULL_FACE);
 		glCullFace(GL_FRONT);
 		glPolygonMode(GL_BACK, GL_FILL);
-		glViewport(0, 0, 4096, 4096);
 		GLuint modelUniform = glGetUniformLocation(GLuint(shadowGShader), "M");
 		GLuint viewUniform = glGetUniformLocation(GLuint(shadowGShader), "V");
 		GLuint perspectiveUniform = glGetUniformLocation(GLuint(shadowGShader), "P");
 		//set the camera uniforms
 		glUniformMatrix4fv(perspectiveUniform, 1, GL_FALSE, glm::value_ptr(shadowP));
-		glUniformMatrix4fv(viewUniform, 1, GL_FALSE, glm::value_ptr(shadowV));
 		for (Guid entityGuid : ecs::EntitiesInScene<RenderModel, TransformComponent>(scene)) {
 			RenderModel& comp = scene.GetComponent<RenderModel>(entityGuid);
 			TransformComponent& trans = scene.GetComponent<TransformComponent>(entityGuid);
@@ -599,7 +609,58 @@ void GraphicsSystem::Update(ecs::Scene& scene, float deltaTime) {
 			for each (Mesh mesh in comp.meshes) {
 				mesh.geometry->bind();
 				glUniformMatrix4fv(modelUniform, 1, GL_FALSE, glm::value_ptr(M * mesh.localTransformation));
-				drawCamerasElements(GL_TRIANGLES, mesh.numberOfIndicies, GL_UNSIGNED_INT, 0);
+				glm::vec3 position;
+				glm::mat4 shadowV;
+				if (numCamerasActive == 1) {
+					//camera 1
+					position = scene.GetComponent<TransformComponent>(cameras[0].targetEntity).getTranslation() + glm::vec3(0, 30, 0);
+					shadowV = glm::lookAt(position, position + lightDirection, glm::vec3(1, 0, 0));
+					glUniformMatrix4fv(viewUniform, 1, GL_FALSE, glm::value_ptr(shadowV));
+					glViewport(0, 0, 4096, 4096);
+					glDrawElements(GL_TRIANGLES, mesh.numberOfIndicies, GL_UNSIGNED_INT, 0);
+				} 
+				else if (numCamerasActive == 2) {
+					//camera 1
+					position = scene.GetComponent<TransformComponent>(cameras[0].targetEntity).getTranslation() + glm::vec3(0, 30, 0);
+					shadowV = glm::lookAt(position, position + lightDirection, glm::vec3(1, 0, 0));
+					glUniformMatrix4fv(viewUniform, 1, GL_FALSE, glm::value_ptr(shadowV));
+					glViewport(0, 0, 2048, 4096);
+					glDrawElements(GL_TRIANGLES, mesh.numberOfIndicies, GL_UNSIGNED_INT, 0);
+					//camera 2
+					position = scene.GetComponent<TransformComponent>(cameras[1].targetEntity).getTranslation() + glm::vec3(0, 30, 0);
+					shadowV = glm::lookAt(position, position + lightDirection, glm::vec3(1, 0, 0));
+					glUniformMatrix4fv(viewUniform, 1, GL_FALSE, glm::value_ptr(shadowV));
+					glViewport(2048, 0, 2048, 4096);
+					glDrawElements(GL_TRIANGLES, mesh.numberOfIndicies, GL_UNSIGNED_INT, 0);
+				}
+				else {
+					//camera 1
+					position = scene.GetComponent<TransformComponent>(cameras[0].targetEntity).getTranslation() + glm::vec3(0, 30, 0);
+					shadowV = glm::lookAt(position, position + lightDirection, glm::vec3(1, 0, 0));
+					glUniformMatrix4fv(viewUniform, 1, GL_FALSE, glm::value_ptr(shadowV));
+					glViewport(0, 2048, 1024, 1024);
+					glDrawElements(GL_TRIANGLES, mesh.numberOfIndicies, GL_UNSIGNED_INT, 0);
+					//camera 2
+					position = scene.GetComponent<TransformComponent>(cameras[1].targetEntity).getTranslation() + glm::vec3(0, 30, 0);
+					shadowV = glm::lookAt(position, position + lightDirection, glm::vec3(1, 0, 0));
+					glUniformMatrix4fv(viewUniform, 1, GL_FALSE, glm::value_ptr(shadowV));
+					glViewport(2048, 2048, 1024, 1024);
+					glDrawElements(GL_TRIANGLES, mesh.numberOfIndicies, GL_UNSIGNED_INT, 0);
+					//camera 3
+					position = scene.GetComponent<TransformComponent>(cameras[2].targetEntity).getTranslation() + glm::vec3(0, 30, 0);
+					shadowV = glm::lookAt(position, position + lightDirection, glm::vec3(1, 0, 0));
+					glUniformMatrix4fv(viewUniform, 1, GL_FALSE, glm::value_ptr(shadowV));
+					glViewport(0, 0, 1024, 1024);
+					glDrawElements(GL_TRIANGLES, mesh.numberOfIndicies, GL_UNSIGNED_INT, 0);
+					if (numCamerasActive == 4) {
+						//camera 4
+						position = scene.GetComponent<TransformComponent>(cameras[3].targetEntity).getTranslation() + glm::vec3(0, 30, 0);
+						shadowV = glm::lookAt(position, position + lightDirection, glm::vec3(1, 0, 0));
+						glUniformMatrix4fv(viewUniform, 1, GL_FALSE, glm::value_ptr(shadowV));
+						glViewport(2048, 0, 1024, 1024);
+						glDrawElements(GL_TRIANGLES, mesh.numberOfIndicies, GL_UNSIGNED_INT, 0);
+					}
+				}
 			}
 		}
 
@@ -635,21 +696,7 @@ void GraphicsSystem::Update(ecs::Scene& scene, float deltaTime) {
 		glEnable(GL_DEPTH_TEST);
 
 		gShader.use();
-		if (front_face || back_face) {
-			glEnable(GL_CULL_FACE);
-			if (front_face) {
-				glCullFace(GL_FRONT);
-			}
-			else if (back_face) {
-				glCullFace(GL_BACK);
-			}
-			else if (back_face && front_face) {
-				glCullFace(GL_FRONT_AND_BACK);
-			}
-		}
-		else {
-			glDisable(GL_CULL_FACE);
-		}
+
 		//get uniform locations
 		modelUniform = glGetUniformLocation(GLuint(gShader), "M");
 		viewUniform = glGetUniformLocation(GLuint(gShader), "V");
@@ -661,12 +708,11 @@ void GraphicsSystem::Update(ecs::Scene& scene, float deltaTime) {
 		GLuint lightSpaceMatixUniform = glGetUniformLocation(GLuint(gShader), "lightSpaceMatrix");
 		//set the camera uniforms
 		glUniformMatrix4fv(perspectiveUniform, 1, GL_FALSE, glm::value_ptr(P));
-		glUniformMatrix4fv(viewUniform, 1, GL_FALSE, glm::value_ptr(V));
+
+		glm::vec3 position = scene.GetComponent<TransformComponent>(cameras[3].targetEntity).getTranslation() + glm::vec3(0, 30, 0);
+		glm::mat4 shadowV = glm::lookAt(position, position + lightDirection, glm::vec3(1, 0, 0));
 		glUniformMatrix4fv(lightSpaceMatixUniform, 1, GL_FALSE, glm::value_ptr(shadowP * shadowV));
 
-
-		
-		
 
 		for (Guid entityGuid : ecs::EntitiesInScene<RenderModel,TransformComponent>(scene)) {
 			RenderModel& comp = scene.GetComponent<RenderModel>(entityGuid);
@@ -698,7 +744,7 @@ void GraphicsSystem::Update(ecs::Scene& scene, float deltaTime) {
 					glUniform1ui(shaderStateUniform, 0);
 				}
 				
-				drawCamerasElements(GL_TRIANGLES, mesh.numberOfIndicies, GL_UNSIGNED_INT, 0);
+				drawCamerasElements(GL_TRIANGLES, mesh.numberOfIndicies, GL_UNSIGNED_INT, 0, viewUniform);
 			}
 		}
 
@@ -719,7 +765,6 @@ void GraphicsSystem::Update(ecs::Scene& scene, float deltaTime) {
 		viewUniform = glGetUniformLocation(GLuint(VFXshader), "V");
 		perspectiveUniform = glGetUniformLocation(GLuint(VFXshader), "P");
 		glUniformMatrix4fv(perspectiveUniform, 1, GL_FALSE, glm::value_ptr(P));
-		glUniformMatrix4fv(viewUniform, 1, GL_FALSE, glm::value_ptr(V));
 
 		GLuint scaleUniform = glGetUniformLocation(GLuint(VFXshader), "scale");
 		GLuint centrePosUniform = glGetUniformLocation(GLuint(VFXshader), "centrePos");
@@ -737,7 +782,7 @@ void GraphicsSystem::Update(ecs::Scene& scene, float deltaTime) {
 			glUniform3fv(lockingAxisUniform, 1, glm::value_ptr(glm::vec3(0, 1, 0)));
 			glUniform2fv(scaleUniform, 1, glm::value_ptr(glm::vec2(trans.getScale().x, trans.getScale().y)));
 			comp.texture->bind();
-			drawCamerasArrays(GL_TRIANGLES, 0, 6);
+			drawCamerasArrays(GL_TRIANGLES, 0, 6, viewUniform);
 		}
 
 		//textureStrips
@@ -746,14 +791,10 @@ void GraphicsSystem::Update(ecs::Scene& scene, float deltaTime) {
 		for (Guid entityGuid : ecs::EntitiesInScene<VFXTextureStrip, TransformComponent>(scene)) {
 			VFXTextureStrip& comp = scene.GetComponent<VFXTextureStrip>(entityGuid);
 			TransformComponent& trans = scene.GetComponent<TransformComponent>(entityGuid);
-
-			//glUniform3fv(centrePosUniform, 1, glm::value_ptr(trans.getTranslation()));
-			
-
 			comp.texture->bind();
 			comp.GPUline->bind();
 			glDisableVertexAttribArray(1);
-			drawCamerasElements(GL_TRIANGLES, comp.indicies.size(), GL_UNSIGNED_INT, 0);
+			drawCamerasElements(GL_TRIANGLES, comp.indicies.size(), GL_UNSIGNED_INT, 0, viewUniform);
 		}
 
 		//particles
@@ -762,7 +803,6 @@ void GraphicsSystem::Update(ecs::Scene& scene, float deltaTime) {
 		perspectiveUniform = glGetUniformLocation(GLuint(particleShader), "P");
 		cameraPositionUniform = glGetUniformLocation(GLuint(particleShader), "cameraPos");
 		glUniformMatrix4fv(perspectiveUniform, 1, GL_FALSE, glm::value_ptr(P));
-		glUniformMatrix4fv(viewUniform, 1, GL_FALSE, glm::value_ptr(V));
 		glUniform3fv(cameraPositionUniform, 1, glm::value_ptr(cameras[0].cameraPos));
 		
 		
@@ -786,7 +826,7 @@ void GraphicsSystem::Update(ecs::Scene& scene, float deltaTime) {
 				size_t rendering = comp.backIndex <= index ? comp.maxParticles - index : comp.backIndex - index;
 				toRender -= rendering;
 				glBufferData(GL_ARRAY_BUFFER, sizeof(float) * 7 * rendering, &(comp.positions[index]), GL_DYNAMIC_DRAW);
-				drawCamerasInstanced(GL_TRIANGLES, 0, 6, rendering);
+				drawCamerasInstanced(GL_TRIANGLES, 0, 6, rendering, viewUniform);
 				index = index + rendering >= comp.maxParticles ? index = 0 : index = index + rendering;
 			}
 		}
@@ -845,53 +885,53 @@ void GraphicsSystem::Update(ecs::Scene& scene, float deltaTime) {
 
 		glDrawArrays(GL_TRIANGLES, 0, 6);
 		
-
-		//render line components
-		//switch shader program
-		lineShader.use();
-		//bind uniforms
-		modelUniform = glGetUniformLocation(GLuint(lineShader), "M");
-		viewUniform = glGetUniformLocation(GLuint(lineShader), "V");
-		perspectiveUniform = glGetUniformLocation(GLuint(lineShader), "P");
-		GLuint colorUniform = glGetUniformLocation(GLuint(lineShader), "userColor");
-		//set camera uniforms
-		glUniformMatrix4fv(perspectiveUniform, 1, GL_FALSE, glm::value_ptr(P));
-		glUniformMatrix4fv(viewUniform, 1, GL_FALSE, glm::value_ptr(V));
-		for (Guid entityGuid : ecs::EntitiesInScene<RenderLine, TransformComponent>(scene)) {
-			RenderLine& comp = scene.GetComponent<RenderLine>(entityGuid);
-			TransformComponent& trans = scene.GetComponent<TransformComponent>(entityGuid);
-			
-			glm::mat4 M = glm::translate(glm::mat4(1), trans.getTranslation()) * toMat4(trans.getRotation()) * glm::scale(glm::mat4(1), trans.getScale());
-			glUniformMatrix4fv(modelUniform, 1, GL_FALSE, glm::value_ptr(M));
-
-			glUniform3fv(colorUniform, 1, glm::value_ptr(comp.color));
-			
-			comp.geometry->bind();
-			glDrawArrays(GL_LINE_STRIP, 0, comp.numberOfVerticies);
-		}
-
-		
-		if (showColliders) {
-			//Render debug wireframes of physx colliders
-			wireframeShader.use();
+		if (numCamerasActive == 1) {
+			//render line components
+			//switch shader program
+			lineShader.use();
+			//bind uniforms
 			modelUniform = glGetUniformLocation(GLuint(lineShader), "M");
 			viewUniform = glGetUniformLocation(GLuint(lineShader), "V");
 			perspectiveUniform = glGetUniformLocation(GLuint(lineShader), "P");
+			GLuint colorUniform = glGetUniformLocation(GLuint(lineShader), "userColor");
+			//set camera uniforms
 			glUniformMatrix4fv(perspectiveUniform, 1, GL_FALSE, glm::value_ptr(P));
-			glUniformMatrix4fv(viewUniform, 1, GL_FALSE, glm::value_ptr(V));
-			physx::PxScene* physxScene;
-			PxGetPhysics().getScenes(&physxScene, 1);
-			int nbActors = physxScene->getNbActors(physx::PxActorTypeFlag::eRIGID_DYNAMIC | physx::PxActorTypeFlag::eRIGID_STATIC);
-			if (nbActors)
-			{
-				glDisable(GL_DEPTH_TEST);
-				glDisable(GL_CULL_FACE);
-				glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
-				const int MAX_NUM_ACTOR_SHAPES = 128;
-				using namespace physx;
-				std::vector<PxRigidActor*> actors(nbActors);
-				physxScene->getActors(PxActorTypeFlag::eRIGID_DYNAMIC | PxActorTypeFlag::eRIGID_STATIC, reinterpret_cast<PxActor**>(&actors[0]), nbActors);
-				Snippets::renderActors(&actors[0], static_cast<PxU32>(actors.size()), modelUniform);
+			for (Guid entityGuid : ecs::EntitiesInScene<RenderLine, TransformComponent>(scene)) {
+				RenderLine& comp = scene.GetComponent<RenderLine>(entityGuid);
+				TransformComponent& trans = scene.GetComponent<TransformComponent>(entityGuid);
+
+				glm::mat4 M = glm::translate(glm::mat4(1), trans.getTranslation()) * toMat4(trans.getRotation()) * glm::scale(glm::mat4(1), trans.getScale());
+				glUniformMatrix4fv(modelUniform, 1, GL_FALSE, glm::value_ptr(M));
+
+				glUniform3fv(colorUniform, 1, glm::value_ptr(comp.color));
+
+				comp.geometry->bind();
+				drawCamerasArrays(GL_LINE_STRIP, 0, comp.numberOfVerticies, viewUniform);
+			}
+
+
+			if (showColliders) {
+				//Render debug wireframes of physx colliders
+				wireframeShader.use();
+				modelUniform = glGetUniformLocation(GLuint(lineShader), "M");
+				viewUniform = glGetUniformLocation(GLuint(lineShader), "V");
+				perspectiveUniform = glGetUniformLocation(GLuint(lineShader), "P");
+				glUniformMatrix4fv(perspectiveUniform, 1, GL_FALSE, glm::value_ptr(P));
+				glUniformMatrix4fv(viewUniform, 1, GL_FALSE, glm::value_ptr(V));
+				physx::PxScene* physxScene;
+				PxGetPhysics().getScenes(&physxScene, 1);
+				int nbActors = physxScene->getNbActors(physx::PxActorTypeFlag::eRIGID_DYNAMIC | physx::PxActorTypeFlag::eRIGID_STATIC);
+				if (nbActors)
+				{
+					glDisable(GL_DEPTH_TEST);
+					glDisable(GL_CULL_FACE);
+					glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
+					const int MAX_NUM_ACTOR_SHAPES = 128;
+					using namespace physx;
+					std::vector<PxRigidActor*> actors(nbActors);
+					physxScene->getActors(PxActorTypeFlag::eRIGID_DYNAMIC | PxActorTypeFlag::eRIGID_STATIC, reinterpret_cast<PxActor**>(&actors[0]), nbActors);
+					Snippets::renderActors(&actors[0], static_cast<PxU32>(actors.size()), modelUniform);
+				}
 			}
 		}
 	
@@ -941,6 +981,11 @@ void GraphicsSystem::importOBJ(RenderModel& _component, const std::string _fileN
 	}
 	
 	processNode(scene->mRootNode, scene, _component);
+}
+
+void GraphicsSystem::bindCameraToEntity(int cameraNum, Guid Entity)
+{
+	cameras[cameraNum].targetEntity = Entity;
 }
 
 

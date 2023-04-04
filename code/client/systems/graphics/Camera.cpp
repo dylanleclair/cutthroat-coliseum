@@ -1,3 +1,4 @@
+#include "../GraphicsSystem.h"
 #include "Camera.h"
 #include <glm/glm.hpp>
 #include <glm/gtc/matrix_transform.hpp>
@@ -9,7 +10,7 @@
 #include "glm/gtc/quaternion.hpp"
 #include <glm/gtx/quaternion.hpp>
 
-#include "../GraphicsSystem.h"
+
 
 Camera::Camera() {
 	glm::vec3 direction;
@@ -103,7 +104,6 @@ glm::vec3 Camera::getPos()
 
 void Camera::setPos(glm::vec3 _position)
 {
-	velocity = _position - cameraPos;
 	cameraPos = _position;
 }
 
@@ -123,4 +123,5 @@ void Camera::update(TransformComponent& _carTransform)
 		cameraOffset = glm::normalize(cameraOffset) * followDistance;
 		setPos(cameraTargetLocation + cameraOffset);
 	}
+	previousCarPosition = _carTransform.getTranslation();
 }
