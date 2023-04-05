@@ -78,14 +78,11 @@ void resetLevel(Car& testCar, std::vector<Guid> ais, ecs::Scene& mainScene, std:
 {
 	glm::quat q = quatLookAt(forward, { 0,1.f,0 });
 
-	// Player reset
-	testCar.m_Vehicle.mPhysXState.physxActor.rigidBody->setGlobalPose(PxTransform(GLMtoPx(spawnPoints[0]),GLMtoPx(q)));
-	testCar.m_Vehicle.mPhysXState.physxActor.rigidBody->setLinearDamping(10000.f);
-	testCar.m_Vehicle.mPhysXState.physxActor.rigidBody->setAngularDamping(10000.f);
-	testCar.m_driverType = DriverType::HUMAN;
-
 	// Ai Reset
 	for (int i = 0; i < ais.size(); i++) {
+		if (i < ControllerInput::getNumberPlayers()) {
+			testCar.m_driverType = DriverType::HUMAN;
+		}
 		Car& aiCar = mainScene.GetComponent<Car>(ais.at(i));
 		aiCar.m_Vehicle.mPhysXState.physxActor.rigidBody->setGlobalPose(PxTransform(GLMtoPx(spawnPoints[i+1]),GLMtoPx(q)));
 		aiCar.m_Vehicle.mPhysXState.physxActor.rigidBody->setLinearDamping(10000.f);
