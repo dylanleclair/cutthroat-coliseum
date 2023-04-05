@@ -451,8 +451,10 @@ glm::vec3 Car::getPosition()
 Command Car::drive(ecs::Scene& scene, float deltaTime)
 {
 
-
     Command command = {0.f, 0.f, 0.f, m_TargetGearCommand};
+
+    // now we have to get the controller mapping
+    ControllerInput::controller;
 
     if (m_driverType == DriverType::COMPUTER)
     {
@@ -460,6 +462,14 @@ Command Car::drive(ecs::Scene& scene, float deltaTime)
     }
     else if (m_driverType == DriverType::HUMAN)
     {
+
+        SDL_GameController* controller{nullptr};
+        // get controller if it exists
+        if (controllerIndex != -1)
+        {
+            // controller exists for player
+            controller = ControllerInput::controllers[controllerIndex];
+        }
         PxTransform carPose = m_Vehicle.mPhysXState.physxActor.rigidBody->getGlobalPose();
         glm::vec3 glm_carPose = PxtoGLM(carPose.p);
 
@@ -475,7 +485,7 @@ Command Car::drive(ecs::Scene& scene, float deltaTime)
 
         // Jump
         // Checks if the previous frame was a jump, so that it does not cumulatively add impulse
-        if (SDL_GameControllerGetButton(ControllerInput::controller, SDL_CONTROLLER_BUTTON_A) && this->m_Vehicle.mBaseState.roadGeomStates->hitState && !has_jumped)
+        if (SDL_GameControllerGetButton(controller, SDL_CONTROLLER_BUTTON_A) && this->m_Vehicle.mBaseState.roadGeomStates->hitState && !has_jumped)
         {
             if (Jump())
             {
@@ -486,7 +496,7 @@ Command Car::drive(ecs::Scene& scene, float deltaTime)
         // Normalize controller axis
         // BUG: max positive is 1 less in magnitude than max min meaning full negative will be slightly above 1
 
-        carAxis = (float)-SDL_GameControllerGetAxis(ControllerInput::controller, SDL_CONTROLLER_AXIS_LEFTX) / SHRT_MAX;
+        carAxis = (float)-SDL_GameControllerGetAxis(controller, SDL_CONTROLLER_AXIS_LEFTX) / SHRT_MAX;
 
         // Controller deadzone to avoid controller drift when
         // stick is at rest
@@ -542,37 +552,37 @@ Command Car::drive(ecs::Scene& scene, float deltaTime)
         // Same reverse code as above but for controllers - bundling them in with the keyboard
         // doing keyboard or controller input do x - did not work great
         // So I separated them, there may be a cleaner way to do this
-        if (SDL_GameControllerGetAxis(ControllerInput::controller, SDL_CONTROLLER_AXIS_TRIGGERLEFT) && m_Vehicle.mEngineDriveState.gearboxState.currentGear != 0 && linVelMagnitude < 10.f)
+        if (SDL_GameControllerGetAxis(controller, SDL_CONTROLLER_AXIS_TRIGGERLEFT) && m_Vehicle.mEngineDriveState.gearboxState.currentGear != 0 && linVelMagnitude < 10.f)
         {
             this->m_TargetGearCommand = 0;
         }
         else if (this->m_Vehicle.mEngineDriveState.gearboxState.currentGear == 0)
         {
-            if (SDL_GameControllerGetAxis(ControllerInput::controller, SDL_CONTROLLER_AXIS_TRIGGERLEFT))
+            if (SDL_GameControllerGetAxis(controller, SDL_CONTROLLER_AXIS_TRIGGERLEFT))
             {
-                command.throttle = (float)SDL_GameControllerGetAxis(ControllerInput::controller, SDL_CONTROLLER_AXIS_TRIGGERLEFT) / SHRT_MAX;
+                command.throttle = (float)SDL_GameControllerGetAxis(controller, SDL_CONTROLLER_AXIS_TRIGGERLEFT) / SHRT_MAX;
             }
             // If the engine is idle and the w key is pressed switch to normal driving
-            else if (SDL_GameControllerGetAxis(ControllerInput::controller, SDL_CONTROLLER_AXIS_TRIGGERRIGHT) && linVelMagnitude < 10.f)
+            else if (SDL_GameControllerGetAxis(controller, SDL_CONTROLLER_AXIS_TRIGGERRIGHT) && linVelMagnitude < 10.f)
             {
                 // 255 is eAUTOMATIC_GEAR
                 this->m_TargetGearCommand = 255;
             }
-            else if (SDL_GameControllerGetAxis(ControllerInput::controller, SDL_CONTROLLER_AXIS_TRIGGERRIGHT))
+            else if (SDL_GameControllerGetAxis(controller, SDL_CONTROLLER_AXIS_TRIGGERRIGHT))
             {
-                command.brake = (float)SDL_GameControllerGetAxis(ControllerInput::controller, SDL_CONTROLLER_AXIS_TRIGGERRIGHT) / SHRT_MAX;
+                command.brake = (float)SDL_GameControllerGetAxis(controller, SDL_CONTROLLER_AXIS_TRIGGERRIGHT) / SHRT_MAX;
             }
         }
         else if (this->m_Vehicle.mEngineDriveState.gearboxState.currentGear >= 1)
         {
 
-            if (SDL_GameControllerGetAxis(ControllerInput::controller, SDL_CONTROLLER_AXIS_TRIGGERRIGHT))
+            if (SDL_GameControllerGetAxis(controller, SDL_CONTROLLER_AXIS_TRIGGERRIGHT))
             {
-                command.throttle = (float)SDL_GameControllerGetAxis(ControllerInput::controller, SDL_CONTROLLER_AXIS_TRIGGERRIGHT) / SHRT_MAX;
+                command.throttle = (float)SDL_GameControllerGetAxis(controller, SDL_CONTROLLER_AXIS_TRIGGERRIGHT) / SHRT_MAX;
             }
-            else if (SDL_GameControllerGetAxis(ControllerInput::controller, SDL_CONTROLLER_AXIS_TRIGGERLEFT))
+            else if (SDL_GameControllerGetAxis(controller, SDL_CONTROLLER_AXIS_TRIGGERLEFT))
             {
-                command.brake = (float)SDL_GameControllerGetAxis(ControllerInput::controller, SDL_CONTROLLER_AXIS_TRIGGERLEFT) / SHRT_MAX;
+                command.brake = (float)SDL_GameControllerGetAxis(controller, SDL_CONTROLLER_AXIS_TRIGGERLEFT) / SHRT_MAX;
             }
         }
 
@@ -592,7 +602,7 @@ Command Car::drive(ecs::Scene& scene, float deltaTime)
             command.steer = carAxis * carAxisScale;
         }
 
-        if (f_key || SDL_GameControllerGetButton(ControllerInput::controller, SDL_CONTROLLER_BUTTON_Y))
+        if (f_key || SDL_GameControllerGetButton(controller, SDL_CONTROLLER_BUTTON_Y))
         {
             checkFlipped(carPose);
         }
