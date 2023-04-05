@@ -1,7 +1,16 @@
+#include "../GraphicsSystem.h"
 #include "Camera.h"
 #include <glm/glm.hpp>
 #include <glm/gtc/matrix_transform.hpp>
 #include <iostream>
+
+#include "core/ecs.h"
+#include "../components.h"
+
+#include "glm/gtc/quaternion.hpp"
+#include <glm/gtx/quaternion.hpp>
+
+
 
 Camera::Camera() {
 	glm::vec3 direction;
@@ -96,6 +105,24 @@ glm::vec3 Camera::getPos()
 
 void Camera::setPos(glm::vec3 _position)
 {
-	velocity = _position - cameraPos;
 	cameraPos = _position;
+}
+
+void Camera::update(TransformComponent& _carTransform)
+{
+	/*
+	* calculate the camera position
+	*/
+	//calculate where the camera should aim to be positioned
+	glm::vec3 cameraTargetLocation = glm::translate(glm::mat4(1), _carTransform.getTranslation()) * toMat4(_carTransform.getRotation()) * glm::vec4(GraphicsSystem::follow_cam_x, GraphicsSystem::follow_cam_y, GraphicsSystem::follow_cam_z, 1);
+	//calculate the speed of the car
+	float speed = glm::distance(previousCarPosition, _carTransform.getTranslation());
+	//calculate the vector from the cameras current position to the target position
+	glm::vec3 cameraOffset = getPos() - cameraTargetLocation;
+	if (glm::length(cameraOffset) != 0) {
+		float followDistance = (speed / (speed + GraphicsSystem::follow_correction_strength)) * GraphicsSystem::maximum_follow_distance;
+		cameraOffset = glm::normalize(cameraOffset) * followDistance;
+		setPos(cameraTargetLocation + cameraOffset);
+	}
+	previousCarPosition = _carTransform.getTranslation();
 }

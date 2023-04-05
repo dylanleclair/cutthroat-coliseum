@@ -106,7 +106,7 @@ void gamePlayToggle(bool toggle, ecs::Scene &mainScene, std::vector<Guid> aiCars
 	if (toggle) {
 		loadLevelMesh = true;
 		navPathToggle = false;
-		gs.cam_mode = 3; // follow cam
+		gs.s_cameraMode(3); // follow cam
 
 		raceCountdown = true;
 		startCountdown = 5.0f;
@@ -123,7 +123,7 @@ void gamePlayToggle(bool toggle, ecs::Scene &mainScene, std::vector<Guid> aiCars
 	else {
 		loadLevelMesh = false;
 		navPathToggle = true;
-		gs.cam_mode = 1; // free cam
+		gs.s_cameraMode(1); // free cam
 
 		raceCountdown = false;
 		startCountdown = 0.f;
@@ -240,8 +240,6 @@ int main(int argc, char* argv[]) {
 	std::vector<NavPath> aiPaths;
 	aiPaths.reserve(spawnPoints.size());
 
-
-
 	ControllerInput::initControllers();
 
 	// initialize the controllers
@@ -261,6 +259,7 @@ int main(int argc, char* argv[]) {
 		setupCarVFX(mainScene, aiCarGuid);
 	}
 
+
 	// put them into human
 	// conditionally spawn the other cars lmao ? 
 	std::unordered_map<Guid, int> controllerMappings; // the controller -> car mapping
@@ -268,6 +267,8 @@ int main(int argc, char* argv[]) {
 	int number_players = ControllerInput::getNumberPlayers();
 
 	if (number_players == 0) number_players = 1; 
+
+	gs.s_camerasActive(number_players);
 
 	for (int i = 0; i < 4 && i < number_players; i++)
 	{
@@ -278,7 +279,9 @@ int main(int argc, char* argv[]) {
 		testCar.m_driverType = DriverType::HUMAN;
 		testCar.controllerIndex = i;
 		// controllerMappings[AIGuids[i]] = i;
+		gs.bindCameraToEntity(i, AIGuids[i]);
 	}
+
 
 	// bandaids for other calls that do player-only stuff
 	Car& testCar = mainScene.GetComponent<Car>(AIGuids[0]);

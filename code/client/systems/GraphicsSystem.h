@@ -25,26 +25,33 @@ public:
 	void Update(ecs::Scene& scene, float deltaTime);
 	void input(SDL_Event&, int _cameraID);
 	glm::mat4 getCameraView();
-	glm::vec3 GraphicsSystem::g_cameraPosition();
-	glm::vec3 GraphicsSystem::g_cameraVelocity();
+	glm::vec3 g_cameraPosition();
+	glm::vec3 g_cameraVelocity();
+	void s_cameraMode(int _mode);
+	void s_camerasActive(int number);
+	void bindCameraToEntity(int cameraNum, Guid Entity);
 	static void importOBJ(CPU_Geometry& _geometry, const std::string _fileName);
 	static void importOBJ(RenderModel& _component, const std::string _fileName);
 	static void importSplineFromOBJ(CPU_Geometry& _geometry, std::string filename);
 
 	//follow camera variables
-	float follow_cam_x;
-	float follow_cam_y;
-	float follow_cam_z;
-	float follow_correction_strength;
-	float maximum_follow_distance;
-	bool faceCulling;
-	bool front_face;
-	bool back_face;
+	static float follow_cam_x;
+	static float follow_cam_y;
+	static float follow_cam_z;
+	static float follow_correction_strength;
+	static float maximum_follow_distance;
 
-	int cam_mode = 1; // Used to determine what mode the camera should use (free, fixed, follow)
+	
 private:
+	void drawCamerasElements(GLenum mode, GLsizei count, GLenum type, const void* indices, GLuint viewUniform);
+	void drawCamerasArrays(GLenum mode, GLint first, GLsizei count, GLuint viewUniform);
+	void drawCamerasInstanced(GLenum mode, GLint first, GLsizei count, GLsizei instanceCount, GLuint viewUniform);
 
+	int cam_mode = 3; // Used to determine what mode the camera should use (free, fixed, follow)
 	Camera cameras[4];
+	glm::mat4 views[4];
+	std::vector<std::array<float, 2>> viewPorts;
+	float viewportDimensions[2] = { 0,0 };
 	//uniforms
 	int numCamerasActive = 1;
 
@@ -92,11 +99,13 @@ private:
 	ShaderProgram VFXshader;
 	ShaderProgram skyboxShader;
 	ShaderProgram particleShader;
+	ShaderProgram sceneShader;
 	//buffer for offscreen rendering
 	//buffers
 	GLuint gBuffer;
 	GLuint gShadowBuffer;
 	GLuint gVFXBuffer;
+	GLuint sceneBuffer;
 	//textures used in g buffer
 	GLuint gDepth;
 	GLuint gColor;
@@ -109,6 +118,8 @@ private:
 	GLuint skyboxCubemap;
 	//texture used in shadow map calculation
 	GLuint gLightDepth;
+	//scene texture
+	GLuint sceneColor;
 	//variables for rendering whole screen quad
 	GLuint quad_vertexArray;
 	GLuint quad_vertexBuffer;
