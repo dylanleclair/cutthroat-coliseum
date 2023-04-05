@@ -485,12 +485,10 @@ Command Car::drive(ecs::Scene& scene, float deltaTime)
 
         // Jump
         // Checks if the previous frame was a jump, so that it does not cumulatively add impulse
-        if (SDL_GameControllerGetButton(controller, SDL_CONTROLLER_BUTTON_A) && this->m_Vehicle.mBaseState.roadGeomStates->hitState && !has_jumped)
+        if (SDL_GameControllerGetButton(controller, SDL_CONTROLLER_BUTTON_A) && this->m_Vehicle.mBaseState.roadGeomStates->hitState)
         {
-            if (Jump())
-            {
-                has_jumped = true;
-            }
+            AiJump(); // Using ai jump as remove the 'has jumped' check would make the car jump super high
+            // TODO:: replace aijump with jump and use the aijump values
         }
 
         // Normalize controller axis
