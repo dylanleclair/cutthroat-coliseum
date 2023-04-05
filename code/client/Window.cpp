@@ -79,7 +79,7 @@ void Window::RenderAndSwap()
 	Backend::BeginFrame();
 	rmlContext->Render();
 	glDisable(GL_BLEND);
-	
+#define ImGUI_Enabled
 #ifdef ImGUI_Enabled
 	glClear(GL_DEPTH_BUFFER_BIT | GL_STENCIL_BUFFER_BIT);
 	glDisable(GL_FRAMEBUFFER_SRGB);
