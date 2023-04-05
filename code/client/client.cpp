@@ -1,3 +1,4 @@
+#define ImGUI_Enabled
 #include <iostream>
 
 
@@ -42,7 +43,9 @@
 #include <chrono>  // chrono::system_clock
 #include <ctime>   // localtime
 
+
 float startCountdown{5.0f};
+
 
 bool loadLevelMesh{false};
 bool levelMeshLoaded{false};
@@ -77,6 +80,7 @@ void resetLevel(Car& testCar, std::vector<Guid> ais, ecs::Scene& mainScene, std:
 	testCar.m_Vehicle.mPhysXState.physxActor.rigidBody->setGlobalPose(PxTransform(GLMtoPx(spawnPoints[0])));
 	testCar.m_Vehicle.mPhysXState.physxActor.rigidBody->setLinearDamping(10000.f);
 	testCar.m_Vehicle.mPhysXState.physxActor.rigidBody->setAngularDamping(10000.f);
+	testCar.m_driverType = DriverType::HUMAN;
 
 	// Ai Reset
 	for (int i = 0; i < ais.size(); i++) {
@@ -111,7 +115,7 @@ void gamePlayToggle(bool toggle, ecs::Scene &mainScene, std::vector<Guid> aiCars
 			AIDirection.setGeometry(blank);
 		}
 
-		showImgui = false;
+		showImgui = true;
 	}
 	else {
 		loadLevelMesh = false;
@@ -134,14 +138,15 @@ void gamePlayToggle(bool toggle, ecs::Scene &mainScene, std::vector<Guid> aiCars
 
 int main(int argc, char* argv[]) {
 	//RUN_GRAPHICS_TEST_BENCH();
-	printf("Starting main");
+	printf("Starting main\n");
 
-	SDL_Init(SDL_INIT_EVERYTHING); // initialize all sdl systems
 	Window window(1200, 800, "Maximus Overdrive");
 
 	lastTime_millisecs = SDL_GetTicks();
 
+#ifdef ImGUI_Enabled
 	ImGuiIO& io = ImGui::GetIO(); (void)io;
+#endif
 
 	/**
 	 * Begin initialization of ECS systems, entities, etc.
@@ -153,7 +158,7 @@ int main(int argc, char* argv[]) {
 	// first and foremost, create a scene.
 	ecs::Scene mainScene;
 
-	GraphicsSystem gs(window);
+	GraphicsSystem gs = GraphicsSystem();
 
 	physics::PhysicsSystem physicsSystem{};
 	physicsSystem.Initialize();
@@ -166,6 +171,7 @@ int main(int argc, char* argv[]) {
 	glm::vec3 desiredSpawnLocation = {-4.108957, 3.397303, -43.794819}; // hardcoded value near the straight strip of the track
 	Curve raceTrackingCurve(zzPathGeom.verts);
 
+#ifdef ImGUI_Enabled
 	//load fonts into ImGui
 	io.Fonts->AddFontDefault();
 	ImFont* Debrosee = io.Fonts->AddFontFromFileTTF("fonts/Debrosee-ALPnL.ttf", 18.5f);
@@ -176,7 +182,8 @@ int main(int argc, char* argv[]) {
 	IM_ASSERT(CabalBold != NULL);
 	ImFont* ExtraLarge = io.Fonts->AddFontFromFileTTF("fonts/EXTRA LARGE.ttf", 18.5f);
 	IM_ASSERT(ExtraLarge != NULL);
-
+#endif
+	
 
 	// init ecs 
 
@@ -431,6 +438,8 @@ int main(int argc, char* argv[]) {
     SoundUpdater soundUpdater;
     soundUpdater.Initialize(mainScene);
 
+		std::cout << "initalization finished, beginning game\n";
+
 	// GAME LOOP
 	while (!quit) {
 		Timestep timestep; // Time since last frame
@@ -473,24 +482,27 @@ int main(int argc, char* argv[]) {
 		engineVariablesInit(testCar.m_Vehicle);
 
 		//polls all pending input events until there are none left in the queue
-		while (SDL_PollEvent(&window.event)) {
-			ImGui_ImplSDL2_ProcessEvent(&window.event);
+		SDL_Event windowEvent;
+		while (SDL_PollEvent(&windowEvent)) {
+#ifdef ImGUI_Enabled
+			ImGui_ImplSDL2_ProcessEvent(&windowEvent);
+#endif
 
-			if (window.event.type == SDL_CONTROLLERDEVICEADDED) {
+			if (windowEvent.type == SDL_CONTROLLERDEVICEADDED) {
 				std::cout << "Adding controller\n";
 				ControllerInput::init_controller();
 			}
 
-			if (window.event.type == SDL_CONTROLLERDEVICEREMOVED) {
+			if (windowEvent.type == SDL_CONTROLLERDEVICEREMOVED) {
 				std::cout << "removing controller\n";
 				ControllerInput::deinit_controller();
 			}
 
-			if (window.event.type == SDL_QUIT)
+			if (windowEvent.type == SDL_QUIT)
 				quit = true;
 
-			if (window.event.type == SDL_KEYDOWN) {
-				switch (window.event.key.keysym.sym) {
+			if (windowEvent.type == SDL_KEYDOWN) {
+				switch (windowEvent.key.keysym.sym) {
 
 					case SDLK_r:
 						//TODO recompile the shader
@@ -555,7 +567,7 @@ int main(int argc, char* argv[]) {
 			}
 
 			//pass the event to the camera
-			gs.input(window.event, controlledCamera);
+			gs.input(windowEvent, controlledCamera);
 		}
 
 		// Check for the car grounded state, and if grounded after being in the air
@@ -628,8 +640,7 @@ int main(int argc, char* argv[]) {
 
 		// END__ ECS SYSTEMS UPDATES
 
-		glDisable(GL_FRAMEBUFFER_SRGB); // disable sRGB for things like imgui
-
+#ifdef ImGUI_Enabled
 		ImGui_ImplOpenGL3_NewFrame();
 		ImGui_ImplSDL2_NewFrame();
 		ImGui::NewFrame();
@@ -704,7 +715,7 @@ int main(int argc, char* argv[]) {
 			ImGuiWindowFlags_NoBackground |			// window should be transparent; only the text should be visible
 			ImGuiWindowFlags_NoDecoration |			// no decoration; only the text should be visible
 			ImGuiWindowFlags_NoTitleBar;			// no title; only the text should be visible
-
+		
 		//Lap counter
 		ImGui::SetNextWindowPos(ImVec2(10, 10));
 		ImGui::Begin("UI", (bool*)0, textWindowFlags);
@@ -777,18 +788,15 @@ int main(int argc, char* argv[]) {
 			}
 		} 
 
-
-		ImGui::Render();
-		glViewport(0, 0, (int)io.DisplaySize.x, (int)io.DisplaySize.y);
-		ImGui_ImplOpenGL3_RenderDrawData(ImGui::GetDrawData());
-		window.swapBuffers();
-
+#endif
+		//glViewport(0, 0, (int)io.DisplaySize.x, (int)io.DisplaySize.y);
+		window.RenderAndSwap();
 	}
-
+#ifdef ImGUI_Enabled
 	ImGui_ImplOpenGL3_Shutdown();
 	ImGui_ImplSDL2_Shutdown();
 	ImGui::DestroyContext();
-
+#endif
 
 	// cleanupPhysics();
 	physicsSystem.Cleanup();

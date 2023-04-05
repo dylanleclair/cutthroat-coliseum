@@ -63,7 +63,7 @@ void loadCubemap(std::vector<std::string> faces)
 	glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_WRAP_R, GL_CLAMP_TO_EDGE);
 }
 
-GraphicsSystem::GraphicsSystem(Window& _window) :
+GraphicsSystem::GraphicsSystem() :
 	modelShader("shaders/lighting_simple.vert", "shaders/lighting_simple.frag"),
 	lineShader("shaders/line.vert", "shaders/line.frag"),
 	wireframeShader("shaders/wireframe.vert", "shaders/wireframe.frag"),
@@ -75,7 +75,8 @@ GraphicsSystem::GraphicsSystem(Window& _window) :
 	particleShader("shaders/particle.vert", "shaders/particle.frag"),
 	sceneShader("shaders/cel.vert", "shaders/passthrough.frag")
 {
-	windowSize = _window.getSize();
+	windowSize = glm::vec2(1200, 800);//_window.getSize();
+
 
 	/*
 	* create all textures
@@ -476,8 +477,10 @@ void GraphicsSystem::ImGuiPanel() {
 }
 
 
-void GraphicsSystem::Update(ecs::Scene& scene, float deltaTime) {
 
+
+void GraphicsSystem::Update(ecs::Scene& scene, float deltaTime) {
+	for (int i = 0; i < numCamerasActive; i++) {
 		//default camera matricies
 		glm::mat4 P = glm::perspective(glm::radians(45.f), (float)windowSize.x / windowSize.y, 2.f, 1000.f);
 		if (numCamerasActive == 1)
@@ -588,7 +591,6 @@ void GraphicsSystem::Update(ecs::Scene& scene, float deltaTime) {
 
 		static int i = 0;
 		i = i == numCamerasActive - 1 ? i = 0 : i + 1;
-		//for (int i = 0; i < numCamerasActive; i++) {
 			//configure the view
 			V = views[i];
 
@@ -631,57 +633,6 @@ void GraphicsSystem::Update(ecs::Scene& scene, float deltaTime) {
 					glUniformMatrix4fv(viewUniform, 1, GL_FALSE, glm::value_ptr(shadowV));
 					glViewport(0, 0, 4096, 4096);
 					glDrawElements(GL_TRIANGLES, mesh.numberOfIndicies, GL_UNSIGNED_INT, 0);
-					/*
-					if (numCamerasActive == 1) {
-						//camera 1
-						position = scene.GetComponent<TransformComponent>(cameras[0].targetEntity).getTranslation() + glm::vec3(0, 30, 0);
-						shadowV = glm::lookAt(position, position + lightDirection, glm::vec3(1, 0, 0));
-						glUniformMatrix4fv(viewUniform, 1, GL_FALSE, glm::value_ptr(shadowV));
-						glViewport(0, 0, 4096, 4096);
-						glDrawElements(GL_TRIANGLES, mesh.numberOfIndicies, GL_UNSIGNED_INT, 0);
-					}
-					else if (numCamerasActive == 2) {
-						//camera 1
-						position = scene.GetComponent<TransformComponent>(cameras[0].targetEntity).getTranslation() + glm::vec3(0, 30, 0);
-						shadowV = glm::lookAt(position, position + lightDirection, glm::vec3(1, 0, 0));
-						glUniformMatrix4fv(viewUniform, 1, GL_FALSE, glm::value_ptr(shadowV));
-						glViewport(0, 0, 2048, 4096);
-						glDrawElements(GL_TRIANGLES, mesh.numberOfIndicies, GL_UNSIGNED_INT, 0);
-						//camera 2
-						position = scene.GetComponent<TransformComponent>(cameras[1].targetEntity).getTranslation() + glm::vec3(0, 30, 0);
-						shadowV = glm::lookAt(position, position + lightDirection, glm::vec3(1, 0, 0));
-						glUniformMatrix4fv(viewUniform, 1, GL_FALSE, glm::value_ptr(shadowV));
-						glViewport(2048, 0, 2048, 4096);
-						glDrawElements(GL_TRIANGLES, mesh.numberOfIndicies, GL_UNSIGNED_INT, 0);
-					}
-					else {
-						//camera 1
-						position = scene.GetComponent<TransformComponent>(cameras[0].targetEntity).getTranslation() + glm::vec3(0, 30, 0);
-						shadowV = glm::lookAt(position, position + lightDirection, glm::vec3(1, 0, 0));
-						glUniformMatrix4fv(viewUniform, 1, GL_FALSE, glm::value_ptr(shadowV));
-						glViewport(0, 2048, 1024, 1024);
-						glDrawElements(GL_TRIANGLES, mesh.numberOfIndicies, GL_UNSIGNED_INT, 0);
-						//camera 2
-						position = scene.GetComponent<TransformComponent>(cameras[1].targetEntity).getTranslation() + glm::vec3(0, 30, 0);
-						shadowV = glm::lookAt(position, position + lightDirection, glm::vec3(1, 0, 0));
-						glUniformMatrix4fv(viewUniform, 1, GL_FALSE, glm::value_ptr(shadowV));
-						glViewport(2048, 2048, 1024, 1024);
-						glDrawElements(GL_TRIANGLES, mesh.numberOfIndicies, GL_UNSIGNED_INT, 0);
-						//camera 3
-						position = scene.GetComponent<TransformComponent>(cameras[2].targetEntity).getTranslation() + glm::vec3(0, 30, 0);
-						shadowV = glm::lookAt(position, position + lightDirection, glm::vec3(1, 0, 0));
-						glUniformMatrix4fv(viewUniform, 1, GL_FALSE, glm::value_ptr(shadowV));
-						glViewport(0, 0, 1024, 1024);
-						glDrawElements(GL_TRIANGLES, mesh.numberOfIndicies, GL_UNSIGNED_INT, 0);
-						if (numCamerasActive == 4) {
-							//camera 4
-							position = scene.GetComponent<TransformComponent>(cameras[3].targetEntity).getTranslation() + glm::vec3(0, 30, 0);
-							shadowV = glm::lookAt(position, position + lightDirection, glm::vec3(1, 0, 0));
-							glUniformMatrix4fv(viewUniform, 1, GL_FALSE, glm::value_ptr(shadowV));
-							glViewport(2048, 0, 1024, 1024);
-							glDrawElements(GL_TRIANGLES, mesh.numberOfIndicies, GL_UNSIGNED_INT, 0);
-						}
-					}*/
 				}
 			}
 
@@ -830,7 +781,7 @@ void GraphicsSystem::Update(ecs::Scene& scene, float deltaTime) {
 			glUniformMatrix4fv(perspectiveUniform, 1, GL_FALSE, glm::value_ptr(P));
 			glUniformMatrix4fv(viewUniform, 1, GL_FALSE, glm::value_ptr(V));
 			glUniform3fv(cameraPositionUniform, 1, glm::value_ptr(cameras[i].cameraPos));
-
+		
 
 			glBindVertexArray(particles_vertexArray);
 			glBindBuffer(GL_ARRAY_BUFFER, particles_instanceTransformBuffer);

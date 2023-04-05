@@ -69,6 +69,7 @@ if(WIN32 OR APPLE)
     
     $<TARGET_NAME_IF_EXISTS:SDL2::SDL2main>
     $<IF:$<TARGET_EXISTS:SDL2::SDL2>,SDL2::SDL2,SDL2::SDL2-static>
+    $<IF:$<TARGET_EXISTS:SDL2_image::SDL2_image>,SDL2_image::SDL2_image,SDL2_image::SDL2_image-static>
     glm::glm
     GLEW::GLEW
     assimp::assimp
@@ -76,9 +77,11 @@ if(WIN32 OR APPLE)
     fmt
     tomlplusplus::tomlplusplus
     imgui::imgui
+    Freetype::Freetype
     ${FMOD_LIB}
     ${FMODL_LIB}
-    
+    RmlCore
+    RmlDebugger
     ${PhysXPvdSDK_LIBRARY} ${PhysXExtensions_LIBRARY} ${PhysXFoundation_LIBRARY} ${PhysXCommon_LIBRARY} ${PhysXCooking_LIBRARY} ${PhysXVehicle2_LIBRARY}  ${PhysX_LIBRARY} 
   )
 

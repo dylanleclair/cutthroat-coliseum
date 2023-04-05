@@ -18,6 +18,13 @@
 
 #include <memory>
 
+#include "systems/UI/RmlUi_Renderer_GL3.h"
+#include "systems/UI/RmlUi_Platform_SDL.h"
+
+#define RMLUI_STATIC_LIB
+#include <RmlUi/Core.h>
+#include "systems/UI/RmlUi_Backend.h"
+#include <RmlUi/Debugger.h>
 
 
 // Functor for deleting a SDL window.
@@ -29,7 +36,6 @@ struct WindowDeleter {
 		SDL_DestroyWindow(window);
 	}
 };
-
 
 // Main class for creating and interacting with a SDL window.
 // Only wraps the most fundamental parts of the API
@@ -47,9 +53,10 @@ struct Window {
 
 	// NOTE(beau): make current context method?
 
-	void swapBuffers() { SDL_GL_SwapWindow(window.get()); }
+	//void swapBuffers() { SDL_GL_SwapWindow(window.get()); }
+	void RenderAndSwap();
 
-	SDL_Event event;
-
-	std::unique_ptr<SDL_Window, WindowDeleter> window; // owning ptr (from SDL)
-};
+	Rml::Context* rmlContext;
+	static Rml::ElementDocument* document;
+	static bool ProcessKeyDownShortcuts(Rml::Context* context, Rml::Input::KeyIdentifier key, int key_modifier, float native_dp_ratio, bool priority);
+}; 

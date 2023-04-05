@@ -18,7 +18,7 @@
 
 struct GraphicsSystem : ecs::ISystem {
 public:
-	GraphicsSystem(Window& _window);
+	GraphicsSystem();
 	~GraphicsSystem();
 	void ImGuiPanel();
 	void renderUI();
