@@ -80,6 +80,7 @@ void resetLevel(Car& testCar, std::vector<Guid> ais, ecs::Scene& mainScene, std:
 	testCar.m_Vehicle.mPhysXState.physxActor.rigidBody->setGlobalPose(PxTransform(GLMtoPx(spawnPoints[0])));
 	testCar.m_Vehicle.mPhysXState.physxActor.rigidBody->setLinearDamping(10000.f);
 	testCar.m_Vehicle.mPhysXState.physxActor.rigidBody->setAngularDamping(10000.f);
+	testCar.m_driverType = DriverType::HUMAN;
 
 	// Ai Reset
 	for (int i = 0; i < ais.size(); i++) {
