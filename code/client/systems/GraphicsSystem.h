@@ -53,7 +53,7 @@ private:
 	std::vector<std::array<float, 2>> viewPorts;
 	float viewportDimensions[2] = { 0,0 };
 	//uniforms
-	int numCamerasActive = 4;
+	int numCamerasActive = 1;
 
 	glm::mat4 V = glm::mat4(1.f); // Had to declare this variable here for the rest of the program to work
 

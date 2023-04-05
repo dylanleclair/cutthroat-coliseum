@@ -480,450 +480,448 @@ void GraphicsSystem::ImGuiPanel() {
 
 
 void GraphicsSystem::Update(ecs::Scene& scene, float deltaTime) {
-	for (int i = 0; i < numCamerasActive; i++) {
-		//default camera matricies
-		glm::mat4 P = glm::perspective(glm::radians(45.f), (float)windowSize.x / windowSize.y, 2.f, 1000.f);
-		if (numCamerasActive == 1)
-			cam_mode = 3;
+	//default camera matricies
+	glm::mat4 P = glm::perspective(glm::radians(45.f), (float)windowSize.x / windowSize.y, 2.f, 1000.f);
+	if (numCamerasActive == 1)
+		cam_mode = 3;
 
-		// If camera mode is 1 - use freecam
-		if (cam_mode == 1) {
-			V = cameras[0].getView();
-		}
-		// If cam mode is 2 - use fixed camera (values from milestone 2)
-		else if (cam_mode == 2) {
-			V = { 0.658686, -0.565264, 0.496598, 0,
-				0, 0.660003, 0.751263, 0,
-				-0.752418, -0.494847, 0.434735, 0,
-				9.27202, -0.914308, -33.4781, 1
-			};
-		}
-		// follow cam view matricies
-		else {
-			for (int i = 0; i < numCamerasActive; i++) {
-				//Main goal rn: Implement the logic...
-				TransformComponent& trans = scene.GetComponent<TransformComponent>(cameras[i].targetEntity);
-				//Car& car = scene.GetComponent<Car>(cameras[i].targetEntity);
-				cameras[i].update(trans);
+	// If camera mode is 1 - use freecam
+	if (cam_mode == 1) {
+		V = cameras[0].getView();
+	}
+	// If cam mode is 2 - use fixed camera (values from milestone 2)
+	else if (cam_mode == 2) {
+		V = { 0.658686, -0.565264, 0.496598, 0,
+			0, 0.660003, 0.751263, 0,
+			-0.752418, -0.494847, 0.434735, 0,
+			9.27202, -0.914308, -33.4781, 1
+		};
+	}
+	// follow cam view matricies
+	else {
+		for (int i = 0; i < numCamerasActive; i++) {
+			//Main goal rn: Implement the logic...
+			TransformComponent& trans = scene.GetComponent<TransformComponent>(cameras[i].targetEntity);
+			//Car& car = scene.GetComponent<Car>(cameras[i].targetEntity);
+			cameras[i].update(trans);
 
-				//set the camera variables
-				views[i] = glm::lookAt(cameras[i].getPos(), trans.getTranslation(), glm::vec3(0.0f, 1.0f, 0.0f));
-			}
+			//set the camera variables
+			views[i] = glm::lookAt(cameras[i].getPos(), trans.getTranslation(), glm::vec3(0.0f, 1.0f, 0.0f));
 		}
+	}
 
-		//if there are 2 cameras then the aspect ratio is a upright rectangle that takes half the screen
-		if (numCamerasActive == 1 || numCamerasActive >= 3) {
-			P = glm::perspective(glm::radians(45.f), (float)windowSize.x / windowSize.y, 2.f, 1000.f);
-		}
-		else {
-			P = glm::perspective(glm::radians(45.f), ((float)windowSize.x / 2.f) / windowSize.y, 2.f, 1000.f);
-		}
+	//if there are 2 cameras then the aspect ratio is a upright rectangle that takes half the screen
+	if (numCamerasActive == 1 || numCamerasActive >= 3) {
+		P = glm::perspective(glm::radians(45.f), (float)windowSize.x / windowSize.y, 2.f, 1000.f);
+	}
+	else {
+		P = glm::perspective(glm::radians(45.f), ((float)windowSize.x / 2.f) / windowSize.y, 2.f, 1000.f);
+	}
 
-		if (numCamerasActive == 1) {
-			viewportDimensions[0] = windowSize.x;
-			viewportDimensions[1] = windowSize.y;
-		}
-		else if (numCamerasActive == 2) {
-			viewportDimensions[0] = windowSize.x / 2.f;
-			viewportDimensions[1] = windowSize.y;
-		}
-		else {
-			viewportDimensions[0] = windowSize.x / 2.f;
-			viewportDimensions[1] = windowSize.y / 2.f;
-		}
+	if (numCamerasActive == 1) {
+		viewportDimensions[0] = windowSize.x;
+		viewportDimensions[1] = windowSize.y;
+	}
+	else if (numCamerasActive == 2) {
+		viewportDimensions[0] = windowSize.x / 2.f;
+		viewportDimensions[1] = windowSize.y;
+	}
+	else {
+		viewportDimensions[0] = windowSize.x / 2.f;
+		viewportDimensions[1] = windowSize.y / 2.f;
+	}
 
-		//create the viewports starting at the top left and going clockwise
-		viewPorts.clear();
-		if (numCamerasActive == 1) {
-			viewPorts.push_back({ 0,0 });
-		}
-		else if (numCamerasActive == 2) {
-			viewPorts.push_back({ 0,0 });
-			viewPorts.push_back({ windowSize.x/2.f, 0 });
-		}
-		else {
-			viewPorts.push_back({ 0, windowSize.y / 2.f });
-			viewPorts.push_back({ windowSize.x / 2.f, windowSize.y / 2.f });
-			viewPorts.push_back({ 0, 0 });
-			viewPorts.push_back({ windowSize.x / 2.f, 0 });
-		}
+	//create the viewports starting at the top left and going clockwise
+	viewPorts.clear();
+	if (numCamerasActive == 1) {
+		viewPorts.push_back({ 0,0 });
+	}
+	else if (numCamerasActive == 2) {
+		viewPorts.push_back({ 0,0 });
+		viewPorts.push_back({ windowSize.x / 2.f, 0 });
+	}
+	else {
+		viewPorts.push_back({ 0, windowSize.y / 2.f });
+		viewPorts.push_back({ windowSize.x / 2.f, windowSize.y / 2.f });
+		viewPorts.push_back({ 0, 0 });
+		viewPorts.push_back({ windowSize.x / 2.f, 0 });
+	}
 
 
-		/*
-		* UPDATE THE TRANSFORM COMPONENTS
-		*/
-		for (Guid entityGuid : ecs::EntitiesInScene<RenderModel, TransformComponent>(scene)) {
-			RenderModel& comp = scene.GetComponent<RenderModel>(entityGuid);
-			TransformComponent& trans = scene.GetComponent<TransformComponent>(entityGuid);
-			bool cont = false;
-			//search if it is already in the debug list, and if it is update it
-			for (int i = 0; i < entityTransforms.count; i++) {
-				if (entityTransforms.ids[i] == entityGuid) {
-					//read
-					if (entityTransforms.read_write[i] == 1) {
-						entityTransforms.positions[i] = trans.position;
-						entityTransforms.rotations[i] = glm::vec4(trans.rotationAxis, trans.rotationAngle);
-						entityTransforms.scales[i] = trans.scale;
-					}
-					//write
-					else if(entityTransforms.read_write[i] == 2) {
-						trans.position = entityTransforms.positions[i];
-						trans.setRotation(glm::vec3(entityTransforms.rotations[i]), entityTransforms.rotations[i][3]);
-						trans.scale = entityTransforms.scales[i];
-					}
-					entityTransforms.read_write[i] = 0;
-
-					cont = true;
-					break;
+	/*
+	* UPDATE THE TRANSFORM COMPONENTS
+	*/
+	for (Guid entityGuid : ecs::EntitiesInScene<RenderModel, TransformComponent>(scene)) {
+		RenderModel& comp = scene.GetComponent<RenderModel>(entityGuid);
+		TransformComponent& trans = scene.GetComponent<TransformComponent>(entityGuid);
+		bool cont = false;
+		//search if it is already in the debug list, and if it is update it
+		for (int i = 0; i < entityTransforms.count; i++) {
+			if (entityTransforms.ids[i] == entityGuid) {
+				//read
+				if (entityTransforms.read_write[i] == 1) {
+					entityTransforms.positions[i] = trans.position;
+					entityTransforms.rotations[i] = glm::vec4(trans.rotationAxis, trans.rotationAngle);
+					entityTransforms.scales[i] = trans.scale;
 				}
+				//write
+				else if (entityTransforms.read_write[i] == 2) {
+					trans.position = entityTransforms.positions[i];
+					trans.setRotation(glm::vec3(entityTransforms.rotations[i]), entityTransforms.rotations[i][3]);
+					trans.scale = entityTransforms.scales[i];
+				}
+				entityTransforms.read_write[i] = 0;
+
+				cont = true;
+				break;
 			}
-			if (cont)
-				continue;
-			//add it to the list if it wasn't found
-			entityTransforms.ids.push_back(entityGuid);
-			entityTransforms.names.push_back(comp.name);
-			entityTransforms.positions.push_back(trans.position);
-			entityTransforms.rotations.push_back(glm::vec4(trans.rotationAxis, trans.rotationAngle));
-			entityTransforms.scales.push_back(trans.scale);
-			entityTransforms.read_write.push_back(0);
-			entityTransforms.count++;
 		}
+		if (cont)
+			continue;
+		//add it to the list if it wasn't found
+		entityTransforms.ids.push_back(entityGuid);
+		entityTransforms.names.push_back(comp.name);
+		entityTransforms.positions.push_back(trans.position);
+		entityTransforms.rotations.push_back(glm::vec4(trans.rotationAxis, trans.rotationAngle));
+		entityTransforms.scales.push_back(trans.scale);
+		entityTransforms.read_write.push_back(0);
+		entityTransforms.count++;
+	}
 
-		static int i = 0;
-		i = i == numCamerasActive - 1 ? i = 0 : i + 1;
-			//configure the view
-			V = views[i];
+	static int i = 0;
+	i = i == numCamerasActive - 1 ? i = 0 : i + 1;
+	//configure the view
+	V = views[i];
 
-			//light space 'camera'
-			glm::mat4 shadowP = glm::ortho(-40.f, 40.f, -40.f, 40.f, 1.f, 40.0f);
-
-
-			/*
-			* Generate the shadow map
-			*/
-			glBindFramebuffer(GL_FRAMEBUFFER, gShadowBuffer);
-			shadowGShader.use();
-			glEnable(GL_DEPTH_TEST);
-			glEnable(GL_CULL_FACE);
-			glCullFace(GL_FRONT);
-			glPolygonMode(GL_BACK, GL_FILL);
-			glDepthMask(GL_TRUE);
-			glClear(GL_DEPTH_BUFFER_BIT);
-			GLuint modelUniform = glGetUniformLocation(GLuint(shadowGShader), "M");
-			GLuint viewUniform = glGetUniformLocation(GLuint(shadowGShader), "V");
-			GLuint perspectiveUniform = glGetUniformLocation(GLuint(shadowGShader), "P");
-			//set the camera uniforms
-			glUniformMatrix4fv(perspectiveUniform, 1, GL_FALSE, glm::value_ptr(shadowP));
-			glUniformMatrix4fv(viewUniform, 1, GL_FALSE, glm::value_ptr(V));
-			for (Guid entityGuid : ecs::EntitiesInScene<RenderModel, TransformComponent>(scene)) {
-				RenderModel& comp = scene.GetComponent<RenderModel>(entityGuid);
-				TransformComponent& trans = scene.GetComponent<TransformComponent>(entityGuid);
-
-				glm::mat4 M = glm::translate(glm::mat4(1), trans.getTranslation()) * toMat4(trans.getRotation()) * glm::scale(glm::mat4(1), trans.getScale());
-
-				//loop through each mesh in the renderComponent
-				for each (Mesh mesh in comp.meshes) {
-					mesh.geometry->bind();
-					glUniformMatrix4fv(modelUniform, 1, GL_FALSE, glm::value_ptr(M * mesh.localTransformation));
-					glm::vec3 position;
-					glm::mat4 shadowV;
-
-					position = scene.GetComponent<TransformComponent>(cameras[i].targetEntity).getTranslation() + glm::vec3(0, 30, 0);
-					shadowV = glm::lookAt(position, position + lightDirection, glm::vec3(1, 0, 0));
-					glUniformMatrix4fv(viewUniform, 1, GL_FALSE, glm::value_ptr(shadowV));
-					glViewport(0, 0, 4096, 4096);
-					glDrawElements(GL_TRIANGLES, mesh.numberOfIndicies, GL_UNSIGNED_INT, 0);
-				}
-			}
-
-			/*
-			* RENDER THE DEPTH, COLOR, NORMAL AND SHADOW TEXTURES
-			*/
-			glBindFramebuffer(GL_FRAMEBUFFER, gBuffer);
-			glViewport(0, 0, windowSize.x, windowSize.y);
-			//glViewport(viewPorts[i][0], viewPorts[i][1], viewportDimensions[0], viewportDimensions[1]);
-			glEnable(GL_LINE_SMOOTH);
-			glEnable(GL_FRAMEBUFFER_SRGB);
-			glPolygonMode(GL_FRONT, GL_FILL);
-			glCullFace(GL_BACK);
-			/*
-			* render the skybox using the same framebuffer as the generative stage
-			*/
-			skyboxShader.use();
-			glDisable(GL_CULL_FACE);
-			glDisable(GL_DEPTH_TEST);
-			glDepthMask(GL_FALSE);
-			glBindVertexArray(skybox_vertexArray);
-			glBindBuffer(GL_ARRAY_BUFFER, skybox_vertexBuffer);
-			glActiveTexture(GL_TEXTURE0);
-			glBindTexture(GL_TEXTURE_CUBE_MAP, skyboxCubemap);
-			viewUniform = glGetUniformLocation(GLuint(skyboxShader), "V");
-			perspectiveUniform = glGetUniformLocation(GLuint(skyboxShader), "P");
-			glUniformMatrix4fv(perspectiveUniform, 1, GL_FALSE, glm::value_ptr(P));
-			glUniformMatrix4fv(viewUniform, 1, GL_FALSE, glm::value_ptr(glm::mat4(glm::mat3(V))));
-			glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-			glDrawArrays(GL_TRIANGLES, 0, 36);
-			glDepthMask(GL_TRUE);
-			glEnable(GL_DEPTH_TEST);
-			glEnable(GL_CULL_FACE);
-			glClear(GL_DEPTH_BUFFER_BIT);
-
-			gShader.use();
-
-			//get uniform locations
-			modelUniform = glGetUniformLocation(GLuint(gShader), "M");
-			viewUniform = glGetUniformLocation(GLuint(gShader), "V");
-			perspectiveUniform = glGetUniformLocation(GLuint(gShader), "P");
-			GLuint cameraDirectionUniform = glGetUniformLocation(GLuint(gShader), "cameraDirection");
-			GLuint normalMatUniform = glGetUniformLocation(GLuint(gShader), "normalMat");
-			GLuint shaderStateUniform = glGetUniformLocation(GLuint(gShader), "shaderState");
-			GLuint userColorUniform = glGetUniformLocation(GLuint(gShader), "userColor");
-			GLuint lightSpaceMatixUniform = glGetUniformLocation(GLuint(gShader), "lightSpaceMatrix");
-			//set the camera uniforms
-			glUniformMatrix4fv(perspectiveUniform, 1, GL_FALSE, glm::value_ptr(P));
-			glUniformMatrix4fv(viewUniform, 1, GL_FALSE, glm::value_ptr(V));
-			glm::vec3 position = scene.GetComponent<TransformComponent>(cameras[i].targetEntity).getTranslation() + glm::vec3(0, 30, 0);
-			glm::mat4 shadowV = glm::lookAt(position, position + lightDirection, glm::vec3(1, 0, 0));
-			glUniformMatrix4fv(lightSpaceMatixUniform, 1, GL_FALSE, glm::value_ptr(shadowP * shadowV));
+	//light space 'camera'
+	glm::mat4 shadowP = glm::ortho(-40.f, 40.f, -40.f, 40.f, 1.f, 40.0f);
 
 
-			for (Guid entityGuid : ecs::EntitiesInScene<RenderModel, TransformComponent>(scene)) {
-				RenderModel& comp = scene.GetComponent<RenderModel>(entityGuid);
-				TransformComponent& trans = scene.GetComponent<TransformComponent>(entityGuid);
+	/*
+	* Generate the shadow map
+	*/
+	glBindFramebuffer(GL_FRAMEBUFFER, gShadowBuffer);
+	shadowGShader.use();
+	glEnable(GL_DEPTH_TEST);
+	glEnable(GL_CULL_FACE);
+	glCullFace(GL_FRONT);
+	glPolygonMode(GL_BACK, GL_FILL);
+	glDepthMask(GL_TRUE);
+	glClear(GL_DEPTH_BUFFER_BIT);
+	GLuint modelUniform = glGetUniformLocation(GLuint(shadowGShader), "M");
+	GLuint viewUniform = glGetUniformLocation(GLuint(shadowGShader), "V");
+	GLuint perspectiveUniform = glGetUniformLocation(GLuint(shadowGShader), "P");
+	//set the camera uniforms
+	glUniformMatrix4fv(perspectiveUniform, 1, GL_FALSE, glm::value_ptr(shadowP));
+	glUniformMatrix4fv(viewUniform, 1, GL_FALSE, glm::value_ptr(V));
+	for (Guid entityGuid : ecs::EntitiesInScene<RenderModel, TransformComponent>(scene)) {
+		RenderModel& comp = scene.GetComponent<RenderModel>(entityGuid);
+		TransformComponent& trans = scene.GetComponent<TransformComponent>(entityGuid);
 
-				//properties the geometry is ALWAYS going to have
-				glm::mat4 M = glm::translate(glm::mat4(1), trans.getTranslation()) * toMat4(trans.getRotation()) * glm::scale(glm::mat4(1), trans.getScale());
+		glm::mat4 M = glm::translate(glm::mat4(1), trans.getTranslation()) * toMat4(trans.getRotation()) * glm::scale(glm::mat4(1), trans.getScale());
 
-				//bind the light depth texture
-				glActiveTexture(GL_TEXTURE0);
-				glBindTexture(GL_TEXTURE_2D, gLightDepth);
+		//loop through each mesh in the renderComponent
+		for each (Mesh mesh in comp.meshes) {
+			mesh.geometry->bind();
+			glUniformMatrix4fv(modelUniform, 1, GL_FALSE, glm::value_ptr(M * mesh.localTransformation));
+			glm::vec3 position;
+			glm::mat4 shadowV;
 
-				//loop through each mesh in the renderComponent
-				for each (Mesh mesh in comp.meshes) {
-
-					glUniformMatrix4fv(modelUniform, 1, GL_FALSE, glm::value_ptr(M * mesh.localTransformation));
-					glm::mat3 normalsMatrix = glm::mat3(glm::transpose(glm::inverse(M * mesh.localTransformation)));
-					glUniformMatrix3fv(normalMatUniform, 1, GL_FALSE, glm::value_ptr(normalsMatrix));
-
-					mesh.geometry->bind();
-					if ((mesh.properties & Mesh::meshProperties::m_hasTextureCoords) != 0 && mesh.textureIndex != -1) {
-						glActiveTexture(GL_TEXTURE1);
-						comp.textures[mesh.textureIndex]->bind();
-						glUniform1ui(shaderStateUniform, 1);
-					}
-					else {
-						glUniform3fv(userColorUniform, 1, glm::value_ptr(mesh.meshColor));
-						glDisableVertexAttribArray(2);
-						glUniform1ui(shaderStateUniform, 0);
-					}
-
-					//drawCamerasElements(GL_TRIANGLES, mesh.numberOfIndicies, GL_UNSIGNED_INT, 0, viewUniform);
-					glDrawElements(GL_TRIANGLES, mesh.numberOfIndicies, GL_UNSIGNED_INT, 0);
-				}
-			}
-
-
-			/*
-			* render VFX that don't affect the shading. Things like billboards and particle effects
-			* This uses the gFrameBuffer still as its render target
-			* Render this to the screen
-			*/
-			glBindFramebuffer(GL_FRAMEBUFFER, gVFXBuffer);
-			VFXshader.use();
-			glBindVertexArray(billboard_vertexArray);
-			glBindBuffer(GL_ARRAY_BUFFER, billboard_vertexBuffer);
-			//disable writing to the depth buffer, but still use it for culling
-			//glDepthMask(false);
-			glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-			glDisable(GL_CULL_FACE);
-			viewUniform = glGetUniformLocation(GLuint(VFXshader), "V");
-			perspectiveUniform = glGetUniformLocation(GLuint(VFXshader), "P");
-			glUniformMatrix4fv(perspectiveUniform, 1, GL_FALSE, glm::value_ptr(P));
-			glUniformMatrix4fv(viewUniform, 1, GL_FALSE, glm::value_ptr(V));
-			GLuint scaleUniform = glGetUniformLocation(GLuint(VFXshader), "scale");
-			GLuint centrePosUniform = glGetUniformLocation(GLuint(VFXshader), "centrePos");
-			GLuint cameraPositionUniform = glGetUniformLocation(GLuint(VFXshader), "cameraPos");
-			GLuint lockingAxisUniform = glGetUniformLocation(GLuint(VFXshader), "lockingAxis");
-			GLuint typeUniform = glGetUniformLocation(GLuint(VFXshader), "type");
-			//Billboards
-			glUniform1ui(typeUniform, 0);
-			glUniform3fv(cameraPositionUniform, 1, glm::value_ptr(cameras[i].cameraPos));
-			for (Guid entityGuid : ecs::EntitiesInScene<VFXBillboard, TransformComponent>(scene)) {
-				VFXBillboard& comp = scene.GetComponent<VFXBillboard>(entityGuid);
-				TransformComponent& trans = scene.GetComponent<TransformComponent>(entityGuid);
-
-				glUniform3fv(centrePosUniform, 1, glm::value_ptr(trans.getTranslation()));
-				glUniform3fv(lockingAxisUniform, 1, glm::value_ptr(glm::vec3(0, 1, 0)));
-				glUniform2fv(scaleUniform, 1, glm::value_ptr(glm::vec2(trans.getScale().x, trans.getScale().y)));
-				comp.texture->bind();
-				glDrawArrays(GL_TRIANGLES, 0, 6);
-				//DrawCameraArrays(GL_TRIANGLES, 0, 6, view);
-			}
-
-			//textureStrips
-			glUniform1ui(typeUniform, 1);
-			glUniform3fv(centrePosUniform, 1, glm::value_ptr(glm::vec3(0, 0, 0)));
-			for (Guid entityGuid : ecs::EntitiesInScene<VFXTextureStrip, TransformComponent>(scene)) {
-				VFXTextureStrip& comp = scene.GetComponent<VFXTextureStrip>(entityGuid);
-				TransformComponent& trans = scene.GetComponent<TransformComponent>(entityGuid);
-				comp.texture->bind();
-				comp.GPUline->bind();
-				glDisableVertexAttribArray(1);
-				//drawCamerasElements(GL_TRIANGLES, comp.indicies.size(), GL_UNSIGNED_INT, 0, viewUniform);
-				glDrawElements(GL_TRIANGLES, comp.indicies.size(), GL_UNSIGNED_INT, 0);
-			}
-
-			//particles
-			particleShader.use();
-			viewUniform = glGetUniformLocation(GLuint(particleShader), "V");
-			perspectiveUniform = glGetUniformLocation(GLuint(particleShader), "P");
-			cameraPositionUniform = glGetUniformLocation(GLuint(particleShader), "cameraPos");
-			glUniformMatrix4fv(perspectiveUniform, 1, GL_FALSE, glm::value_ptr(P));
-			glUniformMatrix4fv(viewUniform, 1, GL_FALSE, glm::value_ptr(V));
-			glUniform3fv(cameraPositionUniform, 1, glm::value_ptr(cameras[i].cameraPos));
-		
-
-			glBindVertexArray(particles_vertexArray);
-			glBindBuffer(GL_ARRAY_BUFFER, particles_instanceTransformBuffer);
-			glEnable(GL_BLEND);
-			glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
-			for (Guid entityGuid : ecs::EntitiesInScene<VFXParticleSystem, TransformComponent>(scene)) {
-				VFXParticleSystem& comp = scene.GetComponent<VFXParticleSystem>(entityGuid);
-				TransformComponent& trans = scene.GetComponent<TransformComponent>(entityGuid);
-				comp.texture->bind();
-				const size_t maxBatchSize = 500;
-				/*
-				* render in batches of up to 500
-				* start at the front index and go until either the end of the array or the max batch size. If the end is reached before the endIndex
-				* then make a second call from the start of the array and work until the endIndex is reached
-				*/
-				size_t index = comp.frontIndex;
-				size_t toRender = comp.backIndex <= comp.frontIndex && comp.particleCount != 0 ? (comp.backIndex + comp.maxParticles) - comp.frontIndex : comp.backIndex - comp.frontIndex;
-				while (toRender != 0) {
-					size_t rendering = comp.backIndex <= index ? comp.maxParticles - index : comp.backIndex - index;
-					toRender -= rendering;
-					glBufferData(GL_ARRAY_BUFFER, sizeof(float) * 7 * rendering, &(comp.positions[index]), GL_DYNAMIC_DRAW);
-					glDrawArraysInstanced(GL_TRIANGLES, 0, 6, rendering);
-					//drawCamerasInstanced(GL_TRIANGLES, 0, 6, rendering, viewUniform);
-					index = index + rendering >= comp.maxParticles ? index = 0 : index = index + rendering;
-				}
-			}
-			glDisable(GL_BLEND);
-
-			/*
-			* APPLY SHADING EFFECTS AND DRAW TO gColor buffer
-			*/
-			glBindFramebuffer(GL_FRAMEBUFFER, sceneBuffer);
-			glViewport(viewPorts[i][0], viewPorts[i][1], viewportDimensions[0], viewportDimensions[1]);
-			glDisable(GL_DEPTH_TEST);
-			glDepthMask(GL_FALSE);
-			celShader.use();
-			glBindVertexArray(quad_vertexArray);
-			glBindBuffer(GL_ARRAY_BUFFER, quad_vertexBuffer);
-
-			GLuint normWeightUniform = glGetUniformLocation(GLuint(celShader), "normalDiffWeight");
-			GLuint depthWeightUniform = glGetUniformLocation(GLuint(celShader), "depthDiffWeight");
-
-			glUniform1f(normWeightUniform, normalDiffWeight);
-			glUniform1f(depthWeightUniform, depthDiffWeight);
-
-			GLuint lightUniform = glGetUniformLocation(GLuint(celShader), "lightDir");
-			GLuint ambiantUniform = glGetUniformLocation(GLuint(celShader), "ambiantStr");
-			GLuint diffuseWeightUniform = glGetUniformLocation(GLuint(celShader), "diffuseWeight");
-			GLuint quantizedSplitsUniform = glGetUniformLocation(GLuint(celShader), "numQuantizedSplits");
-			GLuint goochWarmUniform = glGetUniformLocation(GLuint(celShader), "goochWarm");
-			GLuint goochCoolUniform = glGetUniformLocation(GLuint(celShader), "goochCool");
-			GLuint goochStrengthUniform = glGetUniformLocation(GLuint(celShader), "goochWeight");
-			glUniform3fv(lightUniform, 1, glm::value_ptr(lightDirection));
-			glUniform1f(ambiantUniform, ambiantStrength);
-			glUniform1f(diffuseWeightUniform, diffuseWeight);
-			glUniform1i(quantizedSplitsUniform, numQuantizedSplits);
-			glm::vec3 goochWarmPass = goochWarm;
-			glUniform3fv(goochWarmUniform, 1, glm::value_ptr(goochWarmPass));
-			glm::vec3 goochCoolPass = goochCool;
-			glUniform3fv(goochCoolUniform, 1, glm::value_ptr(goochCoolPass));
-			glUniform1f(goochStrengthUniform, goochStrength);
-
-			//bind the textures
-			glActiveTexture(GL_TEXTURE0);
-			glBindTexture(GL_TEXTURE_2D, gPosition);
-			glActiveTexture(GL_TEXTURE1);
-			glBindTexture(GL_TEXTURE_2D, gNormal);
-			glActiveTexture(GL_TEXTURE2);
-			glBindTexture(GL_TEXTURE_2D, gColor);
-			glActiveTexture(GL_TEXTURE3);
-			glBindTexture(GL_TEXTURE_2D, gDepth);
-			glActiveTexture(GL_TEXTURE4);
-			glBindTexture(GL_TEXTURE_2D, gShadow);
-			glActiveTexture(GL_TEXTURE5);
-			glBindTexture(GL_TEXTURE_2D, gVFXColor);
-			glActiveTexture(GL_TEXTURE6);
-			glBindTexture(GL_TEXTURE_2D, gVFXDepth);
-			//glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-
-			glDrawArrays(GL_TRIANGLES, 0, 6);
-
-			
-			//draw the scene
-			glBindFramebuffer(GL_FRAMEBUFFER, 0);
-			glViewport(0, 0, windowSize.x, windowSize.y);
-			glActiveTexture(GL_TEXTURE0);
-			glBindTexture(GL_TEXTURE_2D, sceneColor);
-			sceneShader.use();
-			glDrawArrays(GL_TRIANGLES, 0, 6);
-			
-			if (numCamerasActive == 1) {
-				//render line components
-				//switch shader program
-				lineShader.use();
-				//bind uniforms
-				modelUniform = glGetUniformLocation(GLuint(lineShader), "M");
-				viewUniform = glGetUniformLocation(GLuint(lineShader), "V");
-				perspectiveUniform = glGetUniformLocation(GLuint(lineShader), "P");
-				GLuint colorUniform = glGetUniformLocation(GLuint(lineShader), "userColor");
-				//set camera uniforms
-				glUniformMatrix4fv(perspectiveUniform, 1, GL_FALSE, glm::value_ptr(P));
-				for (Guid entityGuid : ecs::EntitiesInScene<RenderLine, TransformComponent>(scene)) {
-					RenderLine& comp = scene.GetComponent<RenderLine>(entityGuid);
-					TransformComponent& trans = scene.GetComponent<TransformComponent>(entityGuid);
-
-					glm::mat4 M = glm::translate(glm::mat4(1), trans.getTranslation()) * toMat4(trans.getRotation()) * glm::scale(glm::mat4(1), trans.getScale());
-					glUniformMatrix4fv(modelUniform, 1, GL_FALSE, glm::value_ptr(M));
-
-					glUniform3fv(colorUniform, 1, glm::value_ptr(comp.color));
-
-					comp.geometry->bind();
-					//drawCamerasArrays(GL_LINE_STRIP, 0, comp.numberOfVerticies, viewUniform);
-					glDrawArrays(GL_LINE_STRIP, 0, comp.numberOfVerticies);
-				}
-
-
-				if (showColliders) {
-					//Render debug wireframes of physx colliders
-					wireframeShader.use();
-					modelUniform = glGetUniformLocation(GLuint(lineShader), "M");
-					viewUniform = glGetUniformLocation(GLuint(lineShader), "V");
-					perspectiveUniform = glGetUniformLocation(GLuint(lineShader), "P");
-					glUniformMatrix4fv(perspectiveUniform, 1, GL_FALSE, glm::value_ptr(P));
-					glUniformMatrix4fv(viewUniform, 1, GL_FALSE, glm::value_ptr(V));
-					physx::PxScene* physxScene;
-					PxGetPhysics().getScenes(&physxScene, 1);
-					int nbActors = physxScene->getNbActors(physx::PxActorTypeFlag::eRIGID_DYNAMIC | physx::PxActorTypeFlag::eRIGID_STATIC);
-					if (nbActors)
-					{
-						glDisable(GL_DEPTH_TEST);
-						glDisable(GL_CULL_FACE);
-						glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
-						const int MAX_NUM_ACTOR_SHAPES = 128;
-						using namespace physx;
-						std::vector<PxRigidActor*> actors(nbActors);
-						physxScene->getActors(PxActorTypeFlag::eRIGID_DYNAMIC | PxActorTypeFlag::eRIGID_STATIC, reinterpret_cast<PxActor**>(&actors[0]), nbActors);
-						Snippets::renderActors(&actors[0], static_cast<PxU32>(actors.size()), modelUniform);
-					}
-				}
-			//}
+			position = scene.GetComponent<TransformComponent>(cameras[i].targetEntity).getTranslation() + glm::vec3(0, 30, 0);
+			shadowV = glm::lookAt(position, position + lightDirection, glm::vec3(1, 0, 0));
+			glUniformMatrix4fv(viewUniform, 1, GL_FALSE, glm::value_ptr(shadowV));
+			glViewport(0, 0, 4096, 4096);
+			glDrawElements(GL_TRIANGLES, mesh.numberOfIndicies, GL_UNSIGNED_INT, 0);
 		}
+	}
+
+
+	/*
+	* RENDER THE DEPTH, COLOR, NORMAL AND SHADOW TEXTURES
+	*/
+	glBindFramebuffer(GL_FRAMEBUFFER, gBuffer);
+	glViewport(0, 0, windowSize.x, windowSize.y);
+	//glViewport(viewPorts[i][0], viewPorts[i][1], viewportDimensions[0], viewportDimensions[1]);
+	glEnable(GL_LINE_SMOOTH);
+	glEnable(GL_FRAMEBUFFER_SRGB);
+	glPolygonMode(GL_FRONT, GL_FILL);
+	glCullFace(GL_BACK);
+	/*
+	* render the skybox using the same framebuffer as the generative stage
+	*/
+	skyboxShader.use();
+	glDisable(GL_CULL_FACE);
+	glDisable(GL_DEPTH_TEST);
+	glDepthMask(GL_FALSE);
+	glBindVertexArray(skybox_vertexArray);
+	glBindBuffer(GL_ARRAY_BUFFER, skybox_vertexBuffer);
+	glActiveTexture(GL_TEXTURE0);
+	glBindTexture(GL_TEXTURE_CUBE_MAP, skyboxCubemap);
+	viewUniform = glGetUniformLocation(GLuint(skyboxShader), "V");
+	perspectiveUniform = glGetUniformLocation(GLuint(skyboxShader), "P");
+	glUniformMatrix4fv(perspectiveUniform, 1, GL_FALSE, glm::value_ptr(P));
+	glUniformMatrix4fv(viewUniform, 1, GL_FALSE, glm::value_ptr(glm::mat4(glm::mat3(V))));
+	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+	glDrawArrays(GL_TRIANGLES, 0, 36);
+	glDepthMask(GL_TRUE);
+	glEnable(GL_DEPTH_TEST);
+	glEnable(GL_CULL_FACE);
+	glClear(GL_DEPTH_BUFFER_BIT);
+
+	gShader.use();
+
+	//get uniform locations
+	modelUniform = glGetUniformLocation(GLuint(gShader), "M");
+	viewUniform = glGetUniformLocation(GLuint(gShader), "V");
+	perspectiveUniform = glGetUniformLocation(GLuint(gShader), "P");
+	GLuint cameraDirectionUniform = glGetUniformLocation(GLuint(gShader), "cameraDirection");
+	GLuint normalMatUniform = glGetUniformLocation(GLuint(gShader), "normalMat");
+	GLuint shaderStateUniform = glGetUniformLocation(GLuint(gShader), "shaderState");
+	GLuint userColorUniform = glGetUniformLocation(GLuint(gShader), "userColor");
+	GLuint lightSpaceMatixUniform = glGetUniformLocation(GLuint(gShader), "lightSpaceMatrix");
+	//set the camera uniforms
+	glUniformMatrix4fv(perspectiveUniform, 1, GL_FALSE, glm::value_ptr(P));
+	glUniformMatrix4fv(viewUniform, 1, GL_FALSE, glm::value_ptr(V));
+	glm::vec3 position = scene.GetComponent<TransformComponent>(cameras[i].targetEntity).getTranslation() + glm::vec3(0, 30, 0);
+	glm::mat4 shadowV = glm::lookAt(position, position + lightDirection, glm::vec3(1, 0, 0));
+	glUniformMatrix4fv(lightSpaceMatixUniform, 1, GL_FALSE, glm::value_ptr(shadowP * shadowV));
+
+
+	for (Guid entityGuid : ecs::EntitiesInScene<RenderModel, TransformComponent>(scene)) {
+		RenderModel& comp = scene.GetComponent<RenderModel>(entityGuid);
+		TransformComponent& trans = scene.GetComponent<TransformComponent>(entityGuid);
+
+		//properties the geometry is ALWAYS going to have
+		glm::mat4 M = glm::translate(glm::mat4(1), trans.getTranslation()) * toMat4(trans.getRotation()) * glm::scale(glm::mat4(1), trans.getScale());
+
+		//bind the light depth texture
+		glActiveTexture(GL_TEXTURE0);
+		glBindTexture(GL_TEXTURE_2D, gLightDepth);
+
+		//loop through each mesh in the renderComponent
+		for each (Mesh mesh in comp.meshes) {
+
+			glUniformMatrix4fv(modelUniform, 1, GL_FALSE, glm::value_ptr(M * mesh.localTransformation));
+			glm::mat3 normalsMatrix = glm::mat3(glm::transpose(glm::inverse(M * mesh.localTransformation)));
+			glUniformMatrix3fv(normalMatUniform, 1, GL_FALSE, glm::value_ptr(normalsMatrix));
+
+			mesh.geometry->bind();
+			if ((mesh.properties & Mesh::meshProperties::m_hasTextureCoords) != 0 && mesh.textureIndex != -1) {
+				glActiveTexture(GL_TEXTURE1);
+				comp.textures[mesh.textureIndex]->bind();
+				glUniform1ui(shaderStateUniform, 1);
+			}
+			else {
+				glUniform3fv(userColorUniform, 1, glm::value_ptr(mesh.meshColor));
+				glDisableVertexAttribArray(2);
+				glUniform1ui(shaderStateUniform, 0);
+			}
+
+			//drawCamerasElements(GL_TRIANGLES, mesh.numberOfIndicies, GL_UNSIGNED_INT, 0, viewUniform);
+			glDrawElements(GL_TRIANGLES, mesh.numberOfIndicies, GL_UNSIGNED_INT, 0);
+		}
+	}
+
+
+	/*
+	* render VFX that don't affect the shading. Things like billboards and particle effects
+	* This uses the gFrameBuffer still as its render target
+	* Render this to the screen
+	*/
+	glBindFramebuffer(GL_FRAMEBUFFER, gVFXBuffer);
+	VFXshader.use();
+	glBindVertexArray(billboard_vertexArray);
+	glBindBuffer(GL_ARRAY_BUFFER, billboard_vertexBuffer);
+	//disable writing to the depth buffer, but still use it for culling
+	//glDepthMask(false);
+	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+	glDisable(GL_CULL_FACE);
+	viewUniform = glGetUniformLocation(GLuint(VFXshader), "V");
+	perspectiveUniform = glGetUniformLocation(GLuint(VFXshader), "P");
+	glUniformMatrix4fv(perspectiveUniform, 1, GL_FALSE, glm::value_ptr(P));
+	glUniformMatrix4fv(viewUniform, 1, GL_FALSE, glm::value_ptr(V));
+	GLuint scaleUniform = glGetUniformLocation(GLuint(VFXshader), "scale");
+	GLuint centrePosUniform = glGetUniformLocation(GLuint(VFXshader), "centrePos");
+	GLuint cameraPositionUniform = glGetUniformLocation(GLuint(VFXshader), "cameraPos");
+	GLuint lockingAxisUniform = glGetUniformLocation(GLuint(VFXshader), "lockingAxis");
+	GLuint typeUniform = glGetUniformLocation(GLuint(VFXshader), "type");
+	//Billboards
+	glUniform1ui(typeUniform, 0);
+	glUniform3fv(cameraPositionUniform, 1, glm::value_ptr(cameras[i].cameraPos));
+	for (Guid entityGuid : ecs::EntitiesInScene<VFXBillboard, TransformComponent>(scene)) {
+		VFXBillboard& comp = scene.GetComponent<VFXBillboard>(entityGuid);
+		TransformComponent& trans = scene.GetComponent<TransformComponent>(entityGuid);
+
+		glUniform3fv(centrePosUniform, 1, glm::value_ptr(trans.getTranslation()));
+		glUniform3fv(lockingAxisUniform, 1, glm::value_ptr(glm::vec3(0, 1, 0)));
+		glUniform2fv(scaleUniform, 1, glm::value_ptr(glm::vec2(trans.getScale().x, trans.getScale().y)));
+		comp.texture->bind();
+		glDrawArrays(GL_TRIANGLES, 0, 6);
+		//DrawCameraArrays(GL_TRIANGLES, 0, 6, view);
+	}
+
+	//textureStrips
+	glUniform1ui(typeUniform, 1);
+	glUniform3fv(centrePosUniform, 1, glm::value_ptr(glm::vec3(0, 0, 0)));
+	for (Guid entityGuid : ecs::EntitiesInScene<VFXTextureStrip, TransformComponent>(scene)) {
+		VFXTextureStrip& comp = scene.GetComponent<VFXTextureStrip>(entityGuid);
+		TransformComponent& trans = scene.GetComponent<TransformComponent>(entityGuid);
+		comp.texture->bind();
+		comp.GPUline->bind();
+		glDisableVertexAttribArray(1);
+		//drawCamerasElements(GL_TRIANGLES, comp.indicies.size(), GL_UNSIGNED_INT, 0, viewUniform);
+		glDrawElements(GL_TRIANGLES, comp.indicies.size(), GL_UNSIGNED_INT, 0);
+	}
+
+	//particles
+	particleShader.use();
+	viewUniform = glGetUniformLocation(GLuint(particleShader), "V");
+	perspectiveUniform = glGetUniformLocation(GLuint(particleShader), "P");
+	cameraPositionUniform = glGetUniformLocation(GLuint(particleShader), "cameraPos");
+	glUniformMatrix4fv(perspectiveUniform, 1, GL_FALSE, glm::value_ptr(P));
+	glUniformMatrix4fv(viewUniform, 1, GL_FALSE, glm::value_ptr(V));
+	glUniform3fv(cameraPositionUniform, 1, glm::value_ptr(cameras[i].cameraPos));
 	
+
+	glBindVertexArray(particles_vertexArray);
+	glBindBuffer(GL_ARRAY_BUFFER, particles_instanceTransformBuffer);
+	glEnable(GL_BLEND);
+	glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+	for (Guid entityGuid : ecs::EntitiesInScene<VFXParticleSystem, TransformComponent>(scene)) {
+		VFXParticleSystem& comp = scene.GetComponent<VFXParticleSystem>(entityGuid);
+		TransformComponent& trans = scene.GetComponent<TransformComponent>(entityGuid);
+		comp.texture->bind();
+		const size_t maxBatchSize = 500;
+		/*
+		* render in batches of up to 500
+		* start at the front index and go until either the end of the array or the max batch size. If the end is reached before the endIndex
+		* then make a second call from the start of the array and work until the endIndex is reached
+		*/
+		size_t index = comp.frontIndex;
+		size_t toRender = comp.backIndex <= comp.frontIndex && comp.particleCount != 0 ? (comp.backIndex + comp.maxParticles) - comp.frontIndex : comp.backIndex - comp.frontIndex;
+		while (toRender != 0) {
+			size_t rendering = comp.backIndex <= index ? comp.maxParticles - index : comp.backIndex - index;
+			toRender -= rendering;
+			glBufferData(GL_ARRAY_BUFFER, sizeof(float) * 7 * rendering, &(comp.positions[index]), GL_DYNAMIC_DRAW);
+			glDrawArraysInstanced(GL_TRIANGLES, 0, 6, rendering);
+			//drawCamerasInstanced(GL_TRIANGLES, 0, 6, rendering, viewUniform);
+			index = index + rendering >= comp.maxParticles ? index = 0 : index = index + rendering;
+		}
+	}
+	glDisable(GL_BLEND);
+
+	/*
+	* APPLY SHADING EFFECTS AND DRAW TO gColor buffer
+	*/
+	glBindFramebuffer(GL_FRAMEBUFFER, sceneBuffer);
+	glViewport(viewPorts[i][0], viewPorts[i][1], viewportDimensions[0], viewportDimensions[1]);
+	glDisable(GL_DEPTH_TEST);
+	glDepthMask(GL_FALSE);
+	celShader.use();
+	glBindVertexArray(quad_vertexArray);
+	glBindBuffer(GL_ARRAY_BUFFER, quad_vertexBuffer);
+
+	GLuint normWeightUniform = glGetUniformLocation(GLuint(celShader), "normalDiffWeight");
+	GLuint depthWeightUniform = glGetUniformLocation(GLuint(celShader), "depthDiffWeight");
+
+	glUniform1f(normWeightUniform, normalDiffWeight);
+	glUniform1f(depthWeightUniform, depthDiffWeight);
+
+	GLuint lightUniform = glGetUniformLocation(GLuint(celShader), "lightDir");
+	GLuint ambiantUniform = glGetUniformLocation(GLuint(celShader), "ambiantStr");
+	GLuint diffuseWeightUniform = glGetUniformLocation(GLuint(celShader), "diffuseWeight");
+	GLuint quantizedSplitsUniform = glGetUniformLocation(GLuint(celShader), "numQuantizedSplits");
+	GLuint goochWarmUniform = glGetUniformLocation(GLuint(celShader), "goochWarm");
+	GLuint goochCoolUniform = glGetUniformLocation(GLuint(celShader), "goochCool");
+	GLuint goochStrengthUniform = glGetUniformLocation(GLuint(celShader), "goochWeight");
+	glUniform3fv(lightUniform, 1, glm::value_ptr(lightDirection));
+	glUniform1f(ambiantUniform, ambiantStrength);
+	glUniform1f(diffuseWeightUniform, diffuseWeight);
+	glUniform1i(quantizedSplitsUniform, numQuantizedSplits);
+	glm::vec3 goochWarmPass = goochWarm;
+	glUniform3fv(goochWarmUniform, 1, glm::value_ptr(goochWarmPass));
+	glm::vec3 goochCoolPass = goochCool;
+	glUniform3fv(goochCoolUniform, 1, glm::value_ptr(goochCoolPass));
+	glUniform1f(goochStrengthUniform, goochStrength);
+
+	//bind the textures
+	glActiveTexture(GL_TEXTURE0);
+	glBindTexture(GL_TEXTURE_2D, gPosition);
+	glActiveTexture(GL_TEXTURE1);
+	glBindTexture(GL_TEXTURE_2D, gNormal);
+	glActiveTexture(GL_TEXTURE2);
+	glBindTexture(GL_TEXTURE_2D, gColor);
+	glActiveTexture(GL_TEXTURE3);
+	glBindTexture(GL_TEXTURE_2D, gDepth);
+	glActiveTexture(GL_TEXTURE4);
+	glBindTexture(GL_TEXTURE_2D, gShadow);
+	glActiveTexture(GL_TEXTURE5);
+	glBindTexture(GL_TEXTURE_2D, gVFXColor);
+	glActiveTexture(GL_TEXTURE6);
+	glBindTexture(GL_TEXTURE_2D, gVFXDepth);
+	//glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+
+	glDrawArrays(GL_TRIANGLES, 0, 6);
+
+	
+	//draw the scene
+	glBindFramebuffer(GL_FRAMEBUFFER, 0);
+	glViewport(0, 0, windowSize.x, windowSize.y);
+	glActiveTexture(GL_TEXTURE0);
+	glBindTexture(GL_TEXTURE_2D, sceneColor);
+	sceneShader.use();
+	glDrawArrays(GL_TRIANGLES, 0, 6);
+	
+	if (numCamerasActive == 1) {
+		//render line components
+		//switch shader program
+		lineShader.use();
+		//bind uniforms
+		modelUniform = glGetUniformLocation(GLuint(lineShader), "M");
+		viewUniform = glGetUniformLocation(GLuint(lineShader), "V");
+		perspectiveUniform = glGetUniformLocation(GLuint(lineShader), "P");
+		GLuint colorUniform = glGetUniformLocation(GLuint(lineShader), "userColor");
+		//set camera uniforms
+		glUniformMatrix4fv(perspectiveUniform, 1, GL_FALSE, glm::value_ptr(P));
+		for (Guid entityGuid : ecs::EntitiesInScene<RenderLine, TransformComponent>(scene)) {
+			RenderLine& comp = scene.GetComponent<RenderLine>(entityGuid);
+			TransformComponent& trans = scene.GetComponent<TransformComponent>(entityGuid);
+
+			glm::mat4 M = glm::translate(glm::mat4(1), trans.getTranslation()) * toMat4(trans.getRotation()) * glm::scale(glm::mat4(1), trans.getScale());
+			glUniformMatrix4fv(modelUniform, 1, GL_FALSE, glm::value_ptr(M));
+
+			glUniform3fv(colorUniform, 1, glm::value_ptr(comp.color));
+
+			comp.geometry->bind();
+			//drawCamerasArrays(GL_LINE_STRIP, 0, comp.numberOfVerticies, viewUniform);
+			glDrawArrays(GL_LINE_STRIP, 0, comp.numberOfVerticies);
+		}
+
+
+		if (showColliders) {
+			//Render debug wireframes of physx colliders
+			wireframeShader.use();
+			modelUniform = glGetUniformLocation(GLuint(lineShader), "M");
+			viewUniform = glGetUniformLocation(GLuint(lineShader), "V");
+			perspectiveUniform = glGetUniformLocation(GLuint(lineShader), "P");
+			glUniformMatrix4fv(perspectiveUniform, 1, GL_FALSE, glm::value_ptr(P));
+			glUniformMatrix4fv(viewUniform, 1, GL_FALSE, glm::value_ptr(V));
+			physx::PxScene* physxScene;
+			PxGetPhysics().getScenes(&physxScene, 1);
+			int nbActors = physxScene->getNbActors(physx::PxActorTypeFlag::eRIGID_DYNAMIC | physx::PxActorTypeFlag::eRIGID_STATIC);
+			if (nbActors)
+			{
+				glDisable(GL_DEPTH_TEST);
+				glDisable(GL_CULL_FACE);
+				glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
+				const int MAX_NUM_ACTOR_SHAPES = 128;
+				using namespace physx;
+				std::vector<PxRigidActor*> actors(nbActors);
+				physxScene->getActors(PxActorTypeFlag::eRIGID_DYNAMIC | PxActorTypeFlag::eRIGID_STATIC, reinterpret_cast<PxActor**>(&actors[0]), nbActors);
+				Snippets::renderActors(&actors[0], static_cast<PxU32>(actors.size()), modelUniform);
+			}
+		}	
+	}
 }
 
 // Function to return a camera view matrix (used for debug)
