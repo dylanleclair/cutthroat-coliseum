@@ -74,10 +74,12 @@ bool gamePaused = false;
 uint32_t lastTime_millisecs;
 
 
-void resetLevel(Car& testCar, std::vector<Guid> ais, ecs::Scene& mainScene, std::vector<glm::vec3> spawnPoints, RaceTracker& raceSystem, float& acc_t)
+void resetLevel(Car& testCar, std::vector<Guid> ais, ecs::Scene& mainScene, std::vector<glm::vec3> spawnPoints, RaceTracker& raceSystem, float& acc_t, glm::vec3 forward)
 {
+	glm::quat q = quatLookAt(forward, { 0,1.f,0 });
+
 	// Player reset
-	testCar.m_Vehicle.mPhysXState.physxActor.rigidBody->setGlobalPose(PxTransform(GLMtoPx(spawnPoints[0])));
+	testCar.m_Vehicle.mPhysXState.physxActor.rigidBody->setGlobalPose(PxTransform(GLMtoPx(spawnPoints[0]),GLMtoPx(q)));
 	testCar.m_Vehicle.mPhysXState.physxActor.rigidBody->setLinearDamping(10000.f);
 	testCar.m_Vehicle.mPhysXState.physxActor.rigidBody->setAngularDamping(10000.f);
 	testCar.m_driverType = DriverType::HUMAN;
@@ -85,7 +87,7 @@ void resetLevel(Car& testCar, std::vector<Guid> ais, ecs::Scene& mainScene, std:
 	// Ai Reset
 	for (int i = 0; i < ais.size(); i++) {
 		Car& aiCar = mainScene.GetComponent<Car>(ais.at(i));
-		aiCar.m_Vehicle.mPhysXState.physxActor.rigidBody->setGlobalPose(PxTransform(GLMtoPx(spawnPoints[i+1])));
+		aiCar.m_Vehicle.mPhysXState.physxActor.rigidBody->setGlobalPose(PxTransform(GLMtoPx(spawnPoints[i+1]),GLMtoPx(q)));
 		aiCar.m_Vehicle.mPhysXState.physxActor.rigidBody->setLinearDamping(10000.f);
 		aiCar.m_Vehicle.mPhysXState.physxActor.rigidBody->setAngularDamping(10000.f);
 		aiCar.m_navPath->resetNav();
@@ -503,7 +505,7 @@ int main(int argc, char* argv[]) {
 					case SDLK_r:
 						//TODO recompile the shader
 						
-						resetLevel(testCar, AIGuids,mainScene,spawnPoints, raceSystem, acc_t);
+						resetLevel(testCar, AIGuids,mainScene,spawnPoints, raceSystem, acc_t, forward);
 						break;
 						
 					// TODO: change the file that is serializes (Want to do base.json and enginedrive.json)
