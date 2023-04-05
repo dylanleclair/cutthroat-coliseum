@@ -24,7 +24,7 @@ namespace ControllerInput {
 		for (int i = 0; i < numcontrollers && i < 4; i++)
 		{
 			if (controllers[i] == nullptr)
-				controllers[i] = SDL_GameControllerOpen(0);
+				controllers[i] = SDL_GameControllerOpen(i);
 		}
 		
 	}
