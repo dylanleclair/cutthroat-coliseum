@@ -474,35 +474,14 @@ void GraphicsSystem::ImGuiPanel() {
 		}
 	}
 }
-/*
-void GraphicsSystem::drawCamerasElements(GLenum mode, GLsizei count, GLenum type, const void* indices, GLuint viewUniform) {
-	for (int i = 0; i < numCamerasActive; i++) {
-		glUniformMatrix4fv(viewUniform, 1, GL_FALSE, glm::value_ptr(views[i]));
-		glViewport(viewPorts[i][0], viewPorts[i][1], viewportDimensions[0], viewportDimensions[1]);
-		glDrawElements(mode, count, type, indices);
-	}
-}
 
-void GraphicsSystem::drawCamerasArrays(GLenum mode, GLint first, GLsizei count, GLuint viewUniform) {
-	for (int i = 0; i < numCamerasActive; i++) {
-		glUniformMatrix4fv(viewUniform, 1, GL_FALSE, glm::value_ptr(views[i]));
-		glViewport(viewPorts[i][0], viewPorts[i][1], viewportDimensions[0], viewportDimensions[1]);
-		glDrawArrays(mode, first, count);
-	}
-}
-
-void GraphicsSystem::drawCamerasInstanced(GLenum mode, GLint first, GLsizei count, GLsizei instanceCount, GLuint viewUniform) {
-	for (int i = 0; i < numCamerasActive; i++) {
-		glUniformMatrix4fv(viewUniform, 1, GL_FALSE, glm::value_ptr(views[i]));
-		glViewport(viewPorts[i][0], viewPorts[i][1], viewportDimensions[0], viewportDimensions[1]);
-		glDrawArraysInstanced(mode, first, count, instanceCount);
-	}
-}*/
 
 void GraphicsSystem::Update(ecs::Scene& scene, float deltaTime) {
 
 		//default camera matricies
 		glm::mat4 P = glm::perspective(glm::radians(45.f), (float)windowSize.x / windowSize.y, 2.f, 1000.f);
+		if (numCamerasActive == 1)
+			cam_mode = 3;
 
 		// If camera mode is 1 - use freecam
 		if (cam_mode == 1) {
@@ -608,7 +587,7 @@ void GraphicsSystem::Update(ecs::Scene& scene, float deltaTime) {
 		}
 
 		static int i = 0;
-		i = i == 3 ? i = 0 : i + 1;
+		i = i == numCamerasActive - 1 ? i = 0 : i + 1;
 		//for (int i = 0; i < numCamerasActive; i++) {
 			//configure the view
 			V = views[i];
@@ -817,7 +796,7 @@ void GraphicsSystem::Update(ecs::Scene& scene, float deltaTime) {
 			GLuint typeUniform = glGetUniformLocation(GLuint(VFXshader), "type");
 			//Billboards
 			glUniform1ui(typeUniform, 0);
-			glUniform3fv(cameraPositionUniform, 1, glm::value_ptr(cameras[0].cameraPos));
+			glUniform3fv(cameraPositionUniform, 1, glm::value_ptr(cameras[i].cameraPos));
 			for (Guid entityGuid : ecs::EntitiesInScene<VFXBillboard, TransformComponent>(scene)) {
 				VFXBillboard& comp = scene.GetComponent<VFXBillboard>(entityGuid);
 				TransformComponent& trans = scene.GetComponent<TransformComponent>(entityGuid);
@@ -850,7 +829,7 @@ void GraphicsSystem::Update(ecs::Scene& scene, float deltaTime) {
 			cameraPositionUniform = glGetUniformLocation(GLuint(particleShader), "cameraPos");
 			glUniformMatrix4fv(perspectiveUniform, 1, GL_FALSE, glm::value_ptr(P));
 			glUniformMatrix4fv(viewUniform, 1, GL_FALSE, glm::value_ptr(V));
-			glUniform3fv(cameraPositionUniform, 1, glm::value_ptr(cameras[0].cameraPos));
+			glUniform3fv(cameraPositionUniform, 1, glm::value_ptr(cameras[i].cameraPos));
 
 
 			glBindVertexArray(particles_vertexArray);
@@ -1016,7 +995,7 @@ void GraphicsSystem::s_cameraMode(int _mode)
 
 void GraphicsSystem::s_camerasActive(int number) {
 	if (number != 1) 
-		cam_mode = 1;
+		cam_mode = 3;
 	numCamerasActive = number;
 }
 
