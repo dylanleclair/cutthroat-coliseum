@@ -23,6 +23,7 @@ Window::Window(int width, int height, const char* title)
 {
 	if (!Backend::Initialize("Maximus Overdrive", 1200, 800, false))
 		std::cout << "Failed to initalize backend\n";
+	/*
 	Rml::SetSystemInterface(Backend::GetSystemInterface());
 	Rml::SetRenderInterface(Backend::GetRenderInterface());
 	Rml::Initialise();
@@ -45,7 +46,7 @@ Window::Window(int width, int height, const char* title)
 	document->Hide();
 
 	Rml::Log::Message(Rml::Log::LT_DEBUG, "Test warning.");
-
+	*/
 	std::cout << "finished initalizing window\n\n";
 }
 
@@ -65,7 +66,7 @@ glm::ivec2 Window::getSize() const {
 
 void Window::RenderAndSwap()
 {
-	
+	/*
 	Backend::ProcessEvents(rmlContext, static_cast<KeyDownCallback>(&Window::ProcessKeyDownShortcuts));
 
 	glClear(GL_DEPTH_BUFFER_BIT | GL_STENCIL_BUFFER_BIT);
@@ -78,6 +79,7 @@ void Window::RenderAndSwap()
 	rmlContext->Update();
 	Backend::BeginFrame();
 	rmlContext->Render();
+	*/
 	glDisable(GL_BLEND);
 #define ImGUI_Enabled
 #ifdef ImGUI_Enabled

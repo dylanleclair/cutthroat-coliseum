@@ -181,8 +181,9 @@ bool Backend::Initialize(const char* window_name, int width, int height, bool al
 		throw std::runtime_error("Failed to initialize GLEW");
 	}
 
+	
 	data = Rml::MakeUnique<BackendData>();
-
+	
 	if (!data->render_interface)
 	{
 		data.reset();
@@ -195,6 +196,7 @@ bool Backend::Initialize(const char* window_name, int width, int height, bool al
 
 	data->system_interface.SetWindow(window);
 	data->render_interface.SetViewport(width, height);
+	
 #define ImGUI_Enabled
 #ifdef ImGUI_Enabled
 	IMGUI_CHECKVERSION();
