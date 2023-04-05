@@ -75,9 +75,9 @@ void Window::RenderAndSwap()
 	glEnable(GL_FRAMEBUFFER_SRGB);
 
 	glActiveTexture(GL_TEXTURE0);
-	rmlContext->Update();
-	Backend::BeginFrame();
-	rmlContext->Render();
+	//rmlContext->Update();
+	//Backend::BeginFrame();
+	//rmlContext->Render();
 	glDisable(GL_BLEND);
 #define ImGUI_Enabled
 #ifdef ImGUI_Enabled
