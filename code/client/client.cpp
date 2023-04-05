@@ -99,6 +99,10 @@ void resetLevel(Car& testCar, std::vector<Guid> ais, ecs::Scene& mainScene, std:
 	// Resets the accumulator
 	acc_t = 0;
 
+	// Starting up the race countdown
+	raceCountdown = true;
+	startCountdown = 5.0f;
+
 }
 
 void gamePlayToggle(bool toggle, ecs::Scene &mainScene, std::vector<Guid> aiCars, GraphicsSystem &gs) {
