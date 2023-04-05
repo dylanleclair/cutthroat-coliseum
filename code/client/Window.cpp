@@ -66,7 +66,7 @@ glm::ivec2 Window::getSize() const {
 void Window::RenderAndSwap()
 {
 	
-	// Backend::ProcessEvents(rmlContext, static_cast<KeyDownCallback>(&Window::ProcessKeyDownShortcuts));
+	Backend::ProcessEvents(rmlContext, static_cast<KeyDownCallback>(&Window::ProcessKeyDownShortcuts));
 
 	glClear(GL_DEPTH_BUFFER_BIT | GL_STENCIL_BUFFER_BIT);
 	glDisable(GL_DEPTH_TEST);
@@ -75,9 +75,9 @@ void Window::RenderAndSwap()
 	glEnable(GL_FRAMEBUFFER_SRGB);
 
 	glActiveTexture(GL_TEXTURE0);
-	// rmlContext->Update();
-	// Backend::BeginFrame();
-	// rmlContext->Render();
+	rmlContext->Update();
+	Backend::BeginFrame();
+	rmlContext->Render();
 	glDisable(GL_BLEND);
 #define ImGUI_Enabled
 #ifdef ImGUI_Enabled
