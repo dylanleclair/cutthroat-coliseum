@@ -11,6 +11,8 @@
 
 #include "Window.h"
 
+#include <unordered_map>
+
 #include "core/ecs.h"
 #include "systems/GraphicsSystem.h"
 #include "systems/components.h"
@@ -42,6 +44,7 @@
 
 #include <chrono>  // chrono::system_clock
 #include <ctime>   // localtime
+
 
 
 float startCountdown{5.0f};
@@ -106,7 +109,7 @@ void gamePlayToggle(bool toggle, ecs::Scene &mainScene, std::vector<Guid> aiCars
 	if (toggle) {
 		loadLevelMesh = true;
 		navPathToggle = false;
-		gs.cam_mode = 3; // follow cam
+		gs.s_cameraMode(3); // follow cam
 
 		raceCountdown = true;
 		startCountdown = 5.0f;
@@ -123,7 +126,7 @@ void gamePlayToggle(bool toggle, ecs::Scene &mainScene, std::vector<Guid> aiCars
 	else {
 		loadLevelMesh = false;
 		navPathToggle = true;
-		gs.cam_mode = 1; // free cam
+		gs.s_cameraMode(1); // free cam
 
 		raceCountdown = false;
 		startCountdown = 0.f;
@@ -240,16 +243,14 @@ int main(int argc, char* argv[]) {
 	std::vector<NavPath> aiPaths;
 	aiPaths.reserve(spawnPoints.size());
 
-	// SPAWN THE HUMAN VEHICLE
-	auto driverNavPath = NavPath(&aiNavigationPath);
-	Guid carGuid = spawnCar(DriverType::HUMAN, mainScene,&physicsSystem,spawnPoints[0], forward, &raceTrackingCurve, &driverNavPath);
-	Car& testCar = mainScene.GetComponent<Car>(carGuid);
-	setupCarVFX(mainScene, carGuid);
+	ControllerInput::initControllers();
 
+	// initialize the controllers
+	// then count the number of human players
 
 	// SPAWN THE AI CARS
 	// skip the first spot (player driven vehicle) 
-	for (int i = 1; i < spawnPoints.size(); i++)
+	for (int i = 0; i < spawnPoints.size(); i++)
 	{		
 		auto& spawnPoint = spawnPoints[i];
 		aiPaths.emplace_back(&aiNavigationPath);
@@ -260,6 +261,34 @@ int main(int argc, char* argv[]) {
 		AIGuids.push_back(aiCarGuid);
 		setupCarVFX(mainScene, aiCarGuid);
 	}
+
+
+	// put them into human
+	// conditionally spawn the other cars lmao ? 
+	std::unordered_map<Guid, int> controllerMappings; // the controller -> car mapping
+
+	int number_players = ControllerInput::getNumberPlayers();
+
+	if (number_players == 0) number_players = 1; 
+
+	gs.s_camerasActive(number_players);
+
+	for (int i = 0; i < 4 && i < number_players; i++)
+	{
+		// get car at each guid
+		// if it's under ze number_players
+		// set it's driver to HUMAN
+		Car& testCar = mainScene.GetComponent<Car>(AIGuids[i]);
+		testCar.m_driverType = DriverType::HUMAN;
+		testCar.controllerIndex = i;
+		// controllerMappings[AIGuids[i]] = i;
+		gs.bindCameraToEntity(i, AIGuids[i]);
+	}
+
+
+	// bandaids for other calls that do player-only stuff
+	Car& testCar = mainScene.GetComponent<Car>(AIGuids[0]);
+	Guid carGuid = AIGuids[0];
 
 	ecs::Entity navRenderer_e = mainScene.CreateEntity();
 	mainScene.AddComponent(navRenderer_e.guid,TransformComponent{});

@@ -46,6 +46,9 @@ extern const char *gVehicleDataPath;
 
 struct Car {
 
+    // needed for controller support lmao
+    int controllerIndex = -1;
+
     DriverType m_driverType = DriverType::COMPUTER;
 
     physics::PhysicsSystem* physicsSystem;

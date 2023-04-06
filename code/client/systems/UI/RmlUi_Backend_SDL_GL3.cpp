@@ -181,8 +181,9 @@ bool Backend::Initialize(const char* window_name, int width, int height, bool al
 		throw std::runtime_error("Failed to initialize GLEW");
 	}
 
+	
 	data = Rml::MakeUnique<BackendData>();
-
+	
 	if (!data->render_interface)
 	{
 		data.reset();
@@ -195,6 +196,7 @@ bool Backend::Initialize(const char* window_name, int width, int height, bool al
 
 	data->system_interface.SetWindow(window);
 	data->render_interface.SetViewport(width, height);
+	
 #define ImGUI_Enabled
 #ifdef ImGUI_Enabled
 	IMGUI_CHECKVERSION();
@@ -252,64 +254,66 @@ bool Backend::ProcessEvents(Rml::Context* context, KeyDownCallback key_down_call
 
 #endif
 
-	bool result = data->running;
-	data->running = true;
+	// bool result = data->running;
+	// data->running = true;
 
-	SDL_Event ev;
-	int has_event = 0;
-	//if (power_save)
-		//has_event = SDL_WaitEventTimeout(&ev, static_cast<int>(Rml::Math::Min(context->GetNextUpdateDelay(), 10.0) * 1000));
-	has_event = SDL_PollEvent(&ev);
-	while (has_event)
-	{
-		switch (ev.type)
-		{
-		case SDL_QUIT:
-		{
-			result = false;
-		}
-		break;
-		case SDL_KEYDOWN:
-		{
-			const Rml::Input::KeyIdentifier key = RmlSDL::ConvertKey(ev.key.keysym.sym);
-			const int key_modifier = RmlSDL::GetKeyModifierState();
-			const float native_dp_ratio = 1.f;
+	// SDL_Event ev;
+	// int has_event = 0;
+	// //if (power_save)
+	// 	//has_event = SDL_WaitEventTimeout(&ev, static_cast<int>(Rml::Math::Min(context->GetNextUpdateDelay(), 10.0) * 1000));
+	// has_event = SDL_PollEvent(&ev);
+	// while (has_event)
+	// {
+	// 	switch (ev.type)
+	// 	{
+	// 	case SDL_QUIT:
+	// 	{
+	// 		result = false;
+	// 	}
+	// 	break;
+	// 	case SDL_KEYDOWN:
+	// 	{
+	// 		const Rml::Input::KeyIdentifier key = RmlSDL::ConvertKey(ev.key.keysym.sym);
+	// 		const int key_modifier = RmlSDL::GetKeyModifierState();
+	// 		const float native_dp_ratio = 1.f;
 
-			// See if we have any global shortcuts that take priority over the context.
-			if (key_down_callback && !key_down_callback(context, key, key_modifier, native_dp_ratio, true))
-				break;
-			// Otherwise, hand the event over to the context by calling the input handler as normal.
-			if (!RmlSDL::InputEventHandler(context, ev))
-				break;
-			// The key was not consumed by the context either, try keyboard shortcuts of lower priority.
-			if (key_down_callback && !key_down_callback(context, key, key_modifier, native_dp_ratio, false))
-				break;
-		}
-		break;
-		case SDL_WINDOWEVENT:
-		{
-			switch (ev.window.event)
-			{
-			case SDL_WINDOWEVENT_SIZE_CHANGED:
-			{
-				Rml::Vector2i dimensions(ev.window.data1, ev.window.data2);
-				data->render_interface.SetViewport(dimensions.x, dimensions.y);
-			}
-			break;
-			}
-			RmlSDL::InputEventHandler(context, ev);
-		}
-		break;
-		default:
-		{
-			RmlSDL::InputEventHandler(context, ev);
-		}
-		break;
-		}
-		has_event = SDL_PollEvent(&ev);
-	}
+	// 		// See if we have any global shortcuts that take priority over the context.
+	// 		if (key_down_callback && !key_down_callback(context, key, key_modifier, native_dp_ratio, true))
+	// 			break;
+	// 		// Otherwise, hand the event over to the context by calling the input handler as normal.
+	// 		if (!RmlSDL::InputEventHandler(context, ev))
+	// 			break;
+	// 		// The key was not consumed by the context either, try keyboard shortcuts of lower priority.
+	// 		if (key_down_callback && !key_down_callback(context, key, key_modifier, native_dp_ratio, false))
+	// 			break;
+	// 	}
+	// 	break;
+	// 	case SDL_WINDOWEVENT:
+	// 	{
+	// 		switch (ev.window.event)
+	// 		{
+	// 		case SDL_WINDOWEVENT_SIZE_CHANGED:
+	// 		{
+	// 			Rml::Vector2i dimensions(ev.window.data1, ev.window.data2);
+	// 			data->render_interface.SetViewport(dimensions.x, dimensions.y);
+	// 		}
+	// 		break;
+	// 		}
+	// 		RmlSDL::InputEventHandler(context, ev);
+	// 	}
+	// 	break;
+	// 	default:
+	// 	{
+	// 		RmlSDL::InputEventHandler(context, ev);
+	// 	}
+	// 	break;
+	// 	}
+	// 	has_event = SDL_PollEvent(&ev);
+	// }
 
-	return result;
+	// return result;
+
+	return true;
 }
 
 void Backend::RequestExit()

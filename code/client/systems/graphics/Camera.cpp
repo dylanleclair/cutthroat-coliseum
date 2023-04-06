@@ -1,7 +1,16 @@
+#include "../GraphicsSystem.h"
 #include "Camera.h"
 #include <glm/glm.hpp>
 #include <glm/gtc/matrix_transform.hpp>
 #include <iostream>
+
+#include "core/ecs.h"
+#include "../components.h"
+
+#include "glm/gtc/quaternion.hpp"
+#include <glm/gtx/quaternion.hpp>
+
+
 
 Camera::Camera() {
 	glm::vec3 direction;
@@ -96,6 +105,94 @@ glm::vec3 Camera::getPos()
 
 void Camera::setPos(glm::vec3 _position)
 {
-	velocity = _position - cameraPos;
 	cameraPos = _position;
+}
+
+void Camera::update(TransformComponent& _carTransform, float dt)
+{
+	/*
+	* calculate the camera position
+	*/
+	//calculate where the camera should aim to be positioned
+	glm::vec3 cameraTargetLocation = glm::translate(glm::mat4(1), _carTransform.getTranslation()) * toMat4(_carTransform.getRotation()) * glm::vec4(GraphicsSystem::follow_cam_x, GraphicsSystem::follow_cam_y, GraphicsSystem::follow_cam_z, 1);
+	//calculate the speed of the car
+	
+	if (!initalized) {
+		initalized = true;
+		previousCarPosition = _carTransform.getTranslation();
+	}
+
+	glm::vec3 speed = _carTransform.getTranslation() - previousCarPosition;
+	previousCarPosition = _carTransform.getTranslation();
+
+	float FOVBounceMax = 50;
+	float maxFOVstable = 45;
+	float minFOV = 30;
+	static char state = 0; //0 = no change, 1 = increasing to FOVBounceMax, 2 = decreasing from FOVBounceMax, 3 = stable at maxFOV
+
+	//determine the camera state
+	if (glm::length(speed) >= 0.01) {
+		if (state == 0 && glm::length(speed) > 0.25)
+			state = 1;
+		else if (state == 1 && FOV >= FOVBounceMax)
+			state = 2;
+		else if (state == 2 && FOV <= maxFOVstable)
+			state = 3;
+		else if (glm::length(speed) <= 0.24)
+			state = 0;
+	}
+
+	//decrease it
+	if (state == 3 || state == 0)
+		FOV -= 20 * dt;
+	else if (state == 2)
+		FOV -= 5 * dt;
+
+
+	if(state == 1 || state == 3)
+		FOV += glm::length(speed) * 30 * dt;
+
+	//bound the FOV
+	if(state == 3)
+		FOV = fmin(maxFOVstable, FOV);
+	FOV = fmax(minFOV, FOV);
+	
+	//std::cout << "speed: " << glm::length(speed) << "  FOV: " << FOV << " State: " << (int)state << '\n';
+
+	//cameraTargetLocation.y += glm::length(speed) * 0.2;
+	/*
+	//calculate the vector from the cameras current position to the target position
+	glm::vec3 cameraOffset = getPos() - cameraTargetLocation;
+	if (glm::length(cameraOffset) != 0) {
+		float followDistance = (speed / (speed + GraphicsSystem::follow_correction_strength)) * GraphicsSystem::maximum_follow_distance;
+		cameraOffset = glm::normalize(cameraOffset) * followDistance;
+		setPos(cameraTargetLocation + cameraOffset);
+	}
+	*/
+	
+
+	glm::vec3 currentCamLocation = getPos();
+	
+	//update the camera using a spring 
+	const float k = 3;
+	const float c = 1;
+	const float r = 0.5;
+	const float cameraMass = 1;
+	const glm::vec3 s = cameraTargetLocation - getPos();
+	glm::vec3 Fs = (k * (glm::length(s) - r)) * glm::normalize(s);
+	glm::vec3 Fd = ((glm::dot(-c * (speed-cameraVelocity), s)) / glm::length(s)) * glm::normalize(s);
+
+	glm::vec3 a = (Fs + Fd) / cameraMass;
+	glm::vec3 v = a * dt;
+	setPos(getPos() + a * dt);
+	if (getPos().y < cameraTargetLocation.y)
+		cameraPos.y = cameraTargetLocation.y;
+
+
+	if (glm::length(cameraTargetLocation - getPos()) > 4)
+		setPos(cameraTargetLocation + glm::normalize(getPos() - cameraTargetLocation) * 4.f);
+
+	cameraVelocity = currentCamLocation - getPos();
+
+	//setPos(cameraTargetLocation);
 }
