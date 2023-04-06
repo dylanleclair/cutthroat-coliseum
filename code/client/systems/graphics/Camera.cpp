@@ -187,5 +187,5 @@ void Camera::update(TransformComponent& _carTransform, bool isReversing, glm::ve
 
 	cameraVelocity = currentCamLocation - getPos();
 
-	setPos(cameraTargetLocation);
+	//setPos(cameraTargetLocation);
 }
