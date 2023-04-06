@@ -77,7 +77,6 @@ GraphicsSystem::GraphicsSystem() :
 {
 	windowSize = glm::vec2(1200, 800);//_window.getSize();
 
-
 	/*
 	* create all textures
 	*/
@@ -503,19 +502,11 @@ void GraphicsSystem::Update(ecs::Scene& scene, float deltaTime) {
 			//Main goal rn: Implement the logic...
 			TransformComponent& trans = scene.GetComponent<TransformComponent>(cameras[i].targetEntity);
 			//Car& car = scene.GetComponent<Car>(cameras[i].targetEntity);
-			cameras[i].update(trans);
+			cameras[i].update(trans, deltaTime);
 
 			//set the camera variables
 			views[i] = glm::lookAt(cameras[i].getPos(), trans.getTranslation(), glm::vec3(0.0f, 1.0f, 0.0f));
 		}
-	}
-
-	//if there are 2 cameras then the aspect ratio is a upright rectangle that takes half the screen
-	if (numCamerasActive == 1 || numCamerasActive >= 3) {
-		P = glm::perspective(glm::radians(45.f), (float)windowSize.x / windowSize.y, 2.f, 1000.f);
-	}
-	else {
-		P = glm::perspective(glm::radians(45.f), ((float)windowSize.x / 2.f) / windowSize.y, 2.f, 1000.f);
 	}
 
 	if (numCamerasActive == 1) {
@@ -590,6 +581,15 @@ void GraphicsSystem::Update(ecs::Scene& scene, float deltaTime) {
 
 	static int i = 0;
 	i = i == numCamerasActive - 1 ? i = 0 : i + 1;
+
+	//if there are 2 cameras then the aspect ratio is a upright rectangle that takes half the screen
+	if (numCamerasActive == 1 || numCamerasActive >= 3) {
+		P = glm::perspective(glm::radians(cameras[i].FOV), (float)windowSize.x / windowSize.y, 2.f, 1000.f);
+	}
+	else {
+		P = glm::perspective(glm::radians(cameras[i].FOV), ((float)windowSize.x / 2.f) / windowSize.y, 2.f, 1000.f);
+	}
+
 	//configure the view
 	V = views[i];
 

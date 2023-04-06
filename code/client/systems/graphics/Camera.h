@@ -19,7 +19,7 @@ public:
 	void input(const SDL_Event&);
 	glm::vec3 getPos();
 	void setPos(glm::vec3 _position);
-	void update(TransformComponent& _carTransform);
+	void update(TransformComponent& _carTransform, float dt);
 	Guid targetEntity = 0;
 private:
 	friend class GraphicsSystem;
@@ -29,7 +29,10 @@ private:
 	float fspeed = 0, hspeed = 0, panHorizontal = 90.0f, panVertical = -10.0f, lastX = 0, lastY = 0;
 	bool leftMouseButtonPressed = false, firstMouse = true;
 	const float cameraSpeed = 0.1;
+	bool initalized = false;
 
+	float FOV = 30;
+	glm::vec3 cameraVelocity = { 0,0,0 };
 	glm::vec3 previousCarPosition = glm::vec3(0);
 };
 
