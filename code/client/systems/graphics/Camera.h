@@ -19,7 +19,7 @@ public:
 	void input(const SDL_Event&);
 	glm::vec3 getPos();
 	void setPos(glm::vec3 _position);
-	void update(TransformComponent& _carTransform, float dt);
+	void update(TransformComponent& _carTransform, bool isReversing, float dt);
 	Guid targetEntity = 0;
 private:
 	friend class GraphicsSystem;

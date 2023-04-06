@@ -108,7 +108,7 @@ void Camera::setPos(glm::vec3 _position)
 	cameraPos = _position;
 }
 
-void Camera::update(TransformComponent& _carTransform, float dt)
+void Camera::update(TransformComponent& _carTransform, bool isReversing, float dt)
 {
 	/*
 	* calculate the camera position
@@ -141,6 +141,9 @@ void Camera::update(TransformComponent& _carTransform, float dt)
 		else if (glm::length(speed) <= 0.24)
 			state = 0;
 	}
+
+	if (isReversing)
+		state = 0;
 
 	//decrease it
 	if (state == 3 || state == 0)

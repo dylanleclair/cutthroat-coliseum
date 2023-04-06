@@ -39,7 +39,6 @@ void setupCarVFX(ecs::Scene& mainScene, Guid _ID) {
 	//front tire
 	ecs::Entity frontTireTrack = mainScene.CreateEntity();
 	VFXTextureStrip frontTireTrack_r = VFXTextureStrip("textures/MotercycleTireTread.png", 0.07, 2);
-	frontTireTrack_r.maxLength = 115;
 	TransformComponent frontTireTrack_t = TransformComponent(car->getVehicleRigidBody());
 	frontTireTrack_t.setPosition(glm::vec3(0, 0, 3.2));
 	mainScene.AddComponent(frontTireTrack.guid, frontTireTrack_r);
@@ -48,7 +47,6 @@ void setupCarVFX(ecs::Scene& mainScene, Guid _ID) {
 	//right tire
 	ecs::Entity rightTireTrack = mainScene.CreateEntity();
 	VFXTextureStrip rightTireTrack_r = VFXTextureStrip("textures/MotercycleTireTread.png", 0.07, 1);
-	rightTireTrack_r.maxLength = 100;
 	TransformComponent rightTireTrack_t = TransformComponent(car->getVehicleRigidBody());
 	rightTireTrack_t.setPosition(glm::vec3(-1, 0, -0.65));
 	mainScene.AddComponent(rightTireTrack.guid, rightTireTrack_r);
@@ -57,7 +55,6 @@ void setupCarVFX(ecs::Scene& mainScene, Guid _ID) {
 	//left tire
 	ecs::Entity leftTireTrack = mainScene.CreateEntity();
 	VFXTextureStrip leftTireTrack_r = VFXTextureStrip("textures/MotercycleTireTread.png", 0.07, 1);
-	leftTireTrack_r.maxLength = 100;
 	TransformComponent leftTireTrack_t = TransformComponent(car->getVehicleRigidBody());
 	leftTireTrack_t.setPosition(glm::vec3(1, 0, -0.65));
 	mainScene.AddComponent(leftTireTrack.guid, leftTireTrack_r);

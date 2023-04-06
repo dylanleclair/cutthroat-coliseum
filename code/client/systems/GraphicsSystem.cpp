@@ -501,8 +501,9 @@ void GraphicsSystem::Update(ecs::Scene& scene, float deltaTime) {
 		for (int i = 0; i < numCamerasActive; i++) {
 			//Main goal rn: Implement the logic...
 			TransformComponent& trans = scene.GetComponent<TransformComponent>(cameras[i].targetEntity);
-			//Car& car = scene.GetComponent<Car>(cameras[i].targetEntity);
-			cameras[i].update(trans, deltaTime);
+			Car& car = scene.GetComponent<Car>(cameras[i].targetEntity);
+			bool isReversing = car.m_TargetGearCommand == 0 ? true : false;
+			cameras[i].update(trans, isReversing, deltaTime);
 
 			//set the camera variables
 			views[i] = glm::lookAt(cameras[i].getPos(), trans.getTranslation(), glm::vec3(0.0f, 1.0f, 0.0f));

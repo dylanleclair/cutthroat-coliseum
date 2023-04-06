@@ -145,17 +145,6 @@ VFXTextureStrip::VFXTextureStrip(std::string _textureName, const CPU_Geometry& _
 
 void VFXTextureStrip::extrude(glm::vec3 _position, glm::vec3 _normal)
 {
-	//check if the buffer is full and remove the oldest position if yes
-	if (currentLength == maxLength) {
-		//shift all elements back four
-		for (int i = 0; i < verticies.size() - 4; i += 4) {
-			verticies[i] = verticies[i + 4];
-			verticies[i + 1] = verticies[i + 5];
-			verticies[i + 2] = verticies[i + 6];
-			verticies[i + 3] = verticies[i + 7];
-		}
-	}
-
 	previousRight = right;
 	previousPoint = position;
 	previousNormal = normal;
@@ -174,35 +163,27 @@ void VFXTextureStrip::extrude(glm::vec3 _position, glm::vec3 _normal)
 	if (glm::length(right) != 0)
 		right = glm::normalize(right);
 	if (state >= 2) {
-		if (currentLength < maxLength) {
-			int i = currentLength;
-			//make a quad
-			verticies.push_back(previousPoint + previousRight * width);
-			verticies.push_back(previousPoint - previousRight * width);
-			verticies.push_back(_position + right * width);
-			verticies.push_back(_position - right * width);
-			float ratio = glm::length(previousPoint - _position) / textureLength;
-			texCoords.push_back(glm::vec2(0, 0));
-			texCoords.push_back(glm::vec2(1, 0));
-			texCoords.push_back(glm::vec2(0, 1 * ratio));
-			texCoords.push_back(glm::vec2(1, 1 * ratio));
-			//triangle 1
-			indicies.push_back(4 * i);
-			indicies.push_back(4 * i + 2);
-			indicies.push_back(4 * i + 3);
-			//triangle 2
-			indicies.push_back(4 * i);
-			indicies.push_back(4 * i + 3);
-			indicies.push_back(4 * i + 1);
-			currentLength++;
-		}
-		else {
-			//adjust the last quad
-			verticies[verticies.size() - 4] = previousPoint + previousRight * width;
-			verticies[verticies.size() - 3] = previousPoint - previousRight * width;
-			verticies[verticies.size() - 2] = _position + right * width;
-			verticies[verticies.size() - 1] = _position - right * width;
-		}
+		int i = currentLength;
+		//make a quad
+		verticies.push_back(previousPoint + previousRight * width);
+		verticies.push_back(previousPoint - previousRight * width);
+		verticies.push_back(_position + right * width);
+		verticies.push_back(_position - right * width);
+		float ratio = glm::length(previousPoint - _position) / textureLength;
+		texCoords.push_back(glm::vec2(0, 0));
+		texCoords.push_back(glm::vec2(1, 0));
+		texCoords.push_back(glm::vec2(0, 1 * ratio));
+		texCoords.push_back(glm::vec2(1, 1 * ratio));
+		//triangle 1
+		indicies.push_back(4 * i);
+		indicies.push_back(4 * i + 2);
+		indicies.push_back(4 * i + 3);
+		//triangle 2
+		indicies.push_back(4 * i);
+		indicies.push_back(4 * i + 3);
+		indicies.push_back(4 * i + 1);
+		currentLength++;
+		
 	}
 
 	
