@@ -87,7 +87,7 @@ void resetLevel(Car& testCar, std::vector<Guid> ais, ecs::Scene& mainScene, std:
 			testCar.m_driverType = DriverType::HUMAN;
 		}
 		Car& aiCar = mainScene.GetComponent<Car>(ais.at(i));
-		aiCar.m_Vehicle.mPhysXState.physxActor.rigidBody->setGlobalPose(PxTransform(GLMtoPx(spawnPoints[i+1]),GLMtoPx(q)));
+		aiCar.m_Vehicle.mPhysXState.physxActor.rigidBody->setGlobalPose(PxTransform(GLMtoPx(spawnPoints[i]),GLMtoPx(q)));
 		aiCar.m_Vehicle.mPhysXState.physxActor.rigidBody->setLinearDamping(10000.f);
 		aiCar.m_Vehicle.mPhysXState.physxActor.rigidBody->setAngularDamping(10000.f);
 		aiCar.m_navPath->resetNav();
