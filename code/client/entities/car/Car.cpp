@@ -38,7 +38,7 @@ glm::vec3 Car::getTrackNormal()
 void Car::keepRigidbodyUpright(PxRigidBody* rigidbody)
 {
 
-        if ( m_Vehicle.mBaseState.tireSlipStates->slips[0] > 50.f)
+        if ( m_Vehicle.mBaseState.tireSlipStates->slips[0] > 150.f)
         {
             // correct the vehicles orientation
 
