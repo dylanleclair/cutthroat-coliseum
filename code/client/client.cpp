@@ -83,6 +83,9 @@ void resetLevel(Car& testCar, std::vector<Guid> ais, ecs::Scene& mainScene, std:
 
 	// Ai Reset
 	for (int i = 0; i < ais.size(); i++) {
+		if (i == 0) {
+			testCar.m_driverType = DriverType::HUMAN; // Hardcoding first player to be reset to a human, as there will always be one human player
+		}
 		if (i < ControllerInput::getNumberPlayers()) {
 			testCar.m_driverType = DriverType::HUMAN;
 		}

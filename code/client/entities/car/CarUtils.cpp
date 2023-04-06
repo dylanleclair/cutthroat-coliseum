@@ -39,9 +39,11 @@ Guid spawnCar(DriverType type, ecs::Scene& scene, physics::PhysicsSystem* physic
 	RenderModel aiDriver_r = RenderModel();
 
 
+	// Currently all cars are set to computers first and then dynamically set to players
+	// based on controller count, so all carts will load the same model
 	if (type == DriverType::COMPUTER)
 	{
-			GraphicsSystem::importOBJ(aiDriver_r, "AI_beta_cart.obj");
+			GraphicsSystem::importOBJ(aiDriver_r, "beta_cart.obj");
 	} else {
 			GraphicsSystem::importOBJ(aiDriver_r, "beta_cart.obj");
 	}
