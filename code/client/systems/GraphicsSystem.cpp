@@ -481,12 +481,13 @@ void GraphicsSystem::ImGuiPanel() {
 void GraphicsSystem::Update(ecs::Scene& scene, float deltaTime) {
 	//default camera matricies
 	glm::mat4 P = glm::perspective(glm::radians(45.f), (float)windowSize.x / windowSize.y, 2.f, 1000.f);
-	if (numCamerasActive == 1)
+	if (numCamerasActive > 1)
 		cam_mode = 3;
 
 	// If camera mode is 1 - use freecam
 	if (cam_mode == 1) {
 		V = cameras[0].getView();
+		views[0] = V;
 	}
 	// If cam mode is 2 - use fixed camera (values from milestone 2)
 	else if (cam_mode == 2) {
@@ -503,7 +504,7 @@ void GraphicsSystem::Update(ecs::Scene& scene, float deltaTime) {
 			TransformComponent& trans = scene.GetComponent<TransformComponent>(cameras[i].targetEntity);
 			Car& car = scene.GetComponent<Car>(cameras[i].targetEntity);
 			bool isReversing = car.m_TargetGearCommand == 0 ? true : false;
-			cameras[i].update(trans, isReversing, deltaTime);
+			cameras[i].update(trans, isReversing, PxtoGLM(car.getVehicleRigidBody()->getLinearVelocity()), deltaTime);
 
 			//set the camera variables
 			views[i] = glm::lookAt(cameras[i].getPos(), trans.getTranslation(), glm::vec3(0.0f, 1.0f, 0.0f));
@@ -595,7 +596,7 @@ void GraphicsSystem::Update(ecs::Scene& scene, float deltaTime) {
 	V = views[i];
 
 	//light space 'camera'
-	glm::mat4 shadowP = glm::ortho(-40.f, 40.f, -40.f, 40.f, 1.f, 40.0f);
+	glm::mat4 shadowP = glm::ortho(-60.f, 60.f, -60.f, 60.f, 1.f, 40.0f);
 
 
 	/*
@@ -614,9 +615,19 @@ void GraphicsSystem::Update(ecs::Scene& scene, float deltaTime) {
 	GLuint perspectiveUniform = glGetUniformLocation(GLuint(shadowGShader), "P");
 	//set the camera uniforms
 	glUniformMatrix4fv(perspectiveUniform, 1, GL_FALSE, glm::value_ptr(shadowP));
-	glUniformMatrix4fv(viewUniform, 1, GL_FALSE, glm::value_ptr(V));
+	//glUniformMatrix4fv(viewUniform, 1, GL_FALSE, glm::value_ptr(V));
+
+	//shadow camera
+	TransformComponent& chariotTrans = scene.GetComponent<TransformComponent>(cameras[i].targetEntity);
+	//glm::vec3 position = glm::vec3(chariotTrans.getTransformationMatrix() * glm::vec4(0, 10, 0, 1));
+	glm::vec3 position = glm::translate(glm::mat4(1), chariotTrans.getTranslation()) * glm::toMat4(chariotTrans.getRotation()) * glm::vec4(0, 30, 30, 1);
+	glm::mat4 shadowV = glm::lookAt(position, position + lightDirection, glm::vec3(1, 0, 0));
+	glUniformMatrix4fv(viewUniform, 1, GL_FALSE, glm::value_ptr(shadowV));
+
 	for (Guid entityGuid : ecs::EntitiesInScene<RenderModel, TransformComponent>(scene)) {
 		RenderModel& comp = scene.GetComponent<RenderModel>(entityGuid);
+		if (!comp.castsShadow)
+			continue;
 		TransformComponent& trans = scene.GetComponent<TransformComponent>(entityGuid);
 
 		glm::mat4 M = glm::translate(glm::mat4(1), trans.getTranslation()) * toMat4(trans.getRotation()) * glm::scale(glm::mat4(1), trans.getScale());
@@ -625,12 +636,6 @@ void GraphicsSystem::Update(ecs::Scene& scene, float deltaTime) {
 		for each (Mesh mesh in comp.meshes) {
 			mesh.geometry->bind();
 			glUniformMatrix4fv(modelUniform, 1, GL_FALSE, glm::value_ptr(M * mesh.localTransformation));
-			glm::vec3 position;
-			glm::mat4 shadowV;
-
-			position = scene.GetComponent<TransformComponent>(cameras[i].targetEntity).getTranslation() + glm::vec3(0, 30, 0);
-			shadowV = glm::lookAt(position, position + lightDirection, glm::vec3(1, 0, 0));
-			glUniformMatrix4fv(viewUniform, 1, GL_FALSE, glm::value_ptr(shadowV));
 			glViewport(0, 0, 4096, 4096);
 			glDrawElements(GL_TRIANGLES, mesh.numberOfIndicies, GL_UNSIGNED_INT, 0);
 		}
@@ -669,6 +674,10 @@ void GraphicsSystem::Update(ecs::Scene& scene, float deltaTime) {
 	glEnable(GL_CULL_FACE);
 	glClear(GL_DEPTH_BUFFER_BIT);
 
+
+	/*
+	* generate the generative buffer
+	*/
 	gShader.use();
 
 	//get uniform locations
@@ -683,8 +692,6 @@ void GraphicsSystem::Update(ecs::Scene& scene, float deltaTime) {
 	//set the camera uniforms
 	glUniformMatrix4fv(perspectiveUniform, 1, GL_FALSE, glm::value_ptr(P));
 	glUniformMatrix4fv(viewUniform, 1, GL_FALSE, glm::value_ptr(V));
-	glm::vec3 position = scene.GetComponent<TransformComponent>(cameras[i].targetEntity).getTranslation() + glm::vec3(0, 30, 0);
-	glm::mat4 shadowV = glm::lookAt(position, position + lightDirection, glm::vec3(1, 0, 0));
 	glUniformMatrix4fv(lightSpaceMatixUniform, 1, GL_FALSE, glm::value_ptr(shadowP * shadowV));
 
 

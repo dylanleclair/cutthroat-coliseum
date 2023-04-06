@@ -64,6 +64,11 @@ void main()
 		depthDiff += abs(tdepth - LinearizeDepth(texture(gDepth, tc + vec2(0, vstep)).x));
 		depthDiff += abs(tdepth - LinearizeDepth(texture(gDepth, tc + vec2(0, vstep)).x));
 
+		depthDiff += abs(tdepth - LinearizeDepth(texture(gDepth, tc + vec2(hstep, -vstep)).x));
+		depthDiff += abs(tdepth - LinearizeDepth(texture(gDepth, tc + vec2(-hstep, -vstep)).x));
+		depthDiff += abs(tdepth - LinearizeDepth(texture(gDepth, tc + vec2(hstep, vstep)).x));
+		depthDiff += abs(tdepth - LinearizeDepth(texture(gDepth, tc + vec2(-hstep, vstep)).x));
+
 		float normalDiff = 0.0;
 		normalDiff += distance(tnormal, texture(gNormal, tc + vec2(hstep, 0)).xyz);
 		normalDiff += distance(tnormal, texture(gNormal, tc + vec2(-hstep, 0)).xyz);
@@ -84,7 +89,8 @@ void main()
 
 		//calculate final color
 		//if shadow = 1 then the pixel is in shadow
-		color = mix(mix(quantized, gooch, goochWeight),vec3(0,0,0),outline) * ((1-shadow) + (shadow * 0.4));
+		//color = (outline >= 0.5 ? mix(quantized, gooch, goochWeight) : vec3(0,0,0)) * ((1-shadow) + (shadow * 0.4));
+		color = mix(mix(quantized, gooch, goochWeight), vec3(0,0,0), outline) * ((1-shadow) + (shadow * 0.4));
 		if(tdepth - VFXdepth > 0) 
 			color = texture(gVFXColor, tc).xyz;
 	

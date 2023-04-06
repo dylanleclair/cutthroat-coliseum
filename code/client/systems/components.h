@@ -80,7 +80,7 @@ public:
 		//glm::mat4 scalingM = glm::scale(rotationM,this->getScale());
 		//glm::mat4 translationM = glm::translate(scalingM,this->getTranslation());
 
-		return glm::translate(glm::mat4(1), getTranslation()) * toMat4(getRotation()) * glm::scale(glm::mat4(1), getScale()); //translationM;
+		return glm::translate(glm::mat4(1), getTranslation()) * toMat4(getRotation()) * glm::scale(glm::mat4(1), getScale()); 
 	}	
 
 private:
@@ -144,6 +144,7 @@ public:
 	*/
 	void setModelColor(const glm::vec3 _color);
 	bool setMeshLocalTransformation(glm::mat4 _transformation, std::string _meshName);
+	bool castsShadow = true;
 //private functions
 private:
 	int getMeshIndex(int _meshID) {
@@ -165,6 +166,7 @@ private:
 private:
 	unsigned int currentMeshID = 0;
 	int numberOfVerts = 0;
+	
 };
 
 struct RenderLine {

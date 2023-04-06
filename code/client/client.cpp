@@ -416,6 +416,7 @@ int main(int argc, char* argv[]) {
 	TransformComponent road_t = TransformComponent();
 	RenderModel road_r = RenderModel();
 	GraphicsSystem::importOBJ(road_r,"zz-track-road.obj");
+	road_r.castsShadow = false;
 	mainScene.AddComponent(road_e.guid, road_r);
 	mainScene.AddComponent(road_e.guid, road_t);
 
@@ -434,7 +435,6 @@ int main(int argc, char* argv[]) {
 	FramerateCounter framerate;
 
 	bool quit = false;
-	int controlledCamera = 0;
 	
 	// Find the default values of movement dampening
 	// This will be used to reset changes to dampening
@@ -484,6 +484,7 @@ int main(int argc, char* argv[]) {
 
 				RenderModel new_level_r = RenderModel();
 				GraphicsSystem::importOBJ(new_level_r,"zz-track-mesh.obj");
+				//new_level_r.castsShadow = true;
 				mainScene.AddComponent(new_level_e.guid, new_level_r);
 				mainScene.AddComponent(new_level_e.guid, new_level_t);
 
@@ -547,18 +548,6 @@ int main(int argc, char* argv[]) {
 						else {
 							gamePaused = true;
 						}
-					case SDLK_0:
-						controlledCamera = 0;
-						break;
-					case SDLK_1:
-						controlledCamera = 1;
-						break;
-					case SDLK_2:
-						controlledCamera = 2;
-						break;
-					case SDLK_3:
-						controlledCamera = 3;
-						break;
 					case SDLK_p:
 						if (!showImgui) {
 							showImgui = true;
@@ -592,7 +581,7 @@ int main(int argc, char* argv[]) {
 			}
 
 			//pass the event to the camera
-			gs.input(windowEvent, controlledCamera);
+			gs.input(windowEvent, 0);
 		}
 
 		// Check for the car grounded state, and if grounded after being in the air

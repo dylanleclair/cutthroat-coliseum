@@ -43,10 +43,6 @@ public:
 
 	
 private:
-	void drawCamerasElements(GLenum mode, GLsizei count, GLenum type, const void* indices, GLuint viewUniform);
-	void drawCamerasArrays(GLenum mode, GLint first, GLsizei count, GLuint viewUniform);
-	void drawCamerasInstanced(GLenum mode, GLint first, GLsizei count, GLsizei instanceCount, GLuint viewUniform);
-
 	int cam_mode = 3; // Used to determine what mode the camera should use (free, fixed, follow)
 	Camera cameras[4];
 	glm::mat4 views[4];
@@ -70,7 +66,7 @@ private:
 	};
 	renderableInfo entityTransforms;
 
-	float depthDiffWeight = 1;
+	float depthDiffWeight = 20;
 	float normalDiffWeight = 1;
 	glm::vec3 lightDirection = glm::vec3(1, -3, 1);
 	float ambiantStrength = 1;

@@ -34,6 +34,7 @@ glm::mat4 Camera::getView()
 * Used to forward callback events into the camera
 */
 void Camera::input(const SDL_Event& _event) {
+#define ImGUI_Enabled
 #ifdef ImGUI_Enabled
 	auto& io = ImGui::GetIO();
 	if (io.WantCaptureKeyboard && _event.type == SDL_MOUSEBUTTONDOWN) return;
@@ -108,7 +109,7 @@ void Camera::setPos(glm::vec3 _position)
 	cameraPos = _position;
 }
 
-void Camera::update(TransformComponent& _carTransform, bool isReversing, float dt)
+void Camera::update(TransformComponent& _carTransform, bool isReversing, glm::vec3 carVelocity, float dt)
 {
 	/*
 	* calculate the camera position
@@ -122,23 +123,23 @@ void Camera::update(TransformComponent& _carTransform, bool isReversing, float d
 		previousCarPosition = _carTransform.getTranslation();
 	}
 
-	glm::vec3 speed = _carTransform.getTranslation() - previousCarPosition;
 	previousCarPosition = _carTransform.getTranslation();
 
 	float FOVBounceMax = 50;
 	float maxFOVstable = 45;
 	float minFOV = 30;
 	static char state = 0; //0 = no change, 1 = increasing to FOVBounceMax, 2 = decreasing from FOVBounceMax, 3 = stable at maxFOV
+	float carSpeed = glm::length(carVelocity);
 
 	//determine the camera state
-	if (glm::length(speed) >= 0.01) {
-		if (state == 0 && glm::length(speed) > 0.25)
+	if (carSpeed >= 0.01) {
+		if (state == 0 && carSpeed > 20)
 			state = 1;
 		else if (state == 1 && FOV >= FOVBounceMax)
 			state = 2;
 		else if (state == 2 && FOV <= maxFOVstable)
 			state = 3;
-		else if (glm::length(speed) <= 0.24)
+		else if (carSpeed <= 10)
 			state = 0;
 	}
 
@@ -153,25 +154,14 @@ void Camera::update(TransformComponent& _carTransform, bool isReversing, float d
 
 
 	if(state == 1 || state == 3)
-		FOV += glm::length(speed) * 30 * dt;
+		FOV += carSpeed * dt;
 
 	//bound the FOV
 	if(state == 3)
 		FOV = fmin(maxFOVstable, FOV);
 	FOV = fmax(minFOV, FOV);
 	
-	//std::cout << "speed: " << glm::length(speed) << "  FOV: " << FOV << " State: " << (int)state << '\n';
-
-	//cameraTargetLocation.y += glm::length(speed) * 0.2;
-	/*
-	//calculate the vector from the cameras current position to the target position
-	glm::vec3 cameraOffset = getPos() - cameraTargetLocation;
-	if (glm::length(cameraOffset) != 0) {
-		float followDistance = (speed / (speed + GraphicsSystem::follow_correction_strength)) * GraphicsSystem::maximum_follow_distance;
-		cameraOffset = glm::normalize(cameraOffset) * followDistance;
-		setPos(cameraTargetLocation + cameraOffset);
-	}
-	*/
+	std::cout << "speed: " << carSpeed << "  FOV: " << FOV << " State: " << (int)state << '\n';
 	
 
 	glm::vec3 currentCamLocation = getPos();
@@ -183,7 +173,7 @@ void Camera::update(TransformComponent& _carTransform, bool isReversing, float d
 	const float cameraMass = 1;
 	const glm::vec3 s = cameraTargetLocation - getPos();
 	glm::vec3 Fs = (k * (glm::length(s) - r)) * glm::normalize(s);
-	glm::vec3 Fd = ((glm::dot(-c * (speed-cameraVelocity), s)) / glm::length(s)) * glm::normalize(s);
+	glm::vec3 Fd = ((glm::dot(-c * (carVelocity - cameraVelocity), s)) / glm::length(s)) * glm::normalize(s);
 
 	glm::vec3 a = (Fs + Fd) / cameraMass;
 	glm::vec3 v = a * dt;
@@ -197,5 +187,5 @@ void Camera::update(TransformComponent& _carTransform, bool isReversing, float d
 
 	cameraVelocity = currentCamLocation - getPos();
 
-	//setPos(cameraTargetLocation);
+	setPos(cameraTargetLocation);
 }
