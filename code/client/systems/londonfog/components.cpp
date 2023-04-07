@@ -135,6 +135,23 @@ void LondonFog::setStyle()
 }
 
 
+std::string getRankSuffix(int rank)
+{
+  int ending = rank % 10;
+  switch (ending)
+  {
+    case 1:
+      return "st";
+    case 2:
+      return "nd";
+    case 3:
+      return "rd";
+    default:
+      return "th";
+  } 
+
+}
+
 void LondonFog::drawHUD(Guid carGuid, ecs::Scene scene, BoundingBox region, RaceTracker& raceSystem)
 {
 
@@ -195,13 +212,14 @@ void LondonFog::drawHUD(Guid carGuid, ecs::Scene scene, BoundingBox region, Race
   ImGui::SetWindowPos(ImVec2((region.x + region.w) - (region.w * startX) - v.x, region.y + startY * region.h));
 
 
+  int ranking = raceSystem.getRanking(carGuid);
   ImGui::BeginGroup();
   ImGui::TextColored(ImVec4(1.0f, 1.0f, 1.0f, 1.0f), "Rank");
   ImGui::PushFont(m_fonts["JockeyOneLarge"]);
-  ImGui::TextColored(ImVec4(1.0f, 1.0f, 1.0f, 1.0f), "%d", raceSystem.getRanking(carGuid));
+  ImGui::TextColored(ImVec4(1.0f, 1.0f, 1.0f, 1.0f), "%d", ranking);
   ImGui::PopFont();
   ImGui::SameLine();
-  ImGui::TextColored(ImVec4(1.0f, 1.0f, 1.0f, 1.0f), "st");
+  ImGui::TextColored(ImVec4(1.0f, 1.0f, 1.0f, 1.0f), getRankSuffix(ranking).c_str());
   ImGui::EndGroup();
 
   for (int i =0; i < 9; i++)
