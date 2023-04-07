@@ -61,6 +61,7 @@ void RaceTracker::Update(ecs::Scene& scene, float deltaTime) {
       }
       if (car.lapCount == MAX_LAPS+1)
       {
+        car.lapCount--;
         m_raceFinished = true; // the whole race
         car.isFinished = true; // each individual racer
       }

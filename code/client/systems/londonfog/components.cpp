@@ -171,7 +171,7 @@ void LondonFog::drawHUD(Guid carGuid, ecs::Scene scene, BoundingBox region, Race
 
   ImGui::TextColored(ImVec4(1.0f, 1.0f, 1.0f, 1.0f), "Current Speed");
   ImGui::PushFont(m_fonts["JockeyOneLarge"]);
-  ImGui::TextColored(ImVec4(1.0f, 1.0f, 1.0f, 1.0f), "%.0f", clamp((carSpeed * (carSpeed / 200.f)), 0.f, 500.f));
+  ImGui::TextColored(ImVec4(1.0f, 1.0f, 1.0f, 1.0f), "%.0f", clamp((carSpeed * (carSpeed / 10.f)), 0.f, 500.f));
   ImGui::PopFont();
   ImGui::SameLine();
   ImGui::TextColored(ImVec4(1.0f, 1.0f, 1.0f, 1.0f), "cm/s");
