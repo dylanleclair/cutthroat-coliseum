@@ -162,7 +162,7 @@ void Camera::update(TransformComponent& _carTransform, bool isReversing, glm::ve
 	FOV = fmax(minFOV, FOV);
 	
 	//std::cout << "speed: " << carSpeed << "  FOV: " << FOV << " State: " << (int)state << '\n';
-	
+	FOV = 45;
 
 	glm::vec3 currentCamLocation = getPos();
 	
@@ -187,5 +187,5 @@ void Camera::update(TransformComponent& _carTransform, bool isReversing, glm::ve
 
 	cameraVelocity = currentCamLocation - getPos();
 
-	//setPos(cameraTargetLocation);
+	setPos(cameraTargetLocation);
 }
