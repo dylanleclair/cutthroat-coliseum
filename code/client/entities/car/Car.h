@@ -103,6 +103,9 @@ struct Car {
     void cleanupVehicle();
     void baseSetup();
     void setup1();
+    void setup2();
+    
+    float carSpeed();
 
     // movement 
     Command drive(ecs::Scene& scene, float deltaTime);

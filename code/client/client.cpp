@@ -45,6 +45,7 @@
 #include <chrono>  // chrono::system_clock
 #include <ctime>   // localtime
 
+#include "systems/londonfog/components.h"
 
 
 float startCountdown{5.0f};
@@ -471,6 +472,11 @@ int main(int argc, char* argv[]) {
 
 		std::cout << "initalization finished, beginning game\n";
 
+
+	// initialize UI
+
+	LondonFog ui;
+
 	// GAME LOOP
 	while (!quit) {
 		Timestep timestep; // Time since last frame
@@ -736,24 +742,29 @@ int main(int argc, char* argv[]) {
 			ImGuiWindowFlags_NoDecoration |			// no decoration; only the text should be visible
 			ImGuiWindowFlags_NoTitleBar;			// no title; only the text should be visible
 		
-		//Lap counter
-		ImGui::SetNextWindowPos(ImVec2(10, 10));
-		ImGui::Begin("UI", (bool*)0, textWindowFlags);
-		ImGui::SetWindowFontScale(2.f);
-		ImGui::PushFont(CabalBold);
-		ImGui::TextColored(ImVec4(1.0f, 1.0f, 1.0f, 1.0f), "Lap: %d/%d", raceSystem.getLapCount(carGuid), raceSystem.MAX_LAPS);
-		ImGui::PopFont();
-		ImGui::End();
-		
-		//Lap counter
-		ImGui::SetNextWindowPos(ImVec2(10, 30));
-		ImGui::Begin("UI", (bool*)0, textWindowFlags);
-		ImGui::SetWindowFontScale(2.f);
-		ImGui::PushFont(CabalBold);
-		ImGui::TextColored(ImVec4(1.0f, 1.0f, 1.0f, 1.0f), "Rank: %d/%d", raceSystem.getRanking(carGuid), spawnPoints.size() );
-		ImGui::PopFont();
-		ImGui::End();
 
+		// londonfog::setStyle();
+
+
+		// //Lap counter
+		// ImGui::SetNextWindowPos(ImVec2(10, 10));
+		// ImGui::Begin("UI", (bool*)0, textWindowFlags);
+		// ImGui::SetWindowFontScale(2.f);
+		// ImGui::PushFont(CabalBold);
+		// ImGui::TextColored(ImVec4(1.0f, 1.0f, 1.0f, 1.0f), "Lap: %d/%d", raceSystem.getLapCount(carGuid), raceSystem.MAX_LAPS);
+		// ImGui::PopFont();
+		// ImGui::End();
+		
+		// //Lap counter
+		// ImGui::SetNextWindowPos(ImVec2(10, 30));
+		// ImGui::Begin("UI", (bool*)0, textWindowFlags);
+		// ImGui::SetWindowFontScale(2.f);
+		// ImGui::PushFont(CabalBold);
+		// ImGui::TextColored(ImVec4(1.0f, 1.0f, 1.0f, 1.0f), "Rank: %d/%d", raceSystem.getRanking(carGuid), spawnPoints.size() );
+		// ImGui::PopFont();
+		// ImGui::End();
+
+		ui.drawHUD(carGuid, mainScene,{0,0,1200,800}, raceSystem);
 
 		//you win message
 		static int counter = 0;

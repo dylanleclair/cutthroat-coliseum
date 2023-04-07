@@ -1,6 +1,7 @@
 #include "Car.h"
 #include "../../Input.h"
 #include "glm/glm.hpp"
+#include <glm/gtx/projection.hpp>
 #include "../../utils/PxConversionUtils.h"
 
 #include "../physics/LevelCollider.h"
@@ -281,6 +282,40 @@ void Car::setup1() {
     m_Vehicle.mEngineDriveParams.autoboxParams.latency = 0.5f;
     m_Vehicle.mEngineDriveParams.gearBoxParams.switchTime = 0.2f;
 }
+
+void Car::setup2() {
+    // For rigid body moi calculations
+    // x= (L^2 + H^2)*M/12, y=(W^2+L^2)*M/12, z=(H^2+W^2)*M/12
+    //width = 1.68
+    //height = 1.3
+    //length = 2.74
+    m_Vehicle.mBaseParams.rigidBodyParams.mass = 500.f;
+    m_Vehicle.mBaseParams.rigidBodyParams.moi.x = 3200;
+    m_Vehicle.mBaseParams.rigidBodyParams.moi.y = 2000;
+    m_Vehicle.mBaseParams.rigidBodyParams.moi.z = 3200;
+
+    m_Vehicle.mBaseParams.wheelParams[0].radius = .6f;
+    m_Vehicle.mBaseParams.wheelParams[0].halfWidth = .3f;
+    m_Vehicle.mBaseParams.wheelParams[1].radius = .6f;
+    m_Vehicle.mBaseParams.wheelParams[1].halfWidth = .3f;
+    m_Vehicle.mBaseParams.wheelParams[2].radius = .6f;
+    m_Vehicle.mBaseParams.wheelParams[2].halfWidth = .3f;
+    m_Vehicle.mBaseParams.wheelParams[3].radius = .6f;
+    m_Vehicle.mBaseParams.wheelParams[3].halfWidth = .3f;
+
+    m_Vehicle.mBaseParams.steerResponseParams.maxResponse = 0.6f;
+    m_Vehicle.mBaseParams.brakeResponseParams->wheelResponseMultipliers[0] = 0.5f;
+    m_Vehicle.mBaseParams.brakeResponseParams->wheelResponseMultipliers[1] = 0.5f;
+    m_Vehicle.mBaseParams.tireForceParams->latStiffY = 3186990.625f;
+
+    m_Vehicle.mEngineDriveParams.engineParams.moi = 0.5;
+    m_Vehicle.mEngineDriveParams.engineParams.peakTorque = 500.f;
+    m_Vehicle.mEngineDriveParams.engineParams.maxOmega = 600.f;
+    m_Vehicle.mEngineDriveParams.autoboxParams.latency = 0.5f;
+    m_Vehicle.mEngineDriveParams.gearBoxParams.switchTime = 0.1f;
+}
+
+
 
 void Car::resetModifications() {
     // ORIGINALLY MEANT TO RESET THE CENTER OF GRAVITY, BUT WORKS BETTER WITHOUT CHANGING ?
@@ -839,3 +874,12 @@ Command Car::pathfind(ecs::Scene& scene, float deltaTime)
     return command;
 }
 
+float Car::carSpeed()
+{
+    // return the projection of the car's linear velocity on it's heading/forward dir
+
+    glm::vec3 v = PxtoGLM(m_Vehicle.mPhysXState.physxActor.rigidBody->getLinearVelocity());
+    glm::vec3 u = getForwardDir();
+
+    return glm::length(v);
+}
