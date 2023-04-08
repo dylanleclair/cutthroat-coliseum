@@ -336,7 +336,29 @@ int main(int argc, char* argv[]) {
 		mainScene.AddComponent(exhausePipes[i].guid, pipe_t);
 		//mainScene.AddComponent(exhausePipes[i].guid, flame_p);
 		
+
+		ecs::Entity wrongWaySign = mainScene.CreateEntity();
+		TransformComponent wrongWaySign_t = TransformComponent(testCar.getVehicleRigidBody());
+		VFXBillboard wrongWay_b = VFXBillboard("textures/wrongway.png", glm::vec3(1, 1, 0));
+		wrongWaySign_t.setScale(glm::vec3(6, 3, 0));
+		wrongWaySign_t.setPosition(glm::vec3(0, 2.2, -3));
+
+		mainScene.AddComponent(wrongWaySign.guid, wrongWaySign_t);
+		mainScene.AddComponent(wrongWaySign.guid, wrongWay_b);
+		
 	}
+
+	ecs::Entity wrongWaySign = mainScene.CreateEntity();
+	TransformComponent wrongWaySign_ti = TransformComponent(testCar.getVehicleRigidBody());
+	VFXBillboard wrongWay_b = VFXBillboard("textures/wrongway.png", glm::vec3(1, 1, 0));
+	wrongWaySign_ti.setScale(glm::vec3(6, 3, 0));
+	wrongWaySign_ti.setPosition(glm::vec3(0, 2.2, -3));
+
+	mainScene.AddComponent(wrongWaySign.guid, wrongWaySign_ti);
+	mainScene.AddComponent(wrongWaySign.guid, wrongWay_b);
+
+	TransformComponent& wrongWaySign_t = mainScene.GetComponent<TransformComponent>(wrongWaySign.guid);
+
 	
 	RaceTracker raceSystem{raceTrackingCurve, desiredSpawnLocation};	
 
@@ -508,6 +530,18 @@ int main(int argc, char* argv[]) {
 		//TODO:  May need to put in an if check, and factor out ?
 		testCar.m_Vehicle.mPhysXState.physxActor.rigidBody->setLinearDamping(default_lin_damp);
 		testCar.m_Vehicle.mPhysXState.physxActor.rigidBody->setAngularDamping(default_ang_damp);
+
+		if (testCar.isWrongWay())
+		{
+			wrongWaySign_t.setScale(glm::vec3(6, 3, 0));
+			bill_t.setPosition(glm::vec3(0, 20, 0));
+
+
+		} else {
+			wrongWaySign_t.setScale(glm::vec3(0, 0, 0));
+			bill_t.setPosition(glm::vec3(20000000, 2000000, 0));
+
+		}
 
 		for (int i = 0; i < AIGuids.size(); i++) {
 			Car& aiCar = mainScene.GetComponent<Car>(AIGuids.at(i));
