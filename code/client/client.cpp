@@ -47,6 +47,7 @@
 
 #include "systems/londonfog/components.h"
 
+#include "utils/AssetLoader.h"
 
 float startCountdown{5.0f};
 
@@ -166,6 +167,19 @@ int main(int argc, char* argv[]) {
 	 */
 
 	// first and foremost, create a scene.
+
+
+
+	// register and begin loading all assets
+	g_Assets.registerAsset("zz-track-nav.obj", "zz-track-path", SPLINE); 
+	g_Assets.registerAsset("zz-track-ai-nav.obj", "zz-track-ai-path", SPLINE); 
+
+	// load the assets (may want to perform on separate thread for efficiency)
+	g_Assets.loadAssets();
+	
+	// now you can access & use them!
+
+
 	ecs::Scene mainScene;
 
 	GraphicsSystem gs = GraphicsSystem();
@@ -175,8 +189,7 @@ int main(int argc, char* argv[]) {
 
 
 
-	CPU_Geometry zzPathGeom;
-	GraphicsSystem::importSplineFromOBJ(zzPathGeom, "zz-track-nav.obj");
+	CPU_Geometry& zzPathGeom = g_Assets.getSpline("zz-track-path");
 	
 	glm::vec3 desiredSpawnLocation = {-4.108957, 3.397303, -43.794819}; // hardcoded value near the straight strip of the track
 	Curve raceTrackingCurve(zzPathGeom.verts);
@@ -238,8 +251,7 @@ int main(int argc, char* argv[]) {
 	// ai path is lower resolution curve to help prevent ai from "overcorrecting"
 	// but this could also be fixed by fixing normal computation
 	// in steering code
-	CPU_Geometry nav_geom;
-	GraphicsSystem::importSplineFromOBJ(nav_geom, "zz-track-ai-nav.obj");
+	CPU_Geometry& nav_geom = g_Assets.getSpline("zz-track-ai-path");
 	Curve aiNavigationPath{nav_geom.verts};
 
 
