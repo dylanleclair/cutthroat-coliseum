@@ -5,6 +5,7 @@
 #include <sstream>
 #include <string>
 
+const ImVec2 AUTO_RESIZE = ImVec2(0.f,0.f);
 
 ImGuiWindowFlags lfWindowFlags =
   ImGuiWindowFlags_NoBringToFrontOnFocus |
@@ -51,6 +52,8 @@ void LondonFog::loadFonts()
   //load fonts into ImGui
   loadFont("fonts/JockeyOne.ttf", "JockeyOne", 50.f, io, m_fonts);
   loadFont("fonts/JockeyOne.ttf", "JockeyOneLarge", 130.f, io, m_fonts);
+  loadFont("fonts/JockeyOne.ttf", "JockeyOneXL", 150.f, io, m_fonts);
+  loadFont("fonts/JockeyOne.ttf", "JockeyOneMedium", 70.f, io, m_fonts);
 
 
 }
@@ -187,14 +190,21 @@ void LondonFog::drawHUD(Guid carGuid, ecs::Scene scene, BoundingBox region, Race
 
   if (car.isWrongWay())
   {
+    static float SCREEN_WIDTH = 1200.f;
+    static float SCREEN_HEIGHT = 800.f;
 
+    float size = 300; 
+    ImVec2 imageSize{size * 1.60f, size}; // enforce aspect ratio
+    ImVec2 pos = region.getRelativeCenter(imageSize);
 
-    ImGui::SetNextWindowSize(ImVec2(0.f,0.f));
-    ImGui::SetNextWindowPos(ImVec2(0,0));
+    pos.y -= 0.3f * static_cast<float>(region.h);
+
+    ImGui::SetNextWindowSize(ImVec2(0.f,0.f)); // scale to fill content (img size in this case)
+    ImGui::SetNextWindowPos(pos);
     ImGui::Begin("warning", false, emptyBackground);
 
-    m_texts["wrongway"].Render();
 
+    m_texts["wrongway"].Render(imageSize);
 
 
     ImGui::End();
@@ -302,26 +312,86 @@ void LondonFog::drawHUD(Guid carGuid, ecs::Scene scene, BoundingBox region, Race
 
 
 
-void LondonFog::drawMenu(int width, int height)
+void LondonFog::drawMenu(BoundingBox region)
 {
-  ImGui::PushStyleVar(ImGuiStyleVar_WindowPadding, ImVec2{18.f, 12.f});
-  ImGui::PushStyleColor(ImGuiCol_WindowBg, colorCodeToImguiVec("#EF1A1A", 0.65f));
+  // push the style options
+  ImGui::PushStyleVar(ImGuiStyleVar_WindowPadding, ImVec2{0.f, 0.f});
+  ImGui::PushStyleColor(ImGuiCol_WindowBg, colorCodeToImguiVec("#000000", 0.65f));
   ImGui::PushFont(m_fonts["JockeyOne"]);
 
   if (m_status == MAIN_SCREEN)
   {
 
-    ImGui::SetNextWindowSize(ImVec2(0.f,0.f));
+
+
+    // draw our names :D
+
+    ImVec2 blCorner = region.getCorner(Corner::BOTTOM_LEFT);
+    ImGui::SetNextWindowSize(AUTO_RESIZE);
+    ImGui::Begin("authors",false, lfWindowFlags);
 
 
 
-    ImGui::Begin("mainmenu");
+    ImGui::PushFont(m_fonts["JockeyOneMedium"]);
+    ImGui::TextColored(ImVec4(1.0f, 1.0f, 1.0f, 1.0f), "By Sam, Elise, Dylan and Beau");
+    ImGui::PopFont();
+
 
     ImVec2 v = ImGui::GetWindowSize();
+    ImVec2 textOffset = {0.f, 40.f};
+    ImGui::SetWindowPos(ImVec2(blCorner.x + textOffset.x, blCorner.y - v.y - textOffset.y));
+
+    ImGui::End();
+
+
+    // draw "Maximus Overdrive" (game title)
+    ImVec2 trCorner = region.getCorner(Corner::TOP_RIGHT);
+    ImGui::SetNextWindowSize(AUTO_RESIZE);
+    ImGui::Begin("gametitle",false, lfWindowFlags);
+
+    ImGui::PushFont(m_fonts["JockeyOneXL"]);
+    ImGui::TextColored(ImVec4(1.0f, 1.0f, 1.0f, 1.0f), "Maximus");
+    for (int i =0; i < 10; i++)
+    {
+      ImGui::Spacing();
+      ImGui::SameLine();
+    }
+    ImGui::SameLine();
+    ImGui::TextColored(ImVec4(1.0f, 1.0f, 1.0f, 1.0f), "Overdrive");
+    ImGui::PopFont();
+
+
+    v = ImGui::GetWindowSize();
+    textOffset = {0.f, 40.f};
+    ImGui::SetWindowPos(ImVec2(trCorner.x - v.x, trCorner.y + textOffset.y));
+
+    ImGui::End();
+
+
+
+
+
+    ImVec2 menuSize = ImVec2(static_cast<float>(region.w), static_cast<float>(region.h));
+    ImGui::SetNextWindowSize(menuSize);
+    ImGui::SetNextWindowPos(ImVec2(0.f,0.f));
+
+
+    ImGui::Begin("mainmenu", false, emptyBackground);
+
+    // take up the entire screen
+    m_texts["mainmenu"].Render(menuSize);
+
+    ImGui::End();
+
+
+    // now draw the other elements of the screen.
 
     // should take up right side of screen
     // all in one window? or should I split it up??
-    ImGui::SetWindowPos(ImVec2());
+    
+    ImGui::Begin("gametitle", false, lfWindowFlags);
+
+    ImGui::End();
 
 
     // ImGui::Button("ACTION", ImVec2((size.x - ImGui::GetStyle().ItemSpacing.x) * 0.5f, size.y));
@@ -330,10 +400,13 @@ void LondonFog::drawMenu(int width, int height)
 
     
 
-    ImGui::End();
+
   }
 
-
+  // pop the style options
+  ImGui::PopFont();
+  ImGui::PopStyleColor();
+  ImGui::PopStyleVar();
 
 
 
@@ -418,4 +491,6 @@ void LondonFog::loadTextures()
   UITexture wrongWay{"textures/wrongway.png"};
   m_texts["wrongway"] = wrongWay;
 
+  UITexture mainmenu{"textures/mainmenubkg.png"};
+  m_texts["mainmenu"] = mainmenu;
 }
