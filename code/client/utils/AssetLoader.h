@@ -5,8 +5,6 @@
 #include <unordered_set>
 #include "../systems/GraphicsSystem.h"
 
-
-
 enum AssetType {
   MODEL,
   SPLINE,
@@ -41,7 +39,6 @@ private:
   std::unordered_map<std::string, RenderModel> m_renderables;
   std::unordered_map<std::string, CPU_Geometry> m_geoms;
   void AssetLoader::loadAsyncWorker(void (*when_complete)());
-
 
   std::vector<Asset> m_registered;
 };

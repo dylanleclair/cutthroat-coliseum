@@ -19,6 +19,17 @@ ImGuiWindowFlags lfWindowFlags =
   ImGuiWindowFlags_NoTitleBar;			// no title; only the text should be visible
 
 
+ImGuiWindowFlags emptyBackground =
+  ImGuiWindowFlags_NoBringToFrontOnFocus |
+  ImGuiWindowFlags_NoMove |				// text "window" should not move
+  // ImGuiWindowFlags_NoResize |				// should not resize
+  ImGuiWindowFlags_NoCollapse |			// should not collapse
+  ImGuiWindowFlags_NoSavedSettings |		// don't want saved settings mucking things up
+  // ImGuiWindowFlags_AlwaysAutoResize |		// window should auto-resize to fit the text
+  ImGuiWindowFlags_NoBackground |			// window should be transparent; only the text should be visible
+  ImGuiWindowFlags_NoDecoration |			// no decoration; only the text should be visible
+  ImGuiWindowFlags_NoScrollbar |
+  ImGuiWindowFlags_NoTitleBar;			// no title; only the text should be visible
 
 
 ImVec4 colorCodeToImguiVec(std::string colorCode, float opacity);
@@ -176,12 +187,16 @@ void LondonFog::drawHUD(Guid carGuid, ecs::Scene scene, BoundingBox region, Race
 
   if (car.isWrongWay())
   {
+
+
     ImGui::SetNextWindowSize(ImVec2(0.f,0.f));
     ImGui::SetNextWindowPos(ImVec2(0,0));
-    ImGui::Begin("warning");
+    ImGui::Begin("warning", false, emptyBackground);
 
     m_texts["wrongway"].Render();
-    
+
+
+
     ImGui::End();
   }
 
