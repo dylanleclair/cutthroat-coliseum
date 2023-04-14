@@ -23,6 +23,13 @@ struct Asset {
 struct AssetLoader {
   void registerAsset(std::string filename); // will set an asset to be loaded
   void loadAssets(); // will load all the assets that are registered.
+  
+  
+  /*
+  */
+  void AssetLoader::loadAssetsAsync(void (*when_complete)());
+  void AssetLoader::loadAssetsAsync();
+  
   CPU_Geometry& getSpline(std::string name);
   void registerAsset(std::string filename, std::string name, AssetType type)
   {
@@ -33,6 +40,7 @@ private:
   void loadAsset(Asset asset);
   std::unordered_map<std::string, RenderModel> m_renderables;
   std::unordered_map<std::string, CPU_Geometry> m_geoms;
+  void AssetLoader::loadAsyncWorker(void (*when_complete)());
 
 
   std::vector<Asset> m_registered;

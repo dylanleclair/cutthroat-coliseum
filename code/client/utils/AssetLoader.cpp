@@ -41,6 +41,29 @@ void AssetLoader::loadAssets()
 
 }
 
+
+void AssetLoader::loadAsyncWorker(void (*when_complete)())
+{
+  // this will be spawned on seperate thread, which will load assets
+  // then call the provided callback
+  std::thread i_want_to_kms = std::thread(&AssetLoader::loadAssets, this);
+  i_want_to_kms.join();
+  when_complete();
+}
+
+
+void AssetLoader::loadAssetsAsync(void (*when_complete)())
+{
+  std::thread depression = std::thread(&AssetLoader::loadAsyncWorker,this, when_complete);
+}
+void AssetLoader::loadAssetsAsync()
+{
+  auto doNothing = []{};
+  std::thread depression = std::thread(&AssetLoader::loadAsyncWorker,this, doNothing);
+}
+
+
+
 CPU_Geometry& AssetLoader::getSpline(std::string name)
 {
   return m_geoms[name];
