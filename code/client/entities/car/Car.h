@@ -116,7 +116,7 @@ struct Car {
     bool Jump();
     bool AiJump();
     void Car::checkFlipped(PxTransform carPose);
-
+    void BoostForward();
     // navigation
     glm::vec3 getForwardDir();
 
@@ -129,6 +129,7 @@ struct Car {
     // position
     PxRigidBody* getVehicleRigidBody();
     glm::vec3 getPosition();
+    PxTransform getTransformPx();
 
     /////////////////////////////////////////
     // AI methods / etc.  ///////////////////
@@ -142,8 +143,9 @@ private:
     void keepRigidbodyUpright(PxRigidBody* rigidbody);
 
     float STRENGTH_UP_CORRECTION{300.f};
-    float m_stuckTimer;
-
+    float m_stuckTimer{0.f};
+    float m_timeSinceLastJump{0.f};
+    bool m_grounded{false};
 
 };
 

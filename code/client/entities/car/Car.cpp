@@ -11,6 +11,18 @@
 #include "imgui_impl_opengl3.h"
 #include <iostream>
 
+physx::PxShape* castRayCheckShape(PxScene* scene, PxVec3 origin, PxVec3 dir, float dist)
+{
+    PxRaycastBuffer hit;
+
+    bool status = scene->raycast(origin, dir, dist, hit);
+    if (status)
+    {
+        return hit.block.shape;
+    }
+    return nullptr;
+}
+
 const char* gVehicleDataPath = "vehicledata";
 
 // // HACK(beau): make these visible to tuning imgui panel
@@ -39,7 +51,8 @@ glm::vec3 Car::getTrackNormal()
 void Car::keepRigidbodyUpright(PxRigidBody* rigidbody)
 {
 
-        if ( m_Vehicle.mBaseState.tireSlipStates->slips[0] > 150.f)
+        if (!m_grounded)
+        // if ( m_Vehicle.mBaseState.tireSlipStates->slips[0] > 150.f)
         {
             // correct the vehicles orientation
 
@@ -205,6 +218,7 @@ void Car::carImGui() {
         ImGui::Text("Car rotation: %f, %f, %f, %f", vehicleRot.w, vehicleRot.x, vehicleRot.y, vehicleRot.z);
         ImGui::Text("Friction? %f, %f", m_Vehicle.mBaseState.tireSlipStates->slips[0], m_Vehicle.mBaseState.tireSlipStates->slips[1]);
         ImGui::Text("Is wrong way?: %s", isWrongWay() ? "true" : "false");
+        ImGui::Text("Grounded?: %s", m_grounded ? "true" : "false");
         
         ImGui::TreePop();
 
@@ -391,6 +405,23 @@ bool Car::AiJump() {
     return true;
 }
 
+void Car::BoostForward()
+{
+    // will boost the car forward !! 
+
+    // get the heading direction of the car and scale it by the magnitude of the boost
+    glm::vec3 _heading = getForwardDir();
+    PxVec3 heading = GLMtoPx(_heading);
+
+    if (m_timeSinceLastJump > 1.5f)
+    {
+        // Caution force is proportional to the mass of the car, the lower the mass, the harder the force will be applied
+        m_Vehicle.mPhysXState.physxActor.rigidBody->addForce(heading * 4200.f, PxForceMode::eIMPULSE, true);
+        m_timeSinceLastJump = 0.f;
+    }
+}
+
+
 
 void Car::Update(Guid carGuid, ecs::Scene& scene, float deltaTime)
 {
@@ -398,10 +429,45 @@ void Car::Update(Guid carGuid, ecs::Scene& scene, float deltaTime)
   float delta_seconds = deltaTime;
   assert(delta_seconds > 0.f && delta_seconds < 0.2000001f);  
 
+  m_timeSinceLastJump += delta_seconds;
+
   Command command = drive(scene, deltaTime);
   keepRigidbodyUpright(m_Vehicle.mPhysXState.physxActor.rigidBody);
 
   checkFlipped(getVehicleRigidBody()->getGlobalPose());
+
+  PxTransform local = getTransformPx();
+  // local down vector
+  PxVec3 down(0.f,-1.f,0.f);
+
+  bool obstacle_under{false};
+
+  PxShape* hitShape = castRayCheckShape(physicsSystem->m_Scene, local.p, down, 10.f);
+  // check for obstacles in front of the ai    
+  if (hitShape != nullptr)
+  {
+    for (Guid entity : ecs::EntitiesInScene<ObstacleCollider>(scene))
+    {
+        // get the level collider
+        ObstacleCollider& oc = scene.GetComponent<ObstacleCollider>(entity);
+        obstacle_under = obstacle_under || (oc.getShape() == hitShape);
+    }
+
+    // check if they should get boosted :p 
+    if (obstacle_under)
+    {
+        std::cout << "boost detected!!!\n";
+        BoostForward();
+    }
+
+  }
+
+  hitShape = castRayCheckShape(physicsSystem->m_Scene, local.p, local.q.rotate(down), 1.f);
+  for (Guid entity : ecs::EntitiesInScene<RoadCollider>(scene))
+  {
+    RoadCollider& rc = scene.GetComponent<RoadCollider>(entity);
+    m_grounded = (rc.getShape() == hitShape) ? true : false;
+  }
 
   m_Vehicle.mCommandState.brakes[0] = command.brake;
   m_Vehicle.mCommandState.nbBrakes = 1;
@@ -481,6 +547,13 @@ glm::vec3 Car::getPosition()
 {
     PxTransform carPose = m_Vehicle.mPhysXState.physxActor.rigidBody->getGlobalPose();
     return PxtoGLM(carPose.p);
+}
+
+
+PxTransform Car::getTransformPx()
+{
+    PxTransform carPose = m_Vehicle.mPhysXState.physxActor.rigidBody->getGlobalPose();
+    return carPose;
 }
 
 Command Car::drive(ecs::Scene& scene, float deltaTime)
@@ -669,6 +742,11 @@ bool castRay(PxScene* scene, PxVec3 origin, PxVec3 dir, float dist, physx::PxSha
     return false;
 }
 
+
+
+
+
+
 Command Car::pathfind(ecs::Scene& scene, float deltaTime)
 {
 
@@ -723,6 +801,8 @@ Command Car::pathfind(ecs::Scene& scene, float deltaTime)
     bool forced_turn_right{false};
     bool hitting_wall{false};
     bool obstacle_ahead{false};
+
+    bool obstacle_under{false};
 
     // split into left and right
     bool hit = castRay(physicsSystem->m_Scene, carPose.p, GLMtoPx(steering_rays[0]), 10.f, level_c->getShape());
