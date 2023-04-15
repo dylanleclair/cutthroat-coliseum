@@ -60,7 +60,7 @@ struct BoundingBox {
     // then subtract half of the elements size's width/height
     centerX -= (elementSize.x) / 2.f;
     centerY -= (elementSize.y) / 2.f;
-
+    
     // return the computer center coords
     return ImVec2{centerX,centerY};
   }

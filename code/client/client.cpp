@@ -699,8 +699,10 @@ int main(int argc, char* argv[]) {
 					case SDLK_F1:
 						if (gamePaused) {
 							gamePaused = false;
+							ui.m_status = RACING_SCREEN;
 						}
 						else {
+							ui.m_status = PAUSE_SCREEN;
 							gamePaused = true;
 						}
 					case SDLK_p:

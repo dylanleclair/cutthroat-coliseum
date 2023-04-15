@@ -244,6 +244,11 @@ void LondonFog::drawHUD(Guid carGuid, ecs::Scene scene, BoundingBox region, Race
   ImGui::SameLine();
   ImGui::TextColored(ImVec4(1.0f, 1.0f, 1.0f, 1.0f), "cm/s");
 
+  ImVec2 size = ImGui::GetWindowSize();
+  // make the clamp relative to actual region size
+  // make font scale to region size
+  ImGui::SetWindowSize(ImVec2(clamp(size.x,70.f, 100.f), size.y));
+
   ImGui::End();
 
 
@@ -456,7 +461,6 @@ void LondonFog::drawMenu(BoundingBox region)
   } else if (m_status == MULTIPLAYER_SCREEN)
   {
 
-
     ImGui::PushStyleColor(ImGuiCol_WindowBg, colorCodeToImguiVec("#000000", 1.00f));
     ImGui::PushFont(m_fonts["JockeyOneMedium"]);
 
@@ -536,6 +540,71 @@ void LondonFog::drawMenu(BoundingBox region)
   } else if (m_status == PAUSE_SCREEN)
   {
     // draw the pause screen
+
+    // draw a window in the middle of the screen
+    // with "resume?"
+
+
+    ImGui::PushStyleColor(ImGuiCol_WindowBg, colorCodeToImguiVec("#bf0d0d", 0.65f));
+
+    ImGui::SetNextWindowSize(AUTO_RESIZE);
+    ImGui::Begin("pause_menu",false, lfWindowFlags);
+
+    ImGui::PushFont(m_fonts["JockeyOneLarge"]);
+    ImGui::Text("Game Paused");
+    ImGui::PopFont();
+
+    ImGui::PushFont(m_fonts["JockeyOneMedium"]);
+    
+    ImGui::PushStyleColor(ImGuiCol_Button,        colorCodeToImguiVec("#770909", 0.65f));
+    ImGui::PushStyleColor(ImGuiCol_ButtonHovered, colorCodeToImguiVec("#770909", 0.87f));
+    ImGui::PushStyleColor(ImGuiCol_ButtonActive,  colorCodeToImguiVec("#300303", 0.65f));
+
+    ImGui::PushStyleVar(ImGuiStyleVar_FramePadding, ImVec2(15.f,15.f));
+
+    if (ImGui::Button("Resume Race"))
+    {
+      // unpause the game
+      m_status = RACING_SCREEN;
+    }
+
+    ImGui::Spacing();
+    if (ImGui::Button("Reset Race"))
+    {
+      // pass callbacks for this stuff?
+      // or give the UI scope to the game variables
+      // m_status = MULTIPLAYER_SCREEN;
+    }
+    
+    ImGui::Spacing();
+    if (ImGui::Button("End Race"));
+    {
+      // check the controls ? 
+      m_status = MAIN_SCREEN;
+    }
+    ImGui::Spacing();
+    // pop frame padding
+    ImGui::PopStyleVar();
+
+    // pop button colors
+    ImGui::PopStyleColor();
+    ImGui::PopStyleColor();
+    ImGui::PopStyleColor();
+
+    // pop window color
+    ImGui::PopStyleColor();
+
+    // pop medium font
+    ImGui::PopFont();
+
+    ImVec2 v = ImGui::GetWindowSize();
+    ImVec2 center = region.getRelativeCenter(v);
+
+    ImGui::SetWindowPos(ImVec2(center.x, center.y));
+
+
+    ImGui::End();
+
   }
 
 
