@@ -147,6 +147,106 @@ void gamePlayToggle(bool toggle, ecs::Scene &mainScene, std::vector<Guid> aiCars
 	}
 }
 
+enum SCENES {
+	MAIN_MENU,
+	RACING
+};
+
+
+/**
+ * Ignore this for now :(
+*/
+void InitializeMainMenu(ecs::Scene& menuScene, PhysicsSystem& physicsSystem, physx::PxMaterial* lMaterial)
+{
+	// load the track
+	// load the nav splines
+	// load the vehicles
+
+	CPU_Geometry demo_nav_spline;
+	GraphicsSystem::importSplineFromOBJ(demo_nav_spline,"demo-track/demo-nav.obj");
+	Curve aiNavigationPath{demo_nav_spline.verts};
+	
+	
+ 	static float levelMaterial[3] = { 0.5f, 1.0f, 0.10f};
+
+	std::cout << "Component initalization finished\n";
+
+	// spawn a vehicle every once in a while along the track
+
+	std::vector<glm::vec3> spawnPoints;
+
+	for (int i = 0; i < demo_nav_spline.verts.size(); i++)
+	{
+		if (i % 8 == 0)
+		{
+			spawnPoints.push_back(demo_nav_spline.verts[i]);
+		}
+	}
+
+
+	int numCars = spawnPoints.size();
+
+	std::cout << "Starting main menu with " << numCars << " drivers!";
+
+	/* --------------------------- */
+	/* 	Spawn the cars						 */
+	/* --------------------------- */
+
+	std::vector<Guid> AIGuids;
+	std::vector<NavPath> aiPaths;
+	aiPaths.reserve(spawnPoints.size());
+
+	// SPAWN THE AI CARS
+	// skip the first spot (player driven vehicle) 
+	for (int i = 0; i < spawnPoints.size(); i++)
+	{		
+		auto& spawnPoint = spawnPoints[i];
+		aiPaths.emplace_back(&aiNavigationPath);
+		auto& navPath = aiPaths[aiPaths.size() - 1];
+		Guid aiCarGuid = spawnCar(DriverType::COMPUTER, menuScene,&physicsSystem,spawnPoint,aiNavigationPath.forward(spawnPoint), &aiNavigationPath, &navPath);
+
+		AIGuids.push_back(aiCarGuid);
+		setupCarVFX(menuScene, aiCarGuid);
+	}
+
+
+	// spawn the track colliders
+	// load the road 
+	CPU_Geometry new_level_geom = CPU_Geometry();
+	GraphicsSystem::importOBJ(new_level_geom, "demo-track/colliders/road.obj");
+
+	Guid level_collider_e = menuScene.CreateEntity().guid;
+	menuScene.AddComponent(level_collider_e, RoadCollider());
+	RoadCollider& new_level_collider = menuScene.GetComponent<RoadCollider>(level_collider_e);
+	new_level_collider.Initialize(new_level_geom, physicsSystem);
+	physx::PxTriangleMesh* new_level_collider_mesh = new_level_collider.cookLevel(glm::scale(glm::mat4(1), glm::vec3(1.0)));
+	new_level_collider.initLevelRigidBody(new_level_collider_mesh, lMaterial);
+
+	// load the walls
+	CPU_Geometry level_wall_geom = CPU_Geometry();
+	GraphicsSystem::importOBJ(level_wall_geom, "demo-track/colliders/walls.obj");
+
+	Guid level_wall_e = menuScene.CreateEntity().guid;
+	menuScene.AddComponent(level_wall_e, LevelCollider());
+	LevelCollider& level_wall_collider = menuScene.GetComponent<LevelCollider>(level_wall_e);
+	level_wall_collider.Initialize(level_wall_geom, physicsSystem);
+	physx::PxTriangleMesh* level_wall_collider_mesh = level_wall_collider.cookLevel(glm::scale(glm::mat4(1), glm::vec3(1.0)));
+	level_wall_collider.initLevelRigidBody(level_wall_collider_mesh, lMaterial);
+
+	// render the basic level
+
+	ecs::Entity road_e = menuScene.CreateEntity();
+	TransformComponent road_t = TransformComponent();
+	RenderModel road_r = RenderModel();
+	GraphicsSystem::importOBJ(road_r,"demo-track/intro-track.obj");
+	road_r.castsShadow = true;
+	menuScene.AddComponent(road_e.guid, road_r);
+	menuScene.AddComponent(road_e.guid, road_t);
+
+	// start loading other assets lol
+
+}
+
 int main(int argc, char* argv[]) {
 
 	//RUN_GRAPHICS_TEST_BENCH();

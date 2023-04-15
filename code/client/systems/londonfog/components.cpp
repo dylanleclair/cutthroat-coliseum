@@ -315,7 +315,7 @@ void LondonFog::drawHUD(Guid carGuid, ecs::Scene scene, BoundingBox region, Race
 void LondonFog::drawMenu(BoundingBox region)
 {
   // push the style options
-  ImGui::PushStyleVar(ImGuiStyleVar_WindowPadding, ImVec2{0.f, 0.f});
+  ImGui::PushStyleVar(ImGuiStyleVar_WindowPadding, ImVec2{30.f, 20.f});
   ImGui::PushStyleColor(ImGuiCol_WindowBg, colorCodeToImguiVec("#000000", 0.65f));
   ImGui::PushFont(m_fonts["JockeyOne"]);
 
@@ -375,6 +375,10 @@ void LondonFog::drawMenu(BoundingBox region)
 
     ImGui::PushFont(m_fonts["JockeyOneMedium"]);
     
+    ImGui::PushStyleColor(ImGuiCol_Button,        colorCodeToImguiVec("#000000", 0.65f));
+    ImGui::PushStyleColor(ImGuiCol_ButtonHovered, colorCodeToImguiVec("#000000", 0.80f));
+    ImGui::PushStyleColor(ImGuiCol_ButtonActive,  colorCodeToImguiVec("#000000", 1.0f));
+
     ImGui::Button("Singleplayer");
     ImGui::Spacing();
     ImGui::Button("Multiplayer");
@@ -382,17 +386,25 @@ void LondonFog::drawMenu(BoundingBox region)
     ImGui::Button("Controls");
     ImGui::Spacing();
 
+    ImGui::PopStyleColor();
+    ImGui::PopStyleColor();
+    ImGui::PopStyleColor();
+
+
+
     ImGui::PopFont();
 
 
     v = ImGui::GetWindowSize();
-    textOffset = {40.f, 120.f};
+    textOffset = {40.f, 100.f};
     ImGui::SetWindowPos(ImVec2(brCorner.x - v.x - textOffset.x, brCorner.y - v.y - textOffset.y));
 
     ImGui::End();
 
 
 
+    ImGui::PopStyleVar();
+    ImGui::PushStyleVar(ImGuiStyleVar_WindowPadding, ImVec2{0.f, 0.f});
 
 
     ImVec2 menuSize = ImVec2(static_cast<float>(region.w), static_cast<float>(region.h));
