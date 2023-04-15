@@ -97,6 +97,7 @@ enum MenuStatus {
   CONTROLS_SCREEN,
   PAUSE_SCREEN,
   RACING_SCREEN,
+  LOADING_SCREEN, // lowkey just the controls screen ? idk
 };
 
 struct LondonFog {
