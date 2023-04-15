@@ -479,6 +479,7 @@ void GraphicsSystem::ImGuiPanel() {
 
 
 void GraphicsSystem::Update(ecs::Scene& scene, float deltaTime) {
+	cam_mode = 3;
 	//default camera matricies
 	glm::mat4 P = glm::perspective(glm::radians(45.f), (float)windowSize.x / windowSize.y, 2.f, 1000.f);
 	if (numCamerasActive > 1)
@@ -755,7 +756,7 @@ void GraphicsSystem::Update(ecs::Scene& scene, float deltaTime) {
 	GLuint typeUniform = glGetUniformLocation(GLuint(VFXshader), "type");
 	//Billboards
 	glUniform1ui(typeUniform, 0);
-	glUniform3fv(cameraPositionUniform, 1, glm::value_ptr(cameras[i].cameraPos));
+	glUniform3fv(cameraPositionUniform, 1, glm::value_ptr(cameras[i].getPos()));
 	for (Guid entityGuid : ecs::EntitiesInScene<VFXBillboard, TransformComponent>(scene)) {
 		VFXBillboard& comp = scene.GetComponent<VFXBillboard>(entityGuid);
 		TransformComponent& trans = scene.GetComponent<TransformComponent>(entityGuid);

@@ -73,6 +73,12 @@ public:
 	void setScale(glm::vec3 _scale) {
 		scale = _scale;
 	}
+	void attachActor(physx::PxRigidActor* _actor) {
+		actor = _actor;
+	}
+	void detatchActor() {
+		actor = nullptr;
+	}
 
 	glm::mat4 getTransformationMatrix()
 	{	

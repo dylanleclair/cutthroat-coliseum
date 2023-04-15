@@ -10,6 +10,7 @@
 
 #include "core/ecs.h"
 #include "../components.h"
+#include "PxPhysicsAPI.h"
 
 class Camera {
 public:
@@ -22,8 +23,8 @@ public:
 	void update(TransformComponent& _carTransform, bool isReversing, glm::vec3 carVelocity, float dt);
 	Guid targetEntity = 0;
 private:
-	friend class GraphicsSystem;
-	glm::vec3 cameraPos = glm::vec3(35.0f, 6.0f, -15.0f);
+	friend class GraphicsSystem; 
+	glm::vec3 cameraPos = glm::vec3(0);
 	glm::vec3 cameraUp = glm::vec3(0.0f, 1.0f, 0.0f);
 	glm::vec3 cameraDirection = glm::vec3(0.0f, 0.0f, -1.0f); //DO not set, it is overwritten on construction!
 	float fspeed = 0, hspeed = 0, panHorizontal = 90.0f, panVertical = -10.0f, lastX = 0, lastY = 0;
@@ -31,8 +32,8 @@ private:
 	const float cameraSpeed = 0.1;
 	bool initalized = false;
 
+	
 	float FOV = 30;
 	glm::vec3 cameraVelocity = { 0,0,0 };
-	glm::vec3 previousCarPosition = glm::vec3(0);
 };
 

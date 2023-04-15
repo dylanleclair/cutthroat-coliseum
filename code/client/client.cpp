@@ -165,13 +165,16 @@ int main(int argc, char* argv[]) {
 	 */
 
 	// first and foremost, create a scene.
+	using namespace physics;
+	physicsSystem.Initialize();
+
 	ecs::Scene mainScene;
 
 	GraphicsSystem gs = GraphicsSystem();
 
-	physics::PhysicsSystem physicsSystem{};
-	physicsSystem.Initialize();
+	//physics::PhysicsSystem physicsSystem{};
 
+	
 
 
 	CPU_Geometry zzPathGeom;
