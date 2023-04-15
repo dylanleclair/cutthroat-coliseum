@@ -99,7 +99,7 @@ void SoundUpdater::Update(ecs::Scene &scene, float deltaTime)
 
             isPlaying = false;
             brake->isPlaying(&isPlaying);
-            if (!isPlaying && is_car_braking(car)) {
+            if (!isPlaying && is_car_braking(car) && car.m_Vehicle.mBaseState.roadGeomStates->hitState) {
 
                 result = soundsystem.system->playSound(soundsystem.brakesound, 0, false, &brake);
                 handle_fmod_error();
@@ -143,7 +143,7 @@ void SoundUpdater::Update(ecs::Scene &scene, float deltaTime)
 
             isPlaying = false;
             brake->isPlaying(&isPlaying);
-            if (!isPlaying && is_car_braking(car)) {
+            if (!isPlaying && is_car_braking(car) && car.m_Vehicle.mBaseState.roadGeomStates->hitState) {
 
                 result = soundsystem.system->playSound(soundsystem.brakesound, 0, false, &brake);
                 handle_fmod_error();
