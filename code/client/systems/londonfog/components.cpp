@@ -369,6 +369,30 @@ void LondonFog::drawMenu(BoundingBox region)
 
 
 
+    ImVec2 brCorner = region.getCorner(Corner::BOTTOM_RIGHT);
+    ImGui::SetNextWindowSize(AUTO_RESIZE);
+    ImGui::Begin("main_menu_buttons",false, lfWindowFlags);
+
+    ImGui::PushFont(m_fonts["JockeyOneMedium"]);
+    
+    ImGui::Button("Singleplayer");
+    ImGui::Spacing();
+    ImGui::Button("Multiplayer");
+    ImGui::Spacing();
+    ImGui::Button("Controls");
+    ImGui::Spacing();
+
+    ImGui::PopFont();
+
+
+    v = ImGui::GetWindowSize();
+    textOffset = {40.f, 120.f};
+    ImGui::SetWindowPos(ImVec2(brCorner.x - v.x - textOffset.x, brCorner.y - v.y - textOffset.y));
+
+    ImGui::End();
+
+
+
 
 
     ImVec2 menuSize = ImVec2(static_cast<float>(region.w), static_cast<float>(region.h));
