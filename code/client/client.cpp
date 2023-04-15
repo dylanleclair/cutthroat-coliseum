@@ -76,6 +76,9 @@ bool gameplayMode = false;
 bool raceCountdown = false;
 bool gamePaused = false;
 
+
+bool isContentLoaded = false;
+
 uint32_t lastTime_millisecs;
 
 
@@ -152,6 +155,11 @@ enum SCENES {
 	RACING
 };
 
+
+void OnLoadingAssets()
+{
+	isContentLoaded = true;
+}
 
 /**
  * Ignore this for now :(
@@ -275,11 +283,22 @@ int main(int argc, char* argv[]) {
 	g_Assets.registerAsset("zz-track-nav.obj", "zz-track-path", SPLINE); 
 	g_Assets.registerAsset("zz-track-ai-nav.obj", "zz-track-ai-path", SPLINE); 
 
+	// other assets
+	g_Assets.registerAsset("zz-track-collider-road.obj", "zz-road-collider", COLLIDER);
+	g_Assets.registerAsset("zz-track-collider-wall.obj", "zz-wall-collider", COLLIDER);
+	g_Assets.registerAsset("zz-track-road.obj", "zz-road", MODEL);
+	g_Assets.registerAsset("zz-track-mesh.obj", "zz-level", MODEL);
 	// load the assets (may want to perform on separate thread for efficiency)
-	g_Assets.loadAssets();
-	
+
 	// now you can access & use them!
 
+	g_Assets.loadAssetsAsync(&OnLoadingAssets);
+
+	while (!isContentLoaded)
+	{
+		// wait until the main level is loaded
+
+	}
 
 	ecs::Scene mainScene;
 
@@ -492,8 +511,7 @@ int main(int argc, char* argv[]) {
 	// LOAD COLLIDERS
 
 	// load the road 
-	CPU_Geometry new_level_geom = CPU_Geometry();
-	GraphicsSystem::importOBJ(new_level_geom, "zz-track-collider-road.obj");
+	CPU_Geometry& new_level_geom = g_Assets.getColliderGeometry("zz-road-collider");
 
 	Guid level_collider_e = mainScene.CreateEntity().guid;
 	mainScene.AddComponent(level_collider_e, RoadCollider());
@@ -503,8 +521,7 @@ int main(int argc, char* argv[]) {
 	new_level_collider.initLevelRigidBody(new_level_collider_mesh, lMaterial);
 
 	// load the walls
-	CPU_Geometry level_wall_geom = CPU_Geometry();
-	GraphicsSystem::importOBJ(level_wall_geom, "zz-track-collider-wall.obj");
+	CPU_Geometry& level_wall_geom = g_Assets.getColliderGeometry("zz-wall-collider");
 
 	Guid level_wall_e = mainScene.CreateEntity().guid;
 	mainScene.AddComponent(level_wall_e, LevelCollider());
@@ -512,13 +529,12 @@ int main(int argc, char* argv[]) {
 	level_wall_collider.Initialize(level_wall_geom, physicsSystem);
 	physx::PxTriangleMesh* level_wall_collider_mesh = level_wall_collider.cookLevel(glm::scale(glm::mat4(1), glm::vec3(1.0)));
 	level_wall_collider.initLevelRigidBody(level_wall_collider_mesh, lMaterial);
-	CPU_Geometry obstacle_geom = CPU_Geometry();
-	GraphicsSystem::importOBJ(obstacle_geom, "obstacles-mesh.obj");
 
 	gamePlayToggle(gameplayMode, mainScene, AIGuids, gs);
 
 
 	// load the obstacles
+	// leave this at runtime for now
 	std::vector<Guid> obstacles;
 	for (int i = 1; i <= 11; i++)
 	{
@@ -547,23 +563,13 @@ int main(int argc, char* argv[]) {
 
 	ecs::Entity road_e = mainScene.CreateEntity();
 	TransformComponent road_t = TransformComponent();
-	RenderModel road_r = RenderModel();
-	GraphicsSystem::importOBJ(road_r,"zz-track-road.obj");
-	road_r.castsShadow = false;
+	RenderModel road_r = g_Assets.getRenderModel("zz-road");
+	// GraphicsSystem::importOBJ(road_r,"zz-track-road.obj");
+
+	road_r.castsShadow = true;
 	mainScene.AddComponent(road_e.guid, road_r);
 	mainScene.AddComponent(road_e.guid, road_t);
 
-	/*
-	* Demonstration of the Billboard Component. It always expects a texture to be used and an optinal locking axis can be used
-	* The Billboard will always try to face the camera
-	*/
-	ecs::Entity billboard = mainScene.CreateEntity();
-	VFXBillboard bill_r = VFXBillboard("textures/CFHX3384.JPG", glm::vec3(0, 1, 0));
-	TransformComponent bill_t = TransformComponent();
-	bill_t.setPosition(glm::vec3(0, 20, 0));
-	bill_t.setScale(glm::vec3(10, 5, 0));
-	mainScene.AddComponent(billboard.guid, bill_r);
-	mainScene.AddComponent(billboard.guid, bill_t);
 
 	FramerateCounter framerate;
 
@@ -574,18 +580,20 @@ int main(int argc, char* argv[]) {
 	auto default_lin_damp = testCar.m_Vehicle.mPhysXState.physxActor.rigidBody->getLinearDamping();
 	auto default_ang_damp = testCar.m_Vehicle.mPhysXState.physxActor.rigidBody->getAngularDamping();
 
+	// Initialize the RaceSystem (tracks the progress of each vehicle)
+	// must be initialized after the cars are initialized
 	raceSystem.Initialize(mainScene);
-	// Stuff for the physics timestep accumualtor
-	// Previously was clamped
 
+
+	// Physics timestep accumualtor
+	// Previously was clamped
 	auto previous_time = (float)SDL_GetTicks()/1000.f;
 
 	float acc_t = 0.f;
 	float delta_t = 1.f/60.f;
 
-	// Sets up the better handling model on runtime 
-	testCar.setup1();
 
+	// Link car settings to ImGui Panel
 	baseVariablesInit(testCar.m_Vehicle, physicsSystem);
 	engineVariablesInit(testCar.m_Vehicle);
 
@@ -620,8 +628,8 @@ int main(int argc, char* argv[]) {
 			if (!levelMeshLoaded)
 			{
 
-				RenderModel new_level_r = RenderModel();
-				GraphicsSystem::importOBJ(new_level_r,"zz-track-mesh.obj");
+				RenderModel new_level_r = g_Assets.getRenderModel("zz-level");
+				// GraphicsSystem::importOBJ(new_level_r,"zz-track-mesh.obj");
 				//new_level_r.castsShadow = true;
 				mainScene.AddComponent(new_level_e.guid, new_level_r);
 				mainScene.AddComponent(new_level_e.guid, new_level_t);

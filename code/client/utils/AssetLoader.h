@@ -6,8 +6,9 @@
 #include "../systems/GraphicsSystem.h"
 
 enum AssetType {
-  MODEL,
-  SPLINE,
+  MODEL, // renderables
+  SPLINE, // splines
+  COLLIDER, // collidables objects (typically want raw geom, not rendered)
 };
 
 struct Asset {
@@ -29,6 +30,8 @@ struct AssetLoader {
   void AssetLoader::loadAssetsAsync();
   
   CPU_Geometry& getSpline(std::string name);
+  CPU_Geometry& getColliderGeometry(std::string name);
+  RenderModel& getRenderModel(std::string name);
   void registerAsset(std::string filename, std::string name, AssetType type)
   {
     // add to the set of registered models

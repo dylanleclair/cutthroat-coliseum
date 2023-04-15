@@ -1076,7 +1076,7 @@ void GraphicsSystem::importSplineFromOBJ(CPU_Geometry& _geometry, std::string fi
 	// Use a while loop together with the getline() function to read the file line by line
 	while (getline (inputfile, line)) {
 	// Output the text from the file
-	std::cout << line;
+	// std::cout << line;
 
 	glm::vec3 vert;
 

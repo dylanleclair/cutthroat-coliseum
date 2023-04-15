@@ -13,9 +13,15 @@ void AssetLoader::loadAsset(Asset asset)
     case MODEL: 
       m_renderables[name] = RenderModel();
       GraphicsSystem::importOBJ(m_renderables[name],path);
+      break;
     case SPLINE:
       m_geoms[name] = CPU_Geometry();
       GraphicsSystem::importSplineFromOBJ(m_geoms[name],path);
+      break;
+    case COLLIDER:
+      m_geoms[name] = CPU_Geometry();
+      GraphicsSystem::importOBJ(m_geoms[name],path);
+      break;
   }
 }
 
@@ -55,11 +61,14 @@ void AssetLoader::loadAsyncWorker(void (*when_complete)())
 void AssetLoader::loadAssetsAsync(void (*when_complete)())
 {
   std::thread depression = std::thread(&AssetLoader::loadAsyncWorker,this, when_complete);
+  depression.detach();
 }
 void AssetLoader::loadAssetsAsync()
 {
   auto doNothing = []{};
   std::thread depression = std::thread(&AssetLoader::loadAsyncWorker,this, doNothing);
+  depression.detach();
+
 }
 
 
@@ -68,3 +77,14 @@ CPU_Geometry& AssetLoader::getSpline(std::string name)
 {
   return m_geoms[name];
 }
+
+CPU_Geometry& AssetLoader::getColliderGeometry(std::string name)
+{
+  return m_geoms[name];
+}
+
+RenderModel& AssetLoader::getRenderModel(std::string name)
+{
+  return m_renderables[name];
+}
+
