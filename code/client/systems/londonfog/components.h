@@ -92,7 +92,11 @@ struct BoundingBox {
 
 
 enum MenuStatus {
-  MAIN_SCREEN
+  MAIN_SCREEN,
+  MULTIPLAYER_SCREEN,
+  CONTROLS_SCREEN,
+  PAUSE_SCREEN,
+  RACING_SCREEN,
 };
 
 struct LondonFog {

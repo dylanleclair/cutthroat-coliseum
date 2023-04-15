@@ -1,6 +1,7 @@
 #include "core/ecs.h"
 
 #include "components.h"
+#include "../../Input.h"
 
 #include <sstream>
 #include <string>
@@ -178,6 +179,10 @@ void LondonFog::drawHUD(Guid carGuid, ecs::Scene scene, BoundingBox region, Race
 
   // setup the style
 
+  if (m_status != RACING_SCREEN)
+  {
+    return;
+  }
 
   // start with current speed
   // lower left corner.
@@ -315,13 +320,13 @@ void LondonFog::drawHUD(Guid carGuid, ecs::Scene scene, BoundingBox region, Race
 void LondonFog::drawMenu(BoundingBox region)
 {
   // push the style options
-  ImGui::PushStyleVar(ImGuiStyleVar_WindowPadding, ImVec2{30.f, 20.f});
-  ImGui::PushStyleColor(ImGuiCol_WindowBg, colorCodeToImguiVec("#000000", 0.65f));
-  ImGui::PushFont(m_fonts["JockeyOne"]);
 
   if (m_status == MAIN_SCREEN)
   {
 
+    ImGui::PushStyleVar(ImGuiStyleVar_WindowPadding, ImVec2{30.f, 20.f});
+    ImGui::PushStyleColor(ImGuiCol_WindowBg, colorCodeToImguiVec("#000000", 0.65f));
+    ImGui::PushFont(m_fonts["JockeyOne"]);
 
 
     // draw our names :D
@@ -368,6 +373,7 @@ void LondonFog::drawMenu(BoundingBox region)
     ImGui::End();
 
 
+    ImGui::PushStyleColor(ImGuiCol_WindowBg, colorCodeToImguiVec("#bf0d0d", 0.65f));
 
     ImVec2 brCorner = region.getCorner(Corner::BOTTOM_RIGHT);
     ImGui::SetNextWindowSize(AUTO_RESIZE);
@@ -375,13 +381,20 @@ void LondonFog::drawMenu(BoundingBox region)
 
     ImGui::PushFont(m_fonts["JockeyOneMedium"]);
     
-    ImGui::PushStyleColor(ImGuiCol_Button,        colorCodeToImguiVec("#000000", 0.65f));
-    ImGui::PushStyleColor(ImGuiCol_ButtonHovered, colorCodeToImguiVec("#000000", 0.80f));
-    ImGui::PushStyleColor(ImGuiCol_ButtonActive,  colorCodeToImguiVec("#000000", 1.0f));
+    ImGui::PushStyleColor(ImGuiCol_Button,        colorCodeToImguiVec("#770909", 0.65f));
+    ImGui::PushStyleColor(ImGuiCol_ButtonHovered, colorCodeToImguiVec("#770909", 0.87f));
+    ImGui::PushStyleColor(ImGuiCol_ButtonActive,  colorCodeToImguiVec("#300303", 0.65f));
 
-    ImGui::Button("Singleplayer");
+    if (ImGui::Button("Singleplayer"))
+    {
+      m_status = RACING_SCREEN;
+    }
+
     ImGui::Spacing();
-    ImGui::Button("Multiplayer");
+    if (ImGui::Button("Multiplayer"))
+    {
+      m_status = MULTIPLAYER_SCREEN;
+    }
     ImGui::Spacing();
     ImGui::Button("Controls");
     ImGui::Spacing();
@@ -390,6 +403,7 @@ void LondonFog::drawMenu(BoundingBox region)
     ImGui::PopStyleColor();
     ImGui::PopStyleColor();
 
+    ImGui::PopStyleColor();
 
 
     ImGui::PopFont();
@@ -429,20 +443,81 @@ void LondonFog::drawMenu(BoundingBox region)
 
     ImGui::End();
 
+      
+    // pop the style options
+    ImGui::PopFont();
+    ImGui::PopStyleColor();
+    ImGui::PopStyleVar();
 
-    // ImGui::Button("ACTION", ImVec2((size.x - ImGui::GetStyle().ItemSpacing.x) * 0.5f, size.y));
-    // ImGui::Button("ACTION", ImVec2((size.x - ImGui::GetStyle().ItemSpacing.x) * 0.5f, size.y));
-    // ImGui::Button("ACTION", ImVec2((size.x - ImGui::GetStyle().ItemSpacing.x) * 0.5f, size.y));
+  } else if (m_status == MULTIPLAYER_SCREEN)
+  {
 
+
+    ImGui::PushStyleColor(ImGuiCol_WindowBg, colorCodeToImguiVec("#000000", 1.00f));
+    ImGui::PushFont(m_fonts["JockeyOneMedium"]);
+
+    ImGui::PushStyleColor(ImGuiCol_Button,        colorCodeToImguiVec("#770909", 0.65f));
+    ImGui::PushStyleColor(ImGuiCol_ButtonHovered, colorCodeToImguiVec("#770909", 0.87f));
+    ImGui::PushStyleColor(ImGuiCol_ButtonActive,  colorCodeToImguiVec("#300303", 0.65f));
+
+    ImGui::SetNextWindowPos(region.getCorner(TOP_LEFT));
+    ImGui::SetNextWindowSize(ImVec2(static_cast<float>(region.w), static_cast<float>(region.h)));
+    // draw one big fat window with lots of padding, radio buttons
+    ImGui::Begin("multiplayer_menu", false, lfWindowFlags);
+    
+    ImGui::PushFont(m_fonts["JockeyOne"]);
+    if (ImGui::Button("Back to main menu"))
+    {
+      m_status = MAIN_SCREEN;
+    }
+    ImGui::PopFont();
+
+
+    ImGui::PushFont(m_fonts["JockeyOneXL"]);
+    ImGui::TextColored(ImVec4(1.0f, 1.0f, 1.0f, 1.0f), "Start a multiplayer race");
+    ImGui::PopFont();
+
+    ImGui::TextColored(ImVec4(1.0f, 1.0f, 1.0f, 1.0f), "Plug in up to 4 controllers to play!");
+    ImGui::PushStyleVar(ImGuiStyleVar_FramePadding, ImVec2(20.f,20.f));
     
 
+    ImGui::TextColored(ImVec4(1.0f, 1.0f, 1.0f, 1.0f), "There are currently %d controllers detected.", ControllerInput::getNumberPlayers());
+    
+    static int n = 0;
+    ImGui::RadioButton("1", &n, 1); ImGui::SameLine();
+    ImGui::RadioButton("2", &n, 2); ImGui::SameLine();
+    ImGui::RadioButton("3", &n, 3); ImGui::SameLine();
+    ImGui::RadioButton("4", &n, 4);
 
+    ImGui::PopStyleVar();
+
+    if (ImGui::Button("Start Racing!"))
+    {
+      m_status = RACING_SCREEN;
+    }
+    
+    ImGui::PopFont();
+    ImGui::End();
+
+    // button colors
+    ImGui::PopStyleColor();
+    ImGui::PopStyleColor();
+    ImGui::PopStyleColor();
+
+    // window color
+    ImGui::PopStyleColor();
+
+
+
+    // draw the multiplayer screen
+  } else if (m_status == CONTROLS_SCREEN)
+  {
+    // draw the controls screen :p 
+  } else if (m_status == PAUSE_SCREEN)
+  {
+    // draw the pause screen
   }
 
-  // pop the style options
-  ImGui::PopFont();
-  ImGui::PopStyleColor();
-  ImGui::PopStyleVar();
 
 
 

@@ -630,6 +630,10 @@ int main(int argc, char* argv[]) {
 			}
 		}
 
+		// check for new controllers
+
+
+
 		// Reset dampening values if they are changed every frame (used after car is reset) 
 		//TODO:  May need to put in an if check, and factor out ?
 		testCar.m_Vehicle.mPhysXState.physxActor.rigidBody->setLinearDamping(default_lin_damp);
@@ -666,12 +670,13 @@ int main(int argc, char* argv[]) {
 
 			if (windowEvent.type == SDL_CONTROLLERDEVICEADDED) {
 				std::cout << "Adding controller\n";
-				ControllerInput::init_controller();
+				ControllerInput::initControllers();
 			}
 
 			if (windowEvent.type == SDL_CONTROLLERDEVICEREMOVED) {
-				std::cout << "removing controller\n";
-				ControllerInput::deinit_controller();
+				std::cout << "a controller was unplugged!\n";
+				// ControllerInput::deinit_controller();
+				std::cout << "pause here?!?!?!?\n";
 			}
 
 			if (windowEvent.type == SDL_QUIT)
