@@ -554,6 +554,7 @@ int main(int argc, char* argv[]) {
 						else {
 							gamePaused = true;
 						}
+						break;
 					case SDLK_p:
 						if (!showImgui) {
 							showImgui = true;
