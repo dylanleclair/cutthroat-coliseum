@@ -144,9 +144,10 @@ private:
 
     float STRENGTH_UP_CORRECTION{300.f};
     float m_stuckTimer{0.f};
-    float m_timeSinceLastJump{0.f};
+    float m_timeSinceLastBoost{0.f};
     float m_timeSinceLastRamp{0.f};
     bool m_grounded{false};
+    float m_timeSinceLastJump{0.f};
 
 };
 

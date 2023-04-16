@@ -425,8 +425,9 @@ void Car::Update(Guid carGuid, ecs::Scene& scene, float deltaTime)
   float delta_seconds = deltaTime;
   assert(delta_seconds > 0.f && delta_seconds < 0.2000001f);  
 
-  m_timeSinceLastJump += delta_seconds;
+  m_timeSinceLastBoost += delta_seconds;
   m_timeSinceLastRamp += delta_seconds;
+  m_timeSinceLastJump += delta_seconds;
 
   Command command = drive(scene, deltaTime);
   keepRigidbodyUpright(m_Vehicle.mPhysXState.physxActor.rigidBody);
@@ -461,10 +462,10 @@ void Car::Update(Guid carGuid, ecs::Scene& scene, float deltaTime)
     if (obstacle_under)
     {
         std::cout << "boost detected!!!\n";
-        if (m_timeSinceLastJump > 1.5f)
+        if (m_timeSinceLastBoost > 1.5f)
         {
             BoostForward(4500.f);
-            m_timeSinceLastJump = 0.f;
+            m_timeSinceLastBoost = 0.f;
 
         }
     }
@@ -823,14 +824,14 @@ Command Car::pathfind(ecs::Scene& scene, float deltaTime)
     bool obstacle_under{false};
 
     // split into left and right
-    bool hit = castRay(physicsSystem->m_Scene, carPose.p, GLMtoPx(steering_rays[0]), 10.f, level_c->getShape());
+    bool hit = castRay(physicsSystem->m_Scene, carPose.p, GLMtoPx(steering_rays[0]), 16.f, level_c->getShape());
     if (hit)
     {
         // ray hit forward left
         forced_turn_right = true;
     }
 
-    hit = castRay(physicsSystem->m_Scene, carPose.p, GLMtoPx(steering_rays[1]), 10.f, level_c->getShape());
+    hit = castRay(physicsSystem->m_Scene, carPose.p, GLMtoPx(steering_rays[1]), 16.f, level_c->getShape());
     if (hit)
     {
         // ray hit forward right
@@ -856,7 +857,16 @@ Command Car::pathfind(ecs::Scene& scene, float deltaTime)
     if (obstacle_ahead)
     {
         // std::cout << "ai needs to jump!" << std::endl;
-        AiJump();
+
+        // also check the car is going fast enough for a jump to make sense
+        if (carSpeed() > 10.f)
+        {
+            AiJump();
+        } else {
+            // need to correct
+            hitting_wall = true;
+            m_stuckTimer = 10.f;
+        }
     }
 
 
@@ -883,7 +893,7 @@ Command Car::pathfind(ecs::Scene& scene, float deltaTime)
     float actualAngle = acos(angleBetween);
 
     // if almost parallel, don't worry about steering
-    if (abs(actualAngle) < 0.08f)
+    if (abs(actualAngle) < 0.23f) // 30 degrees (rads)
     {
         command.steer = 0.0f;
     } else {
@@ -897,9 +907,9 @@ Command Car::pathfind(ecs::Scene& scene, float deltaTime)
         // float normalized "turning" angle
 
 
-        if (forced_turn_left || forced_turn_right)
+        if ( (abs(actualAngle) > M_PI / 3 ) && (forced_turn_left || forced_turn_right))
         {
-            command.throttle = 0.5f;
+            command.throttle = 0.80f;
             
             // scale steering based on distance to wall?
 
@@ -913,10 +923,15 @@ Command Car::pathfind(ecs::Scene& scene, float deltaTime)
             command.throttle = 1.f;
             // normal turning logic
 
-            float maxAngle = M_PI / 3.f; 
+            float maxAngle = M_PI / 4.f;  // higher max angle = closer AI follows path
 
-            if (abs(actualAngle) > maxAngle) // if the turning angle is more gentle
+            if (abs(actualAngle) < maxAngle) // if the turning angle is more gentle
             {
+                // slow down to steer (to correct faster) threshold
+                if (abs(actualAngle) > M_PI_2)
+                {
+                    command.throttle = 0.65f;
+                }
 
                 // use the heading direction as the target direction instead 
                 {
@@ -941,11 +956,11 @@ Command Car::pathfind(ecs::Scene& scene, float deltaTime)
 
     }
 
-    if (m_stuckTimer > 0.8f && hitting_wall)
+    if (m_stuckTimer > 0.7f && hitting_wall)
     {
         // reverse
         m_TargetGearCommand = 0; // put in reverse
-        command.throttle = 0.5f;
+        command.throttle = 0.6f;
 
         // calulate the way they want to steer to be in line with the track!
         {
