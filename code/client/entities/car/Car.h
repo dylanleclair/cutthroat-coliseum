@@ -24,7 +24,6 @@ extern float carBrake;
 extern float carAxis;
 extern float carAxisScale;
 
-
 // Commands are issued to the vehicle in a pre-choreographed sequence.
 struct Command
 {
@@ -103,6 +102,9 @@ struct Car {
     void cleanupVehicle();
     void baseSetup();
     void setup1();
+
+    bool carControllerStartPressed();
+    bool carControllerSelectPressed();
 
     // movement 
     Command drive(ecs::Scene& scene, float deltaTime);

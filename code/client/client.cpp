@@ -288,7 +288,6 @@ int main(int argc, char* argv[]) {
 		gs.bindCameraToEntity(i, AIGuids[i]);
 	}
 
-
 	// bandaids for other calls that do player-only stuff
 	Car& testCar = mainScene.GetComponent<Car>(AIGuids[0]);
 	Guid carGuid = AIGuids[0];
@@ -590,6 +589,23 @@ int main(int argc, char* argv[]) {
 			//pass the event to the camera
 			gs.input(windowEvent, 0);
 		}
+
+		// Iterates through all player controllers and
+		// checks if the start or select button has been pressed
+		// and launches the approriate functions 
+		for (int i = 0; i < number_players; i++)
+		{
+			Car& testCar = mainScene.GetComponent<Car>(AIGuids[i]);
+			if (testCar.carControllerStartPressed()) {
+				if (gamePaused) { gamePaused = false; }
+				else if (!gamePaused) { gamePaused = true;  }
+			}
+			
+			if (testCar.carControllerSelectPressed()) {
+				resetLevel(testCar, AIGuids, mainScene, spawnPoints, raceSystem, acc_t, forward);
+			}
+		}
+
 
 		// Check for the car grounded state, and if grounded after being in the air
 		// resets the modifications made to the car while in the air
