@@ -125,6 +125,16 @@ void Camera::setPos(glm::vec3 _position)
 
 void Camera::update(TransformComponent& _carTransform, bool isReversing, glm::vec3 carVelocity, float dt)
 {
+	//if the tracking entity has changed then set the camera to a good position behind it
+	if (fixCamera) {
+		glm::vec2 carFront2D;
+		{
+			glm::vec4 temp = glm::toMat4(_carTransform.getRotation()) * glm::vec4(0, 0, 1, 1);
+			carFront2D = glm::normalize(glm::vec2(temp[0], temp[2]));
+		}
+		setPos(glm::vec3(-carFront2D[0] * 10, _carTransform.getTranslation().y, -carFront2D[1] * 10));
+		fixCamera = false;
+	}
 	/*
 	* calculate the camera position
 	*/
@@ -194,8 +204,6 @@ void Camera::update(TransformComponent& _carTransform, bool isReversing, glm::ve
 		carFront2D = glm::normalize(glm::vec2(temp[0], temp[2]));
 	}
 	glm::vec3 carPos3D = _carTransform.getTranslation();
-
-
 	/*
 	* determine the location of the camera target by performing operations in the xz plane
 	*/
@@ -217,8 +225,9 @@ void Camera::update(TransformComponent& _carTransform, bool isReversing, glm::ve
 	if (glm::length(camPosT2D - carPos2D) > maxDistance) {
 		camPosT2D = (glm::normalize(camPosT2D - carPos2D) * maxDistance) + carPos2D;
 	}
-	
+
 	//figure out the height of the camera by raycasting down and finding distance to the ground
+	PxQueryFilterData filterData(PxQueryFlag::eSTATIC);
 	PxRaycastBuffer hitBuffer;
 	float cameraHeight = carPos3D.y + height;
 	if (physics::physicsSystem.m_Scene->raycast(GLMtoPx(glm::vec3(camPosT2D[0], carPos3D.y + 40, camPosT2D[1])), PxVec3(0,-1,0), 260, hitBuffer)) {
@@ -233,15 +242,13 @@ void Camera::update(TransformComponent& _carTransform, bool isReversing, glm::ve
 	glm::vec3 carToCamDir3D = glm::normalize(carToCam3D);
 	float carToCamLength = glm::length(carToCam3D);
 
-	glm::vec2 originalDir2D = glm::vec2(carToCamDir3D[0], carToCamDir3D[2]);
-	float angleOff = 0; //radians
-	bool clockwise = 0; //0 = counterclockwise, 1 = clockwise
-	PxQueryFilterData filterData(PxQueryFlag::eSTATIC);
-	while (physics::physicsSystem.m_Scene->raycast(GLMtoPx(carPos3D), GLMtoPx(carToCamDir3D), carToCamLength, hitBuffer, PxHitFlag::eDEFAULT, filterData) && angleOff < 3) {
+	//glm::vec2 originalDir2D = glm::vec2(carToCamDir3D[0], carToCamDir3D[2]);
+	//float angleOff = 0; //radians
+	//bool clockwise = 0; //0 = counterclockwise, 1 = clockwise
+	if (physics::physicsSystem.m_Scene->raycast(GLMtoPx(carPos3D), GLMtoPx(carToCamDir3D), carToCamLength, hitBuffer, PxHitFlag::eDEFAULT, filterData)) {
 		PxRaycastHit hit = hitBuffer.block;
 		glm::vec2 collisionPoint = glm::vec2(hit.position.x, hit.position.z);
 		camPosT2D = collisionPoint;
-		break;
 		/*
 		//test if just moving the camera closer would solve it
 		glm::vec2 collisionPoint = glm::vec2(hit.position.x, hit.position.z);
@@ -263,5 +270,9 @@ void Camera::update(TransformComponent& _carTransform, bool isReversing, glm::ve
 
 	//move the camera towards the target
 	cameraTargetLocation = glm::vec3(camPosT2D[0], cameraHeight, camPosT2D[1]);
-	setPos(cameraTargetLocation);
+	glm::vec3 movementDirection = glm::distance(cameraTargetLocation, getPos()) > 0.1 ? cameraTargetLocation - getPos() : glm::vec3(0);
+	float moveAmount = 10.f * dt;
+	moveAmount = glm::distance(cameraTargetLocation, getPos()) < moveAmount ? glm::distance(cameraTargetLocation, getPos()) : moveAmount;
+	setPos(getPos() + movementDirection * moveAmount);
+
 }

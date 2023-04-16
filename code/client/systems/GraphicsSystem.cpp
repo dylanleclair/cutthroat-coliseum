@@ -982,6 +982,7 @@ void GraphicsSystem::importOBJ(RenderModel& _component, const std::string _fileN
 void GraphicsSystem::bindCameraToEntity(int cameraNum, Guid Entity)
 {
 	cameras[cameraNum].targetEntity = Entity;
+	cameras[cameraNum].fixCamera = true;
 }
 
 

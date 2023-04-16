@@ -31,6 +31,7 @@ private:
 	bool leftMouseButtonPressed = false, firstMouse = true;
 	const float cameraSpeed = 0.1;
 	bool initalized = false;
+	bool fixCamera = false;
 
 	
 	float FOV = 30;
