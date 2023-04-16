@@ -103,8 +103,8 @@ struct Car {
     void baseSetup();
     void setup1();
 
-    bool carControllerStartPressed();
-    bool carControllerSelectPressed();
+    bool carGetControllerStartPressed();
+    bool carGetControllerSelectPressed();
 
     // movement 
     Command drive(ecs::Scene& scene, float deltaTime);

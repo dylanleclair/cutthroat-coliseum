@@ -596,13 +596,13 @@ int main(int argc, char* argv[]) {
 		for (int i = 0; i < number_players; i++)
 		{
 			Car& testCar = mainScene.GetComponent<Car>(AIGuids[i]);
-			if (testCar.carControllerStartPressed()) {
+			if (testCar.carGetControllerStartPressed()) {
 				if (gamePaused) { gamePaused = false; }
-				else if (!gamePaused) { gamePaused = true;  }
+				else if (!gamePaused) { gamePaused = true;  }				
 			}
 			
-			if (testCar.carControllerSelectPressed()) {
-				resetLevel(testCar, AIGuids, mainScene, spawnPoints, raceSystem, acc_t, forward);
+			if (testCar.carGetControllerSelectPressed()) {
+				resetLevel(testCar, AIGuids, mainScene, spawnPoints, raceSystem, acc_t, forward);				
 			}
 		}
 

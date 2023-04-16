@@ -486,24 +486,6 @@ Command Car::drive(ecs::Scene& scene, float deltaTime)
         auto m_key = keys_arr[SDL_SCANCODE_M];
         auto f_key = keys_arr[SDL_SCANCODE_F];
 
-
-        // The two if statements below are used in the render loop to check if any of the 
-        // controllers have pressed these buttons, and then resets the booleans 
-        // 
-        // This checks if the start button has been pressed, and sets the boolean for that
-        // button to true if not true
-        if (SDL_GameControllerGetButton(controller, SDL_CONTROLLER_BUTTON_START)) {
-            if (!start_pressed) { start_pressed = true; }
-        }
-
-        // This checks if the start button has been pressed, and sets the boolean for that
-        // button to true if not true
-        if (SDL_GameControllerGetButton(controller, SDL_CONTROLLER_BUTTON_BACK)) {
-            if (!select_pressed) { select_pressed = true; }
-        }
-        //
-        //
-
         // Jump
         // Checks if the previous frame was a jump, so that it does not cumulatively add impulse
         if (SDL_GameControllerGetButton(controller, SDL_CONTROLLER_BUTTON_A) && this->m_Vehicle.mBaseState.roadGeomStates->hitState)
@@ -860,27 +842,39 @@ Command Car::pathfind(ecs::Scene& scene, float deltaTime)
     return command;
 }
 
-// The two functions below are return functions,
-// they are kind of hacky and jank, but it's because I could not put
-// a controller polling in the main loop as there is potentially up to 4
-// different controllers active and we need to read input from any one of them
-// This way each controller is attached to a player / car
 
-// Function that will be called every frame
-// Checks if the start button has been pressed
-// if true, reset the start button boolean, and return true
-bool Car::carControllerStartPressed() {
-    if (start_pressed) {
-        start_pressed = false;
+// Two functions below are not in an update loop because 
+// they pause and reset the game, when the game is paused the update
+// loop no longer gets called so you could not unpause the game
+
+bool Car::carGetControllerStartPressed() {
+    SDL_GameController* controller{ nullptr };
+    // get controller if it exists
+    if (controllerIndex != -1)
+    {
+        // controller exists for player
+        controller = ControllerInput::controllers[controllerIndex];
+    }
+
+    if (SDL_GameControllerGetButton(controller, SDL_CONTROLLER_BUTTON_START)) {
         return true;
     }
+
+    return false;
 }
-// Function that will be called every frame
-// Checks if the select button has been pressed
-// if true, reset the select button boolean, and return true
-bool Car::carControllerSelectPressed() {
-    if (select_pressed) {
-        select_pressed = false;
+
+bool Car::carGetControllerSelectPressed() {
+    SDL_GameController* controller{ nullptr };
+    // get controller if it exists
+    if (controllerIndex != -1)
+    {
+        // controller exists for player
+        controller = ControllerInput::controllers[controllerIndex];
+    }
+
+    if (SDL_GameControllerGetButton(controller, SDL_CONTROLLER_BUTTON_BACK)) {
         return true;
     }
+
+    return false;
 }
