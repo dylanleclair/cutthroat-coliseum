@@ -465,8 +465,6 @@ int main(int argc, char* argv[]) {
 	baseVariablesInit(testCar.m_Vehicle, physicsSystem);
 	engineVariablesInit(testCar.m_Vehicle);
 
-	float original_z_follow_dist = gs.follow_cam_z;
-
 	bool playSounds = true;
 	init_sound_system();
     SoundUpdater soundUpdater;

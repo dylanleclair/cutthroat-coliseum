@@ -129,10 +129,11 @@ void Camera::update(TransformComponent& _carTransform, bool isReversing, glm::ve
 	if (fixCamera) {
 		glm::vec2 carFront2D;
 		{
-			glm::vec4 temp = glm::toMat4(_carTransform.getRotation()) * glm::vec4(0, 0, 1, 1);
+			glm::vec3 temp = _carTransform.getRotation() * glm::vec3(0, 0, 1);
 			carFront2D = glm::normalize(glm::vec2(temp[0], temp[2]));
 		}
-		setPos(glm::vec3(-carFront2D[0] * 10, _carTransform.getTranslation().y, -carFront2D[1] * 10));
+		cameraTargetLocation = _carTransform.getTranslation() + glm::vec3(-carFront2D[0] * 20, _carTransform.getTranslation().y + GraphicsSystem::height_offset, -carFront2D[1] * 20);
+		setPos(cameraTargetLocation);
 		fixCamera = false;
 	}
 	/*
@@ -188,11 +189,6 @@ void Camera::update(TransformComponent& _carTransform, bool isReversing, glm::ve
 	//	cameraPlaneNormal = _carTransform.getRotation() * glm::vec3(1, 0, 0);
 	//}
 	//calculate where the camera should aim to be positioned
-	static glm::vec3 cameraTargetLocation = glm::vec3(0);
-	//tunables
-	const float minDistance = 22;
-	const float maxDistance = 35;
-	const float height = 4;
 
 	//set up variables used in the calculations
 	glm::vec2 carPos2D = glm::vec2(_carTransform.getTranslation()[0], _carTransform.getTranslation()[2]);
@@ -209,31 +205,34 @@ void Camera::update(TransformComponent& _carTransform, bool isReversing, glm::ve
 	*/
 	//move the camera towards the centre axis of the car
 	glm::vec2 CameraToCenterLine = -((camPosT2D - carPos2D) - glm::proj(camPosT2D - carPos2D, carFront2D));
-	if(glm::length(CameraToCenterLine) > 0.2)
-		camPosT2D += glm::normalize(CameraToCenterLine) * 15.f * dt;
-	if (glm::dot(carFront2D, glm::normalize(camPosT2D - carPos2D)) > -0.1) {
+	if (glm::length(CameraToCenterLine) > GraphicsSystem::centering_slack_margin) {
+		float travelDistance = GraphicsSystem::centering_speed * dt;
+		travelDistance = glm::length(CameraToCenterLine) - GraphicsSystem::centering_slack_margin > travelDistance ? travelDistance : glm::length(CameraToCenterLine) - GraphicsSystem::centering_slack_margin;
+		camPosT2D += glm::normalize(CameraToCenterLine) * travelDistance;
+	}
+	if (acos(glm::dot(carFront2D, glm::normalize(camPosT2D - carPos2D))) > glm::radians(GraphicsSystem::pushback_angle = 95)) {
 		//move the camera towards the back of the car
-		camPosT2D += -carFront2D * 30.f * dt;
+		camPosT2D += -carFront2D * GraphicsSystem::pushback_strength * dt;
 	}
 
 	//if the target is in the innder radius then project it to the minimum radius
 	
-	if (glm::length(camPosT2D - carPos2D) < minDistance && glm::length(camPosT2D - carPos2D) != 0) {
-		camPosT2D = (glm::normalize(camPosT2D - carPos2D) * minDistance) + carPos2D;
+	if (glm::length(camPosT2D - carPos2D) < GraphicsSystem::minimum_radius && glm::length(camPosT2D - carPos2D) != 0) {
+		camPosT2D = (glm::normalize(camPosT2D - carPos2D) * GraphicsSystem::minimum_radius) + carPos2D;
 	}
 	//if the target is outside the outer radius then project it back in
-	if (glm::length(camPosT2D - carPos2D) > maxDistance) {
-		camPosT2D = (glm::normalize(camPosT2D - carPos2D) * maxDistance) + carPos2D;
+	if (glm::length(camPosT2D - carPos2D) > GraphicsSystem::maximum_radius) {
+		camPosT2D = (glm::normalize(camPosT2D - carPos2D) * GraphicsSystem::maximum_radius) + carPos2D;
 	}
 
 	//figure out the height of the camera by raycasting down and finding distance to the ground
 	PxQueryFilterData filterData(PxQueryFlag::eSTATIC);
 	PxRaycastBuffer hitBuffer;
-	float cameraHeight = carPos3D.y + height;
+	float cameraHeight = carPos3D.y + GraphicsSystem::height_offset;
 	if (physics::physicsSystem.m_Scene->raycast(GLMtoPx(glm::vec3(camPosT2D[0], carPos3D.y + 40, camPosT2D[1])), PxVec3(0,-1,0), 260, hitBuffer)) {
 		PxRaycastHit hit = hitBuffer.block;
 		if(glm::dot(PxtoGLM(hit.normal), glm::vec3(0, 1, 0)) > 0.3)
-			cameraHeight = std::max(cameraHeight, hit.position.y + height);
+			cameraHeight = std::max(cameraHeight, hit.position.y + GraphicsSystem::height_offset);
 	}
 	
 
@@ -273,6 +272,7 @@ void Camera::update(TransformComponent& _carTransform, bool isReversing, glm::ve
 	glm::vec3 movementDirection = glm::distance(cameraTargetLocation, getPos()) > 0.1 ? cameraTargetLocation - getPos() : glm::vec3(0);
 	float moveAmount = 10.f * dt;
 	moveAmount = glm::distance(cameraTargetLocation, getPos()) < moveAmount ? glm::distance(cameraTargetLocation, getPos()) : moveAmount;
-	setPos(getPos() + movementDirection * moveAmount);
+	//setPos(getPos() + movementDirection * moveAmount);
+	setPos(cameraTargetLocation);
 
 }

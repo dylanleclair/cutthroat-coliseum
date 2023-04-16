@@ -32,6 +32,7 @@ private:
 	const float cameraSpeed = 0.1;
 	bool initalized = false;
 	bool fixCamera = false;
+	glm::vec3 cameraTargetLocation = glm::vec3(0);;
 
 	
 	float FOV = 30;

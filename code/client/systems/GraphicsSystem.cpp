@@ -31,11 +31,13 @@
 //DEBUG IMPORTS
 #include "graphics/snippetrender/SnippetRender.h"
 
-float GraphicsSystem::follow_cam_x = 0;
-float GraphicsSystem::follow_cam_y = 4;
-float GraphicsSystem::follow_cam_z = -22;
-float GraphicsSystem::follow_correction_strength = 40;
-float GraphicsSystem::maximum_follow_distance = 10;
+float GraphicsSystem::centering_speed = 15;
+float GraphicsSystem::centering_slack_margin = 0.2;
+float GraphicsSystem::pushback_angle = 95;
+float GraphicsSystem::pushback_strength = 30;
+float GraphicsSystem::minimum_radius = 22;
+float GraphicsSystem::maximum_radius = 35;
+float GraphicsSystem::height_offset = 4;
 
 void loadCubemap(std::vector<std::string> faces)
 {
@@ -410,11 +412,13 @@ void GraphicsSystem::ImGuiPanel() {
 		}
 
 		if (cam_mode == 3) {
-			ImGui::InputFloat("X Distance: ", &follow_cam_x);
-			ImGui::InputFloat("Y Distance: ", &follow_cam_y);
-			ImGui::InputFloat("Z Distance: ", &follow_cam_z);
-			ImGui::InputFloat("Correction Strength", &follow_correction_strength);
-			ImGui::InputFloat("max follow distance", &maximum_follow_distance);
+			ImGui::InputFloat("centering_speed", &centering_speed);
+			ImGui::InputFloat("centering_slack_margin", &centering_slack_margin);
+			ImGui::InputFloat("pushback_angle", &pushback_angle);
+			ImGui::InputFloat("pushback_strength", &pushback_strength);
+			ImGui::InputFloat("minimum_radius", &minimum_radius);
+			ImGui::InputFloat("maximum_radius", &maximum_radius);
+			ImGui::InputFloat("height_offset", &height_offset);
 		}
 	}
 	if (ImGui::CollapsingHeader("Rendering")) {

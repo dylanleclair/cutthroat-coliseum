@@ -35,11 +35,13 @@ public:
 	static void importSplineFromOBJ(CPU_Geometry& _geometry, std::string filename);
 
 	//follow camera variables
-	static float follow_cam_x;
-	static float follow_cam_y;
-	static float follow_cam_z;
-	static float follow_correction_strength;
-	static float maximum_follow_distance;
+	static float centering_speed; //the strength of the camera moving towards the centre line of the car
+	static float centering_slack_margin; //the distance from the true centre line that the camera can be at
+	static float pushback_angle;
+	static float pushback_strength;
+	static float minimum_radius;
+	static float maximum_radius;
+	static float height_offset;
 
 	
 private:
