@@ -116,7 +116,7 @@ struct Car {
     bool Jump();
     bool AiJump();
     void Car::checkFlipped(PxTransform carPose);
-    void BoostForward();
+    void BoostForward(float magnitude);
     // navigation
     glm::vec3 getForwardDir();
 
@@ -145,6 +145,7 @@ private:
     float STRENGTH_UP_CORRECTION{300.f};
     float m_stuckTimer{0.f};
     float m_timeSinceLastJump{0.f};
+    float m_timeSinceLastRamp{0.f};
     bool m_grounded{false};
 
 };

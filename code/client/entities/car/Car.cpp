@@ -405,7 +405,7 @@ bool Car::AiJump() {
     return true;
 }
 
-void Car::BoostForward()
+void Car::BoostForward(float magnitude)
 {
     // will boost the car forward !! 
 
@@ -413,12 +413,8 @@ void Car::BoostForward()
     glm::vec3 _heading = getForwardDir();
     PxVec3 heading = GLMtoPx(_heading);
 
-    if (m_timeSinceLastJump > 1.5f)
-    {
-        // Caution force is proportional to the mass of the car, the lower the mass, the harder the force will be applied
-        m_Vehicle.mPhysXState.physxActor.rigidBody->addForce(heading * 4200.f, PxForceMode::eIMPULSE, true);
-        m_timeSinceLastJump = 0.f;
-    }
+    // Caution force is proportional to the mass of the car, the lower the mass, the harder the force will be applied
+    m_Vehicle.mPhysXState.physxActor.rigidBody->addForce(heading * magnitude, PxForceMode::eIMPULSE, true);
 }
 
 
@@ -430,6 +426,7 @@ void Car::Update(Guid carGuid, ecs::Scene& scene, float deltaTime)
   assert(delta_seconds > 0.f && delta_seconds < 0.2000001f);  
 
   m_timeSinceLastJump += delta_seconds;
+  m_timeSinceLastRamp += delta_seconds;
 
   Command command = drive(scene, deltaTime);
   keepRigidbodyUpright(m_Vehicle.mPhysXState.physxActor.rigidBody);
@@ -441,6 +438,7 @@ void Car::Update(Guid carGuid, ecs::Scene& scene, float deltaTime)
   PxVec3 down(0.f,-1.f,0.f);
 
   bool obstacle_under{false};
+  bool ramp_under{false};
 
   PxShape* hitShape = castRayCheckShape(physicsSystem->m_Scene, local.p, down, 10.f);
   // check for obstacles in front of the ai    
@@ -452,12 +450,32 @@ void Car::Update(Guid carGuid, ecs::Scene& scene, float deltaTime)
         ObstacleCollider& oc = scene.GetComponent<ObstacleCollider>(entity);
         obstacle_under = obstacle_under || (oc.getShape() == hitShape);
     }
+    for (Guid entity : ecs::EntitiesInScene<RampCollider>(scene))
+    {
+        // get the level collider
+        RampCollider& oc = scene.GetComponent<RampCollider>(entity);
+        ramp_under = ramp_under || (oc.getShape() == hitShape);
+    }
 
     // check if they should get boosted :p 
     if (obstacle_under)
     {
         std::cout << "boost detected!!!\n";
-        BoostForward();
+        if (m_timeSinceLastJump > 1.5f)
+        {
+            BoostForward(4500.f);
+            m_timeSinceLastJump = 0.f;
+
+        }
+    }
+    if (ramp_under)
+    {
+        std::cout << "ramp detected!!!\n";
+        if (m_timeSinceLastRamp > 1.5f)
+        {
+            BoostForward(10000.f);
+            m_timeSinceLastRamp = 0.f;
+        }
     }
 
   }

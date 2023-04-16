@@ -520,7 +520,7 @@ int main(int argc, char* argv[]) {
 
 	// load the obstacles
 	std::vector<Guid> obstacles;
-	for (int i = 1; i <= 11; i++)
+	for (int i = 1; i <= 9; i++)
 	{
 		char buffer[50];
 
@@ -533,6 +533,34 @@ int main(int argc, char* argv[]) {
 		Guid obstacle_collider_e = mainScene.CreateEntity().guid;
 		mainScene.AddComponent(obstacle_collider_e, ObstacleCollider());
 		ObstacleCollider& new_obstacle_collider = mainScene.GetComponent<ObstacleCollider>(obstacle_collider_e);
+		new_obstacle_collider.Initialize(obstacle_geom, physicsSystem);
+		physx::PxTriangleMesh* new_obstacle_collider_mesh = new_obstacle_collider.cookLevel(glm::scale(glm::mat4(1), glm::vec3(1.0)));
+		new_obstacle_collider.initLevelRigidBody(new_obstacle_collider_mesh, lMaterial);
+		
+	
+		TransformComponent obs_t = TransformComponent();
+		RenderModel obs_r = RenderModel();
+		GraphicsSystem::importOBJ(obs_r,buffer);
+		mainScene.AddComponent(obstacle_collider_e, obs_t);
+		mainScene.AddComponent(obstacle_collider_e, obs_r);
+	}
+
+
+		// load the ramps!
+	std::vector<Guid> ramps;
+	for (int i = 1; i <= 2; i++)
+	{
+		char buffer[50];
+
+		sprintf(buffer, "ramps/Ramp%03d.obj", i);
+		// load in obstacle collider & send it for rendering
+
+		CPU_Geometry obstacle_geom = CPU_Geometry();
+		GraphicsSystem::importOBJ(obstacle_geom, buffer);
+
+		Guid obstacle_collider_e = mainScene.CreateEntity().guid;
+		mainScene.AddComponent(obstacle_collider_e, RampCollider());
+		RampCollider& new_obstacle_collider = mainScene.GetComponent<RampCollider>(obstacle_collider_e);
 		new_obstacle_collider.Initialize(obstacle_geom, physicsSystem);
 		physx::PxTriangleMesh* new_obstacle_collider_mesh = new_obstacle_collider.cookLevel(glm::scale(glm::mat4(1), glm::vec3(1.0)));
 		new_obstacle_collider.initLevelRigidBody(new_obstacle_collider_mesh, lMaterial);
