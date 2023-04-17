@@ -658,7 +658,8 @@ int main(int argc, char* argv[]) {
 					case SDLK_r:
 						//TODO recompile the shader
 						
-						resetLevel(testCar, AIGuids,mainScene,spawnPoints, raceSystem, acc_t, forward);
+						// resetLevel(testCar, AIGuids,mainScene,spawnPoints, raceSystem, acc_t, forward);
+						resetCallback();
 						break;
 						
 					// TODO: change the file that is serializes (Want to do base.json and enginedrive.json)
@@ -727,12 +728,13 @@ int main(int argc, char* argv[]) {
 			// repeatiedly 
 			if (start_button_current_frame[i] && !start_button_previous_frame[i]) {
 
-				if (gamePaused) { gamePaused = false; }
-				else if (!gamePaused) { gamePaused = true; }
+				if (gamePaused) { gamePaused = false; ui.m_status = RACING_SCREEN; }
+				else if (!gamePaused) { gamePaused = true; ui.m_status = PAUSE_SCREEN; }
 			}
 			
 			if (testCar.carGetControllerSelectPressed()) {
-				resetLevel(testCar, AIGuids, mainScene, spawnPoints, raceSystem, acc_t, forward);				
+				// resetLevel(testCar, AIGuids, mainScene, spawnPoints, raceSystem, acc_t, forward);		
+				resetCallback();		
 			}
 
 			// Saves the current frame data as the previous frame for the next frame go around
