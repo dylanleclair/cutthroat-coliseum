@@ -31,12 +31,12 @@
 //DEBUG IMPORTS
 #include "graphics/snippetrender/SnippetRender.h"
 
-float GraphicsSystem::centering_speed = 15;
+float GraphicsSystem::centering_speed = 25;
 float GraphicsSystem::centering_slack_margin = 0.2;
 float GraphicsSystem::pushback_angle = 95;
 float GraphicsSystem::pushback_strength = 30;
-float GraphicsSystem::minimum_radius = 22;
-float GraphicsSystem::maximum_radius = 35;
+float GraphicsSystem::minimum_radius = 15;
+float GraphicsSystem::maximum_radius = 30;
 float GraphicsSystem::height_offset = 4;
 
 void loadCubemap(std::vector<std::string> faces)
