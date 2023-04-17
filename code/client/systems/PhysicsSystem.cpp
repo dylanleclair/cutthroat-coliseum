@@ -23,7 +23,6 @@ struct ContactReportCallback : public physx::PxSimulationEventCallback
 
 namespace physics
 {
-
     void PhysicsSystem::Initialize()
     {
 		initPhysX();
@@ -164,5 +163,5 @@ namespace physics
         m_VehicleSimulationContext.physxScene = m_Scene;
         m_VehicleSimulationContext.physxActorUpdateMode = PxVehiclePhysXActorUpdateMode::eAPPLY_ACCELERATION;
     }
-
+    PhysicsSystem physicsSystem;
 }

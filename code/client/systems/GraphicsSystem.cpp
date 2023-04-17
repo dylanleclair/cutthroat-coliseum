@@ -31,11 +31,13 @@
 //DEBUG IMPORTS
 #include "graphics/snippetrender/SnippetRender.h"
 
-float GraphicsSystem::follow_cam_x = 0;
-float GraphicsSystem::follow_cam_y = 4;
-float GraphicsSystem::follow_cam_z = -22;
-float GraphicsSystem::follow_correction_strength = 40;
-float GraphicsSystem::maximum_follow_distance = 10;
+float GraphicsSystem::centering_speed = 15;
+float GraphicsSystem::centering_slack_margin = 0.2;
+float GraphicsSystem::pushback_angle = 95;
+float GraphicsSystem::pushback_strength = 30;
+float GraphicsSystem::minimum_radius = 22;
+float GraphicsSystem::maximum_radius = 35;
+float GraphicsSystem::height_offset = 4;
 
 void loadCubemap(std::vector<std::string> faces)
 {
@@ -413,11 +415,13 @@ void GraphicsSystem::ImGuiPanel() {
 		}
 
 		if (cam_mode == 3) {
-			ImGui::InputFloat("X Distance: ", &follow_cam_x);
-			ImGui::InputFloat("Y Distance: ", &follow_cam_y);
-			ImGui::InputFloat("Z Distance: ", &follow_cam_z);
-			ImGui::InputFloat("Correction Strength", &follow_correction_strength);
-			ImGui::InputFloat("max follow distance", &maximum_follow_distance);
+			ImGui::InputFloat("centering_speed", &centering_speed);
+			ImGui::InputFloat("centering_slack_margin", &centering_slack_margin);
+			ImGui::InputFloat("pushback_angle", &pushback_angle);
+			ImGui::InputFloat("pushback_strength", &pushback_strength);
+			ImGui::InputFloat("minimum_radius", &minimum_radius);
+			ImGui::InputFloat("maximum_radius", &maximum_radius);
+			ImGui::InputFloat("height_offset", &height_offset);
 		}
 	}
 	if (ImGui::CollapsingHeader("Rendering")) {
@@ -697,7 +701,6 @@ void GraphicsSystem::Update(ecs::Scene& scene, float deltaTime) {
 	glUniformMatrix4fv(viewUniform, 1, GL_FALSE, glm::value_ptr(V));
 	glUniformMatrix4fv(lightSpaceMatixUniform, 1, GL_FALSE, glm::value_ptr(shadowP * shadowV));
 
-
 	for (Guid entityGuid : ecs::EntitiesInScene<RenderModel, TransformComponent>(scene)) {
 		RenderModel& comp = scene.GetComponent<RenderModel>(entityGuid);
 		TransformComponent& trans = scene.GetComponent<TransformComponent>(entityGuid);
@@ -733,7 +736,6 @@ void GraphicsSystem::Update(ecs::Scene& scene, float deltaTime) {
 		}
 	}
 
-
 	/*
 	* render VFX that don't affect the shading. Things like billboards and particle effects
 	* This uses the gFrameBuffer still as its render target
@@ -758,7 +760,7 @@ void GraphicsSystem::Update(ecs::Scene& scene, float deltaTime) {
 	GLuint typeUniform = glGetUniformLocation(GLuint(VFXshader), "type");
 	//Billboards
 	glUniform1ui(typeUniform, 0);
-	glUniform3fv(cameraPositionUniform, 1, glm::value_ptr(cameras[i].cameraPos));
+	glUniform3fv(cameraPositionUniform, 1, glm::value_ptr(cameras[i].getPos()));
 	for (Guid entityGuid : ecs::EntitiesInScene<VFXBillboard, TransformComponent>(scene)) {
 		VFXBillboard& comp = scene.GetComponent<VFXBillboard>(entityGuid);
 		TransformComponent& trans = scene.GetComponent<TransformComponent>(entityGuid);
@@ -984,6 +986,7 @@ void GraphicsSystem::importOBJ(RenderModel& _component, const std::string _fileN
 void GraphicsSystem::bindCameraToEntity(int cameraNum, Guid Entity)
 {
 	cameras[cameraNum].targetEntity = Entity;
+	cameras[cameraNum].fixCamera = true;
 }
 
 

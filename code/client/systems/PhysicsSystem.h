@@ -19,7 +19,6 @@ using namespace snippetvehicle2;
 
 namespace physics
 {
-
 	struct PhysicsSystem : ecs::ISystem
 	{
 		// PhysX management class instances.
@@ -70,4 +69,6 @@ namespace physics
 
 	};
 
+	extern PhysicsSystem physicsSystem;
+	
 }

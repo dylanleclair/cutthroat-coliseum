@@ -82,7 +82,8 @@ uint32_t lastTime_millisecs;
 
 int numberPlayers = 1;
 
-void resetLevel(Car& testCar, std::vector<Guid> ais, ecs::Scene& mainScene, std::vector<glm::vec3> spawnPoints, RaceTracker& raceSystem, float& acc_t, glm::vec3 forward)
+void resetLevel(Car& testCar, std::vector<Guid> ais, ecs::Scene& mainScene, std::vector<glm::vec3> spawnPoints, RaceTracker& raceSystem, float& acc_t, glm::vec3 forward,
+				int number_players, GraphicsSystem& gs)
 {
 	glm::quat q = quatLookAt(forward, { 0,1.f,0 });
 
@@ -116,6 +117,13 @@ void resetLevel(Car& testCar, std::vector<Guid> ais, ecs::Scene& mainScene, std:
 	// Starting up the race countdown
 	raceCountdown = true;
 	startCountdown = 2.8f;
+
+	// Reset cameras
+	for (int i = 0; i < 4 && i < number_players; i++) {
+		gs.bindCameraToEntity(i, ais[i]);
+	}
+	
+
 }
 
 void gamePlayToggle(bool toggle, ecs::Scene &mainScene, std::vector<Guid> aiCars, GraphicsSystem &gs) {
@@ -192,13 +200,14 @@ int main(int argc, char* argv[]) {
 	g_Assets.loadAssets();
 	
 	// now you can access & use them!
+	using namespace physics;
+	physicsSystem.Initialize();
+
 	ecs::Scene mainScene;
 
 	GraphicsSystem gs = GraphicsSystem();
 
-	physics::PhysicsSystem physicsSystem{};
-	physicsSystem.Initialize();
-
+	//physics::PhysicsSystem physicsSystem{};
 
 
 	CPU_Geometry& zzPathGeom = g_Assets.getSpline("zz-track-path");
@@ -530,8 +539,6 @@ int main(int argc, char* argv[]) {
 	baseVariablesInit(testCar.m_Vehicle, physicsSystem);
 	engineVariablesInit(testCar.m_Vehicle);
 
-	float original_z_follow_dist = gs.follow_cam_z;
-
 	bool playSounds = true;
 	init_sound_system();
     SoundUpdater soundUpdater;
@@ -624,7 +631,7 @@ int main(int argc, char* argv[]) {
 		// define some callback functions for the UI
 
 		auto resetCallback = [&]() {
-			resetLevel(testCar, AIGuids,mainScene,spawnPoints, raceSystem, acc_t, forward);
+			resetLevel(testCar, AIGuids,mainScene,spawnPoints, raceSystem, acc_t, forward, numberPlayers, gs);
 		};
 
 		auto pauseCallback = [&](){
@@ -658,7 +665,8 @@ int main(int argc, char* argv[]) {
 					case SDLK_r:
 						//TODO recompile the shader
 						
-						resetLevel(testCar, AIGuids,mainScene,spawnPoints, raceSystem, acc_t, forward);
+						// resetLevel(testCar, AIGuids,mainScene,spawnPoints, raceSystem, acc_t, forward, number, gs);
+						resetCallback();
 						break;
 						
 					// TODO: change the file that is serializes (Want to do base.json and enginedrive.json)
@@ -727,12 +735,12 @@ int main(int argc, char* argv[]) {
 			// repeatiedly 
 			if (start_button_current_frame[i] && !start_button_previous_frame[i]) {
 
-				if (gamePaused) { gamePaused = false; }
-				else if (!gamePaused) { gamePaused = true; }
+				if (gamePaused) { gamePaused = false; ui.m_status = RACING_SCREEN; }
+				else if (!gamePaused) { gamePaused = true; ui.m_status = PAUSE_SCREEN; }
 			}
 			
 			if (testCar.carGetControllerSelectPressed()) {
-				resetLevel(testCar, AIGuids, mainScene, spawnPoints, raceSystem, acc_t, forward);				
+				resetCallback();
 			}
 
 			// Saves the current frame data as the previous frame for the next frame go around
