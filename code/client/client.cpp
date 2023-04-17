@@ -65,7 +65,7 @@ glm::vec3 calculateSpherePoint(float s, float t)
 	return(glm::vec3(x, y, z));
 }
 
-bool showImgui = true;
+bool showImgui = false;
 
 int lapCount = 0;
 bool isFinished = false;
@@ -74,7 +74,7 @@ bool navPathToggle = true;
 
 // Boolean to toggle gameplay mode
 // (follow cam, full level mesh, navmesh off, backface culling off)
-bool gameplayMode = false;
+bool gameplayMode = true;
 bool raceCountdown = false;
 bool gamePaused = false;
 
@@ -134,7 +134,6 @@ void gamePlayToggle(bool toggle, ecs::Scene &mainScene, std::vector<Guid> aiCars
 			AIDirection.setGeometry(blank);
 		}
 
-		showImgui = true;
 	}
 	else {
 		loadLevelMesh = false;
@@ -679,7 +678,7 @@ int main(int argc, char* argv[]) {
 						break;
 					case SDLK_p:
 						if (!showImgui) {
-							showImgui = true;
+							showImgui = false;
 						}
 						else if (showImgui) {
 							showImgui = false;
