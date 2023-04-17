@@ -117,7 +117,7 @@ struct LondonFog {
   void setStyle();
 
 
-  MenuStatus m_status{MenuStatus::RACING_SCREEN};
+  MenuStatus m_status{MenuStatus::MAIN_SCREEN};
 
   // draws the hud for a player in their region
   void drawHUD(Guid carGuid, ecs::Scene& scene, BoundingBox region, RaceTracker& raceSystem);

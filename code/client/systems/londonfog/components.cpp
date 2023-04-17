@@ -527,9 +527,9 @@ void LondonFog::drawMenu(BoundingBox region, std::function<void(void)> resetCall
     ImGui::PushStyleVar(ImGuiStyleVar_WindowPadding, ImVec2{0.f, 0.f});
 
 
-    ImVec2 menuSize = ImVec2(static_cast<float>(region.w), static_cast<float>(region.h));
+    ImVec2 menuSize = ImVec2(static_cast<float>(region.w + 2), static_cast<float>(region.h + 2));
     ImGui::SetNextWindowSize(menuSize);
-    ImGui::SetNextWindowPos(ImVec2(0.f,0.f));
+    ImGui::SetNextWindowPos(ImVec2(-1.f,-1.f));
 
 
     ImGui::Begin("mainmenu", false, emptyBackground);
@@ -796,10 +796,10 @@ void LondonFog::drawMenu(BoundingBox region, std::function<void(void)> resetCall
       return car.m_name.c_str();
     };
 
-
-    for (auto ranking : raceSystem.getRankings())
+    std::vector<Guid>& orderedRankings = raceSystem.getOrderedRankings();
+    for (int i = 0; i <  orderedRankings.size(); i++)
     {
-      ImGui::Text("%d. %s", ranking.second, getName(ranking.first, scene));
+      ImGui::Text("%d. %s", i+1, getName(orderedRankings[i], scene));
     }
 
     // ImGui::Text("1. Player 1");

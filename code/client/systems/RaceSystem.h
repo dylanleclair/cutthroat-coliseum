@@ -56,6 +56,7 @@ struct RaceTracker : ecs::ISystem {
 bool humanRacersFinished(std::vector<Guid> humanGuids);
 
   std::map<Guid,int>& getRankings() { return m_rankings; };
+  std::vector<Guid>& getOrderedRankings() { return m_orderedRankings; };
 private: 
   void computeRankings();
   void correctIndices();
@@ -65,6 +66,7 @@ private:
   // now we need to consider laps!!!
 
   std::map<Guid,int> m_rankings;
+  std::vector<Guid> m_orderedRankings;
   std::vector<int> m_checkpoints;
   std::vector<ProgressTracker*> m_contestants;
 

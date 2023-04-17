@@ -75,6 +75,23 @@ Guid spawnCar(DriverType type, ecs::Scene& scene, physics::PhysicsSystem* physic
 
 	scene.AddComponent(aiDriver_e.guid,ProgressTracker{aiDriver_e.guid});
 
+
+
+	// add nameplates
+
+	ecs::Entity nameplate = scene.CreateEntity();
+	TransformComponent nameplate_t = TransformComponent(aiCar.getVehicleRigidBody());
+	std::string nameplate_name = "textures/nameplates/" + aiCar.m_name + ".png";
+	VFXBillboard nameplate_b = VFXBillboard(nameplate_name, glm::vec3(1, 1, 0));
+	float size = 0.65f;
+	nameplate_t.setScale(glm::vec3(size * 3.f, size, 0));
+	nameplate_t.setPosition(glm::vec3(0, 2.6, 1));
+
+	scene.AddComponent(nameplate.guid, nameplate_t);
+	scene.AddComponent(nameplate.guid, nameplate_b);
+
+	TransformComponent& wrongWaySign_t = scene.GetComponent<TransformComponent>(nameplate.guid);
+
   return aiDriver_e.guid; 
 
 }

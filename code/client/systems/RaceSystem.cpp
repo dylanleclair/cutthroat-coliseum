@@ -158,6 +158,8 @@ bool RaceTracker::isCarFinished(Guid guid) {
 
 void RaceTracker::computeRankings()
 {
+
+  m_orderedRankings.clear();
   
   auto cmp = [](ProgressTracker* a, ProgressTracker* b) {return a->raceIndex > b->raceIndex; };
 
@@ -180,6 +182,7 @@ void RaceTracker::computeRankings()
   for (auto guid : m_finishedRacers)
   {
     m_rankings[guid] = ranking;
+    m_orderedRankings.push_back(guid);
     ranking++;
   }
 
@@ -187,6 +190,7 @@ void RaceTracker::computeRankings()
   for (auto contestant : unfinished)
   {
     m_rankings[contestant->guid] = ranking;
+    m_orderedRankings.push_back(contestant->guid);
     ranking++;
   }
 
