@@ -200,11 +200,11 @@ void LondonFog::drawHUD(Guid carGuid, ecs::Scene scene, BoundingBox region, Race
     static float SCREEN_WIDTH = 1200.f;
     static float SCREEN_HEIGHT = 800.f;
 
-    float size = 180; 
+    float size = 300; 
     ImVec2 imageSize{size * 1.60f, size}; // enforce aspect ratio
     ImVec2 pos = region.getRelativeCenter(imageSize);
 
-    pos.y += 0.3f * static_cast<float>(region.h);
+    pos.y += 0.23f * static_cast<float>(region.h);
 
     ImGui::SetNextWindowSize(ImVec2(0.f,0.f)); // scale to fill content (img size in this case)
     ImGui::SetNextWindowPos(pos);
@@ -241,8 +241,8 @@ void LondonFog::drawHUD(Guid carGuid, ecs::Scene scene, BoundingBox region, Race
 
   ImGui::TextColored(ImVec4(1.0f, 1.0f, 1.0f, 1.0f), "Current Speed");
   ImGui::PushFont(m_fonts["JockeyOneLarge"]);
-  // ImGui::TextColored(ImVec4(1.0f, 1.0f, 1.0f, 1.0f), "%.0f", clamp((carSpeed * (carSpeed / 10.f)), 0.f, 500.f));
-  ImGui::TextColored(ImVec4(1.0f, 1.0f, 1.0f, 1.0f), "%.0f", (carSpeed));
+  ImGui::TextColored(ImVec4(1.0f, 1.0f, 1.0f, 1.0f), "%.0f", clamp((carSpeed * (carSpeed / 10.f)), 0.f, 500.f));
+  // ImGui::TextColored(ImVec4(1.0f, 1.0f, 1.0f, 1.0f), "%.0f", (carSpeed));
   ImGui::PopFont();
   ImGui::SameLine();
   ImGui::TextColored(ImVec4(1.0f, 1.0f, 1.0f, 1.0f), "u/s");
