@@ -18,14 +18,6 @@
 
 #include <memory>
 
-#include "systems/UI/RmlUi_Renderer_GL3.h"
-#include "systems/UI/RmlUi_Platform_SDL.h"
-
-#define RMLUI_STATIC_LIB
-#include <RmlUi/Core.h>
-#include "systems/UI/RmlUi_Backend.h"
-#include <RmlUi/Debugger.h>
-
 
 // Functor for deleting a SDL window.
 //
@@ -55,8 +47,6 @@ struct Window {
 
 	//void swapBuffers() { SDL_GL_SwapWindow(window.get()); }
 	void RenderAndSwap();
-
-	Rml::Context* rmlContext;
-	static Rml::ElementDocument* document;
-	static bool ProcessKeyDownShortcuts(Rml::Context* context, Rml::Input::KeyIdentifier key, int key_modifier, float native_dp_ratio, bool priority);
+	SDL_Window* window = nullptr;
+	SDL_GLContext glcontext = nullptr;
 }; 

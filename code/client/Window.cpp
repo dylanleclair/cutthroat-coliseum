@@ -18,35 +18,78 @@ void sdl_error_handler(int sdl_return) {
 	exit(1);
 }
 
+void FAIL() {
+	std::cout << "failed to make window\n";
+	exit(1);
+}
 
 Window::Window(int width, int height, const char* title)
 {
-	if (!Backend::Initialize("Maximus Overdrive", 1200, 800, false))
-		std::cout << "Failed to initalize backend\n";
-	/*
-	Rml::SetSystemInterface(Backend::GetSystemInterface());
-	Rml::SetRenderInterface(Backend::GetRenderInterface());
-	Rml::Initialise();
-	rmlContext = Rml::CreateContext("main", Rml::Vector2i(1200, 800));
-	if (!rmlContext) {
-		Rml::Shutdown();
-		Backend::Shutdown();
-		std::cout << "Failed to create RmlUI context\n";
+	if (SDL_Init(SDL_INIT_EVERYTHING) != 0)
+		FAIL();
+
+#if defined RMLUI_PLATFORM_EMSCRIPTEN
+	// GLES 3.0 (WebGL 2.0)
+	SDL_GL_SetAttribute(SDL_GL_CONTEXT_FLAGS, 0);
+	SDL_GL_SetAttribute(SDL_GL_CONTEXT_PROFILE_MASK, SDL_GL_CONTEXT_PROFILE_ES);
+	SDL_GL_SetAttribute(SDL_GL_CONTEXT_MAJOR_VERSION, 3);
+	SDL_GL_SetAttribute(SDL_GL_CONTEXT_MINOR_VERSION, 0);
+#else
+	// GL 3.3 Core
+	SDL_GL_SetAttribute(SDL_GL_CONTEXT_FLAGS, 0);
+	SDL_GL_SetAttribute(SDL_GL_CONTEXT_PROFILE_MASK, SDL_GL_CONTEXT_PROFILE_CORE);
+	SDL_GL_SetAttribute(SDL_GL_CONTEXT_MAJOR_VERSION, 4);
+	SDL_GL_SetAttribute(SDL_GL_CONTEXT_MINOR_VERSION, 1);
+#endif
+
+	// Request stencil buffer of at least 8-bit size to supporting clipping on transformed elements.
+	SDL_GL_SetAttribute(SDL_GL_STENCIL_SIZE, 8);
+	SDL_GL_SetAttribute(SDL_GL_DOUBLEBUFFER, 1);
+
+	// Enable linear filtering and MSAA for better-looking visuals, especially when transforms are applied.
+	SDL_SetHint(SDL_HINT_RENDER_SCALE_QUALITY, "linear");
+	SDL_GL_SetAttribute(SDL_GL_MULTISAMPLEBUFFERS, 1);
+	SDL_GL_SetAttribute(SDL_GL_MULTISAMPLESAMPLES, 2);
+
+	const Uint32 window_flags = (SDL_WINDOW_OPENGL);
+
+	window = SDL_CreateWindow(title, SDL_WINDOWPOS_CENTERED, SDL_WINDOWPOS_CENTERED, width, height, window_flags);
+	if (!window)
+	{
+		// Try again on low-quality settings.
+		SDL_SetHint(SDL_HINT_RENDER_SCALE_QUALITY, "nearest");
+		SDL_GL_SetAttribute(SDL_GL_MULTISAMPLEBUFFERS, 0);
+		SDL_GL_SetAttribute(SDL_GL_MULTISAMPLESAMPLES, 0);
+		window = SDL_CreateWindow(title, SDL_WINDOWPOS_CENTERED, SDL_WINDOWPOS_CENTERED, width, height, window_flags);
+		if (!window)
+		{
+			fprintf(stderr, "SDL error on create window: %s\n", SDL_GetError());
+			FAIL();
+		}
+	}
+
+	glcontext = SDL_GL_CreateContext(window);
+	SDL_GL_MakeCurrent(window, glcontext);
+	SDL_GL_SetSwapInterval(1);
+
+	GLenum err = glewInit();
+	if (err != GLEW_OK) {
+		printf("WINDOW glewInit error:{}", glewGetErrorString(err));
+		throw std::runtime_error("Failed to initialize GLEW");
 	}
 	
-	Rml::Debugger::Initialise(rmlContext);
-	//load the sample document
-	if (!Rml::LoadFontFace("fonts/Cabal-w5j3.ttf"))
-		std::cout << "failed to load font\n";
-	document = rmlContext->LoadDocument("Rml/demo.rml");
-	if (document)
-		document->Show();
-	else
-		std::cout << "Failed to load document\n";
-	document->Hide();
+#define ImGUI_Enabled
+#ifdef ImGUI_Enabled
+	IMGUI_CHECKVERSION();
+	ImGui::CreateContext();
 
-	Rml::Log::Message(Rml::Log::LT_DEBUG, "Test warning.");
-	*/
+	ImGui::StyleColorsDark();
+
+	ImGui_ImplSDL2_InitForOpenGL(window, glcontext);
+	// VOLATILE: must match version specified in shaders!
+	ImGui_ImplOpenGL3_Init("#version 410 core");
+#endif
+
 	std::cout << "finished initalizing window\n\n";
 }
 
@@ -66,20 +109,6 @@ glm::ivec2 Window::getSize() const {
 
 void Window::RenderAndSwap()
 {
-	/*
-	Backend::ProcessEvents(rmlContext, static_cast<KeyDownCallback>(&Window::ProcessKeyDownShortcuts));
-
-	glClear(GL_DEPTH_BUFFER_BIT | GL_STENCIL_BUFFER_BIT);
-	glDisable(GL_DEPTH_TEST);
-	glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
-	glEnable(GL_BLEND);
-	glEnable(GL_FRAMEBUFFER_SRGB);
-
-	glActiveTexture(GL_TEXTURE0);
-	rmlContext->Update();
-	Backend::BeginFrame();
-	rmlContext->Render();
-	*/
 	glDisable(GL_BLEND);
 #define ImGUI_Enabled
 #ifdef ImGUI_Enabled
@@ -91,80 +120,5 @@ void Window::RenderAndSwap()
 	glEnable(GL_FRAMEBUFFER_SRGB);
 #endif
 	//swap the buffers
-	Backend::PresentFrame();
-}
-
-Rml::ElementDocument* Window::document = nullptr;
-bool Window::ProcessKeyDownShortcuts(Rml::Context* context, Rml::Input::KeyIdentifier key, int key_modifier, float native_dp_ratio, bool priority)
-{
-	if (!context)
-		return true;
-
-	// Result should return true to allow the event to propagate to the next handler.
-	bool result = false;
-
-	// This function is intended to be called twice by the backend, before and after submitting the key event to the context. This way we can
-	// intercept shortcuts that should take priority over the context, and then handle any shortcuts of lower priority if the context did not
-	// intercept it.
-	if (priority)
-	{
-		// Priority shortcuts are handled before submitting the key to the context.
-
-		// Toggle debugger and set dp-ratio using Ctrl +/-/0 keys.
-		if (key == Rml::Input::KI_F8)
-		{
-			Rml::Debugger::SetVisible(!Rml::Debugger::IsVisible());
-		}
-		else if (key == Rml::Input::KI_F7) {
-			if (document->IsVisible())
-				document->Hide();
-			else
-				document->Show();
-		}
-		else if (key == Rml::Input::KI_0 && key_modifier & Rml::Input::KM_CTRL)
-		{
-			context->SetDensityIndependentPixelRatio(native_dp_ratio);
-		}
-		else if (key == Rml::Input::KI_1 && key_modifier & Rml::Input::KM_CTRL)
-		{
-			context->SetDensityIndependentPixelRatio(1.f);
-		}
-		else if ((key == Rml::Input::KI_OEM_MINUS || key == Rml::Input::KI_SUBTRACT) && key_modifier & Rml::Input::KM_CTRL)
-		{
-			const float new_dp_ratio = Rml::Math::Max(context->GetDensityIndependentPixelRatio() / 1.2f, 0.5f);
-			context->SetDensityIndependentPixelRatio(new_dp_ratio);
-		}
-		else if ((key == Rml::Input::KI_OEM_PLUS || key == Rml::Input::KI_ADD) && key_modifier & Rml::Input::KM_CTRL)
-		{
-			const float new_dp_ratio = Rml::Math::Min(context->GetDensityIndependentPixelRatio() * 1.2f, 2.5f);
-			context->SetDensityIndependentPixelRatio(new_dp_ratio);
-		}
-		else
-		{
-			// Propagate the key down event to the context.
-			result = true;
-		}
-	}
-	else
-	{
-		// We arrive here when no priority keys are detected and the key was not consumed by the context. Check for shortcuts of lower priority.
-		if (key == Rml::Input::KI_R && key_modifier & Rml::Input::KM_CTRL)
-		{
-			for (int i = 0; i < context->GetNumDocuments(); i++)
-			{
-				Rml::ElementDocument* document = context->GetDocument(i);
-				const Rml::String& src = document->GetSourceURL();
-				if (src.size() > 4 && src.substr(src.size() - 4) == ".rml")
-				{
-					document->ReloadStyleSheet();
-				}
-			}
-		}
-		else
-		{
-			result = true;
-		}
-	}
-
-	return result;
+	SDL_GL_SwapWindow(window);
 }
