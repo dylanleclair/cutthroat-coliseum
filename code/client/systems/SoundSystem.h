@@ -6,6 +6,7 @@
 
 struct CarSoundEmitter {
     FMOD::Channel* enginechannel = NULL;
+    FMOD::Channel* idlechannel = NULL;
     FMOD::Channel* brakechannel = NULL;
     // FMOD::Channel* collisionchannel = NULL;
 };
