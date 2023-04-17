@@ -98,7 +98,7 @@ struct Car {
     Car() : physicsSystem(nullptr) {};
 
     // Initialization & updating
-    void Initialize(DriverType type, PxTransform initialPose, physics::PhysicsSystem* ps, Curve* track, NavPath* pathToFollow);
+    void Initialize(DriverType type, PxTransform initialPose, physics::PhysicsSystem* ps, Curve* track, NavPath* pathToFollow, std::string name);
     virtual void Update(Guid carGuid, ecs::Scene& scene, float deltaTime);
     void cleanupVehicle();
     void baseSetup();
@@ -140,6 +140,7 @@ struct Car {
 
     float m_timeSinceLastRamp{0.f};
     float m_timeSinceLastBoost{0.f};
+    std::string m_name;
 private:
     glm::vec3 getTrackNormal();
     void keepRigidbodyUpright(PxRigidBody* rigidbody);

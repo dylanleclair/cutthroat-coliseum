@@ -101,8 +101,10 @@ void Car::keepRigidbodyUpright(PxRigidBody* rigidbody)
 
 
 
-void Car::Initialize(DriverType type, PxTransform initialPose, physics::PhysicsSystem* ps, Curve* track, NavPath* pathToFollow)
+void Car::Initialize(DriverType type, PxTransform initialPose, physics::PhysicsSystem* ps, Curve* track, NavPath* pathToFollow, std::string name)
 {
+
+  m_name = name;
 
   if (!ps)
   {

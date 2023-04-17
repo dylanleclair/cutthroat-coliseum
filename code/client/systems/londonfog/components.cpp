@@ -12,6 +12,7 @@
 const float SCREEN_WIDTH = 1200.f;
 const float SCREEN_HEIGHT = 800.f;
 
+int n{1};
 
 const ImVec2 AUTO_RESIZE = ImVec2(0.f,0.f);
 
@@ -85,6 +86,7 @@ void LondonFog::loadFonts()
 
   //load fonts into ImGui
   loadFont("fonts/JockeyOne.ttf", "JockeyOne", 50.f, io, m_fonts);
+  loadFont("fonts/JockeyOne.ttf", "JockeyOneSmall", 30.f, io, m_fonts);
   loadFont("fonts/JockeyOne.ttf", "JockeyOneLarge", 130.f, io, m_fonts);
   loadFont("fonts/JockeyOne.ttf", "JockeyOneXL", 150.f, io, m_fonts);
   loadFont("fonts/JockeyOne.ttf", "JockeyOneMedium", 70.f, io, m_fonts);
@@ -203,7 +205,7 @@ std::string getRankSuffix(int rank)
 
 }
 
-void LondonFog::drawHUD(Guid carGuid, ecs::Scene scene, BoundingBox region, RaceTracker& raceSystem)
+void LondonFog::drawHUD(Guid carGuid, ecs::Scene& scene, BoundingBox region, RaceTracker& raceSystem)
 {
 
   // get the associated data  
@@ -215,13 +217,33 @@ void LondonFog::drawHUD(Guid carGuid, ecs::Scene scene, BoundingBox region, Race
   if (m_status != RACING_SCREEN)
   {
     return;
-  }
+  } 
+
+
 
   // start with current speed
   // lower left corner.
 
   Car& car = scene.GetComponent<Car>(carGuid);
 
+  ProgressTracker& pt = scene.GetComponent<ProgressTracker>(carGuid);
+
+  // if (pt.isFinished)
+  {
+    // display race complete message!
+    float size = 500; 
+    ImVec2 imageSize{size * 1.60f, size}; // enforce aspect ratio
+    ImVec2 pos = region.getRelativeCenter(imageSize);
+
+    ImGui::SetNextWindowSize(ImVec2(0.f,0.f)); // scale to fill content (img size in this case)
+    ImGui::SetNextWindowPos(pos);
+    ImGui::Begin("finished", false, emptyBackground);
+
+    m_texts["finished"].Render(imageSize);
+
+    ImGui::End();
+    return;
+  }
 
 
   // wrong way prompt
@@ -365,8 +387,15 @@ void LondonFog::drawHUD(Guid carGuid, ecs::Scene scene, BoundingBox region, Race
   ImGui::PopStyleColor();
   ImGui::PopStyleVar();
   
+  std::string label_hud_label = std::string("hud_label_") + std::to_string(carGuid);
 
+  ImGui::Begin(label_hud.c_str(), false, lfWindowFlags);
 
+  ImGui::PushFont(m_fonts["JockeyOneSmall"]);
+  ImGui::Text("Playing as: %s", car.m_name.c_str());
+  ImGui::PopFont();
+  
+  ImGui::End();
 
   // pop the style
 
@@ -377,7 +406,7 @@ void LondonFog::drawHUD(Guid carGuid, ecs::Scene scene, BoundingBox region, Race
 
 
 
-void LondonFog::drawMenu(BoundingBox region, std::function<void(void)> resetCallback, std::function<void(int)> cameraCallback, std::function<void()> togglePauseCallback)
+void LondonFog::drawMenu(BoundingBox region, std::function<void(void)> resetCallback, std::function<void(int)> cameraCallback, std::function<void()> togglePauseCallback, ecs::Scene& scene, RaceTracker& raceSystem)
 {
   // push the style options
 
@@ -457,6 +486,7 @@ void LondonFog::drawMenu(BoundingBox region, std::function<void(void)> resetCall
 
     if (ImGui::Button("Singleplayer"))
     {
+      cameraCallback(1); // need to rig the controller setup
       resetCallback();
       m_status = RACING_SCREEN;
     }
@@ -563,7 +593,7 @@ void LondonFog::drawMenu(BoundingBox region, std::function<void(void)> resetCall
     int numPlayers = ControllerInput::getNumberPlayers();
     ImGui::TextColored(ImVec4(1.0f, 1.0f, 1.0f, 1.0f), "There are currently %d controllers detected.", numPlayers);
     
-    static int n = std::max(1,numPlayers);
+    n = std::max(1,numPlayers);
 
     for (int i = 0; i < numPlayers; i++)
     {
@@ -734,8 +764,99 @@ void LondonFog::drawMenu(BoundingBox region, std::function<void(void)> resetCall
 
     ImGui::SetWindowPos(ImVec2(center.x, center.y));
 
+    ImGui::End();
+
+  } else if (m_status == RESULTS_SCREEN)
+  {
+    // draw the results screen.
+
+
+
+    ImGui::PushStyleColor(ImGuiCol_WindowBg, colorCodeToImguiVec("#000000", 0.65f));
+
+    ImGui::SetNextWindowSize(AUTO_RESIZE);
+    ImGui::Begin("pause_menu",false, lfWindowFlags);
+
+    ImGui::PushFont(m_fonts["JockeyOneLarge"]);
+    ImGui::Text("Race Complete!");
+    ImGui::PopFont();
+
+    ImGui::PushFont(m_fonts["JockeyOneSmall"]);
+
+    ImGui::PushFont(m_fonts["JockeyOneMedium"]);
+    ImGui::Text("Final Rankings");
+    ImGui::PopFont();
+
+    ImGui::Spacing();
+
+
+    auto getName = [](Guid g, ecs::Scene& scene)
+    {
+      Car& car = scene.GetComponent<Car>(g);
+      return car.m_name.c_str();
+    };
+
+
+    for (auto ranking : raceSystem.getRankings())
+    {
+      ImGui::Text("%d. %s", ranking.second, getName(ranking.first, scene));
+    }
+
+    // ImGui::Text("1. Player 1");
+    // ImGui::Text("2. Player 1");
+    // ImGui::Text("3. Player 1");
+    // ImGui::Text("4. Player 1");
+    // ImGui::Text("5. Player 1");
+    // ImGui::Text("6. Player 1");
+    // ImGui::Text("7. Player 1");
+    // ImGui::Text("8. Player 1");
+    // ImGui::Text("9. Player 1");
+
+    ImGui::Spacing();
+    ImGui::Spacing();
+    ImGui::Spacing();
+
+    ImGui::PushStyleColor(ImGuiCol_Button,        colorCodeToImguiVec("#000000", 0.65f));
+    ImGui::PushStyleColor(ImGuiCol_ButtonHovered, colorCodeToImguiVec("#000000", 0.87f));
+    ImGui::PushStyleColor(ImGuiCol_ButtonActive,  colorCodeToImguiVec("#111111", 0.65f));
+
+    ImGui::PushStyleVar(ImGuiStyleVar_FramePadding, ImVec2(5.f,5.f));
+
+
+    ImGui::PushFont(m_fonts["JockeyOne"]);
+  
+    if (ImGui::Button("Back To Menu"))
+    {
+      // check the controls ? 
+      m_status = MAIN_SCREEN;
+    }
+
+    ImGui::PopFont();
+
+    // pop frame padding
+    ImGui::PopStyleVar();
+
+    // pop button colors
+    ImGui::PopStyleColor();
+    ImGui::PopStyleColor();
+    ImGui::PopStyleColor();
+
+    
+    ImGui::PopFont();
+
+
+    // pop window color
+    ImGui::PopStyleColor();
+
+
+
+    ImVec2 v = ImGui::GetWindowSize();
+    ImVec2 center = region.getRelativeCenter(v);
+
+    ImGui::SetWindowPos(ImVec2(center.x, center.y));
 
     ImGui::End();
+
 
   }
 
@@ -838,7 +959,8 @@ void LondonFog::loadTextures()
   UITexture pillarBoost{"textures/pillarboost.png"};
   m_texts["pillar"] = pillarBoost;
 
-
+  UITexture finished{"textures/finished.png"};
+  m_texts["finished"] = finished;
   // UITexture black{"textures/black.png"};
   // m_texts["black"] = black;
 

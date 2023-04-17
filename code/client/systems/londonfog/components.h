@@ -98,6 +98,7 @@ enum MenuStatus {
   PAUSE_SCREEN,
   RACING_SCREEN,
   LOADING_SCREEN, // lowkey just the controls screen ? idk
+  RESULTS_SCREEN,
 };
 
 struct LondonFog {
@@ -116,12 +117,12 @@ struct LondonFog {
   void setStyle();
 
 
-  MenuStatus m_status{MenuStatus::MAIN_SCREEN};
+  MenuStatus m_status{MenuStatus::RACING_SCREEN};
 
   // draws the hud for a player in their region
-  void drawHUD(Guid carGuid, ecs::Scene scene, BoundingBox region, RaceTracker& raceSystem);
+  void drawHUD(Guid carGuid, ecs::Scene& scene, BoundingBox region, RaceTracker& raceSystem);
   void loadFonts();
-  void drawMenu(BoundingBox region, std::function<void(void)> resetCallback, std::function<void(int)> cameraCallback, std::function<void()> togglePauseCallback);
+  void drawMenu(BoundingBox region, std::function<void(void)> resetCallback, std::function<void(int)> cameraCallback, std::function<void()> togglePauseCallback, ecs::Scene& scene, RaceTracker& raceSystem);
   void loadTextures();
 
 };

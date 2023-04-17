@@ -8,8 +8,12 @@
 #include "Car.h"
 #include "../../utils/PxConversionUtils.h"
 #include "../../systems/RaceSystem.h"
+
+#include <algorithm>
+#include <random>
+
 // will instantiate an AI car
-Guid spawnCar(DriverType type, ecs::Scene& scene, physics::PhysicsSystem* physicsSystem, glm::vec3 position, glm::vec3 forward, Curve* track, NavPath* navPath)
+Guid spawnCar(DriverType type, ecs::Scene& scene, physics::PhysicsSystem* physicsSystem, glm::vec3 position, glm::vec3 forward, Curve* track, NavPath* navPath, std::string name)
 {
 
 	// all vehicles are entities that consists of the following components
@@ -24,8 +28,6 @@ Guid spawnCar(DriverType type, ecs::Scene& scene, physics::PhysicsSystem* physic
   scene.AddComponent(aiDriver_e.guid, Car());
 	Car& aiCar = scene.GetComponent<Car>(aiDriver_e.guid);
 
-
-
 	// set rotation of the car.
 	glm::quat q = quatLookAt(forward, {0,1.f,0});
 	PxQuat initialRotation = GLMtoPx(q);
@@ -34,7 +36,7 @@ Guid spawnCar(DriverType type, ecs::Scene& scene, physics::PhysicsSystem* physic
   PxTransform pose(initialPosition,initialRotation);
 
   // initialize the physx vehicle, associated data.
-  aiCar.Initialize(type, pose, physicsSystem, track, navPath);
+  aiCar.Initialize(type, pose, physicsSystem, track, navPath, name);
 	
   // renderer
 	RenderModel aiDriver_r = RenderModel();
@@ -107,4 +109,27 @@ std::vector<glm::vec3> spawnpointsAlongAxis(int rows, int cols,float spread, glm
 
 	return result;
 
+}
+
+
+std::vector<std::string> getPlayerNames()
+{
+	std::vector<std::string> names;
+
+	names.push_back("Zeus");
+	names.push_back("Poseidon");
+	names.push_back("Ares");
+	names.push_back("Aphrodite");
+	names.push_back("Hera");
+	names.push_back("Demeter");
+	names.push_back("Athena");
+	names.push_back("Apollo");
+	names.push_back("Artemis");
+	names.push_back("Hephaestus");
+	names.push_back("Hermes");
+	names.push_back("Dionysus");
+
+	auto rng = std::default_random_engine {};
+	std::shuffle(std::begin(names), std::end(names), rng);
+	return names;
 }
