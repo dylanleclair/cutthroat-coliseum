@@ -192,7 +192,7 @@ void init_sound_system() {
 	result = soundsystem.system->createSound("audio/brake-6315.mp3", FMOD_3D, 0, &soundsystem.brakesound);
 	handle_fmod_error();
 
-	result = soundsystem.system->createSound("audio/engine_driving.mp3", FMOD_3D, 0, &soundsystem.enginesound);
+	result = soundsystem.system->createSound("audio/engine_drive.mp3", FMOD_3D, 0, &soundsystem.enginesound);
 	handle_fmod_error();
 
 	result = soundsystem.system->createSound("audio/dark_pit_theme.mp3", FMOD_LOOP_NORMAL, 0, &soundsystem.musicsound);
