@@ -288,7 +288,6 @@ int main(int argc, char* argv[]) {
 		gs.bindCameraToEntity(i, AIGuids[i]);
 	}
 
-
 	// bandaids for other calls that do player-only stuff
 	Car& testCar = mainScene.GetComponent<Car>(AIGuids[0]);
 	Guid carGuid = AIGuids[0];
@@ -469,6 +468,18 @@ int main(int argc, char* argv[]) {
     SoundUpdater soundUpdater;
     soundUpdater.Initialize(mainScene);
 
+	// button press frame data for the controller start buttons
+	// used to prevent holding down behaviour triggering multiple
+	// commands in a row
+	bool start_button_previous_frame[4];
+	for (int i = 0; i < 4; i++) {
+		start_button_previous_frame[i] = false;
+	}
+	bool start_button_current_frame[4];
+	for (int i = 0; i < 4; i++) {
+		start_button_current_frame[i] = false;
+	}
+
 		std::cout << "initalization finished, beginning game\n";
 
 	// GAME LOOP
@@ -554,6 +565,7 @@ int main(int argc, char* argv[]) {
 						else {
 							gamePaused = true;
 						}
+						break;
 					case SDLK_p:
 						if (!showImgui) {
 							showImgui = true;
@@ -589,6 +601,34 @@ int main(int argc, char* argv[]) {
 			//pass the event to the camera
 			gs.input(windowEvent, 0);
 		}
+
+		// Iterates through all player controllers and
+		// checks if the start or select button has been pressed
+		// and launches the approriate functions 
+		for (int i = 0; i < number_players; i++)
+		{
+			Car& testCar = mainScene.GetComponent<Car>(AIGuids[i]);
+
+			// Checks the controller input and saves the value for the current frame
+			start_button_current_frame[i] = testCar.carGetControllerStartPressed();
+
+			// Checks if the current frame had no button press, and the current frame had a button press
+			// This is to prevent "holding down button" behaviour triggering the game to be paused on and off
+			// repeatiedly 
+			if (start_button_current_frame[i] && !start_button_previous_frame[i]) {
+
+				if (gamePaused) { gamePaused = false; }
+				else if (!gamePaused) { gamePaused = true; }
+			}
+			
+			if (testCar.carGetControllerSelectPressed()) {
+				resetLevel(testCar, AIGuids, mainScene, spawnPoints, raceSystem, acc_t, forward);				
+			}
+
+			// Saves the current frame data as the previous frame for the next frame go around
+			start_button_previous_frame[i] = start_button_current_frame[i];
+		}
+
 
 		// Check for the car grounded state, and if grounded after being in the air
 		// resets the modifications made to the car while in the air
