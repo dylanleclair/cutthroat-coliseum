@@ -703,7 +703,7 @@ int main(int argc, char* argv[]) {
 		// Iterates through all player controllers and
 		// checks if the start or select button has been pressed
 		// and launches the approriate functions 
-		for (int i = 0; i < number_players; i++)
+		for (int i = 0; i < numberPlayers; i++)
 		{
 			Car& testCar = mainScene.GetComponent<Car>(AIGuids[i]);
 
