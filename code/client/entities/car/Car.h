@@ -108,7 +108,7 @@ struct Car {
     float carSpeed();
 
     // movement 
-    Command drive(ecs::Scene& scene, float deltaTime);
+    Command drive(Guid carGuid, ecs::Scene& scene, float deltaTime);
     void setClosestTetherPoint(PxTransform _loc);
     void setClosestTetherPoint(glm::vec3 _loc);
     bool getCTethered();

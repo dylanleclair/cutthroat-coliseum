@@ -200,11 +200,11 @@ void LondonFog::drawHUD(Guid carGuid, ecs::Scene scene, BoundingBox region, Race
     static float SCREEN_WIDTH = 1200.f;
     static float SCREEN_HEIGHT = 800.f;
 
-    float size = 300; 
+    float size = 180; 
     ImVec2 imageSize{size * 1.60f, size}; // enforce aspect ratio
     ImVec2 pos = region.getRelativeCenter(imageSize);
 
-    pos.y -= 0.3f * static_cast<float>(region.h);
+    pos.y += 0.3f * static_cast<float>(region.h);
 
     ImGui::SetNextWindowSize(ImVec2(0.f,0.f)); // scale to fill content (img size in this case)
     ImGui::SetNextWindowPos(pos);

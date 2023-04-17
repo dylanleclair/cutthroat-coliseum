@@ -26,7 +26,7 @@ struct ProgressTracker {
 struct RaceTracker : ecs::ISystem {
 
   const int NUM_CHECKPOINTS = 10;
-  const int MAX_LAPS = 2;
+  const int MAX_LAPS = 1;
 
   Curve& m_racepath;
   
@@ -53,7 +53,7 @@ struct RaceTracker : ecs::ISystem {
   bool getRaceStatus() { return numFinishedRacers() == m_contestants.size(); }
   bool isCarFinished(Guid guid);
 
-  // bool humanRacersFinished();
+bool humanRacersFinished(std::vector<Guid> humanGuids);
 
   std::map<Guid,int>& getRankings() { return m_rankings; };
 private: 
@@ -67,7 +67,6 @@ private:
   std::map<Guid,int> m_rankings;
   std::vector<int> m_checkpoints;
   std::vector<ProgressTracker*> m_contestants;
-  bool m_raceFinished{false};
 
   std::vector<Guid> m_finishedRacers; // always in order of first-to-last
   ecs::Scene* m_scene;

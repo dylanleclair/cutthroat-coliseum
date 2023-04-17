@@ -17,11 +17,21 @@ int RaceTracker::numFinishedRacers()
   return count;
 }
 
-// bool humanRacersFinished(std::vector)
-// {
-//   // will check if the human racers (identified by their guid) are finished
+bool RaceTracker::humanRacersFinished(std::vector<Guid> humanGuids)
+{
+  // will check if the human racers (identified by their guid) are finished
+  int countMatches = 0;
 
-// }
+  for (auto guid : humanGuids)
+  {
+    ProgressTracker& pt = m_scene->GetComponent<ProgressTracker>(guid);
+    if (pt.isFinished)
+    {
+      countMatches++;
+    }
+  }
+  return (countMatches == humanGuids.size()) ? true : false;
+}
 
 void RaceTracker::Initialize() {}
 
@@ -42,10 +52,6 @@ void RaceTracker::Initialize(ecs::Scene& scene)
 void RaceTracker::Update(ecs::Scene& scene, float deltaTime) {
 
   // rankings should not change after the race is finished.
-  if (m_raceFinished)
-  {
-    return;
-  }
 
   // every tick, update the curve index of the car. check if it is near a checkpoint.
   // if it has completed all the checkpoints and is close to the initial checkpoint,
@@ -55,7 +61,7 @@ void RaceTracker::Update(ecs::Scene& scene, float deltaTime) {
     Car& c = scene.GetComponent<Car>(car->guid);
     if (car->isFinished)
     {
-      return;
+      continue;
     }
     car->curveIndex = m_racepath.closestIndex(c.getPosition()); 
 
@@ -78,8 +84,13 @@ void RaceTracker::Update(ecs::Scene& scene, float deltaTime) {
     ProgressTracker& car = scene.GetComponent<ProgressTracker>(guid);
     Car& realCar = scene.GetComponent<Car>(guid);
 
+    if (car.isFinished)
+    {
+      continue;
+    }
+
     // first see if the car's completed a lap
-    if ((car.checkpoints == m_checkpoints.size() - 1) && abs(car.curveIndex - m_checkpoints[0]) == 0)
+    if ((car.checkpoints >= m_checkpoints.size() - 1) && abs(car.curveIndex - m_checkpoints[0]) == 0)
     {
       if (!car.isFinished)
       {
@@ -111,7 +122,7 @@ void RaceTracker::resetRace() {
         // completely reset the progress tracker for each contestant
         (*contestant) = ProgressTracker{contestant->guid};
     }
-    m_raceFinished = false;
+    // m_raceFinished = false;
     m_finishedRacers.clear();
 }
 

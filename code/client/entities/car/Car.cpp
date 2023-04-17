@@ -5,6 +5,7 @@
 #include "../../utils/PxConversionUtils.h"
 
 #include "../physics/LevelCollider.h"
+#include "../../systems/RaceSystem.h"
 
 #include "imgui.h"
 #include "imgui_impl_sdl.h"
@@ -127,7 +128,7 @@ void Car::Initialize(DriverType type, PxTransform initialPose, physics::PhysicsS
   if (!result)
   {
     std::cerr << "Could not load vehicle engine params.\n";
-    return;
+    return; 
   }
 
   setPhysXIntegrationParams(m_Vehicle.mBaseParams.axleDescription,
@@ -429,7 +430,7 @@ void Car::Update(Guid carGuid, ecs::Scene& scene, float deltaTime)
   m_timeSinceLastRamp += delta_seconds;
   m_timeSinceLastJump += delta_seconds;
 
-  Command command = drive(scene, deltaTime);
+  Command command = drive(carGuid, scene, deltaTime);
   keepRigidbodyUpright(m_Vehicle.mPhysXState.physxActor.rigidBody);
 
   checkFlipped(getVehicleRigidBody()->getGlobalPose());
@@ -575,7 +576,7 @@ PxTransform Car::getTransformPx()
     return carPose;
 }
 
-Command Car::drive(ecs::Scene& scene, float deltaTime)
+Command Car::drive(Guid carGuid, ecs::Scene& scene, float deltaTime)
 {
 
     Command command = {0.f, 0.f, 0.f, m_TargetGearCommand};
@@ -583,7 +584,9 @@ Command Car::drive(ecs::Scene& scene, float deltaTime)
     // now we have to get the controller mapping
     ControllerInput::controller;
 
-    if (m_driverType == DriverType::COMPUTER)
+    ProgressTracker& pt = scene.GetComponent<ProgressTracker>(carGuid);
+
+    if (m_driverType == DriverType::COMPUTER || (m_driverType == HUMAN && pt.isFinished) )
     {
         return pathfind(scene,deltaTime);
     }
