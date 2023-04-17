@@ -42,6 +42,8 @@
 
 #include "systems/RaceSystem.h"
 
+#include "entities/car/CollisionSounds.h"
+
 #include <chrono>  // chrono::system_clock
 #include <ctime>   // localtime
 
@@ -416,6 +418,13 @@ int main(int argc, char* argv[]) {
 	CPU_Geometry obstacle_geom = CPU_Geometry();
 	GraphicsSystem::importOBJ(obstacle_geom, "obstacles-mesh.obj");
 
+	physx::PxFilterData obstacleFilter(COLLISION_FLAG_OBSTACLE, COLLISION_FLAG_OBSTACLE_AGAINST, 0, 0);
+
+	physx::PxShape* shape = level_wall_collider.getShape();
+	shape->setSimulationFilterData(obstacleFilter);
+
+	
+
 	gamePlayToggle(gameplayMode, mainScene, AIGuids, gs);
 
 
@@ -444,6 +453,9 @@ int main(int argc, char* argv[]) {
 		GraphicsSystem::importOBJ(obs_r,buffer);
 		mainScene.AddComponent(obstacle_collider_e, obs_t);
 		mainScene.AddComponent(obstacle_collider_e, obs_r);
+
+		physx::PxShape * shape = new_obstacle_collider.getShape();
+		shape->setSimulationFilterData(obstacleFilter);
 	}
 
 

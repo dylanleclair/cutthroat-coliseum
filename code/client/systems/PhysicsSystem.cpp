@@ -5,6 +5,22 @@
 
 #include <iostream>
 
+struct ContactReportCallback : public physx::PxSimulationEventCallback
+{
+    void onContact(const physx::PxContactPairHeader& pairheader, const physx::PxContactPair* pairs, physx::PxU32 nbPairs)
+    {
+        static unsigned int deleteme = 0;
+        printf("Contact\n\n\n\n\n%d\n\n", deleteme++);
+    }
+
+    // rest of methods do nothing
+    void onTrigger(physx::PxTriggerPair* pairs, physx::PxU32 count) {}
+    void onConstraintBreak(physx::PxConstraintInfo* constraints, physx::PxU32 count) {}
+    void onWake(physx::PxActor** actors, physx::PxU32 count) {}
+    void onSleep(physx::PxActor** actors, physx::PxU32 count) {}
+    void onAdvance(const physx::PxRigidBody* const* bodyBuffer, const physx::PxTransform* poseBuffer, const physx::PxU32 count) {}
+};
+
 namespace physics
 {
 
@@ -64,6 +80,8 @@ namespace physics
         m_Dispatcher = PxDefaultCpuDispatcherCreate(numWorkers);
         sceneDesc.cpuDispatcher = m_Dispatcher;
         sceneDesc.filterShader = VehicleFilterShader;
+
+        sceneDesc.simulationEventCallback = new ContactReportCallback();
 
         m_Scene = m_Physics->createScene(sceneDesc);
         PxPvdSceneClient *pvdClient = m_Scene->getScenePvdClient();

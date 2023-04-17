@@ -31,6 +31,7 @@
 
 #include "../snippetvehicle2common/SnippetVehicleHelpers.h"
 
+#include "../../entities/car/CollisionSounds.h"
 
 using namespace physx;
 
@@ -53,6 +54,17 @@ PxPairFlags& pairFlags, const void* constantBlock, PxU32 constantBlockSize)
 	//return PxFilterFlag::eSUPPRESS;
 
 	pairFlags = physx::PxPairFlag::eCONTACT_DEFAULT;
+
+	static unsigned int deleteme = 0;
+    if ((filterData0.word0 == COLLISION_FLAG_OBSTACLE && filterData1.word0 == COLLISION_FLAG_CHASSIS) ||
+        (filterData0.word0 == COLLISION_FLAG_CHASSIS && filterData1.word0 == COLLISION_FLAG_OBSTACLE) ||
+        (filterData0.word0 == COLLISION_FLAG_CHASSIS && filterData1.word0 == COLLISION_FLAG_CHASSIS))
+    {
+        pairFlags |= physx::PxPairFlag::eNOTIFY_TOUCH_FOUND;
+		printf("jslkfjalsdkjfiuefjsdf\n\n\n\ndfjfkdsjf\n%d", deleteme++);
+    }
+
+	pairFlags |= physx::PxPairFlags(physx::PxU16(filterData0.word2 | filterData1.word2));
 
 	return physx::PxFilterFlag::eDEFAULT;
 }
