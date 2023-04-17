@@ -26,7 +26,7 @@ struct ProgressTracker {
 struct RaceTracker : ecs::ISystem {
 
   const int NUM_CHECKPOINTS = 10;
-  const int MAX_LAPS = 1;
+  const int MAX_LAPS = 2;
 
   Curve& m_racepath;
   

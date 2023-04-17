@@ -228,7 +228,7 @@ void LondonFog::drawHUD(Guid carGuid, ecs::Scene& scene, BoundingBox region, Rac
 
   ProgressTracker& pt = scene.GetComponent<ProgressTracker>(carGuid);
 
-  // if (pt.isFinished)
+  if (pt.isFinished)
   {
     // display race complete message!
     float size = 500; 
@@ -825,7 +825,7 @@ void LondonFog::drawMenu(BoundingBox region, std::function<void(void)> resetCall
 
     ImGui::PushFont(m_fonts["JockeyOne"]);
   
-    if (ImGui::Button("Back To Menu"))
+    if (ImGui::Button("Back To Main Menu"))
     {
       // check the controls ? 
       m_status = MAIN_SCREEN;
