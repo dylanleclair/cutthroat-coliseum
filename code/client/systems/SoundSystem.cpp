@@ -130,6 +130,7 @@ void SoundUpdater::Update(ecs::Scene &scene, float deltaTime)
 
             engine->set3DAttributes(&position, &fmod_vel);
             brake->set3DAttributes(&position, &fmod_vel);
+            idle->set3DAttributes(&position, &fmod_vel);
             // collision->set3DAttributes(&position, &fmod_vel);
         } else {
                 auto & car = scene.GetComponent<Car>(id);
@@ -144,6 +145,7 @@ void SoundUpdater::Update(ecs::Scene &scene, float deltaTime)
                 const float playervolume = 0.25f;
                 engine->setVolume(playervolume);
                 brake->setVolume(playervolume);
+                idle->setVolume(playervolume);
             }
 
             bool isPlaying = false;
@@ -194,6 +196,7 @@ void SoundUpdater::Update(ecs::Scene &scene, float deltaTime)
 
             engine->set3DAttributes(&position, &fmod_vel);
             brake->set3DAttributes(&position, &fmod_vel);
+            idle->set3DAttributes(&position, &fmod_vel);
             // collision->set3DAttributes(&position, &fmod_vel);
         }
     }
