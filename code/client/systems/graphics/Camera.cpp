@@ -190,33 +190,47 @@ void Camera::update(TransformComponent& _carTransform, bool isReversing, glm::ve
 	//}
 	//calculate where the camera should aim to be positioned
 
-	//set up variables used in the calculations
-	glm::vec2 carPos2D = glm::vec2(_carTransform.getTranslation()[0], _carTransform.getTranslation()[2]);
-	glm::vec2 camPosT2D = glm::vec2(cameraTargetLocation[0], cameraTargetLocation[2]);
-	glm::vec2 carVel2D = glm::vec2(carVelocity[0], carVelocity[2]);
-	glm::vec2 carFront2D;
+	auto projectOntoPlane = [](glm::vec3 vec, glm::vec3 norm)
 	{
-		glm::vec4 temp = glm::toMat4(_carTransform.getRotation()) * glm::vec4(0, 0, 1, 1);
-		carFront2D = glm::normalize(glm::vec2(temp[0], temp[2]));
-	}
+		return vec - glm::proj(vec, norm);
+	};
+
+	//set up variables used in the calculations
 	glm::vec3 carPos3D = _carTransform.getTranslation();
+	glm::vec3 downVector = glm::vec3(0, -1, 0); //set it to a default down vector incase the ray cast somehow fails
+	//perform a raycast down and figure out the normal of the road beneth the car
+	PxQueryFilterData filterData(PxQueryFlag::eSTATIC);
+	PxRaycastBuffer hitBuffer;
+	if (physics::physicsSystem.m_Scene->raycast(GLMtoPx(carPos3D), PxVec3(0, -1, 0), 300, hitBuffer, PxHitFlag::eDEFAULT, filterData)) {
+		downVector = -PxtoGLM(hitBuffer.block.normal);
+	}
+	//the positions of objects in the 2D plane defined by the down vector
+	//the plane goes through 0,0 and is defined by the down vector
+	glm::vec3 carPos2D = projectOntoPlane(carPos3D, downVector);
+	glm::vec3 camPosT2D = projectOntoPlane(cameraTargetLocation, downVector);
+	glm::vec3 carVel2D = projectOntoPlane(carVelocity, downVector);
+	glm::vec3 carFront2D;
+	{
+		glm::vec3 temp = glm::toMat4(_carTransform.getRotation()) * glm::vec4(0, 0, 1, 1);
+		carFront2D = glm::normalize(projectOntoPlane(temp, downVector)); //temp will never be 0 length since it is just being rotated
+	}
+
 	/*
 	* determine the location of the camera target by performing operations in the xz plane
 	*/
 	//move the camera towards the centre axis of the car
-	glm::vec2 CameraToCenterLine = -((camPosT2D - carPos2D) - glm::proj(camPosT2D - carPos2D, carFront2D));
+	glm::vec3 CameraToCenterLine = (carPos2D - camPosT2D) - glm::proj(carPos2D - camPosT2D, carFront2D);
 	if (glm::length(CameraToCenterLine) > GraphicsSystem::centering_slack_margin) {
 		float travelDistance = GraphicsSystem::centering_speed * dt;
 		travelDistance = glm::length(CameraToCenterLine) - GraphicsSystem::centering_slack_margin > travelDistance ? travelDistance : glm::length(CameraToCenterLine) - GraphicsSystem::centering_slack_margin;
 		camPosT2D += glm::normalize(CameraToCenterLine) * travelDistance;
 	}
-	if (acos(glm::dot(carFront2D, glm::normalize(camPosT2D - carPos2D))) > glm::radians(GraphicsSystem::pushback_angle = 95)) {
+	if (acos(glm::dot(carFront2D, glm::normalize(camPosT2D - carPos2D))) > glm::radians(GraphicsSystem::pushback_angle)) {
 		//move the camera towards the back of the car
 		camPosT2D += -carFront2D * GraphicsSystem::pushback_strength * dt;
 	}
 
 	//if the target is in the innder radius then project it to the minimum radius
-	
 	if (glm::length(camPosT2D - carPos2D) < GraphicsSystem::minimum_radius && glm::length(camPosT2D - carPos2D) != 0) {
 		camPosT2D = (glm::normalize(camPosT2D - carPos2D) * GraphicsSystem::minimum_radius) + carPos2D;
 	}
@@ -226,13 +240,12 @@ void Camera::update(TransformComponent& _carTransform, bool isReversing, glm::ve
 	}
 
 	//figure out the height of the camera by raycasting down and finding distance to the ground
-	PxQueryFilterData filterData(PxQueryFlag::eSTATIC);
-	PxRaycastBuffer hitBuffer;
-	float cameraHeight = carPos3D.y + GraphicsSystem::height_offset;
-	if (physics::physicsSystem.m_Scene->raycast(GLMtoPx(glm::vec3(camPosT2D[0], carPos3D.y + 40, camPosT2D[1])), PxVec3(0,-1,0), 260, hitBuffer)) {
+	float cameraHeight = glm::length(glm::proj(carPos3D, downVector) + (-downVector * GraphicsSystem::height_offset));
+	glm::vec3 cameraRaycastOrigin = camPosT2D + (-downVector * 40.f);
+	if (physics::physicsSystem.m_Scene->raycast(GLMtoPx(cameraRaycastOrigin), GLMtoPx(downVector), 260, hitBuffer)) {
 		PxRaycastHit hit = hitBuffer.block;
-		if(glm::dot(PxtoGLM(hit.normal), glm::vec3(0, 1, 0)) > 0.3)
-			cameraHeight = std::max(cameraHeight, hit.position.y + GraphicsSystem::height_offset);
+		//if(glm::dot(PxtoGLM(hit.normal), -downVector) > 0.3)
+			//cameraHeight = std::max(cameraHeight, hit.position.y + GraphicsSystem::height_offset);
 	}
 	
 
@@ -246,8 +259,8 @@ void Camera::update(TransformComponent& _carTransform, bool isReversing, glm::ve
 	//bool clockwise = 0; //0 = counterclockwise, 1 = clockwise
 	if (physics::physicsSystem.m_Scene->raycast(GLMtoPx(carPos3D), GLMtoPx(carToCamDir3D), carToCamLength, hitBuffer, PxHitFlag::eDEFAULT, filterData)) {
 		PxRaycastHit hit = hitBuffer.block;
-		glm::vec2 collisionPoint = glm::vec2(hit.position.x, hit.position.z);
-		camPosT2D = collisionPoint;
+		glm::vec3 collisionPoint = projectOntoPlane(PxtoGLM(hit.position), downVector);
+		//camPosT2D = collisionPoint;
 		/*
 		//test if just moving the camera closer would solve it
 		glm::vec2 collisionPoint = glm::vec2(hit.position.x, hit.position.z);
@@ -268,10 +281,10 @@ void Camera::update(TransformComponent& _carTransform, bool isReversing, glm::ve
 	}
 
 	//move the camera towards the target
-	cameraTargetLocation = glm::vec3(camPosT2D[0], cameraHeight, camPosT2D[1]);
-	glm::vec3 movementDirection = glm::distance(cameraTargetLocation, getPos()) > 0.1 ? cameraTargetLocation - getPos() : glm::vec3(0);
-	float moveAmount = 10.f * dt;
-	moveAmount = glm::distance(cameraTargetLocation, getPos()) < moveAmount ? glm::distance(cameraTargetLocation, getPos()) : moveAmount;
+	cameraTargetLocation = camPosT2D + -downVector * cameraHeight;
+	//glm::vec3 movementDirection = glm::distance(cameraTargetLocation, getPos()) > 0.1 ? cameraTargetLocation - getPos() : glm::vec3(0);
+	//float moveAmount = 10.f * dt;
+	//moveAmount = glm::distance(cameraTargetLocation, getPos()) < moveAmount ? glm::distance(cameraTargetLocation, getPos()) : moveAmount;
 	//setPos(getPos() + movementDirection * moveAmount);
 	setPos(cameraTargetLocation);
 
