@@ -77,7 +77,8 @@ bool gamePaused = false;
 uint32_t lastTime_millisecs;
 
 
-void resetLevel(Car& testCar, std::vector<Guid> ais, ecs::Scene& mainScene, std::vector<glm::vec3> spawnPoints, RaceTracker& raceSystem, float& acc_t, glm::vec3 forward)
+void resetLevel(Car& testCar, std::vector<Guid> ais, ecs::Scene& mainScene, std::vector<glm::vec3> spawnPoints, RaceTracker& raceSystem, float& acc_t, glm::vec3 forward,
+				int number_players, GraphicsSystem& gs)
 {
 	glm::quat q = quatLookAt(forward, { 0,1.f,0 });
 
@@ -105,6 +106,12 @@ void resetLevel(Car& testCar, std::vector<Guid> ais, ecs::Scene& mainScene, std:
 	// Starting up the race countdown
 	raceCountdown = true;
 	startCountdown = 5.0f;
+
+	// Reset cameras
+	for (int i = 0; i < 4 && i < number_players; i++) {
+		gs.bindCameraToEntity(i, ais[i]);
+	}
+	
 
 }
 
@@ -538,7 +545,7 @@ int main(int argc, char* argv[]) {
 					case SDLK_r:
 						//TODO recompile the shader
 						
-						resetLevel(testCar, AIGuids,mainScene,spawnPoints, raceSystem, acc_t, forward);
+						resetLevel(testCar, AIGuids,mainScene,spawnPoints, raceSystem, acc_t, forward, number_players, gs);
 						break;
 						
 					// TODO: change the file that is serializes (Want to do base.json and enginedrive.json)
