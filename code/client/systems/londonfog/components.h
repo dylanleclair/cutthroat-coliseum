@@ -9,7 +9,7 @@
 #include <GL/glew.h>
 
 #include "stb_image.h"
-
+#include <functional>
 
 // Simple helper function to load an image into a OpenGL texture with common settings
 bool LoadTextureFromFile(const char* filename, GLuint* out_texture, int* out_width, int* out_height);
@@ -118,11 +118,10 @@ struct LondonFog {
 
   MenuStatus m_status{MenuStatus::MAIN_SCREEN};
 
-
   // draws the hud for a player in their region
   void drawHUD(Guid carGuid, ecs::Scene scene, BoundingBox region, RaceTracker& raceSystem);
   void loadFonts();
-  void drawMenu(BoundingBox region);
+  void drawMenu(BoundingBox region, std::function<void(void)> resetCallback, std::function<void(int)> cameraCallback, std::function<void()> togglePauseCallback);
   void loadTextures();
 
 };

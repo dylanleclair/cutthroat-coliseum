@@ -106,8 +106,7 @@ void resetLevel(Car& testCar, std::vector<Guid> ais, ecs::Scene& mainScene, std:
 
 	// Starting up the race countdown
 	raceCountdown = true;
-	startCountdown = 5.0f;
-
+	startCountdown = 2.8f;
 }
 
 void gamePlayToggle(bool toggle, ecs::Scene &mainScene, std::vector<Guid> aiCars, GraphicsSystem &gs) {
@@ -117,7 +116,7 @@ void gamePlayToggle(bool toggle, ecs::Scene &mainScene, std::vector<Guid> aiCars
 		gs.s_cameraMode(3); // follow cam
 
 		raceCountdown = true;
-		startCountdown = 5.0f;
+		startCountdown = 2.8f;
 
 		// Turns off the direction line for all AI
 		for (int i = 0; i < aiCars.size(); i++) {
@@ -131,7 +130,7 @@ void gamePlayToggle(bool toggle, ecs::Scene &mainScene, std::vector<Guid> aiCars
 	else {
 		loadLevelMesh = false;
 		navPathToggle = true;
-		gs.s_cameraMode(1); // free cam
+		gs.s_cameraMode(3); // free cam
 
 		raceCountdown = false;
 		startCountdown = 0.f;
@@ -383,24 +382,25 @@ int main(int argc, char* argv[]) {
 	// put them into human
 	// conditionally spawn the other cars lmao ? 
 	std::unordered_map<Guid, int> controllerMappings; // the controller -> car mapping
-
 	int number_players = ControllerInput::getNumberPlayers();
+	
+	auto camerasCallback = [&](int number_players){
+		if (number_players == 0) number_players = 1; 
+		gs.s_camerasActive(number_players);
 
-	if (number_players == 0) number_players = 1; 
+		for (int i = 0; i < 4 && i < number_players; i++)
+		{
+			// get car at each guid
+			// if it's under ze number_players
+			// set it's driver to HUMAN
+			Car& testCar = mainScene.GetComponent<Car>(AIGuids[i]);
+			testCar.m_driverType = DriverType::HUMAN;
+			testCar.controllerIndex = i;
+			// controllerMappings[AIGuids[i]] = i;
+			gs.bindCameraToEntity(i, AIGuids[i]);
+		}
+	};
 
-	gs.s_camerasActive(number_players);
-
-	for (int i = 0; i < 4 && i < number_players; i++)
-	{
-		// get car at each guid
-		// if it's under ze number_players
-		// set it's driver to HUMAN
-		Car& testCar = mainScene.GetComponent<Car>(AIGuids[i]);
-		testCar.m_driverType = DriverType::HUMAN;
-		testCar.controllerIndex = i;
-		// controllerMappings[AIGuids[i]] = i;
-		gs.bindCameraToEntity(i, AIGuids[i]);
-	}
 
 
 	// bandaids for other calls that do player-only stuff
@@ -689,6 +689,17 @@ int main(int argc, char* argv[]) {
 		baseVariablesInit(testCar.m_Vehicle, physicsSystem);
 		engineVariablesInit(testCar.m_Vehicle);
 
+
+		// define some callback functions for the UI
+
+		auto resetCallback = [&]() {
+			resetLevel(testCar, AIGuids,mainScene,spawnPoints, raceSystem, acc_t, forward);
+		};
+
+		auto pauseCallback = [&](){
+			gamePaused = (gamePaused) ? false : true;
+		};
+
 		//polls all pending input events until there are none left in the queue
 		SDL_Event windowEvent;
 		while (SDL_PollEvent(&windowEvent)) {
@@ -733,6 +744,7 @@ int main(int argc, char* argv[]) {
 							ui.m_status = PAUSE_SCREEN;
 							gamePaused = true;
 						}
+						break;
 					case SDLK_p:
 						if (!showImgui) {
 							showImgui = true;
@@ -943,7 +955,7 @@ int main(int argc, char* argv[]) {
 
 
 
-		ui.drawMenu({0,0,1200,800});
+		ui.drawMenu({0,0,1200,800}, resetCallback, camerasCallback, pauseCallback);
 		ui.drawHUD(carGuid, mainScene,{0,0,1200,800}, raceSystem);
 
 		//you win message
