@@ -526,7 +526,7 @@ void LondonFog::drawMenu(BoundingBox region, std::function<void(void)> resetCall
 
     if (ImGui::Button("Singleplayer"))
     {
-      cameraCallback(n); // need to rig the controller setup
+      cameraCallback(1); // need to rig the controller setup
       resetCallback();
       resetCallback();
       m_status = RACING_SCREEN;
