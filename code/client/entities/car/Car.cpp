@@ -5,6 +5,8 @@
 
 #include "../physics/LevelCollider.h"
 
+#include "CollisionSounds.h"
+
 #include "imgui.h"
 #include "imgui_impl_sdl.h"
 #include "imgui_impl_opengl3.h"
@@ -155,11 +157,16 @@ void Car::Initialize(DriverType type, PxTransform initialPose, physics::PhysicsS
   c_mass_init_v = m_Vehicle.mPhysXParams.physxActorCMassLocalPose;
   angular_damp_init_v = m_Vehicle.mPhysXState.physxActor.rigidBody->getAngularDamping();
 
+  physx::PxFilterData vehicleFilter(COLLISION_FLAG_CHASSIS, COLLISION_FLAG_CHASSIS_AGAINST, 0, 0);
+
   PxU32 vehicle_shapes = m_Vehicle.mPhysXState.physxActor.rigidBody->getNbShapes();
   for (PxU32 i = 0; i < vehicle_shapes; i++)
   {
       PxShape* shape = NULL;
       m_Vehicle.mPhysXState.physxActor.rigidBody->getShapes(&shape, 1, i);
+
+      shape->setSimulationFilterData(vehicleFilter);
+
       shape->setFlag(PxShapeFlag::eSCENE_QUERY_SHAPE, true);
       shape->setFlag(PxShapeFlag::eSIMULATION_SHAPE, true);
       shape->setFlag(PxShapeFlag::eTRIGGER_SHAPE, false);
