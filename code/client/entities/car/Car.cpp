@@ -35,6 +35,9 @@ float carAxisScale = 1.f;
 float controller_throttle = 0.f;
 float controller_brake = 0.f;
 
+bool start_pressed = false;
+bool select_pressed = false;
+
 int time_elapsed = 0;
 bool has_jumped = false;
 bool previous_b_press = false;
@@ -1000,4 +1003,40 @@ float Car::carSpeed()
     glm::vec3 u = getForwardDir();
 
     return glm::length(v);
+}
+
+// Two functions below are not in an update loop because 
+// they pause and reset the game, when the game is paused the update
+// loop no longer gets called so you could not unpause the game
+
+bool Car::carGetControllerStartPressed() {
+    SDL_GameController* controller{ nullptr };
+    // get controller if it exists
+    if (controllerIndex != -1)
+    {
+        // controller exists for player
+        controller = ControllerInput::controllers[controllerIndex];
+    }
+
+    if (SDL_GameControllerGetButton(controller, SDL_CONTROLLER_BUTTON_START)) {
+        return true;
+    }
+
+    return false;
+}
+
+bool Car::carGetControllerSelectPressed() {
+    SDL_GameController* controller{ nullptr };
+    // get controller if it exists
+    if (controllerIndex != -1)
+    {
+        // controller exists for player
+        controller = ControllerInput::controllers[controllerIndex];
+    }
+
+    if (SDL_GameControllerGetButton(controller, SDL_CONTROLLER_BUTTON_BACK)) {
+        return true;
+    }
+
+    return false;
 }

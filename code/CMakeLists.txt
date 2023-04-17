@@ -30,7 +30,6 @@ find_package(assimp CONFIG REQUIRED)
 find_package(tomlplusplus CONFIG REQUIRED)
 find_package(imgui CONFIG REQUIRED)
 find_package(Freetype REQUIRED)
-find_package(RmlUi CONFIG REQUIRED)
 find_package(SDL2_image CONFIG REQUIRED)
 #find_package(stb MODULE REQUIRED)
 

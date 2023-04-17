@@ -9,7 +9,6 @@
     "assimp",
     "tomlplusplus",
     "freetype",
-    "rmlui",
     "sdl2-image",
     {
       "name": "imgui",

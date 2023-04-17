@@ -80,8 +80,6 @@ if(WIN32 OR APPLE)
     Freetype::Freetype
     ${FMOD_LIB}
     ${FMODL_LIB}
-    RmlCore
-    RmlDebugger
     ${PhysXPvdSDK_LIBRARY} ${PhysXExtensions_LIBRARY} ${PhysXFoundation_LIBRARY} ${PhysXCommon_LIBRARY} ${PhysXCooking_LIBRARY} ${PhysXVehicle2_LIBRARY}  ${PhysX_LIBRARY} 
   )
 
