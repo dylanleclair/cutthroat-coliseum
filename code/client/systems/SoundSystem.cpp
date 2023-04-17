@@ -142,7 +142,7 @@ void SoundUpdater::Update(ecs::Scene &scene, float deltaTime)
             // auto & collision = channel.collisionchannel;
 
             {
-                const float playervolume = 0.25f;
+                const float playervolume = 0.15f;
                 engine->setVolume(playervolume);
                 brake->setVolume(playervolume);
                 idle->setVolume(playervolume);
