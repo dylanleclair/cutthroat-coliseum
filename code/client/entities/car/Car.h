@@ -148,7 +148,6 @@ private:
     float m_timeSinceLastRamp{0.f};
     bool m_grounded{false};
     float m_timeSinceLastJump{0.f};
-
 };
 
 

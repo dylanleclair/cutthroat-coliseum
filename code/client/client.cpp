@@ -878,6 +878,10 @@ int main(int argc, char* argv[]) {
 						vehicleTuning(testCar.m_Vehicle, physicsSystem);
 					if (ImGui::CollapsingHeader("Engine Tuning"))
 						engineTuning(testCar.m_Vehicle);
+
+					ProgressTracker& ptracker = mainScene.GetComponent<ProgressTracker>(carGuid);
+					ImGui::Text("checkpoint: %d", ptracker.checkpoints);
+					ImGui::Text("index: %d", ptracker.curveIndex);
 					ImGui::EndTabItem();
 				}
 				if (ImGui::BeginTabItem("Graphics")) {
@@ -936,6 +940,8 @@ int main(int argc, char* argv[]) {
 		// ImGui::TextColored(ImVec4(1.0f, 1.0f, 1.0f, 1.0f), "Rank: %d/%d", raceSystem.getRanking(carGuid), spawnPoints.size() );
 		// ImGui::PopFont();
 		// ImGui::End();
+
+
 
 		ui.drawMenu({0,0,1200,800});
 		ui.drawHUD(carGuid, mainScene,{0,0,1200,800}, raceSystem);

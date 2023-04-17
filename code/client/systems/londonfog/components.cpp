@@ -2,6 +2,8 @@
 
 #include "components.h"
 #include "../../Input.h"
+#include "../../entities/car/Car.h"
+
 
 #include <sstream>
 #include <string>

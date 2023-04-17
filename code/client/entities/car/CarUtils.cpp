@@ -7,6 +7,7 @@
 #include <iostream>
 #include "Car.h"
 #include "../../utils/PxConversionUtils.h"
+#include "../../systems/RaceSystem.h"
 // will instantiate an AI car
 Guid spawnCar(DriverType type, ecs::Scene& scene, physics::PhysicsSystem* physicsSystem, glm::vec3 position, glm::vec3 forward, Curve* track, NavPath* navPath)
 {
@@ -69,6 +70,8 @@ Guid spawnCar(DriverType type, ecs::Scene& scene, physics::PhysicsSystem* physic
     aiVehicleDirection.setColor({0.0f,1.f,0.f});
     scene.AddComponent(aiDriver_e.guid, aiVehicleDirection);
   }
+
+	scene.AddComponent(aiDriver_e.guid,ProgressTracker{aiDriver_e.guid});
 
   return aiDriver_e.guid; 
 

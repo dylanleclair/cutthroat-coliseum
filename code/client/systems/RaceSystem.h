@@ -2,19 +2,22 @@
 
 #include "glm/glm.hpp"
 #include "core/ecs.h"
-#include "../entities/car/Car.h"
 #include <map>
 #include "../curve/Curve.h"
 
-struct Contestant {
-  Car* car;
-  Guid guid;
+/**
+ * The component attached to each car that will be used to track their progress
+*/
+struct ProgressTracker {
   int curveIndex = 0;
+  int raceIndex = 0;
   int lapCount = 1;
   int checkpoints = 0;
-  // other data if needed I guess
   bool isFinished{false};
-  Contestant(Car* car, Guid g) : guid(g), car(car) {}
+  Guid guid;
+  ProgressTracker(Guid g) : guid(g) {}
+
+  void Reset();
 };
 
 /**
@@ -46,20 +49,28 @@ struct RaceTracker : ecs::ISystem {
 
   int getRanking(Guid contestantGuid);
   int getLapCount(Guid contestantGuid);
-  bool getRaceStatus() {return m_raceFinished; }
-  bool isRacerFinished(Guid contestantGuid);
+  
+  bool getRaceStatus() { return numFinishedRacers() == m_contestants.size(); }
+  bool isCarFinished(Guid guid);
+
+  // bool humanRacersFinished();
 
   std::map<Guid,int>& getRankings() { return m_rankings; };
 private: 
-  void computeRankings(std::vector<Contestant> contestants);
-  void correctIndices(std::vector<Contestant> contestants);
+  void computeRankings();
+  void correctIndices();
 
+  // use to check if t
+  int numFinishedRacers();
   // now we need to consider laps!!!
 
   std::map<Guid,int> m_rankings;
   std::vector<int> m_checkpoints;
-  std::vector<Contestant> m_contestants;
+  std::vector<ProgressTracker*> m_contestants;
   bool m_raceFinished{false};
+
+  std::vector<Guid> m_finishedRacers; // always in order of first-to-last
+  ecs::Scene* m_scene;
 
 };
 

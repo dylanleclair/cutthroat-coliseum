@@ -3,20 +3,38 @@
 #include <algorithm>
 #include <iostream> 
 
+
+int RaceTracker::numFinishedRacers()
+{
+  int count{0};
+  for (auto contestant : m_contestants)
+  {
+    if (contestant->isFinished)
+    {
+      count++;
+    }
+  }
+  return count;
+}
+
+// bool humanRacersFinished(std::vector)
+// {
+//   // will check if the human racers (identified by their guid) are finished
+
+// }
+
 void RaceTracker::Initialize() {}
 
 void RaceTracker::Initialize(ecs::Scene& scene)
 {
 
+  this->m_scene = &scene;
   // search for all cars in the scene and add them as a contestant in the race
 
   for (auto entityGuid : ecs::EntitiesInScene<Car>(scene))
   {
-      Car& car = scene.GetComponent<Car>(entityGuid);
-      // push back incomplete ranking to m_rankings
-      
-      Contestant c{&car, entityGuid};
-      m_contestants.push_back(c);
+      ProgressTracker& p = scene.GetComponent<ProgressTracker>(entityGuid);
+      m_contestants.push_back(&p);
   }
 
 }
@@ -32,25 +50,33 @@ void RaceTracker::Update(ecs::Scene& scene, float deltaTime) {
   // every tick, update the curve index of the car. check if it is near a checkpoint.
   // if it has completed all the checkpoints and is close to the initial checkpoint,
   // it's completed a lap!
-  for (Contestant& car : m_contestants)
+  for (auto car : m_contestants)
   {
-    car.curveIndex = m_racepath.closestIndex(car.car->getPosition()); 
+    Car& c = scene.GetComponent<Car>(car->guid);
+    if (car->isFinished)
+    {
+      return;
+    }
+    car->curveIndex = m_racepath.closestIndex(c.getPosition()); 
 
     // prevent reverse hack
-    if (car.checkpoints == 0)
+    if (car->checkpoints == 0)
     {
-      if (car.curveIndex > m_checkpoints[1])
+      if (car->curveIndex > m_checkpoints[1])
       {
-        car.curveIndex = 0;
+        car->curveIndex = 0;
       }
     }
 
   }
 
-  correctIndices(m_contestants);
+  // tbh i dont think this is even necessary anymore but we'll keep it 
+  // correctIndices();
 
-  for (Contestant& car : m_contestants)
+  for (auto guid : ecs::EntitiesInScene<ProgressTracker>(scene))
   {
+    ProgressTracker& car = scene.GetComponent<ProgressTracker>(guid);
+    Car& realCar = scene.GetComponent<Car>(guid);
 
     // first see if the car's completed a lap
     if ((car.checkpoints == m_checkpoints.size() - 1) && abs(car.curveIndex - m_checkpoints[0]) == 0)
@@ -62,8 +88,9 @@ void RaceTracker::Update(ecs::Scene& scene, float deltaTime) {
       if (car.lapCount == MAX_LAPS+1)
       {
         car.lapCount--;
-        m_raceFinished = true; // the whole race
         car.isFinished = true; // each individual racer
+        m_finishedRacers.push_back(guid); // mark that the racer has finished
+        
       }
       car.checkpoints = 0;
     }
@@ -75,80 +102,80 @@ void RaceTracker::Update(ecs::Scene& scene, float deltaTime) {
       car.checkpoints++;
     }
   }
-  computeRankings(m_contestants);
+  computeRankings();
 
 }
 
 void RaceTracker::resetRace() {
-    for (auto& contestant : m_contestants) {
-        contestant.lapCount = 1;
+    for (auto contestant : m_contestants) {
+        // completely reset the progress tracker for each contestant
+        (*contestant) = ProgressTracker{contestant->guid};
     }
-
     m_raceFinished = false;
+    m_finishedRacers.clear();
 }
 
-void RaceTracker::correctIndices(std::vector<Contestant> contestants)
+void RaceTracker::correctIndices()
 {
-  for (auto& contestant : contestants)
+
+  for (auto contestant : m_contestants)
   {
-    int index = contestant.curveIndex;
+    int index = contestant->curveIndex;
     int diffy = index - startIndex;
 
-    contestant.curveIndex = (index < startIndex) ? m_racepath.size() - diffy : index;  
-
+    contestant->curveIndex = (index < startIndex) ? m_racepath.size() - diffy : index;  
   }
+
 }
 
-// if we do want to support multiplayer, we don't want to formally end the race until all
-// players have finished, so we might need something like this eventually...
-bool RaceTracker::isRacerFinished(Guid g)
+int RaceTracker::getRanking(Guid guid)
 {
-  // iterate over contestants and find the matching guid
-  for (auto& contestant : m_contestants)
-  {
-    if (contestant.guid == g && contestant.isFinished)
-    {
-      return true;
-    }
-  }
-  return false;
-}
-
-int RaceTracker::getRanking(Guid contestantGuid)
-{
-  return m_rankings[contestantGuid];
-}
-
-int RaceTracker::getLapCount(Guid contestantGuid)
-{
-  for (auto& c : m_contestants)
-  {
-    if (c.guid == contestantGuid)
-    {
-      return c.lapCount;
-    }
-  }
-  return -1;
+  return m_rankings[guid];
 }
 
 
-void RaceTracker::computeRankings(std::vector<Contestant> contestants)
-{
-  auto cmp = [](Contestant a, Contestant b) {return a.curveIndex > b.curveIndex; };
 
-  for (auto& contestant : m_contestants)
+
+int RaceTracker::getLapCount(Guid guid)
+{
+  return m_scene->GetComponent<ProgressTracker>(guid).lapCount;
+}
+
+bool RaceTracker::isCarFinished(Guid guid) {
+  return m_scene->GetComponent<ProgressTracker>(guid).isFinished;
+}
+
+void RaceTracker::computeRankings()
+{
+  
+  auto cmp = [](ProgressTracker* a, ProgressTracker* b) {return a->raceIndex > b->raceIndex; };
+
+  std::vector<ProgressTracker*> unfinished;
+
+  for (auto contestant : m_contestants)
   {
     // add the lap multiple to their count
-    contestant.curveIndex += contestant.lapCount * m_racepath.size();
+    contestant->raceIndex = contestant->curveIndex + contestant->lapCount * m_racepath.size();
+    if (!contestant->isFinished)
+    {
+      unfinished.push_back(contestant);
+    }
   }
 
   std::sort(m_contestants.begin(),m_contestants.end(), cmp);
 
   int ranking = 1;
-  // iterate over the rankings, put results in the map
-  for (auto& contestant : m_contestants)
+
+  for (auto guid : m_finishedRacers)
   {
-    m_rankings[contestant.guid] = ranking;
+    m_rankings[guid] = ranking;
+    ranking++;
+  }
+
+  // iterate over the rankings, put results in the map
+  for (auto contestant : unfinished)
+  {
+    m_rankings[contestant->guid] = ranking;
     ranking++;
   }
 
