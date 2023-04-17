@@ -464,7 +464,7 @@ void Car::Update(Guid carGuid, ecs::Scene& scene, float deltaTime)
     // check if they should get boosted :p 
     if (obstacle_under)
     {
-        std::cout << "boost detected!!!\n";
+        // std::cout << "boost detected!!!\n";
         if (m_timeSinceLastBoost > 1.5f)
         {
             BoostForward(4500.f);
@@ -474,7 +474,7 @@ void Car::Update(Guid carGuid, ecs::Scene& scene, float deltaTime)
     }
     if (ramp_under)
     {
-        std::cout << "ramp detected!!!\n";
+        // std::cout << "ramp detected!!!\n";
         if (m_timeSinceLastRamp > 1.5f)
         {
             BoostForward(10000.f);
@@ -533,7 +533,7 @@ bool Car::isWrongWay()
 
     if (angle > M_PI_2)
     {
-        std::cout << "CAR IS WRONG WAY!\n";
+        // std::cout << "CAR IS WRONG WAY!\n";
         return true;
     }
     return false;

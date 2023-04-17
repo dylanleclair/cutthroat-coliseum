@@ -12,7 +12,7 @@
 const float SCREEN_WIDTH = 1200.f;
 const float SCREEN_HEIGHT = 800.f;
 
-int n{1};
+int n{ std::max(1, ControllerInput::getNumberPlayers())};
 
 const ImVec2 AUTO_RESIZE = ImVec2(0.f,0.f);
 
@@ -87,7 +87,9 @@ void LondonFog::loadFonts()
   //load fonts into ImGui
   loadFont("fonts/JockeyOne.ttf", "JockeyOne", 50.f, io, m_fonts);
   loadFont("fonts/JockeyOne.ttf", "JockeyOneSmall", 30.f, io, m_fonts);
+  loadFont("fonts/JockeyOne.ttf", "JockeyOneXS", 15.f, io, m_fonts);
   loadFont("fonts/JockeyOne.ttf", "JockeyOneLarge", 130.f, io, m_fonts);
+  loadFont("fonts/JockeyOne.ttf", "JockeyOneSpeed", 100.f, io, m_fonts);
   loadFont("fonts/JockeyOne.ttf", "JockeyOneXL", 150.f, io, m_fonts);
   loadFont("fonts/JockeyOne.ttf", "JockeyOneMedium", 70.f, io, m_fonts);
 
@@ -208,6 +210,20 @@ std::string getRankSuffix(int rank)
 void LondonFog::drawHUD(Guid carGuid, ecs::Scene& scene, BoundingBox region, RaceTracker& raceSystem)
 {
 
+  std::vector<std::string> hudFonts; 
+
+
+
+  if (n != 1)
+  {
+    hudFonts.push_back("JockeyOneXS");
+    hudFonts.push_back("JockeyOneSmall");
+  }
+  else {
+    hudFonts.push_back("JockeyOne");
+    hudFonts.push_back("JockeyOneSpeed");
+  }
+
   // get the associated data  
 
   // start the imgui calls
@@ -231,7 +247,7 @@ void LondonFog::drawHUD(Guid carGuid, ecs::Scene& scene, BoundingBox region, Rac
   if (pt.isFinished)
   {
     // display race complete message!
-    float size = 500; 
+    float size = region.w / 2; 
     ImVec2 imageSize{size * 1.60f, size}; // enforce aspect ratio
     ImVec2 pos = region.getRelativeCenter(imageSize);
 
@@ -248,9 +264,13 @@ void LondonFog::drawHUD(Guid carGuid, ecs::Scene& scene, BoundingBox region, Rac
 
   // wrong way prompt
 
+  float size = region.w / 3;
+
+  std::string label_hud_msg = std::string("hud_message_") + std::to_string(carGuid);
+
+
   if (car.isWrongWay())
   {
-    float size = 300; 
     ImVec2 imageSize{size * 1.60f, size}; // enforce aspect ratio
     ImVec2 pos = region.getRelativeCenter(imageSize);
 
@@ -258,14 +278,13 @@ void LondonFog::drawHUD(Guid carGuid, ecs::Scene& scene, BoundingBox region, Rac
 
     ImGui::SetNextWindowSize(ImVec2(0.f,0.f)); // scale to fill content (img size in this case)
     ImGui::SetNextWindowPos(pos);
-    ImGui::Begin("warning", false, emptyBackground);
+    ImGui::Begin(label_hud_msg.c_str(), false, emptyBackground);
 
     m_texts["wrongway"].Render(imageSize);
 
     ImGui::End();
   } else if (car.m_timeSinceLastRamp < 1.8f)
   {
-    float size = 300; 
     ImVec2 imageSize{size * 1.60f, size}; // enforce aspect ratio
     ImVec2 pos = region.getRelativeCenter(imageSize);
 
@@ -273,14 +292,13 @@ void LondonFog::drawHUD(Guid carGuid, ecs::Scene& scene, BoundingBox region, Rac
 
     ImGui::SetNextWindowSize(ImVec2(0.f,0.f)); // scale to fill content (img size in this case)
     ImGui::SetNextWindowPos(pos);
-    ImGui::Begin("warning", false, emptyBackground);
+    ImGui::Begin(label_hud_msg.c_str(), false, emptyBackground);
 
     m_texts["ramp"].Render(imageSize);
 
     ImGui::End();
   } else if (car.m_timeSinceLastBoost < 1.2f)
   {
-    float size = 300; 
     ImVec2 imageSize{size * 1.60f, size}; // enforce aspect ratio
     ImVec2 pos = region.getRelativeCenter(imageSize);
 
@@ -288,7 +306,7 @@ void LondonFog::drawHUD(Guid carGuid, ecs::Scene& scene, BoundingBox region, Rac
 
     ImGui::SetNextWindowSize(ImVec2(0.f,0.f)); // scale to fill content (img size in this case)
     ImGui::SetNextWindowPos(pos);
-    ImGui::Begin("warning", false, emptyBackground);
+    ImGui::Begin(label_hud_msg.c_str(), false, emptyBackground);
 
     m_texts["pillar"].Render(imageSize);
 
@@ -300,14 +318,18 @@ void LondonFog::drawHUD(Guid carGuid, ecs::Scene& scene, BoundingBox region, Rac
   float startY{0.73f};
   float startX{0.015f};
 
+  ImVec2 bottomLeft = region.getCorner(BOTTOM_LEFT);
+  ImVec2 bottomRight = region.getCorner(BOTTOM_RIGHT);
+
+
   ImGui::PushStyleVar(ImGuiStyleVar_WindowPadding, ImVec2{18.f, 12.f});
   ImGui::PushStyleColor(ImGuiCol_WindowBg, colorCodeToImguiVec("#EF1A1A", 0.65f));
-  ImGui::PushFont(m_fonts["JockeyOne"]);
+  ImGui::PushFont(m_fonts[hudFonts[0]]);
 
   std::string label_hud = std::string("hud_") + std::to_string(carGuid);
 
   ImGui::SetNextWindowSize(ImVec2(0.f,0.f));
-  ImGui::SetNextWindowPos(ImVec2(region.x + startX * region.w, region.y + startY * region.h));
+  // ImGui::SetNextWindowPos(ImVec2(bottomLeft.x + startX * region.w, region.y + startY * region.h));
   std::string label_speed = std::string("speed_") + std::to_string(carGuid);
 
   ImGui::Begin(label_speed.c_str(),false,lfWindowFlags);
@@ -317,17 +339,22 @@ void LondonFog::drawHUD(Guid carGuid, ecs::Scene& scene, BoundingBox region, Rac
   auto carSpeed = car.carSpeed();
 
   ImGui::TextColored(ImVec4(1.0f, 1.0f, 1.0f, 1.0f), "Current Speed");
-  ImGui::PushFont(m_fonts["JockeyOneLarge"]);
+  ImGui::PushFont(m_fonts[hudFonts[1]]);
   ImGui::TextColored(ImVec4(1.0f, 1.0f, 1.0f, 1.0f), "%.0f", clamp((carSpeed * (carSpeed / 10.f)), 0.f, 500.f));
   // ImGui::TextColored(ImVec4(1.0f, 1.0f, 1.0f, 1.0f), "%.0f", (carSpeed));
   ImGui::PopFont();
   ImGui::SameLine();
   ImGui::TextColored(ImVec4(1.0f, 1.0f, 1.0f, 1.0f), "u/s");
 
-  ImVec2 size = ImGui::GetWindowSize();
+  ImVec2 windowSize = ImGui::GetWindowSize();
   // make the clamp relative to actual region size
   // make font scale to region size
-  ImGui::SetWindowSize(ImVec2(clamp(size.x,70.f, 100.f), size.y));
+
+  float offsetCorner = (region.w / 28);
+
+  ImGui::SetWindowPos(ImVec2(bottomLeft.x + offsetCorner, bottomLeft.y - windowSize.y - offsetCorner));
+
+  ImGui::SetWindowSize(ImVec2(clamp(windowSize.x,70.f, 100.f), windowSize.y));
 
   ImGui::End();
 
@@ -342,20 +369,31 @@ void LondonFog::drawHUD(Guid carGuid, ecs::Scene& scene, BoundingBox region, Rac
   
   ImGui::Begin(label_rank.c_str(),false,lfWindowFlags);
   ImVec2 v = ImGui::GetWindowSize();
-  ImGui::SetWindowPos(ImVec2((region.x + region.w) - (region.w * startX) - v.x, region.y + startY * region.h));
+  ImGui::SetWindowPos(ImVec2(bottomRight.x - offsetCorner - v.x, bottomRight.y - v.y - offsetCorner));
 
 
   int ranking = raceSystem.getRanking(carGuid);
   ImGui::BeginGroup();
   ImGui::TextColored(ImVec4(1.0f, 1.0f, 1.0f, 1.0f), "Rank");
-  ImGui::PushFont(m_fonts["JockeyOneLarge"]);
+  ImGui::PushFont(m_fonts[hudFonts[1]]);
   ImGui::TextColored(ImVec4(1.0f, 1.0f, 1.0f, 1.0f), "%d", ranking);
   ImGui::PopFont();
   ImGui::SameLine();
   ImGui::TextColored(ImVec4(1.0f, 1.0f, 1.0f, 1.0f), getRankSuffix(ranking).c_str());
   ImGui::EndGroup();
 
-  for (int i =0; i < 9; i++)
+  int spacingCount = 7;
+  if (n > 2)
+  {
+    spacingCount = 3;
+  }
+
+  if (n == 2)
+  {
+    spacingCount = 2;
+  }
+
+  for (int i =0; i < spacingCount; i++)
   {
     ImGui::SameLine();
     ImGui::Spacing();
@@ -365,7 +403,7 @@ void LondonFog::drawHUD(Guid carGuid, ecs::Scene& scene, BoundingBox region, Rac
 
   ImGui::BeginGroup();  
   ImGui::TextColored(ImVec4(1.0f, 1.0f, 1.0f, 1.0f), "Lap");
-  ImGui::PushFont(m_fonts["JockeyOneLarge"]);
+  ImGui::PushFont(m_fonts[hudFonts[1]]);
   ImGui::TextColored(ImVec4(1.0f, 1.0f, 1.0f, 1.0f), "%d/%d", raceSystem.getLapCount(carGuid), raceSystem.MAX_LAPS);
   ImGui::PopFont();
   ImGui::EndGroup();
@@ -388,10 +426,12 @@ void LondonFog::drawHUD(Guid carGuid, ecs::Scene& scene, BoundingBox region, Rac
   ImGui::PopStyleVar();
   
   std::string label_hud_label = std::string("hud_label_") + std::to_string(carGuid);
+  ImVec2 tl = region.getCorner(TOP_LEFT);
+  ImGui::SetNextWindowPos(ImVec2(tl.x + (region.w / 10), tl.y + (region.h / 10)));
 
   ImGui::Begin(label_hud.c_str(), false, lfWindowFlags);
 
-  ImGui::PushFont(m_fonts["JockeyOneSmall"]);
+  ImGui::PushFont(m_fonts[hudFonts[0]]);
   ImGui::Text("Playing as: %s", car.m_name.c_str());
   ImGui::PopFont();
   
@@ -486,7 +526,8 @@ void LondonFog::drawMenu(BoundingBox region, std::function<void(void)> resetCall
 
     if (ImGui::Button("Singleplayer"))
     {
-      cameraCallback(1); // need to rig the controller setup
+      cameraCallback(n); // need to rig the controller setup
+      resetCallback();
       resetCallback();
       m_status = RACING_SCREEN;
     }
@@ -587,13 +628,11 @@ void LondonFog::drawMenu(BoundingBox region, std::function<void(void)> resetCall
     ImGui::TextColored(ImVec4(1.0f, 1.0f, 1.0f, 1.0f), "Start a multiplayer race");
     ImGui::PopFont();
 
-    ImGui::TextColored(ImVec4(1.0f, 1.0f, 1.0f, 1.0f), "Plug in up to 4 controllers to play!");
+    ImGui::TextColored(ImVec4(1.0f, 1.0f, 1.0f, 1.0f), "Plug in up to 4 controllers to play! (Do NOT unplug any!)");
     ImGui::PushStyleVar(ImGuiStyleVar_FramePadding, ImVec2(20.f,20.f));
     
-    int numPlayers = ControllerInput::getNumberPlayers();
+    int numPlayers = std::max(1,ControllerInput::getNumberPlayers());
     ImGui::TextColored(ImVec4(1.0f, 1.0f, 1.0f, 1.0f), "There are currently %d controllers detected.", numPlayers);
-    
-    n = std::max(1,numPlayers);
 
     for (int i = 0; i < numPlayers; i++)
     {

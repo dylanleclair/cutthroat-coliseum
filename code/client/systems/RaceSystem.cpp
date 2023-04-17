@@ -106,7 +106,7 @@ void RaceTracker::Update(ecs::Scene& scene, float deltaTime) {
       car.checkpoints = 0;
     }
 
-    int next_checkpoint = (car.checkpoints + 1 == m_checkpoints.size()) ? 0 : car.checkpoints + 1; 
+    int next_checkpoint = (car.checkpoints + 1 >= m_checkpoints.size()) ? 0 : car.checkpoints + 1; 
 
     if (abs(car.curveIndex - m_checkpoints[next_checkpoint]) < 3)
     {

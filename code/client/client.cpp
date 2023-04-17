@@ -101,6 +101,8 @@ void resetLevel(Car& testCar, std::vector<Guid> ais, ecs::Scene& mainScene, std:
 		aiCar.m_Vehicle.mPhysXState.physxActor.rigidBody->clearForce(PxForceMode::eFORCE);
 		aiCar.m_Vehicle.mPhysXState.physxActor.rigidBody->clearForce(PxForceMode::eIMPULSE);
 		aiCar.m_Vehicle.mPhysXState.physxActor.rigidBody->clearForce(PxForceMode::eVELOCITY_CHANGE);
+		aiCar.m_timeSinceLastBoost = 10.f;
+		aiCar.m_timeSinceLastRamp = 10.f;
 	}
 
 	// Resets the lap count for all racers
@@ -267,7 +269,6 @@ int main(int argc, char* argv[]) {
 	std::vector<NavPath> aiPaths;
 	aiPaths.reserve(spawnPoints.size());
 
-	ControllerInput::initControllers();
 
 	// initialize the controllers
 	// then count the number of human players
@@ -292,7 +293,7 @@ int main(int argc, char* argv[]) {
 	// put them into human
 	// conditionally spawn the other cars lmao ? 
 	std::unordered_map<Guid, int> controllerMappings; // the controller -> car mapping
-	int number_players = ControllerInput::getNumberPlayers();
+	// int number_players = ControllerInput::getNumberPlayers();
 	
 	auto camerasCallback = [&](int number_players){
 
@@ -864,9 +865,48 @@ int main(int argc, char* argv[]) {
 		// ImGui::PopFont();
 		// ImGui::End();
 
-		ui.drawMenu({0,0,1200,800}, resetCallback, camerasCallback, pauseCallback, mainScene, raceSystem);
+		BoundingBox base = {0,0,1200,800};
+
+		ui.drawMenu(base, resetCallback, camerasCallback, pauseCallback, mainScene, raceSystem);
 		
-		ui.drawHUD(carGuid, mainScene,{0,0,1200,800}, raceSystem);
+		
+		if (numberPlayers == 1)
+		{
+			ui.drawHUD(carGuid, mainScene,base, raceSystem);
+
+		} else if (numberPlayers == 2)
+		{
+
+			static BoundingBox regions[2] = {
+				{ 0,0, base.w / 2, base.h },
+				{ base.w / 2,0,base.w / 2, base.h },
+			};
+			for (int i = 0; i < numberPlayers; i++)
+			{
+				ui.drawHUD(AIGuids[i], mainScene,regions[i], raceSystem);
+			}
+
+			// ui.drawHUD(carGuid, mainScene,{0,0,1200,800}, raceSystem);
+			// ui.drawHUD(carGuid, mainScene,{0,0,1200,800}, raceSystem);
+
+		} else 
+		{
+			BoundingBox regions[4] = {
+				{ 0,0, base.w / 2, base.h / 2 },
+				{ base.w / 2,0,base.w / 2, base.h / 2},
+				{ 0,base.h / 2, base.w / 2, base.h / 2 },
+				{ base.w / 2,base.h / 2,base.w / 2, base.h / 2},
+			}; 
+
+			// draw up to number of players
+			for (int i = 0; i < numberPlayers; i++)
+			{
+				ui.drawHUD(AIGuids[i], mainScene,regions[i], raceSystem);
+			}
+
+		}
+
+		// ui.drawHUD(carGuid, mainScene,{0,0,1200,800}, raceSystem);
 
 		if (raceCountdown)
 		{
@@ -906,7 +946,8 @@ int main(int argc, char* argv[]) {
 	// cleanupPhysics();
 	physicsSystem.Cleanup();
 
-	ControllerInput::deinit_controller();
+	ControllerInput::destroyControllers();
+
 
 	SDL_Quit();
 	return 0;
