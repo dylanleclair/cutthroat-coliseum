@@ -262,17 +262,17 @@ void updateCarVFX(ecs::Scene mainScene, float dt) {
 		leftTireParticle.stepSystem(dt, leftTireTransform.getTransformationMatrix());
 
 		VFXParticleSystem& rampSparklerParticle = mainScene.GetComponent<VFXParticleSystem>(vfx.rampSparklerGuid);
-		// TransformComponent rampSparkler_t = mainScene.GetComponent<TransformComponent>(vfx.rampSparklerGuid);
+		TransformComponent rampSparkler_t = mainScene.GetComponent<TransformComponent>(vfx.rampSparklerGuid);
 		rampSparklerParticle.active = (car->m_timeSinceLastRamp < 3.0f && !car->m_grounded) ? true : false;
 		rampSparklerParticle.particleFrequency = frequency;
 
 		VFXParticleSystem& sparklerParticle = mainScene.GetComponent<VFXParticleSystem>(vfx.boostSparklerGuid);
-		// TransformComponent sparkler_t = mainScene.GetComponent<TransformComponent>(vfx.boostSparklerGuid);
+		TransformComponent sparkler_t = mainScene.GetComponent<TransformComponent>(vfx.boostSparklerGuid);
 		sparklerParticle.active = (car->m_timeSinceLastBoost < 3.0f && !car->m_grounded) ? true : false;
 		sparklerParticle.particleFrequency = frequency;
 
-		sparklerParticle.stepSystem(dt, leftTireTransform.getTransformationMatrix());
-		rampSparklerParticle.stepSystem(dt, leftTireTransform.getTransformationMatrix());
+		sparklerParticle.stepSystem(dt, rampSparkler_t.getTransformationMatrix());
+		rampSparklerParticle.stepSystem(dt, sparkler_t.getTransformationMatrix());
 
 
 	}

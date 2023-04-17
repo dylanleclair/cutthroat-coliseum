@@ -97,6 +97,10 @@ void resetLevel(Car& testCar, std::vector<Guid> ais, ecs::Scene& mainScene, std:
 		aiCar.m_Vehicle.mPhysXState.physxActor.rigidBody->setLinearDamping(10000.f);
 		aiCar.m_Vehicle.mPhysXState.physxActor.rigidBody->setAngularDamping(10000.f);
 		aiCar.m_navPath->resetNav();
+		aiCar.m_Vehicle.mPhysXState.physxActor.rigidBody->clearForce(PxForceMode::eACCELERATION);
+		aiCar.m_Vehicle.mPhysXState.physxActor.rigidBody->clearForce(PxForceMode::eFORCE);
+		aiCar.m_Vehicle.mPhysXState.physxActor.rigidBody->clearForce(PxForceMode::eIMPULSE);
+		aiCar.m_Vehicle.mPhysXState.physxActor.rigidBody->clearForce(PxForceMode::eVELOCITY_CHANGE);
 	}
 
 	// Resets the lap count for all racers
@@ -184,8 +188,6 @@ int main(int argc, char* argv[]) {
 	g_Assets.loadAssets();
 	
 	// now you can access & use them!
-
-
 	ecs::Scene mainScene;
 
 	GraphicsSystem gs = GraphicsSystem();
@@ -363,23 +365,7 @@ int main(int argc, char* argv[]) {
 		
 	}
 
-	// use something like this for rendering player color/number/name
-	// ecs::Entity wrongWaySign = mainScene.CreateEntity();
-	// TransformComponent wrongWaySign_ti = TransformComponent(testCar.getVehicleRigidBody());
-	// VFXBillboard wrongWay_b = VFXBillboard("textures/wrongway.png", glm::vec3(1, 1, 0));
-	// wrongWaySign_ti.setScale(glm::vec3(6, 3, 0));
-	// wrongWaySign_ti.setPosition(glm::vec3(0, 2.2, -3));
-
-	// mainScene.AddComponent(wrongWaySign.guid, wrongWaySign_ti);
-	// mainScene.AddComponent(wrongWaySign.guid, wrongWay_b);
-
-	// TransformComponent& wrongWaySign_t = mainScene.GetComponent<TransformComponent>(wrongWaySign.guid);
-
-	
 	RaceTracker raceSystem{raceTrackingCurve, desiredSpawnLocation};	
-
-
-
 
 	//make an entity
 	ecs::Entity level_e = mainScene.CreateEntity();
@@ -599,18 +585,6 @@ int main(int argc, char* argv[]) {
 		//TODO:  May need to put in an if check, and factor out ?
 		testCar.m_Vehicle.mPhysXState.physxActor.rigidBody->setLinearDamping(default_lin_damp);
 		testCar.m_Vehicle.mPhysXState.physxActor.rigidBody->setAngularDamping(default_ang_damp);
-
-		// if (testCar.isWrongWay())
-		// {
-		// 	wrongWaySign_t.setScale(glm::vec3(6, 3, 0));
-		// 	bill_t.setPosition(glm::vec3(0, 20, 0));
-
-
-		// } else {
-		// 	wrongWaySign_t.setScale(glm::vec3(0, 0, 0));
-		// 	bill_t.setPosition(glm::vec3(20000000, 2000000, 0));
-
-		// }
 
 		for (int i = 0; i < AIGuids.size(); i++) {
 			Car& aiCar = mainScene.GetComponent<Car>(AIGuids.at(i));
@@ -860,11 +834,11 @@ int main(int argc, char* argv[]) {
 		ImGuiWindowFlags textWindowFlags =
 			ImGuiWindowFlags_NoBringToFrontOnFocus |
 			ImGuiWindowFlags_NoMove |				// text "window" should not move
-			ImGuiWindowFlags_NoResize |				// should not resize
+			// ImGuiWindowFlags_NoResize |				// should not resize
 			ImGuiWindowFlags_NoCollapse |			// should not collapse
 			ImGuiWindowFlags_NoSavedSettings |		// don't want saved settings mucking things up
-			ImGuiWindowFlags_AlwaysAutoResize |		// window should auto-resize to fit the text
-			ImGuiWindowFlags_NoBackground |			// window should be transparent; only the text should be visible
+			// ImGuiWindowFlags_AlwaysAutoResize |		// window should auto-resize to fit the text
+			// ImGuiWindowFlags_NoBackground |			// window should be transparent; only the text should be visible
 			ImGuiWindowFlags_NoDecoration |			// no decoration; only the text should be visible
 			ImGuiWindowFlags_NoTitleBar;			// no title; only the text should be visible
 		
@@ -894,38 +868,6 @@ int main(int argc, char* argv[]) {
 		
 		ui.drawHUD(carGuid, mainScene,{0,0,1200,800}, raceSystem);
 
-		//you win message
-		static int counter = 0;
-		const float delayInSeconds = 0.5;
-		static bool display = true;
-		if (raceSystem.getRaceStatus()) {
-			// the race is finished!!
-			
-			// make the AI take over after the driver has finished (UI will take precedence)
-			testCar.m_driverType = DriverType::COMPUTER;
-
-			// see if the message should be displayed
-			counter += timestep.getMilliseconds();
-			if (counter >= delayInSeconds * 1000) {
-				counter = 0;
-				display = !display;
-			}
-
-			// check who the winner was
-			const char * winner = (raceSystem.getRanking(carGuid) == 1) ? "VICTORY!" : "AI WON!";
-
-			if (display) {
-				ImGui::SetNextWindowPos(ImVec2(200, 200));
-				ImGui::Begin("UI2", (bool*)0, textWindowFlags);
-				ImGui::SetWindowFontScale(5.f);
-				ImGui::PushFont(CabalBold);
-				ImGui::TextColored(ImVec4(1.0f, 1.0f, 1.0f, 1.0f), winner);
-				ImGui::PopFont();
-				ImGui::End();
-			}
-
-		}
-
 		if (raceCountdown)
 		{
 			if (startCountdown > 0.f)
@@ -933,6 +875,8 @@ int main(int argc, char* argv[]) {
 				gamePaused = true;
 				startCountdown -= timestep.getSeconds();
 			
+		    ImGui::PushStyleColor(ImGuiCol_WindowBg,ImVec4(0.0f, 0.0f, 0.0f, 0.65f));
+
 				ImGui::SetNextWindowPos(ImVec2(200, 200));
 				ImGui::Begin("UI2", (bool*)0, textWindowFlags);
 				ImGui::SetWindowFontScale(2.5f);
@@ -940,6 +884,8 @@ int main(int argc, char* argv[]) {
 				ImGui::TextColored(ImVec4(1.0f, 1.0f, 1.0f, 1.0f), "Race starting in... %.0f", startCountdown + 1);
 				ImGui::PopFont();
 				ImGui::End();
+
+				ImGui::PopStyleColor();
 			
 			}else  { 
 				raceCountdown = false;
