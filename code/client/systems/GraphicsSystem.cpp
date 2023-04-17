@@ -483,7 +483,6 @@ void GraphicsSystem::ImGuiPanel() {
 
 
 void GraphicsSystem::Update(ecs::Scene& scene, float deltaTime) {
-	cam_mode = 3;
 	//default camera matricies
 	glm::mat4 P = glm::perspective(glm::radians(45.f), (float)windowSize.x / windowSize.y, 2.f, 1000.f);
 	if (numCamerasActive > 1)
