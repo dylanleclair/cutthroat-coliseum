@@ -699,7 +699,6 @@ void GraphicsSystem::Update(ecs::Scene& scene, float deltaTime) {
 	glUniformMatrix4fv(viewUniform, 1, GL_FALSE, glm::value_ptr(V));
 	glUniformMatrix4fv(lightSpaceMatixUniform, 1, GL_FALSE, glm::value_ptr(shadowP * shadowV));
 
-
 	for (Guid entityGuid : ecs::EntitiesInScene<RenderModel, TransformComponent>(scene)) {
 		RenderModel& comp = scene.GetComponent<RenderModel>(entityGuid);
 		TransformComponent& trans = scene.GetComponent<TransformComponent>(entityGuid);
@@ -734,7 +733,6 @@ void GraphicsSystem::Update(ecs::Scene& scene, float deltaTime) {
 			glDrawElements(GL_TRIANGLES, mesh.numberOfIndicies, GL_UNSIGNED_INT, 0);
 		}
 	}
-
 
 	/*
 	* render VFX that don't affect the shading. Things like billboards and particle effects

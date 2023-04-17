@@ -174,8 +174,6 @@ int main(int argc, char* argv[]) {
 
 	//physics::PhysicsSystem physicsSystem{};
 
-	
-
 
 	CPU_Geometry zzPathGeom;
 	GraphicsSystem::importSplineFromOBJ(zzPathGeom, "zz-track-nav.obj");
