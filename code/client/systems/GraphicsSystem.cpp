@@ -75,6 +75,7 @@ GraphicsSystem::GraphicsSystem() :
 	particleShader("shaders/particle.vert", "shaders/particle.frag"),
 	sceneShader("shaders/cel.vert", "shaders/passthrough.frag")
 {
+	std::cout << GL_MAX_TEXTURE_SIZE << '\n';
 	windowSize = glm::vec2(1200, 800);//_window.getSize();
 
 	/*
@@ -132,7 +133,7 @@ GraphicsSystem::GraphicsSystem() :
 	// light depth texture
 	glGenTextures(1, &gLightDepth);
 	glBindTexture(GL_TEXTURE_2D, gLightDepth);
-	glTexImage2D(GL_TEXTURE_2D, 0, GL_DEPTH_COMPONENT, 4096, 4096, 0, GL_DEPTH_COMPONENT, GL_HALF_FLOAT, NULL);
+	glTexImage2D(GL_TEXTURE_2D, 0, GL_DEPTH_COMPONENT, 2048, 2048, 0, GL_DEPTH_COMPONENT, GL_HALF_FLOAT, NULL);
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_BORDER);
@@ -144,14 +145,14 @@ GraphicsSystem::GraphicsSystem() :
 	glGenTextures(1, &sceneColor);
 	glBindTexture(GL_TEXTURE_2D, sceneColor);
 	glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, windowSize.x, windowSize.y, 0, GL_RGB, GL_UNSIGNED_BYTE, NULL);
-	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
-	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
 
 	//skybox cubemap texture
 	glGenTextures(1, &skyboxCubemap);
 	glBindTexture(GL_TEXTURE_CUBE_MAP, skyboxCubemap);
 	glActiveTexture(GL_TEXTURE0);
-	std::vector<std::string> faces{"textures/-X.jpg","textures/+X.jpg","textures/+Y.jpg","textures/-Y.jpg","textures/-Z.jpg","textures/+Z.jpg"};
+	std::vector<std::string> faces{"textures/-X.png","textures/+X.png","textures/+Y.png","textures/-Y.png","textures/-Z.png","textures/+Z.png"};
 	loadCubemap(faces);
 
 	glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
@@ -295,7 +296,7 @@ GraphicsSystem::GraphicsSystem() :
 
 
 	//generate the data for the skybox
-	const float skyboxVertices[] = {
+  float skyboxVertices[] = {
 		// positions          
 		-5.0f,  5.0f, -5.0f,
 		-5.0f, -5.0f, -5.0f,
@@ -339,6 +340,8 @@ GraphicsSystem::GraphicsSystem() :
 		-5.0f, -5.0f,  5.0f,
 		 5.0f, -5.0f,  5.0f
 	};
+	for (int i = 0; i < 3 * 6 * 6; i++)
+		skyboxVertices[i] *= 1 / 5.f;
 	glGenBuffers(1, &skybox_vertexBuffer);
 	glBindBuffer(GL_ARRAY_BUFFER, skybox_vertexBuffer);
 	glBufferData(GL_ARRAY_BUFFER, sizeof(skyboxVertices), skyboxVertices, GL_STATIC_DRAW);
@@ -586,10 +589,10 @@ void GraphicsSystem::Update(ecs::Scene& scene, float deltaTime) {
 
 	//if there are 2 cameras then the aspect ratio is a upright rectangle that takes half the screen
 	if (numCamerasActive == 1 || numCamerasActive >= 3) {
-		P = glm::perspective(glm::radians(cameras[i].FOV), (float)windowSize.x / windowSize.y, 2.f, 1000.f);
+		P = glm::perspective(glm::radians(cameras[i].FOV), (float)windowSize.x / windowSize.y, 0.3f, 1000.f);
 	}
 	else {
-		P = glm::perspective(glm::radians(cameras[i].FOV), ((float)windowSize.x / 2.f) / windowSize.y, 2.f, 1000.f);
+		P = glm::perspective(glm::radians(cameras[i].FOV), ((float)windowSize.x / 2.f) / windowSize.y, 0.3f, 1000.f);
 	}
 
 	//configure the view
@@ -636,7 +639,7 @@ void GraphicsSystem::Update(ecs::Scene& scene, float deltaTime) {
 		for each (Mesh mesh in comp.meshes) {
 			mesh.geometry->bind();
 			glUniformMatrix4fv(modelUniform, 1, GL_FALSE, glm::value_ptr(M * mesh.localTransformation));
-			glViewport(0, 0, 4096, 4096);
+			glViewport(0, 0, 2048, 2048);
 			glDrawElements(GL_TRIANGLES, mesh.numberOfIndicies, GL_UNSIGNED_INT, 0);
 		}
 	}
