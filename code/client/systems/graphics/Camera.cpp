@@ -125,6 +125,7 @@ void Camera::update(TransformComponent& _carTransform, bool isReversing, glm::ve
 		}
 		cameraTargetLocation = _carTransform.getTranslation() + glm::vec3(-carFront2D[0] * 20, _carTransform.getTranslation().y + GraphicsSystem::height_offset, -carFront2D[1] * 20);
 		std::fill(rollingAverageCamera.begin(), rollingAverageCamera.end(), cameraTargetLocation);
+		std::fill(rollingAverageDownvector.begin(), rollingAverageDownvector.end(), glm::vec3(0, -1, 0));//used to fix camera jitter on reset
 		setPos(cameraTargetLocation);
 		fixCamera = false;
 	}
