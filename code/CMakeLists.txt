@@ -27,7 +27,7 @@ find_package(GTest CONFIG REQUIRED)
 find_package(glm CONFIG REQUIRED)
 find_package(glew REQUIRED)
 find_package(assimp CONFIG REQUIRED)
-find_package(tomlplusplus CONFIG REQUIRED)
+#find_package(tomlplusplus CONFIG REQUIRED)
 find_package(imgui CONFIG REQUIRED)
 find_package(Freetype REQUIRED)
 find_package(SDL2_image CONFIG REQUIRED)
@@ -69,9 +69,9 @@ FetchContent_Declare(
 )
 FetchContent_MakeAvailable(fmt)
 
-FetchContent_Declare(
-    tomlplusplus
-    GIT_REPOSITORY https://github.com/marzer/tomlplusplus.git
-    GIT_TAG        v3.2.0
-)
-FetchContent_MakeAvailable(tomlplusplus)
+#FetchContent_Declare(
+#    tomlplusplus
+#    GIT_REPOSITORY https://github.com/marzer/tomlplusplus.git
+#    GIT_TAG        v3.4.0
+#)
+#FetchContent_MakeAvailable(tomlplusplus)

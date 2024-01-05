@@ -75,7 +75,7 @@ if(WIN32 OR APPLE)
     assimp::assimp
     vivid
     fmt
-    tomlplusplus::tomlplusplus
+    #tomlplusplus::tomlplusplus
     imgui::imgui
     Freetype::Freetype
     ${FMOD_LIB}
@@ -93,7 +93,7 @@ else()
     assimp::assimp
     vivid
     fmt
-    tomlplusplus::tomlplusplus
+    #tomlplusplus::tomlplusplus
     imgui::imgui
     
      -Wl,--start-group ${PhysXPvdSDK_LIBRARY} ${PhysXExtensions_LIBRARY} ${PhysXFoundation_LIBRARY} ${PhysXCommon_LIBRARY} ${PhysXCooking_LIBRARY} ${PhysXVehicle2_LIBRARY}  ${PhysX_LIBRARY} -Wl,--end-group
