@@ -30,6 +30,10 @@ And don't forget to avoid the pillars blocking your path!
 
 ![](screenshots/jump.PNG)
 
+Make sure to play it with your friends, too! (only the track is rendered since this screenshot is an oldie from dev testing)
+
+![](screenshots/three-players.png)
+
 ### Gameplay Video
 
 Check out a gameplay video over at:
