@@ -1,42 +1,71 @@
-# cpsc585
+# Maximus Overdrive: an action packed chariot racing game!
 
-## getting started (windows)
+Maximus Overdrive (or Cutthroat Coliseum) is a game where you must conquer a winding stretch of obstacles, ramps and of course, your opponents: all in the quest of glory!
 
-1. install "Desktop Development with C++" in the visual studio installer (it provides `cmake`)
-1. open powershell and cd to the root directory of the project
-1. run the command `Set-ExecutionPolicy -ExecutionPolicy Bypass -Scope Process` (still in powershell in the root dir)
-1. run the command `.\init.ps1` in powershell (still in powershell in the root dir)
-1. setup your IDE to run with the project. (if not using IDE, I'd recommend just using the commands from the `init` scripts manually)
-- Install "Desktop Development with C++" in the visual studio installer (for cmake) if you haven't already
-- It will ask which cmake thing to use, use <project_root>/code/CMakeLists.txt
-- Everything should build for you wooooo lmk if there's an issue
-1. To run, use the green button dropdown to find `cpsc585-client.exe` or someth it'll work I think
+It was written in C++ over the course of a single semester (February-April) in Winter 2023 at the University of Calgary as part of it's CPSC 585 (Computer Game Development) course.
 
-- see the IDE integration section here:
-  - https://vcpkg.io/en/docs/users/buildsystems/cmake-integration.html
-  
-NOTE: dylan i think you and i are fine without instructions
+![](screenshots/cover.PNG)
 
-## project organization
+It's main features are:
+- beautiful cel-shaded graphics
+- controller and mouse/keyboard support
+- local multiplayer support (up to 4 players!), dynamically scaling the screen to fit the appropriate number of players on screen
+- realistic physics & driving models (integrated with Nvidia PhysX)
+- 3d sound
 
-- the project is divided into three chunks right now.
-  - lib - systems code / code that supports the game but could easily be reused in other games.
-  - client - the actual game / game logic
-  - tst - for unit tests
+And under the hood:
+- a lightnight fast entity-component-system which helped us more easily integrate several components like colliders with their textures all into one entity. 
 
-## Hot-reload example
+## Screenshots:
 
-Version-controlled configs are stored in code/assets/configs. These are
-then copied into build/client/configs, similar to the shaders.
+Try not to skid out!
 
-DESERIALIZING:
+![](screenshots/basic.PNG)
 
-1. Modify the config file in build/client/configs/CarPhysics.toml with
-thing running
-2. Press `t` - you should see the console print what was deserialized
+Take as many ramps as you can!
 
-SERIALIZING:
+![](screenshots/boost.PNG)
 
-Press `s` to serialize your new config back into the version-controlled
-config file. Note that this actually reads your config again cause idk
-if the serializer should know abt the state of the program
+And don't forget to avoid the pillars blocking your path!
+
+![](screenshots/jump.PNG)
+
+### Gameplay Video
+
+Check out a gameplay video over at:
+
+https://youtu.be/gV-7d2pARK4
+
+## Credits
+
+* Samuel Osweiler
+  * graphics: everything... (cel-shading, billboards, particles, culling, camera, etc.)
+* Elise Chevalier
+  * gameplay: design lead, tuned driving
+  * systems: input
+* Beau McCartney
+  * systems: window, input, sound, integration (SDL, fmod), controller support
+* Dylan Leclair
+  * systems: ai, ui, ecs, race tracking, integration (physx, cmake), multi-controller support
+  * gameplay: level design
+
+* open source/integrated libraries:
+  * nvidia physx
+  * dear imgui
+  * fmod
+  * sdl2
+  * OpenGL
+  * SDL2
+  * GTest
+  * glm
+  * glew  
+  * assimp
+  * tomlplusplus
+  * imgui
+  * Freetype  
+  * SDL2_image
+  * stb
+
+* tools:
+  * blender (level design)
+  * GIMP (graphics)
