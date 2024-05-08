@@ -41,7 +41,7 @@ https://youtu.be/gV-7d2pARK4
 * Samuel Osweiler
   * graphics: everything... (cel-shading, billboards, particles, culling, camera, etc.)
 * Elise Chevalier
-  * gameplay: design lead, tuned driving
+  * gameplay: design lead, driving expert, level design, experimental designer (tethers, etc.)
   * systems: input
 * Beau McCartney
   * systems: window, input, sound, integration (SDL, fmod), controller support
